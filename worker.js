@@ -114,6 +114,8 @@ Replace UNIQUE_ID with a descriptive slug like gallery-1, gallery-2, team-1, pro
 
 Never create a styled box or placeholder that looks like an image area WITHOUT using this format — otherwise users cannot add photos to it.
 
+When the user asks to make an existing area or element uploadable, or to "add a picture here" / "let me add a photo where X is", CONVERT that exact element into the ws-img-slot format above with a NEW unique data-slot id (and keep its existing size/position). Do not leave a plain colored div — any region meant to hold a user photo MUST be a ws-img-slot carrying a data-slot attribute, or the upload click cannot target it.
+
 EDIT PRINCIPLES:
 - Make EXACTLY what the user asked — don't change anything else
 - If changing colors: update ALL instances consistently across ALL pages — buttons, borders, gradients, accents, icons, hover states
@@ -168,8 +170,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r96">
-<script>window._wsBuild="2026-06-10-r96";console.log("%c[Websprout] build 2026-06-10-r96 (AI edits: animation requests now produce a real, continuously-running animation instead of an invisible no-op)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r97">
+<script>window._wsBuild="2026-06-10-r97";console.log("%c[Websprout] build 2026-06-10-r97 (photo slots: fillSlot falls back to the lone empty slot; AI converts areas into real upload slots so Could-not-find-slot stops)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4027,6 +4029,11 @@ function fillSlot(dataUrl){
     var doc=pf.contentDocument||pf.contentWindow.document;
     var slot=doc.querySelector('[data-slot="'+currentSlotId+'"]');
     if(!slot)slot=doc.querySelector("[data-slot='"+currentSlotId+"']");
+    if(!slot){
+      // The AI may have created the slot with a different id than what was clicked.
+      // If exactly one unfilled image slot exists, fill that one rather than erroring.
+      try{var cands=doc.querySelectorAll('[data-slot]');if(cands.length===1)slot=cands[0];}catch(e){}
+    }
 
     if(slot){
       var h=slot.style.height||'320px';
