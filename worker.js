@@ -164,8 +164,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r78">
-<script>console.log("%c[Websprout] build 2026-06-10-r78 (gap 1: in-app Leads dashboard — view contact-form submissions + set notify email)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r79">
+<script>console.log("%c[Websprout] build 2026-06-10-r79 (fix: preview blocks ALL link navigation incl empty/# hrefs — no more app-in-app; in-app Leads)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2343,10 +2343,13 @@ function setPreview(html){
       'var a=e.target.closest(\"a\");'+
       'if(!a)return;'+
       'var h=a.getAttribute(\"href\")||\"\";'+
-      'if(h===\"\"||h.startsWith(\"#\")||h.startsWith(\"javascript\")||h.startsWith(\"mailto:\")||h.startsWith(\"tel:\"))return;'+
-      // Block all other links from navigating the iframe away
+      'if(h.indexOf(\"mailto:\")===0||h.indexOf(\"tel:\")===0||h.indexOf(\"javascript:\")===0)return;'+
+      // Block EVERYTHING else from navigating the srcdoc preview away — empty, "#", "/", and full URLs
+      // all resolve to websprout.app inside an srcdoc iframe and would load the whole app in the preview.
+      // For genuine in-page hash links, scroll to the target manually instead of letting it navigate.
       'e.preventDefault();'+
-    '});'+
+      'if(h.length>1&&h.charAt(0)===\"#\"){try{var t=document.getElementById(h.slice(1));if(t&&t.scrollIntoView)t.scrollIntoView({behavior:\"smooth\"});}catch(err){}}'+
+    '},true);'+
     // Never let a form submission navigate the preview away (it was loading the whole app inside the preview)
     'document.addEventListener(\"submit\",function(e){e.preventDefault();},true);'+
 
