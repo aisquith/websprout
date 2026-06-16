@@ -168,8 +168,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r92">
-<script>window._wsBuild="2026-06-10-r92";console.log("%c[Websprout] build 2026-06-10-r92 (profile: My sites button + saved-site count, opens the My sites list from your account)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r93">
+<script>window._wsBuild="2026-06-10-r93";console.log("%c[Websprout] build 2026-06-10-r93 (unlock banner now promotes Websprout publishing + shareable link, not Netlify deploy)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1093,8 +1093,8 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   <!-- Deploy CTA banner (shown after purchase) -->
   <div class="deploy-cta-banner" id="deployCtaBanner">
     <div style="font-size:20px">&#128640;</div>
-    <div class="deploy-cta-banner-text"><span>Site unlocked!</span> Get it live free on Netlify in about 10 seconds.</div>
-    <button class="deploy-cta-banner-btn" id="deployCtaBtn">Deploy now &#8594;</button>
+    <div class="deploy-cta-banner-text"><span>Site unlocked!</span> Publish it live and grab your shareable link in seconds.</div>
+    <button class="deploy-cta-banner-btn" id="deployCtaBtn">Publish now &#8594;</button>
     <button class="deploy-cta-dismiss" id="deployCtaDismiss">&#10005;</button>
   </div>
   <div class="pub-modal" id="pubModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:18px">
@@ -2619,8 +2619,8 @@ document.addEventListener('DOMContentLoaded',function(){
   if(dcb)dcb.addEventListener('click',function(){
     var banner=document.getElementById('deployCtaBanner');
     if(banner)banner.classList.remove('on');
-    var db=document.getElementById('deployBtn');
-    if(db)db.click();
+    var pb=document.getElementById('publishBtn');
+    if(pb)pb.click();
   });
   var dcd=document.getElementById('deployCtaDismiss');
   if(dcd)dcd.addEventListener('click',function(){
