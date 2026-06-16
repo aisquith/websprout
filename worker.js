@@ -149,14 +149,14 @@ const PAGE = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Websprout: AI Website Builder | Make a Website in Seconds, Free</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
-<meta name="description" content="Websprout is an AI website builder that turns one sentence into a complete, professional, multi-page website in about 18 seconds. Free to generate and preview. $10 to download the source code and own it forever. No code, no subscription.">
+<meta name="description" content="Websprout is an AI website builder that turns one sentence into a complete, professional, multi-page website in about 18 seconds. Free to generate and preview. Go Pro for $10/month to download the source code and deploy anywhere — cancel anytime.">
 <link rel="canonical" href="https://websprout.app/">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r56">
-<script>console.log("%c[Websprout] build 2026-06-10-r56 (stripe: wired provided payment link as default)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r57">
+<script>console.log("%c[Websprout] build 2026-06-10-r57 (copy: sweep one-time pricing -> $10/mo subscription)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -165,7 +165,7 @@ const PAGE = `<!DOCTYPE html>
 <meta property="og:site_name" content="Websprout">
 <meta property="og:locale" content="en_US">
 <meta property="og:title" content="Websprout: Build a Website with AI in Seconds">
-<meta property="og:description" content="Describe your business, get a complete professional website in about 18 seconds. Free to preview, $10 to own the source code forever.">
+<meta property="og:description" content="Describe your business, get a complete professional website in about 18 seconds. Free to preview, $10/month to download the code and deploy anywhere.">
 <meta property="og:url" content="https://websprout.app/">
 <meta property="og:image" content="https://websprout.app/og.svg">
 <meta property="og:image:width" content="1200">
@@ -173,11 +173,11 @@ const PAGE = `<!DOCTYPE html>
 <meta property="og:image:alt" content="Websprout - AI Website Builder">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Websprout: Build a Website with AI in Seconds">
-<meta name="twitter:description" content="Describe your business, get a complete professional website in about 18 seconds. Free to preview, $10 to own the source code forever.">
+<meta name="twitter:description" content="Describe your business, get a complete professional website in about 18 seconds. Free to preview, $10/month to download the code and deploy anywhere.">
 <meta name="twitter:image" content="https://websprout.app/og.svg">
 <meta name="twitter:image:alt" content="Websprout - AI Website Builder">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232d7a3a'/><text y='.9em' font-size='75' x='12'>&#127807;</text></svg>">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"Websprout","url":"https://websprout.app/","description":"AI website builder that generates a complete, professional, multi-page website from a short description in about 18 seconds.","applicationCategory":"DesignApplication","operatingSystem":"Web browser","browserRequirements":"Requires JavaScript","offers":{"@type":"Offer","price":"10.00","priceCurrency":"USD","description":"One-time payment to download the full website source code. Generating and previewing is free."},"featureList":["AI website generation in seconds","Live preview before paying","Conversational AI editing","Download full HTML source code","Free one-click deploy to Netlify or Cloudflare Pages"]},{"@type":"Organization","name":"Websprout","url":"https://websprout.app/","logo":"https://websprout.app/og.svg","sameAs":[]},{"@type":"WebSite","name":"Websprout","url":"https://websprout.app/"},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do I need to pay for hosting?","acceptedAnswer":{"@type":"Answer","text":"No. Both Netlify and Cloudflare Pages have permanently free tiers that are more than enough for most websites. Netlify gives you 100GB of bandwidth per month free, and Cloudflare Pages offers unlimited bandwidth."}},{"@type":"Question","name":"Can I update my site after deploying?","acceptedAnswer":{"@type":"Answer","text":"Yes. Use the chat in Websprout to make changes, re-download your site, and re-deploy. On Netlify you can drag and drop a new file onto your existing site to update it, and on Cloudflare Pages you upload a new version through the dashboard."}},{"@type":"Question","name":"How do I connect a custom domain?","acceptedAnswer":{"@type":"Answer","text":"Both platforms make this easy and free. On Netlify, go to Site Settings, Domain Management, Add custom domain, then follow the DNS instructions from your registrar. On Cloudflare Pages, use Custom Domains, Add a domain."}},{"@type":"Question","name":"Is my site secure with HTTPS?","acceptedAnswer":{"@type":"Answer","text":"Yes, automatically. Both Netlify and Cloudflare Pages issue free SSL certificates the moment your site is deployed, so your site always serves over HTTPS with no extra configuration."}},{"@type":"Question","name":"How much does Websprout cost?","acceptedAnswer":{"@type":"Answer","text":"Generating and previewing websites is completely free with no account required. You only pay a one-time $10 fee when you want to download the full source code of a site you like. There is no subscription."}},{"@type":"Question","name":"How long does it take to build a website?","acceptedAnswer":{"@type":"Answer","text":"About 18 seconds. You describe your business, and the AI generates a complete multi-page website that you can preview live and then edit with chat."}}]}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"Websprout","url":"https://websprout.app/","description":"AI website builder that generates a complete, professional, multi-page website from a short description in about 18 seconds.","applicationCategory":"DesignApplication","operatingSystem":"Web browser","browserRequirements":"Requires JavaScript","offers":{"@type":"Offer","price":"10.00","priceCurrency":"USD","description":"$10/month Pro subscription to download the full source code and deploy anywhere. Generating and previewing is free, and you can cancel anytime."},"featureList":["AI website generation in seconds","Live preview before paying","Conversational AI editing","Download full HTML source code","Free one-click deploy to Netlify or Cloudflare Pages"]},{"@type":"Organization","name":"Websprout","url":"https://websprout.app/","logo":"https://websprout.app/og.svg","sameAs":[]},{"@type":"WebSite","name":"Websprout","url":"https://websprout.app/"},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do I need to pay for hosting?","acceptedAnswer":{"@type":"Answer","text":"No. Both Netlify and Cloudflare Pages have permanently free tiers that are more than enough for most websites. Netlify gives you 100GB of bandwidth per month free, and Cloudflare Pages offers unlimited bandwidth."}},{"@type":"Question","name":"Can I update my site after deploying?","acceptedAnswer":{"@type":"Answer","text":"Yes. Use the chat in Websprout to make changes, re-download your site, and re-deploy. On Netlify you can drag and drop a new file onto your existing site to update it, and on Cloudflare Pages you upload a new version through the dashboard."}},{"@type":"Question","name":"How do I connect a custom domain?","acceptedAnswer":{"@type":"Answer","text":"Both platforms make this easy and free. On Netlify, go to Site Settings, Domain Management, Add custom domain, then follow the DNS instructions from your registrar. On Cloudflare Pages, use Custom Domains, Add a domain."}},{"@type":"Question","name":"Is my site secure with HTTPS?","acceptedAnswer":{"@type":"Answer","text":"Yes, automatically. Both Netlify and Cloudflare Pages issue free SSL certificates the moment your site is deployed, so your site always serves over HTTPS with no extra configuration."}},{"@type":"Question","name":"How much does Websprout cost?","acceptedAnswer":{"@type":"Answer","text":"Generating and previewing websites is completely free. Go Pro for $10 per month to download the full source code, deploy your sites, and edit across all of them. You can cancel anytime."}},{"@type":"Question","name":"How long does it take to build a website?","acceptedAnswer":{"@type":"Answer","text":"About 18 seconds. You describe your business, and the AI generates a complete multi-page website that you can preview live and then edit with chat."}}]}]}</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -907,8 +907,8 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       </div>
       <div class="how-card">
         <div class="how-step-num">3</div>
-        <h3>Harvest it forever</h3>
-        <p>Pay $10 once and download the full source code. Deploy free on Netlify or Cloudflare Pages. Yours to keep forever.</p>
+        <h3>Harvest your sites</h3>
+        <p>Go Pro for $10/month to download the full source code and deploy free on Netlify or Cloudflare Pages — across all your sites. Cancel anytime.</p>
       </div>
     </div>
   </div>
@@ -925,8 +925,8 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <ul class="cmp-list">
           <li class="cmp-item">4-page site built in under 20 seconds</li>
           <li class="cmp-item">Preview free, forever</li>
-          <li class="cmp-item">$10 once - no subscription</li>
-          <li class="cmp-item">Download and own the source code</li>
+          <li class="cmp-item">$10/month - cancel anytime</li>
+          <li class="cmp-item">Download your code &amp; deploy anywhere</li>
           <li class="cmp-item">Deploy anywhere for free</li>
           <li class="cmp-item">Chat with AI to change anything</li>
         </ul>
@@ -982,7 +982,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
 <!-- CTA BAND -->
 <div class="cta-band">
   <h2>Your website is one<br>seed away.</h2>
-  <p>Free to plant. Free to preview. $10 to harvest.</p>
+  <p>Free to plant. Free to preview. $10/month to harvest.</p>
   <button class="btn-white" id="ctaBtn">Plant my website free &#127807;</button>
 </div>
 
@@ -1279,7 +1279,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <div class="drop-overlay" id="dropOverlay"><div class="drop-overlay-txt">🌱 Drop photo to add to site</div></div>
       <div class="lock-badge" id="lkbadge">
         <div class="lock-title">🔒 Love what you see?</div>
-        <div class="lock-sub">Pay once, download the code, deploy anywhere — yours forever.</div>
+        <div class="lock-sub">Go Pro for $10/month — download, deploy, and keep all your sites. Cancel anytime.</div>
         <input type="email" id="emailCapture" class="lock-email" placeholder="your@email.com">
         <button class="s-btn s-purple" style="width:100%;padding:10px;border-radius:8px;font-size:13px" id="lockPayBtn">Go Pro — $10/mo</button>
       </div>
@@ -3945,11 +3945,11 @@ a{color:#2d7a3a}
 <h1>Terms of Service</h1>
 <p class="meta">Last updated: May 2026</p>
 <h2>1. Service</h2>
-<p>Websprout provides an AI-powered website generation service. You pay $10 per site to receive the HTML/CSS source code. The preview is free and unlimited.</p>
+<p>Websprout provides an AI-powered website generation service. Generating and previewing sites is free. A Pro subscription ($10/month) unlocks downloading the HTML/CSS source code and deploying your sites.</p>
 <h2>2. Payment</h2>
-<p>All payments are one-time, per site, and processed securely via Stripe. We do not store your payment information. Payments are non-refundable once the source code has been delivered.</p>
+<p>Pro is a recurring subscription billed at $10/month via Stripe until you cancel. You can cancel anytime, which stops future charges; access continues through the end of the current billing period. We do not store your payment information. Charges already billed are non-refundable.</p>
 <h2>3. Ownership</h2>
-<p>Once you purchase a site, you own the generated HTML/CSS code. You may use it for any purpose, personal or commercial.</p>
+<p>Any source code you download while subscribed is yours to use for any purpose, personal or commercial.</p>
 <h2>4. Limitations</h2>
 <p>Websprout generates websites using AI. We do not guarantee any specific outcome, design quality, or fitness for a particular purpose. The generated code is provided as-is.</p>
 <h2>5. Prohibited Use</h2>
@@ -4134,7 +4134,7 @@ footer{border-top:1px solid #e8f0e5;padding:28px 5vw;display:flex;align-items:ce
         <ol class="step-list">
           <li class="step-item">
             <div class="step-num">1</div>
-            <div class="step-content"><strong>Generate &amp; unlock your site</strong>Build your site on Websprout and pay the $10 one-time fee to unlock the source code.</div>
+            <div class="step-content"><strong>Generate &amp; unlock your site</strong>Build your site on Websprout and go Pro ($10/month) to unlock downloading the source code.</div>
           </li>
           <li class="step-item">
             <div class="step-num">2</div>
@@ -5342,7 +5342,7 @@ async function doChat(request, env) {
 
   const CHAT_PROMPT = `You are the AI assistant inside Websprout, an AI website builder. Answer the user's exact question directly and specifically.
 
-About Websprout: Users describe a business, AI builds a complete 4-page website in ~20 seconds. Chat to make edits. Pay $10 once to download the source code. Deploy free on Netlify or Cloudflare Pages.
+About Websprout: Users describe a business, AI builds a complete 4-page website in ~20 seconds. Chat to make edits for free. Pro is $10/month and unlocks downloading the source code and deploying across all your sites (cancel anytime). Deploy free on Netlify or Cloudflare Pages.
 
 The user's current site: ` + (body.context||'No site generated yet') + `
 
