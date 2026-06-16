@@ -29,7 +29,7 @@ OUTPUT: Raw HTML only, <!DOCTYPE html> to </html>. No markdown, no backticks, no
 
 ━━━ REQUIRED SECTIONS (include ALL of these) ━━━
 
-1. NAVIGATION — sticky flex nav (display:flex; align-items:center; justify-content:space-between; gap at least 1.5rem). Brand/logo on the left with CLEAR space from the 4-5 links — the logo must never touch or overlap the links. CTA button on the right. Collapse the links into a hamburger menu below 820px. Wrap the brand/logo text in a tag carrying the attribute data-ws-field="brand".
+1. NAVIGATION — sticky flex nav (display:flex; align-items:center; justify-content:space-between; gap at least 1.5rem). Brand/logo on the left with CLEAR space from the 4-5 links — the logo must never touch or overlap the links. Exactly ONE CTA button on the right — never output two CTA buttons in the nav. Collapse the links into a hamburger menu below 820px. Wrap the brand/logo text in a tag carrying the attribute data-ws-field="brand".
 2. HERO — dramatic full-width section. Large RESPONSIVE headline using font-size:clamp(2rem,6vw,4.5rem) so it scales down on phones and NEVER overflows or gets clipped; weight 900; letter-spacing -2px; the headline MUST be allowed to wrap onto multiple lines (never white-space:nowrap). Subheadline. Two CTA buttons. Keep generous side padding so text never touches the screen edges. All hero text must strongly contrast with the hero background: if the hero background is dark or uses a photo/image slot, the headline and subtext are white/near-white (with a dark overlay over any photo) — never dark text on a dark hero.
 3. TRUST/STATS BAR — strip with 3-4 real stats or trust signals specific to this business type
 4. SERVICES/FEATURES — 3-4 detailed cards. Each has an icon, bold title, 2-3 sentence description. Real content, not generic filler.
@@ -52,6 +52,7 @@ OUTPUT: Raw HTML only, <!DOCTYPE html> to </html>. No markdown, no backticks, no
    <input type="hidden" name="_subject" value="New message from your website">
    Include a submit button with clear label. Business info placeholders: [Your Address], [Your Phone], [your@email.com], [Your Hours]
    BOOKING: If this business runs on appointments or bookings (salons, barbers, spas, fitness/yoga, medical/dental, tattoo, photographers, charters/tours, home services & trades, consultants, tutors, repair shops, etc.), ALSO add a prominent "Book now" / "Book an appointment" button — once in the hero and once in the contact band — as a real link: <a href="[Your Booking Link]" target="_blank" rel="noopener">Book now</a>, styled as a primary button. Use the exact placeholder [Your Booking Link] for the href so the owner can drop in their Calendly / Cal.com / Square scheduler. For pure storefronts or info sites with no appointments, skip the booking button.
+   ORDERING: If this is a restaurant, cafe, food truck, bakery, bar, or any food business with online ordering or delivery, render every "Order online" / "Order now" / "Get delivery" button as a real link: <a href="[Your Ordering Link]" target="_blank" rel="noopener">Order online</a>, styled as a primary button. Use the exact placeholder [Your Ordering Link] for the href so the owner drops in their Toast / Square / DoorDash / Uber Eats ordering URL. Never point an order button at "#".
    CLICK-TO-CALL: Render EVERY phone number as a tappable link — <a href="tel:[Your Phone]">[Your Phone]</a> (use the [Your Phone] placeholder in BOTH the href and the visible text). For phone-driven local businesses (trades, repair, towing, plumbing, HVAC, locksmith, auto, etc.), add a clear "Call [Your Phone]" button in the hero and again in the contact band, styled as a primary or secondary button.
 10. FOOTER — dark background. 3 columns: brand+tagline, links, contact. Copyright line.
 
@@ -165,8 +166,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r80">
-<script>console.log("%c[Websprout] build 2026-06-10-r80 (dead CTAs scroll to contact form; generator must link every button to a real section)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r82">
+<script>console.log("%c[Websprout] build 2026-06-10-r82 (online-ordering link for food sites; one nav CTA; stronger no-dead-button rules)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1384,6 +1385,11 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
             <span style="font-size:10px;color:rgba(255,255,255,.2);margin-top:2px;line-height:1.4">Paste your scheduler link — your "Book now" buttons will open it so visitors pick a real time slot</span>
           </div>
           <div class="biz-field">
+            <label>Online ordering link (Toast, Square, DoorDash&hellip;)</label>
+            <input class="biz-input" id="bizInfoOrdering" placeholder="https://order.toasttab.com/...">
+            <span style="font-size:10px;color:rgba(255,255,255,.2);margin-top:2px;line-height:1.4">For food businesses — your "Order online" buttons open this. Leave blank and they jump to your menu instead.</span>
+          </div>
+          <div class="biz-field">
             <label>Business hours</label>
             <input class="biz-input" id="bizInfoHours" placeholder="Mon–Fri 9–5, Sat 10–2">
           </div>
@@ -2349,7 +2355,12 @@ function setPreview(html){
       // all resolve to websprout.app inside an srcdoc iframe and would load the whole app in the preview.
       // For genuine in-page hash links, scroll to the target manually instead of letting it navigate.
       'e.preventDefault();'+
-      'if(h.length>1&&h.charAt(0)===\"#\"){try{var t=document.getElementById(h.slice(1));if(!t)t=document.querySelector(\"form\");if(t&&t.scrollIntoView)t.scrollIntoView({behavior:\"smooth\"});}catch(err){}}'+
+      // External links (DoorDash, Toast, booking pages, socials) go to a DIFFERENT origin — open them in a
+      // new tab so they visibly work; they never cause the srcdoc recursion. Same-origin/relative/# links
+      // would resolve to websprout.app and load the app, so we keep them in-page: scroll to the matching
+      // section, or fall back to the contact form so the button always does something.
+      'if((h.indexOf(\"http://\")===0||h.indexOf(\"https://\")===0)&&h.indexOf(\"websprout.app\")===-1){try{window.open(h,\"_blank\",\"noopener\");}catch(err){}return;}'+
+      'try{var t=(h.length>1&&h.charAt(0)===\"#\")?document.getElementById(h.slice(1)):null;if(!t)t=document.querySelector(\"form\");if(t&&t.scrollIntoView)t.scrollIntoView({behavior:\"smooth\"});}catch(err){}'+
     '},true);'+
     // Never let a form submission navigate the preview away (it was loading the whole app inside the preview)
     'document.addEventListener(\"submit\",function(e){e.preventDefault();},true);'+
@@ -3229,9 +3240,10 @@ function doGenerate(){
       var addr=document.getElementById('bizInfoAddress').value.trim();
       var formEmail=document.getElementById('bizInfoForm').value.trim();
       var booking=document.getElementById('bizInfoBooking').value.trim();
+      var ordering=(document.getElementById('bizInfoOrdering')||{}).value;ordering=ordering?ordering.trim():'';
       var hours=(document.getElementById('bizInfoHours')||{}).value;hours=hours?hours.trim():'';
 
-      if(!name&&!email&&!phone&&!addr&&!formEmail&&!booking&&!hours){toast('Fill in at least one field first');return;}
+      if(!name&&!email&&!phone&&!addr&&!formEmail&&!booking&&!ordering&&!hours){toast('Fill in at least one field first');return;}
 
       var updated=gHTML;
       var count=0;
@@ -3295,6 +3307,11 @@ function doGenerate(){
         '[Your Booking Link]','[Booking Link]','[Your Scheduling Link]',
         '[Schedule Link]','[Your Calendar Link]','[Booking URL]'
       ],booking);
+
+      // Online ordering link replacements (Toast / Square / DoorDash) — empty falls back to the menu section
+      updated=rep(updated,[
+        '[Your Ordering Link]','[Ordering Link]','[Your Order Link]','[Order Link]','[Order Online Link]','[Your Online Ordering Link]'
+      ],ordering||'#menu');
 
       // Business hours replacements
       updated=rep(updated,[
