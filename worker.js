@@ -162,8 +162,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r66">
-<script>console.log("%c[Websprout] build 2026-06-10-r66 (hero Support tab + contact form routed to support inbox)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r70">
+<script>console.log("%c[Websprout] build 2026-06-10-r70 (owner admin dashboard: accounts, plans, insights + inline grant/revoke)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1805,6 +1805,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         act.innerHTML='<button id="pfGoPro" style="width:100%;background:linear-gradient(135deg,#2d9e4a,#1c6e32);color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(45,158,74,.35)">\u2726 Go Pro \u2014 $10/mo</button><div style="font-size:12px;color:rgba(255,255,255,.4);text-align:center;margin-top:9px;line-height:1.5">Unlock downloads, deploys, and editing across all of your sites.</div>';
         var gp=$('pfGoPro');if(gp)gp.addEventListener('click',goPro);
       }
+      if(me&&me.owner){act.innerHTML+='<a href="/admin" style="display:block;text-align:center;margin-top:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#cfe;border-radius:10px;padding:11px;font-size:14px;font-weight:600;text-decoration:none">\uD83D\uDCCA Admin dashboard</a>';}
     }
     if(pm)pm.style.display='flex';
   };
@@ -2182,7 +2183,7 @@ function setPreview(html){
         'var s=document.getElementById(\"_wsES\");'+
         'if(e.data.active&&!s){'+
           's=document.createElement(\"style\");s.id=\"_wsES\";'+
-          's.textContent=\"h1,h2,h3,h4,h5,h6,p,li,a,button,span,td,blockquote,div,strong,b,em,small,sup,sub{cursor:text!important}h1:hover,h2:hover,h3:hover,p:hover,li:hover{outline:1px dashed rgba(61,186,82,.5)!important}\";'+
+          's.textContent=\"h1,h2,h3,h4,h5,h6,p,li,a,button,span,img,blockquote,section,header,footer,div{cursor:pointer!important}h1:hover,h2:hover,h3:hover,h4:hover,h5:hover,h6:hover,p:hover,li:hover,a:hover,button:hover,img:hover,blockquote:hover{outline:2px solid rgba(61,186,82,.75)!important;outline-offset:2px!important}\";'+
           'document.head.appendChild(s);'+
         '}else if(!e.data.active&&s)s.remove();'+
       '}'+
@@ -4660,6 +4661,9 @@ export default {
     if (url.pathname === '/unpublish' && request.method === 'POST') return doUnpublish(request, env);
     if (url.pathname === '/slug-check' && request.method === 'GET') return doSlugCheck(request, env);
     if (url.pathname === '/support' && request.method === 'POST') return doSupport(request, env);
+    if (url.pathname === '/admin' && request.method === 'GET') return doAdminPage(request, env);
+    if (url.pathname === '/admin/data' && request.method === 'GET') return doAdminData(request, env);
+    if (url.pathname === '/admin/grant') return doAdminGrant(request, env);
     if (url.pathname === '/auth/google' && request.method === 'GET') return doGoogleStart(request, env);
     if (url.pathname === '/auth/google/callback' && request.method === 'GET') return doGoogleCallback(request, env);
     if (url.pathname === '/auth/email' && request.method === 'POST') return doEmailStart(request, env);
@@ -5354,7 +5358,12 @@ async function doMe(request, env){
   const s=await getSession(request, env);
   if(!s) return succeed({ auth:false });
   let u=null; try{ u=JSON.parse(await env.KV.get('user:'+s.email)||'null'); }catch(e){}
-  return succeed({ auth:true, email:s.email, name:(u&&u.name)||'', plan:(u&&u.plan)||'free', pro:!!(u&&u.plan==='pro') });
+  // Founder/owner account is always Pro — persist it to the accounts database so every plan check agrees
+  if((s.email||'').toLowerCase() === SUPPORT_EMAIL.toLowerCase() && (!u || u.plan !== 'pro')){
+    try{ await setUserPlan(env, s.email, 'pro', '', ''); u=JSON.parse(await env.KV.get('user:'+s.email)||'null'); }catch(e){}
+  }
+  const _owner = (s.email||'').toLowerCase() === SUPPORT_EMAIL.toLowerCase();
+  return succeed({ auth:true, email:s.email, name:(u&&u.name)||'', plan:(u&&u.plan)||'free', pro:!!(u&&u.plan==='pro'), owner:_owner });
 }
 async function doLogout(request, env){
   const t=parseCookies(request)['ws_sess'];
@@ -5414,6 +5423,109 @@ async function doSupport(request, env){
     if(!r.ok) return fail('Could not send right now — please try again');
     return succeed({ ok:true });
   }catch(e){ return fail('Could not send'); }
+}
+const ADMIN_PANEL = `<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>Websprout Admin</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#070d06;color:#eaf2e8;padding:24px;max-width:1100px;margin:0 auto}
+h1{font-size:22px;font-weight:800}
+.sub{color:rgba(234,242,232,.5);font-size:13px}
+.top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:22px}
+.rl{font-size:13px;color:rgba(234,242,232,.55);cursor:pointer;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:7px 12px}
+.rl:hover{background:rgba(255,255,255,.06)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:26px}
+.card{background:#0f1a0d;border:1px solid rgba(45,122,58,.25);border-radius:14px;padding:16px}
+.card .n{font-size:28px;font-weight:800}
+.card .l{font-size:11px;color:rgba(234,242,232,.5);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+.card.pro .n{color:#f5c542}
+h2{font-size:15px;font-weight:700;margin:22px 0 10px}
+.wrap{background:#0f1a0d;border:1px solid rgba(45,122,58,.18);border-radius:14px;padding:4px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:rgba(234,242,232,.4);font-weight:600;padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.08);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+tr:hover td{background:rgba(45,122,58,.06)}
+.badge{display:inline-block;font-size:10px;font-weight:800;padding:3px 9px;border-radius:999px;letter-spacing:.4px}
+.badge.pro{background:linear-gradient(135deg,#f5c542,#2d9e4a);color:#06120a}
+.badge.free{background:rgba(255,255,255,.1);color:rgba(255,255,255,.6)}
+.act{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:7px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.act:hover{background:rgba(255,255,255,.16)}
+.act.mk{background:rgba(45,158,74,.18);border-color:rgba(45,158,74,.4);color:#7fe39a}
+a{color:#4ade80;text-decoration:none}.muted{color:rgba(234,242,232,.38)}.err{color:#fca5a5;padding:20px;text-align:center}
+</style></head><body>
+<div class="top"><div><h1>&#128202; Websprout Admin</h1><div class="sub">Accounts, plans &amp; insights &middot; owner only</div></div><div class="rl" id="refresh">&#8635; Refresh</div></div>
+<div id="cards" class="cards"></div>
+<h2>Accounts</h2>
+<div class="wrap"><table><thead><tr><th>Email</th><th>Name</th><th>Plan</th><th>Joined</th><th>Action</th></tr></thead><tbody id="ubody"><tr><td colspan="5" class="muted" style="padding:18px">Loading&hellip;</td></tr></tbody></table></div>
+<h2>Published sites</h2>
+<div class="wrap"><table><thead><tr><th>Address</th><th>Updated</th><th>Badge</th></tr></thead><tbody id="pbody"><tr><td colspan="3" class="muted" style="padding:18px">Loading&hellip;</td></tr></tbody></table></div>
+<script>
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function dt(ms){if(!ms)return '<span class="muted">&mdash;</span>';var d=new Date(ms);return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
+function card(n,l,cls){return '<div class="card '+(cls||'')+'"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>';}
+function setPlan(email,plan){
+  if(plan==='free'&&!confirm('Revoke Pro from '+email+'?'))return;
+  fetch('/admin/grant?email='+encodeURIComponent(email)+'&plan='+plan).then(function(r){return r.text();}).then(function(){load();}).catch(function(){alert('Failed — try again');});
+}
+function load(){
+  fetch('/admin/data').then(function(r){return r.json();}).then(function(j){
+    if(j.error){document.getElementById('cards').innerHTML='<div class="err">'+esc(j.error)+'</div>';return;}
+    var t=j.totals||{};
+    document.getElementById('cards').innerHTML=card(t.accounts||0,'Accounts')+card(t.pro||0,'Pro','pro')+card(t.free||0,'Free')+card((t.conversion||0)+'%','Conversion')+card(t.published||0,'Published')+card(t.signups7||0,'New (7d)');
+    var us=j.users||[],ub='';
+    if(!us.length)ub='<tr><td colspan="5" class="muted" style="padding:18px">No accounts yet</td></tr>';
+    for(var i=0;i<us.length;i++){var u=us[i],isPro=u.plan==='pro';
+      ub+='<tr><td>'+esc(u.email)+'</td><td>'+(u.name?esc(u.name):'<span class="muted">&mdash;</span>')+'</td><td><span class="badge '+(isPro?'pro':'free')+'">'+(isPro?'PRO':'FREE')+'</span></td><td class="muted">'+dt(u.created)+'</td><td>'+(isPro?'<button class="act" data-email="'+esc(u.email)+'" data-plan="free">Revoke</button>':'<button class="act mk" data-email="'+esc(u.email)+'" data-plan="pro">Make Pro</button>')+'</td></tr>';}
+    document.getElementById('ubody').innerHTML=ub;
+    var ps=j.published||[],pb='';
+    if(!ps.length)pb='<tr><td colspan="3" class="muted" style="padding:18px">No published sites yet</td></tr>';
+    for(var k=0;k<ps.length;k++){var p=ps[k];pb+='<tr><td><a href="https://websprout.app/s/'+esc(p.slug)+'" target="_blank">'+esc(p.slug)+'</a></td><td class="muted">'+dt(p.updated)+'</td><td>'+(p.nobadge?'<span class="muted">hidden (Pro)</span>':'shown')+'</td></tr>';}
+    document.getElementById('pbody').innerHTML=pb;
+  }).catch(function(){document.getElementById('cards').innerHTML='<div class="err">Could not load — make sure you are signed in as the owner.</div>';});
+}
+document.getElementById('ubody').addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('button[data-email]');if(b)setPlan(b.getAttribute('data-email'),b.getAttribute('data-plan'));});
+document.getElementById('refresh').addEventListener('click',load);
+load();
+</script></body></html>`;
+
+async function doAdminData(request, env){
+  const s = await getSession(request, env);
+  if(!s || (s.email||'').toLowerCase() !== SUPPORT_EMAIL.toLowerCase()) return new Response(JSON.stringify({ error:'Not authorized' }), { status:403, headers:{ 'Content-Type':'application/json' } });
+  if(!env.KV) return succeed({ totals:{}, users:[], published:[] });
+  const users=[]; let cursor=undefined, guard=0;
+  do{
+    const r = await env.KV.list({ prefix:'user:', cursor, limit:1000 });
+    for(const k of r.keys){ try{ const u=JSON.parse(await env.KV.get(k.name)||'{}'); users.push({ email:u.email||k.name.slice(5), name:u.name||'', plan:u.plan||'free', created:u.created||0, planUpdated:u.planUpdated||0 }); }catch(e){} }
+    cursor = r.list_complete ? null : r.cursor; guard++;
+  } while(cursor && guard<10);
+  const pub=[]; { let c2=undefined, g2=0; do{ const r2=await env.KV.list({ prefix:'pubmeta:', cursor:c2, limit:1000 }); for(const k of r2.keys){ const slug=k.name.slice(8); try{ const m=JSON.parse(await env.KV.get(k.name)||'{}'); pub.push({ slug, updated:m.updated||0, nobadge:!!m.nobadge }); }catch(e){} } c2=r2.list_complete?null:r2.cursor; g2++; } while(c2 && g2<10); }
+  const now=Date.now(); let pro=0, free=0, signups7=0, signups1=0;
+  for(const u of users){ if(u.plan==='pro')pro++; else free++; if(u.created>now-7*86400000)signups7++; if(u.created>now-86400000)signups1++; }
+  users.sort((a,b)=>(b.created||0)-(a.created||0));
+  pub.sort((a,b)=>(b.updated||0)-(a.updated||0));
+  return succeed({ totals:{ accounts:users.length, pro, free, conversion: users.length?Math.round(pro/users.length*1000)/10:0, published:pub.length, signups7, signups1 }, users, published:pub });
+}
+async function doAdminPage(request, env){
+  const s = await getSession(request, env);
+  if(!s || (s.email||'').toLowerCase() !== SUPPORT_EMAIL.toLowerCase()){
+    return new Response('<!DOCTYPE html><meta charset="utf-8"><body style="font-family:-apple-system,Segoe UI,Arial,sans-serif;background:#060d05;color:#fff;text-align:center;padding:60px"><h2>Admin access only</h2><p style="color:#9bb">Sign in as the owner account, then return to <a href="/admin" style="color:#4ade80">/admin</a>.</p></body>', { status:403, headers:{ 'Content-Type':'text/html; charset=utf-8' } });
+  }
+  return new Response(ADMIN_PANEL, { headers:{ 'Content-Type':'text/html; charset=utf-8' } });
+}
+async function doAdminGrant(request, env){
+  // Owner-only comp tool: grant/revoke Pro without Stripe. Gated to the owner's signed-in account.
+  const s = await getSession(request, env);
+  if(!s || (s.email||'').toLowerCase() !== SUPPORT_EMAIL.toLowerCase()){
+    return new Response('Not authorized. Sign in as the owner account first.', { status:403, headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
+  }
+  const url = new URL(request.url);
+  const target = ((url.searchParams.get('email') || s.email) || '').toLowerCase().trim();
+  if(target.indexOf('@') < 1) return new Response('Provide a valid ?email=', { status:400, headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
+  const plan = url.searchParams.get('plan') === 'free' ? 'free' : 'pro';
+  await setUserPlan(env, target, plan, '', '');
+  const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
+  return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
 async function doStripeWebhook(request, env){
   const raw = await request.text();
