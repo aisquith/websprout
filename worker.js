@@ -64,6 +64,7 @@ Every piece of text MUST be instantly readable against the EXACT color or image 
 - HERO: if the hero background is dark, a gradient, or a photo / image slot, then the headline, subheadline and ALL hero text MUST be white or near-white (#fff to rgba(255,255,255,.82)). If the hero background is light or pale, hero text MUST be near-black (#111). A dark headline on a dark hero is a critical failure — the user must be able to read the headline the instant the page loads.
 - TEXT OVER A PHOTO OR IMAGE SLOT: put a dark overlay (e.g. a layer of rgba(0,0,0,.45)) between the image and the text, use white text, and add a subtle text-shadow so the words stay legible over any photo.
 - BUTTONS: the label must contrast with the button fill — white text on a saturated/dark button, dark text on a pale/light button. Never grey text on a grey button.
+- WORKING LINKS & BUTTONS (critical): every nav link and every CTA/button that is meant to jump somewhere MUST use href="#id" pointing to an id that ACTUALLY EXISTS on the page. Give each major section a matching id (id="solutions", id="services", id="pricing", id="about", id="contact", etc.) and point the nav links and buttons at those exact ids. If a button names content the site should contain ("Browse Catalog", "View Menu", "Our Work", "See Pricing", "View Plans"), BUILD that section and link the button to it. Conversion buttons ("Get a quote", "Get started", "Order online", "Sign up", "Contact us", "Open an account") link to the contact form section via href="#contact". NEVER output href="#", href="", or a link whose target id does not exist on the page — every button must lead somewhere real.
 - Secondary / muted text must still be readable: not lighter than rgba(255,255,255,.65) on dark backgrounds, and around #555–#666 (never lighter) on light backgrounds.
 - FINAL CHECK before you finish: scan every headline, paragraph, button, nav link and stat. If a human couldn't read it in a single glance, change the color until they can.
 
@@ -164,8 +165,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r79">
-<script>console.log("%c[Websprout] build 2026-06-10-r79 (fix: preview blocks ALL link navigation incl empty/# hrefs — no more app-in-app; in-app Leads)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r80">
+<script>console.log("%c[Websprout] build 2026-06-10-r80 (dead CTAs scroll to contact form; generator must link every button to a real section)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2348,7 +2349,7 @@ function setPreview(html){
       // all resolve to websprout.app inside an srcdoc iframe and would load the whole app in the preview.
       // For genuine in-page hash links, scroll to the target manually instead of letting it navigate.
       'e.preventDefault();'+
-      'if(h.length>1&&h.charAt(0)===\"#\"){try{var t=document.getElementById(h.slice(1));if(t&&t.scrollIntoView)t.scrollIntoView({behavior:\"smooth\"});}catch(err){}}'+
+      'if(h.length>1&&h.charAt(0)===\"#\"){try{var t=document.getElementById(h.slice(1));if(!t)t=document.querySelector(\"form\");if(t&&t.scrollIntoView)t.scrollIntoView({behavior:\"smooth\"});}catch(err){}}'+
     '},true);'+
     // Never let a form submission navigate the preview away (it was loading the whole app inside the preview)
     'document.addEventListener(\"submit\",function(e){e.preventDefault();},true);'+
