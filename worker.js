@@ -162,8 +162,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r71">
-<script>console.log("%c[Websprout] build 2026-06-10-r71 (admin: distinguish Paid vs Comped vs Owner Pro accounts)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r72">
+<script>console.log("%c[Websprout] build 2026-06-10-r72 (fix: Pro/comped members re-verify entitlement before any paywall — no more stale-session lockout)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2706,7 +2706,7 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 
   document.getElementById('deployBtn').addEventListener('click',function(){
-    if(!unlocked){toast('🔒 Go Pro ($10/mo) to deploy your site!');return;}
+    if(!unlocked){reverifyPro('deployBtn','🔒 Go Pro ($10/mo) to deploy your site!');return;}
     if(!gHTML){toast('Generate a site first!');return;}
     var savedToken=localStorage.getItem('ws_netlify_token');
     // If token already saved, skip to step 3
@@ -2788,7 +2788,7 @@ document.addEventListener('DOMContentLoaded',function(){
   // -- Email delivery on payment return -------------------------
   // (Email is stored in localStorage - remind user to download)
   document.getElementById('dlBtn').addEventListener('click',function(){
-    if(!unlocked){toast('🔒 Go Pro ($10/mo) to download');return;}
+    if(!unlocked){reverifyPro('dlBtn','🔒 Go Pro ($10/mo) to download');return;}
     if(!gHTML)return;
     var a=document.createElement('a');
     a.href=URL.createObjectURL(new Blob([gHTML],{type:'text/html'}));
@@ -2797,7 +2797,7 @@ document.addEventListener('DOMContentLoaded',function(){
   });
   var copyBtnEl=document.getElementById('copyBtn');
   if(copyBtnEl)copyBtnEl.addEventListener('click',function(){
-    if(!unlocked){toast('🔒 Go Pro ($10/mo) to copy your code');return;}
+    if(!unlocked){reverifyPro('copyBtn','🔒 Go Pro ($10/mo) to copy your code');return;}
     if(!gHTML)return;
     function done(){toast('📋 Full HTML copied to clipboard!');}
     function fallback(){
@@ -3801,6 +3801,23 @@ function applyUnlock(){
   if(db)db.classList.add('s-deploy-hero');
   var banner=document.getElementById('deployCtaBanner');
   if(banner)banner.classList.add('on');
+}
+
+// Before paywalling a gated action, re-confirm Pro status live — fixes stale/cross-session
+// cases where /me wasn't re-checked after sign-in. If genuinely Pro, unlock and re-run the action.
+var _reverifying=false;
+function reverifyPro(btnId, lockMsg){
+  if(_reverifying)return; _reverifying=true;
+  fetch('/me').then(function(r){return r.json();}).then(function(me){
+    _reverifying=false;
+    window._wsUser=me;
+    if(me&&me.pro){
+      unlocked=true; try{applyUnlock();}catch(e){}
+      var b=document.getElementById(btnId); if(b)b.click();
+    }else{
+      toast(lockMsg);
+    }
+  }).catch(function(){ _reverifying=false; toast(lockMsg); });
 }
 
 function addMsg(role,text){
