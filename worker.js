@@ -160,8 +160,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r61">
-<script>console.log("%c[Websprout] build 2026-06-10-r61 (generation: bold award-worthy art-direction brief)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r62">
+<script>console.log("%c[Websprout] build 2026-06-10-r62 (generation: switch to gemini-2.5-pro for design quality; edits stay on Flash)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1307,7 +1307,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <div class="chat-head-sub">Describe any change in plain English and I’ll update your site live.</div>
       </div>
       <div class="chat-msgs" id="cms">
-        <div class="msg msg-ai"><div class="msg-name">Websprout AI</div><div class="msg-body" id="introMsg">Building your site… this only takes a few seconds 🌱</div></div>
+        <div class="msg msg-ai"><div class="msg-name">Websprout AI</div><div class="msg-body" id="introMsg">Designing your site… this can take up to a minute 🌱</div></div>
       </div>
       <div class="typing" id="tw"><div class="typing-bub"><div class="t-dot"></div><div class="t-dot"></div><div class="t-dot"></div></div></div>
       <!-- Image Library -->
@@ -3566,7 +3566,7 @@ function setStudioReady(ready){
     if(intro)intro.innerHTML='Your site’s ready 🌱  What would you like to change? Type it below — or tap a quick idea to start.';
   } else {
     studio.classList.add('studio-loading');
-    if(intro)intro.innerHTML='Building your site… this only takes a few seconds 🌱';
+    if(intro)intro.innerHTML='Designing your site… this can take up to a minute 🌱';
   }
 }
 
@@ -4506,13 +4506,13 @@ function geminiKeys(env) {
   return set;
 }
 
-async function callGemini(keys, bodyStr) {
+async function callGemini(keys, bodyStr, model) {
   if (!Array.isArray(keys)) keys = [keys];
   keys = keys.filter(Boolean);
   if (!keys.length) return { error: 'GEMINI_API_KEY not set.' };
   // Generation model. gemini-2.5-flash is fast + reliable, keeping generation well under
   // a browser-friendly timeout. Swap to 'gemini-2.5-pro' for max quality at the cost of speed.
-  const MODEL = 'gemini-2.5-flash';
+  const MODEL = model || 'gemini-2.5-flash';
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + MODEL + ':generateContent';
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   let lastErr = 'RATE_LIMITED';
@@ -5325,7 +5325,7 @@ async function doGenerate(request, env) {
       contents: [{ parts: [{ text: PROMPT + '\n\nUser request: ' + prompt + getNicheDirection(prompt) + '\n\nSTYLE DIRECTION: ' + getStyleDirection(prompt) + '\n\n' + DESIGN_AMBITION + '\n\nCRITICAL RULES:\n1. CONTRAST IS THE #1 PRIORITY: every text element must be instantly readable against the EXACT background behind it — dark text only on light backgrounds, white/near-white text only on dark backgrounds, never dark-on-dark or light-on-light. If the hero background is dark or uses a photo/image slot, the hero headline and subtext MUST be white/near-white. A dark headline on a dark hero is a failure.\n2. Do NOT use vh or viewport-height units for section/hero HEIGHTS — size heights with px or % (e.g. min-height:640px), required for correct rendering. You SHOULD use clamp() with vw for responsive FONT-SIZE so large headings shrink on small screens and never overflow (e.g. font-size:clamp(2rem,6vw,4.5rem)).\n3. Scroll-reveal and entrance animations are ENCOURAGED, but every element MUST animate from hidden TO fully visible — nothing stays hidden. Keep transitions under 0.8s.\n4. ALWAYS end with </body></html> — never leave HTML incomplete.\n5. COMPLETION IS MANDATORY: always finish the entire page through </body></html>. Keep total output under ~800 lines; if the page is getting long, make each section more concise rather than leaving the page unfinished — a complete simpler page always beats a truncated elaborate one. 6. NO horizontal overflow: set box-sizing:border-box globally, never let any element be wider than the viewport, and the page must NEVER scroll sideways; headings and long text must wrap (overflow-wrap:break-word) and must never use white-space:nowrap on multi-word text. 7. SPACING: the nav logo must never touch the menu links, and text must never touch the screen edges — use container padding/margins and clear gaps between elements.' }] }],
       generationConfig: { maxOutputTokens: 32768, temperature: 0.95, thinkingConfig: { thinkingBudget: 8192 } }
     });
-    const result = await callGemini(keys, body2);
+    const result = await callGemini(keys, body2, 'gemini-2.5-pro');
     if (result.error) return fail(result.error);
     const generatedHtml = cleanHTML(result.data);
     let finalHtml = generatedHtml.includes('</html>') ? generatedHtml : generatedHtml + '\n</body>\n</html>';
