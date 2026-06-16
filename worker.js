@@ -5,6 +5,8 @@ const STRIPE = 'https://buy.stripe.com/00w00kgq56Bd1ds2Wy6Na00';
 // $10/mo unlimited subscription — create a RECURRING ($10/month) Payment Link in your
 // Stripe dashboard and paste its URL here. Set its success URL to https://websprout.app/?sub=success
 const SUB_LINK = 'https://buy.stripe.com/00w00kgq56Bd1ds2Wy6Na00';
+// Support inbox — SERVER-SIDE ONLY. Never interpolated into PAGE, so it never appears in page source.
+const SUPPORT_EMAIL = 'michael.aisquith@gmail.com';
 
 // Reveal safety-net: ships inside every generated site (preview AND download).
 // Preserves the site's own CSS animations — it watches elements with an
@@ -160,8 +162,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r62">
-<script>console.log("%c[Websprout] build 2026-06-10-r62 (generation: switch to gemini-2.5-pro for design quality; edits stay on Flash)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r66">
+<script>console.log("%c[Websprout] build 2026-06-10-r66 (hero Support tab + contact form routed to support inbox)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -773,6 +775,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
     <li><a href="#pricing">Pricing</a></li>
     <li><a href="#" onclick="if(window.openMySites){openMySites();}return false;">My sites</a></li>
     <li><a href="/deploy-guide" target="_blank">Deploy guide</a></li>
+    <li><a href="#" id="supportLink">Support</a></li>
   </ul>
   <button class="nav-cta" id="signInBtn" style="background:transparent;border:1px solid rgba(255,255,255,.18);color:#fff;margin-right:8px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Sign in</button>
   <button class="nav-cta" id="navCta">Build for free &#8594;</button>
@@ -1602,7 +1605,11 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
 </div>
 
 <!-- Edit Mode Indicator -->
-<div class="edit-indicator" id="editIndicator">&#9998; Edit mode on — double-click any text to edit it</div>
+<div class="edit-indicator" id="editIndicator">&#9998; Edit mode — click anything on your site to edit it</div>
+<div id="wsCanvaBar" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9000;background:#0f1a0d;border:1px solid rgba(45,122,58,.45);border-radius:14px;box-shadow:0 16px 50px rgba(0,0,0,.55);padding:8px 10px;align-items:center;gap:8px;max-width:94vw;overflow-x:auto">
+  <span id="wsBarLabel" style="font-size:12px;font-weight:700;color:#7fe39a;white-space:nowrap;padding:0 4px 0 6px">Editing</span>
+  <div id="wsBarActions" style="display:flex;gap:6px;align-items:center"></div>
+</div>
 
 <!-- Section Manager Modal -->
 <div class="sec-modal" id="secModal">
@@ -1687,6 +1694,47 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   }
 })();
 </script>
+<div id="supportModal" style="display:none;position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:18px">
+  <div style="background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:18px;max-width:440px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.6)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.07)">
+      <div style="font-size:17px;font-weight:800;color:#fff">&#128172; Contact support</div>
+      <button id="supportClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;line-height:1">&times;</button>
+    </div>
+    <div style="padding:22px">
+      <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:16px;line-height:1.5">Have a question or hit a snag? Send us a message and we&rsquo;ll get back to you by email.</div>
+      <input id="supName" type="text" placeholder="Your name (optional)" style="width:100%;background:#060d05;border:1px solid rgba(45,122,58,.3);border-radius:10px;color:#fff;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;margin-bottom:10px">
+      <input id="supEmail" type="email" placeholder="Your email (so we can reply)" autocomplete="email" style="width:100%;background:#060d05;border:1px solid rgba(45,122,58,.3);border-radius:10px;color:#fff;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;margin-bottom:10px">
+      <textarea id="supMsg" rows="4" placeholder="How can we help?" style="width:100%;background:#060d05;border:1px solid rgba(45,122,58,.3);border-radius:10px;color:#fff;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;resize:vertical;margin-bottom:10px"></textarea>
+      <button id="supSend" style="width:100%;background:#2d7a3a;color:#fff;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Send message</button>
+      <div id="supMsgOut" style="font-size:13px;min-height:18px;margin-top:10px;text-align:center"></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  function $(id){return document.getElementById(id);}
+  var m=$('supportModal');
+  function openS(){if(!m)return;$('supMsgOut').textContent='';m.style.display='flex';var u=window._wsUser;if(u&&u.email&&$('supEmail')&&!$('supEmail').value)$('supEmail').value=u.email;}
+  function closeS(){if(m)m.style.display='none';}
+  window.openSupport=openS;
+  if($('supportClose'))$('supportClose').addEventListener('click',closeS);
+  if(m)m.addEventListener('click',function(e){if(e.target===m)closeS();});
+  var lnk=$('supportLink');if(lnk)lnk.addEventListener('click',function(e){e.preventDefault();openS();});
+  try{var cs=document.querySelectorAll('a[href="mailto:support@websprout.app"]');for(var i=0;i<cs.length;i++){cs[i].addEventListener('click',function(e){e.preventDefault();openS();});}}catch(e){}
+  var sb=$('supSend');
+  if(sb)sb.addEventListener('click',function(){
+    var email=($('supEmail').value||'').trim(),msg=($('supMsg').value||'').trim(),nm=($('supName').value||'').trim(),out=$('supMsgOut');
+    if(!email||email.indexOf('@')<1){out.style.color='#fca5a5';out.textContent='Please enter your email so we can reply.';return;}
+    if(msg.length<5){out.style.color='#fca5a5';out.textContent='Please write a short message.';return;}
+    sb.disabled=true;sb.textContent='Sending\u2026';out.textContent='';
+    fetch('/support',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:nm,email:email,message:msg})}).then(function(r){return r.json();}).then(function(j){
+      sb.disabled=false;sb.textContent='Send message';
+      if(j&&j.ok){out.style.color='#7fe39a';out.textContent='\u2713 Message sent \u2014 we\u2019ll reply by email soon.';$('supMsg').value='';setTimeout(closeS,1800);}
+      else{out.style.color='#fca5a5';out.textContent=(j&&j.error)||'Could not send \u2014 please try again.';}
+    }).catch(function(){sb.disabled=false;sb.textContent='Send message';out.style.color='#fca5a5';out.textContent='Could not send \u2014 please try again.';});
+  });
+})();
+</script>
 <div id="authModal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:18px">
   <div style="background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:18px;max-width:400px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.6)">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.07)">
@@ -1706,6 +1754,70 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     </div>
   </div>
 </div>
+<div id="profileModal" style="display:none;position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:18px">
+  <div style="background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:18px;max-width:420px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.07)">
+      <div style="font-size:17px;font-weight:800;color:#fff">Your account</div>
+      <button id="profileClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;line-height:1">&times;</button>
+    </div>
+    <div style="padding:22px">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+        <div id="pfAvatar" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2d9e4a,#1c6e32);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:800;flex-shrink:0">Y</div>
+        <div style="min-width:0;flex:1">
+          <div id="pfName" style="font-size:17px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">You</div>
+          <div id="pfEmail" style="font-size:13px;color:rgba(255,255,255,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+        </div>
+        <span id="pfPlanBadge" style="font-size:11px;font-weight:800;letter-spacing:.5px;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);flex-shrink:0">FREE</span>
+      </div>
+      <div id="pfActions" style="margin-bottom:16px"></div>
+      <button id="pfSignOut" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.8);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Sign out</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  function $(id){return document.getElementById(id);}
+  var pm=$('profileModal');
+  function closePf(){if(pm)pm.style.display='none';}
+  function goPro(){
+    var link='${SUB_LINK}';
+    if(!link||link.indexOf('PASTE_YOUR')>-1){if(window.toast)toast('Payments are not set up yet.',5000);return;}
+    var email=(window._wsUser&&window._wsUser.email)||'';
+    window.location.href=link+'?client_reference_id='+encodeURIComponent(email)+'&prefilled_email='+encodeURIComponent(email);
+  }
+  window.openProfile=function(){
+    var me=window._wsUser||{};
+    var nm=((me.name||'').trim())||(me.email?me.email.split('@')[0]:'You');
+    if($('pfName'))$('pfName').textContent=nm;
+    if($('pfEmail'))$('pfEmail').textContent=me.email||'';
+    if($('pfAvatar'))$('pfAvatar').textContent=(nm||'Y').charAt(0).toUpperCase();
+    var pro=!!me.pro, badge=$('pfPlanBadge');
+    if(badge){
+      badge.textContent=pro?'\u2726 PRO':'FREE';
+      badge.style.background=pro?'linear-gradient(135deg,#f5c542,#2d9e4a)':'rgba(255,255,255,.1)';
+      badge.style.color=pro?'#06120a':'rgba(255,255,255,.6)';
+    }
+    var act=$('pfActions');
+    if(act){
+      if(pro){
+        act.innerHTML='<div style="background:rgba(45,158,74,.12);border:1px solid rgba(45,158,74,.3);border-radius:12px;padding:14px 16px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.55">\u2713 <b style="color:#7fe39a">Pro is active.</b> You can download, deploy, and edit across all of your sites. Cancel anytime.</div>';
+      }else{
+        act.innerHTML='<button id="pfGoPro" style="width:100%;background:linear-gradient(135deg,#2d9e4a,#1c6e32);color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(45,158,74,.35)">\u2726 Go Pro \u2014 $10/mo</button><div style="font-size:12px;color:rgba(255,255,255,.4);text-align:center;margin-top:9px;line-height:1.5">Unlock downloads, deploys, and editing across all of your sites.</div>';
+        var gp=$('pfGoPro');if(gp)gp.addEventListener('click',goPro);
+      }
+    }
+    if(pm)pm.style.display='flex';
+  };
+  if($('profileClose'))$('profileClose').addEventListener('click',closePf);
+  if(pm)pm.addEventListener('click',function(e){if(e.target===pm)closePf();});
+  var so=$('pfSignOut');
+  if(so)so.addEventListener('click',function(){
+    if(confirm('Sign out'+((window._wsUser&&window._wsUser.email)?(' of '+window._wsUser.email):'')+'?')){
+      fetch('/auth/logout').then(function(){location.href='/';}).catch(function(){location.href='/';});
+    }
+  });
+})();
+</script>
 <script>
 (function(){
   function $(id){return document.getElementById(id);}
@@ -1733,7 +1845,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   }
   function applyAuthBtn(btn,me,prefix){
     if(!btn)return;
-    if(me&&me.auth){btn.textContent='Hello, '+displayName(me);btn.title='Signed in as '+(me.email||'')+' — click to sign out';btn.onclick=function(){if(confirm('Sign out'+(me.email?(' of '+me.email):'')+'?')){fetch('/auth/logout').then(function(){location.href='/';});}};}
+    if(me&&me.auth){btn.textContent='Hello, '+displayName(me);btn.title='Signed in as '+(me.email||'')+' — view your account';btn.onclick=function(){if(window.openProfile)window.openProfile();};}
     else{btn.textContent=(prefix||'')+'Sign in';btn.title='Sign in to save your sites to your account';btn.onclick=openAuth;}
   }
   function setAuthUI(me){
@@ -2095,6 +2207,23 @@ function setPreview(html){
       '});'+
     '});'+
 
+    // Single-click select (Canva-style) — mark the clicked element + report it to the parent
+    'document.addEventListener("click",function(e){'+
+      'if(!window._wsEM)return;'+
+      'var el=e.target;'+
+      'if(!el||el===document.body||el===document.documentElement)return;'+
+      'if(el.closest&&el.closest("[data-wsfloat]"))return;'+
+      'e.preventDefault();e.stopPropagation();'+
+      'var prev=document.querySelector("[data-wssel]");if(prev){prev.removeAttribute("data-wssel");prev.style.outline="";prev.style.outlineOffset="";}'+
+      'el.setAttribute("data-wssel","1");el.style.outline="2px solid #3dba52";el.style.outlineOffset="1px";'+
+      'var kind="text";'+
+      'if(el.classList.contains("ws-img-slot")||el.hasAttribute("data-slot-filled")||el.tagName==="IMG")kind="image";'+
+      'else if(el.tagName==="SECTION"||el.tagName==="HEADER"||el.tagName==="FOOTER")kind="section";'+
+      'else if(el.tagName==="DIV"){var rr=el.getBoundingClientRect();if(rr.height>160&&el.children.length>=2)kind="section";}'+
+      'var cs=getComputedStyle(el);'+
+      'parent.postMessage({type:"wsSelect",kind:kind,tag:el.tagName,fontSize:parseInt(cs.fontSize)||16,slotId:(el.getAttribute("data-slot")||el.getAttribute("data-slot-filled")||"")},"*");'+
+    '},true);'+
+
     // Wire image slots - direct listeners, no innerHTML, no quote escaping issues
     'function wsWireSlots(){'+
       // Empty slots - click to add photo
@@ -2230,6 +2359,7 @@ document.addEventListener('DOMContentLoaded',function(){
     });
   });
   var cpEl=document.getElementById('customPrompt');
+  try{var _pp=localStorage.getItem('ws_pending_prompt');if(_pp&&cpEl&&!cpEl.value){cpEl.value=_pp;localStorage.removeItem('ws_pending_prompt');selectedType='__c__';var _n1=document.getElementById('next1');if(_n1)_n1.classList.add('on');}}catch(e){}
   if(cpEl)cpEl.addEventListener('input',function(){
     selectedType=cpEl.value.trim()?'__c__':'';
     document.getElementById('next1').classList.toggle('on',!!cpEl.value.trim());
@@ -2905,6 +3035,12 @@ function buildPrompt(){
 }
 
 function doGenerate(){
+  if(!window._wsUser||!window._wsUser.auth){
+    try{var _cp=document.getElementById('customPrompt');if(_cp&&_cp.value.trim())localStorage.setItem('ws_pending_prompt',_cp.value);}catch(e){}
+    toast('Please sign in first — it takes a few seconds and keeps all your sites in one place. \uD83C\uDF31',5500);
+    try{if(window.openAuth)window.openAuth();}catch(e){}
+    return;
+  }
   var prompt=buildPrompt();
   var btn=document.getElementById('gbtn'),ld=document.getElementById('loading'),
       ga=document.getElementById('gen-area'),lt=document.getElementById('loadTxt'),
@@ -3123,6 +3259,7 @@ function toggleEditMode(){
   if(pf&&pf.contentWindow){
     pf.contentWindow.postMessage({type:'wsSetEditMode',active:editModeOn},'*');
   }
+  if(!editModeOn){try{wsCvDeselect();}catch(e){}}
 }
 
 // Receive text edits from iframe
@@ -3142,6 +3279,74 @@ window.addEventListener('message',function(e){
     openSlotPicker(e.data.slotId||'image',e.data.label||'Add photo');
   }
 });
+
+// ── Canva-style click-to-edit (parent side: all the real editing lives here) ──
+var wsBarKind=null, wsBarSlot='';
+function wsPfDoc(){var pf=document.getElementById('pf');return (pf&&(pf.contentDocument||(pf.contentWindow&&pf.contentWindow.document)))||null;}
+function wsSelEl(){var d=wsPfDoc();return d?d.querySelector('[data-wssel]'):null;}
+function wsSyncFromFrame(){
+  var d=wsPfDoc();if(!d)return;
+  try{
+    var sel=d.querySelector('[data-wssel]'),so='',sf='';
+    if(sel){so=sel.style.outline;sf=sel.style.outlineOffset;sel.style.outline='';sel.style.outlineOffset='';sel.removeAttribute('data-wssel');}
+    try{d.querySelectorAll('[data-wsfloat]').forEach(function(b){b.remove();});}catch(e){}
+    var h=d.documentElement.outerHTML;
+    var sc=h.indexOf('<script id="_wsInject">');
+    if(sc===-1)sc=h.indexOf("<script id='_wsInject'>");
+    if(sc>-1){var se=h.indexOf('</'+'script>',sc)+9;if(se>8)h=h.slice(0,sc)+h.slice(se);}
+    gHTML=h;localStorage.setItem('wsh',gHTML);pushUndo(gHTML);bumpEditCount();
+    if(sel){sel.setAttribute('data-wssel','1');sel.style.outline=so||'2px solid #3dba52';sel.style.outlineOffset=sf||'1px';}
+  }catch(e){}
+}
+function wsCvLabel(kind,tag){
+  if(kind==='image')return '\uD83D\uDDBC Image';
+  if(kind==='section')return '\uD83E\uDDE9 Section';
+  var t=(tag||'').toUpperCase();
+  if(t.charAt(0)==='H'&&t.length===2)return 'Heading';
+  if(t==='A'||t==='BUTTON')return 'Button';
+  return 'Text';
+}
+function wsCvBtn(host,html,fn,title){
+  var b=document.createElement('button');b.innerHTML=html;if(title)b.title=title;
+  b.style.cssText='background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:9px;padding:7px 11px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap';
+  b.onmouseenter=function(){b.style.background='rgba(255,255,255,.16)';};
+  b.onmouseleave=function(){b.style.background='rgba(255,255,255,.08)';};
+  b.onclick=fn;host.appendChild(b);return b;
+}
+function wsShowBar(kind,tag,slotId){
+  var bar=document.getElementById('wsCanvaBar');if(!bar)return;
+  wsBarKind=kind;wsBarSlot=slotId||'';
+  var lbl=document.getElementById('wsBarLabel');if(lbl)lbl.textContent='Editing: '+wsCvLabel(kind,tag);
+  var acts=document.getElementById('wsBarActions');if(!acts)return;acts.innerHTML='';
+  if(kind==='image'){
+    if(slotId)wsCvBtn(acts,'\uD83D\uDDBC Replace',function(){openSlotPicker(slotId,'Change photo');},'Swap this photo');
+    wsCvBtn(acts,'\uD83D\uDDD1 Delete',wsCvDelete,'Remove this');
+  }else if(kind==='section'){
+    wsCvBtn(acts,'\uD83C\uDFA8 Background',wsCvBg,'Section background colour');
+    wsCvBtn(acts,'\u2B06',function(){wsCvMove(-1);},'Move up');
+    wsCvBtn(acts,'\u2B07',function(){wsCvMove(1);},'Move down');
+    wsCvBtn(acts,'\uD83D\uDDD1 Delete',wsCvDelete,'Delete section');
+  }else{
+    wsCvBtn(acts,'\u270F Edit',wsCvEdit,'Edit the words');
+    wsCvBtn(acts,'A+',function(){wsCvFont(1);},'Bigger');
+    wsCvBtn(acts,'A\u2212',function(){wsCvFont(-1);},'Smaller');
+    wsCvBtn(acts,'<b>B</b>',wsCvBold,'Bold');
+    wsCvBtn(acts,'\uD83C\uDFA8 Colour',wsCvColor,'Text colour');
+    wsCvBtn(acts,'\uD83D\uDDD1',wsCvDelete,'Delete');
+  }
+  wsCvBtn(acts,'\u2713 Done',wsCvDeselect,'Finish editing this');
+  bar.style.display='flex';
+}
+function wsCvDeselect(){var el=wsSelEl();if(el){el.style.outline='';el.style.outlineOffset='';el.removeAttribute('data-wssel');}var bar=document.getElementById('wsCanvaBar');if(bar)bar.style.display='none';}
+function wsCvDelete(){var el=wsSelEl();if(!el)return;if(el.parentNode)el.parentNode.removeChild(el);wsSyncFromFrame();wsCvDeselect();toast('Deleted',2500);}
+function wsCvFont(dir){var el=wsSelEl();if(!el)return;var d=wsPfDoc();var px=parseInt(d.defaultView.getComputedStyle(el).fontSize)||16;px=Math.max(9,Math.min(180,px+dir*3));el.style.fontSize=px+'px';wsSyncFromFrame();}
+function wsCvBold(){var el=wsSelEl();if(!el)return;var d=wsPfDoc();var w=d.defaultView.getComputedStyle(el).fontWeight;var bold=(w==='700'||w==='bold'||parseInt(w)>=600);el.style.fontWeight=bold?'400':'800';wsSyncFromFrame();}
+function wsCvColorInput(cb){var i=document.createElement('input');i.type='color';i.style.cssText='position:fixed;left:-9999px;top:0';document.body.appendChild(i);i.addEventListener('input',function(){cb(i.value);});i.addEventListener('change',function(){cb(i.value);setTimeout(function(){if(i.parentNode)i.parentNode.removeChild(i);},60);});i.click();}
+function wsCvColor(){var el=wsSelEl();if(!el)return;wsCvColorInput(function(v){el.style.color=v;wsSyncFromFrame();});}
+function wsCvBg(){var el=wsSelEl();if(!el)return;wsCvColorInput(function(v){el.style.background=v;wsSyncFromFrame();});}
+function wsCvMove(dir){var el=wsSelEl();if(!el||!el.parentNode)return;var p=el.parentNode;if(dir<0){var pv=el.previousElementSibling;if(pv)p.insertBefore(el,pv);}else{var nx=el.nextElementSibling;if(nx)p.insertBefore(nx,el);}wsSyncFromFrame();if(el.scrollIntoView)el.scrollIntoView({block:'center'});}
+function wsCvEdit(){var el=wsSelEl();if(!el)return;el.contentEditable='true';el.focus();var done=function(){el.removeAttribute('contenteditable');el.removeEventListener('blur',done);wsSyncFromFrame();};el.addEventListener('blur',done);toast('Type to edit — click away when done',3500);}
+window.addEventListener('message',function(e){if(e.data&&e.data.type==='wsSelect'){wsShowBar(e.data.kind,e.data.tag,e.data.slotId);}});
 
 // -- Instant color replacement ---------------------------------
 function extractSiteColors(){
@@ -3563,7 +3768,9 @@ function setStudioReady(ready){
   var intro=document.getElementById('introMsg');
   if(ready){
     studio.classList.remove('studio-loading');
-    if(intro)intro.innerHTML='Your site’s ready 🌱  What would you like to change? Type it below — or tap a quick idea to start.';
+    if(intro)intro.innerHTML='Your site’s ready 🌱  Click anything on your site to edit it — or describe a change below.';
+    try{editModeOn=true;var _eb=document.getElementById('editModeBtn');if(_eb)_eb.classList.add('on');var _ei=document.getElementById('editIndicator');if(_ei)_ei.classList.add('on');var _pf=document.getElementById('pf');var _em=function(){if(_pf&&_pf.contentWindow)_pf.contentWindow.postMessage({type:'wsSetEditMode',active:true},'*');};setTimeout(_em,300);setTimeout(_em,900);setTimeout(_em,1800);}catch(e){}
+    if(!window._wsCvHint){window._wsCvHint=1;setTimeout(function(){try{toast('👆 Click anything on your site to edit it — change colour, resize, or delete.',6000);}catch(e){}},800);}
   } else {
     studio.classList.add('studio-loading');
     if(intro)intro.innerHTML='Designing your site… this can take up to a minute 🌱';
@@ -4452,6 +4659,7 @@ export default {
     if (url.pathname === '/publish' && request.method === 'POST') return doPublish(request, env);
     if (url.pathname === '/unpublish' && request.method === 'POST') return doUnpublish(request, env);
     if (url.pathname === '/slug-check' && request.method === 'GET') return doSlugCheck(request, env);
+    if (url.pathname === '/support' && request.method === 'POST') return doSupport(request, env);
     if (url.pathname === '/auth/google' && request.method === 'GET') return doGoogleStart(request, env);
     if (url.pathname === '/auth/google/callback' && request.method === 'GET') return doGoogleCallback(request, env);
     if (url.pathname === '/auth/email' && request.method === 'POST') return doEmailStart(request, env);
@@ -4988,7 +5196,8 @@ async function servePublished(slug, env){
   if (!env || !env.KV) return null;
   const html = await env.KV.get('pub:' + slug);
   if (!html) return null;
-  return new Response(withBadge(html), { headers: { 'Content-Type':'text/html; charset=utf-8', 'X-Robots-Tag':'all' } });
+  let nobadge = false; try { const m = await env.KV.get('pubmeta:' + slug); if (m) nobadge = !!JSON.parse(m).nobadge; } catch(e){}
+  return new Response(nobadge ? html : withBadge(html), { headers: { 'Content-Type':'text/html; charset=utf-8', 'X-Robots-Tag':'all' } });
 }
 
 async function doPublish(request, env){
@@ -5003,9 +5212,10 @@ async function doPublish(request, env){
     const existing = await env.KV.get('pubmeta:' + slug);
     if (existing){ try { if (JSON.parse(existing).siteId !== b.siteId) return fail('That name is already taken — try another'); } catch(e){} }
     if (b.html.length > 4*1024*1024) return fail('Site is too large to publish');
+    let _pro = false; try { const _s = await getSession(request, env); if (_s) { const _u = JSON.parse(await env.KV.get('user:' + _s.email) || '{}'); _pro = !!(_u && _u.plan === 'pro'); } } catch(e){}
     await env.KV.put('pub:' + slug, b.html);
-    await env.KV.put('pubmeta:' + slug, JSON.stringify({ siteId: b.siteId, updated: Date.now() }));
-    return succeed({ ok:true, slug: slug, url: 'https://' + slug + '.websprout.app', pathUrl: 'https://websprout.app/s/' + slug });
+    await env.KV.put('pubmeta:' + slug, JSON.stringify({ siteId: b.siteId, updated: Date.now(), nobadge: _pro }));
+    return succeed({ ok:true, slug: slug, url: 'https://' + slug + '.websprout.app', pathUrl: 'https://websprout.app/s/' + slug, nobadge: _pro });
   } catch(e){ return fail(e.message); }
 }
 
@@ -5179,10 +5389,39 @@ async function setUserPlan(env, email, plan, cust, sub){
   u.planUpdated=Date.now();
   await env.KV.put(k, JSON.stringify(u));
 }
+async function doSupport(request, env){
+  try{
+    if(!env.RESEND_API_KEY) return fail('Support email is not configured yet');
+    const ip = request.headers.get('cf-connecting-ip') || '';
+    if(ip && env.KV){ const rk='suprate:'+ip; const n=parseInt(await env.KV.get(rk)||'0',10)||0; if(n>=6) return fail('Too many messages right now — please try again later'); await env.KV.put(rk, String(n+1), { expirationTtl: 3600 }); }
+    const b = await request.json();
+    const email = String(b.email||'').trim().slice(0,160);
+    const name = String(b.name||'').trim().slice(0,120);
+    const message = String(b.message||'').trim().slice(0,5000);
+    if(email.indexOf('@') < 1) return fail('A valid email is required');
+    if(message.length < 5) return fail('Please include a message');
+    const esc = function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+    const html = '<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;font-size:15px;color:#111;line-height:1.6">'
+      + '<h2 style="margin:0 0 6px">New support message</h2>'
+      + '<p style="margin:0 0 4px"><b>From:</b> ' + esc(name||'(no name)') + ' &lt;' + esc(email) + '&gt;</p>'
+      + '<hr style="border:none;border-top:1px solid #eee;margin:12px 0">'
+      + '<p style="white-space:pre-wrap;margin:0">' + esc(message) + '</p></div>';
+    const r = await fetch('https://api.resend.com/emails', {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer '+env.RESEND_API_KEY, 'Content-Type':'application/json' },
+      body: JSON.stringify({ from:'Websprout Support <hello@websprout.app>', to:[SUPPORT_EMAIL], reply_to: email, subject:'🛟 Support: '+(name||email), html: html })
+    });
+    if(!r.ok) return fail('Could not send right now — please try again');
+    return succeed({ ok:true });
+  }catch(e){ return fail('Could not send'); }
+}
 async function doStripeWebhook(request, env){
   const raw = await request.text();
-  if(!env.STRIPE_WEBHOOK_SECRET) return new Response('webhook not configured', { status:503 });
-  const okSig = await verifyStripeSig(raw, request.headers.get('stripe-signature'), env.STRIPE_WEBHOOK_SECRET);
+  const secrets = [env.STRIPE_WEBHOOK_SECRET, env.STRIPE_WEBHOOK_SECRET_TEST].filter(Boolean);
+  if(!secrets.length) return new Response('webhook not configured', { status:503 });
+  const sig = request.headers.get('stripe-signature');
+  let okSig = false;
+  for(const sec of secrets){ if(await verifyStripeSig(raw, sig, sec)){ okSig = true; break; } }
   if(!okSig) return new Response('bad signature', { status:400 });
   let ev={}; try{ ev=JSON.parse(raw); }catch(e){ return new Response('bad json', { status:400 }); }
   try{
@@ -5314,6 +5553,8 @@ function getNicheDirection(prompt){
 }
 
 async function doGenerate(request, env) {
+  const _sess = await getSession(request, env);
+  if (!_sess) return fail('Please sign in to generate a site.');
   const keys = geminiKeys(env);
   if (!keys.length) return fail('GEMINI_API_KEY not set in Cloudflare environment variables.');
   let body;
@@ -5323,9 +5564,9 @@ async function doGenerate(request, env) {
   try {
     const body2 = JSON.stringify({
       contents: [{ parts: [{ text: PROMPT + '\n\nUser request: ' + prompt + getNicheDirection(prompt) + '\n\nSTYLE DIRECTION: ' + getStyleDirection(prompt) + '\n\n' + DESIGN_AMBITION + '\n\nCRITICAL RULES:\n1. CONTRAST IS THE #1 PRIORITY: every text element must be instantly readable against the EXACT background behind it — dark text only on light backgrounds, white/near-white text only on dark backgrounds, never dark-on-dark or light-on-light. If the hero background is dark or uses a photo/image slot, the hero headline and subtext MUST be white/near-white. A dark headline on a dark hero is a failure.\n2. Do NOT use vh or viewport-height units for section/hero HEIGHTS — size heights with px or % (e.g. min-height:640px), required for correct rendering. You SHOULD use clamp() with vw for responsive FONT-SIZE so large headings shrink on small screens and never overflow (e.g. font-size:clamp(2rem,6vw,4.5rem)).\n3. Scroll-reveal and entrance animations are ENCOURAGED, but every element MUST animate from hidden TO fully visible — nothing stays hidden. Keep transitions under 0.8s.\n4. ALWAYS end with </body></html> — never leave HTML incomplete.\n5. COMPLETION IS MANDATORY: always finish the entire page through </body></html>. Keep total output under ~800 lines; if the page is getting long, make each section more concise rather than leaving the page unfinished — a complete simpler page always beats a truncated elaborate one. 6. NO horizontal overflow: set box-sizing:border-box globally, never let any element be wider than the viewport, and the page must NEVER scroll sideways; headings and long text must wrap (overflow-wrap:break-word) and must never use white-space:nowrap on multi-word text. 7. SPACING: the nav logo must never touch the menu links, and text must never touch the screen edges — use container padding/margins and clear gaps between elements.' }] }],
-      generationConfig: { maxOutputTokens: 32768, temperature: 0.95, thinkingConfig: { thinkingBudget: 8192 } }
+      generationConfig: { maxOutputTokens: 32768, temperature: 0.95, thinkingConfig: { thinkingBudget: 24576 } }
     });
-    const result = await callGemini(keys, body2, 'gemini-2.5-pro');
+    const result = await callGemini(keys, body2, 'gemini-2.5-flash');
     if (result.error) return fail(result.error);
     const generatedHtml = cleanHTML(result.data);
     let finalHtml = generatedHtml.includes('</html>') ? generatedHtml : generatedHtml + '\n</body>\n</html>';
