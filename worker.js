@@ -67,7 +67,7 @@ Every piece of text MUST be instantly readable against the EXACT color or image 
 
 ━━━ IMAGE SLOTS ━━━
 Where images naturally belong, use this exact format (users click to upload real photos):
-Hero: <div class="ws-img-slot" data-slot="hero" data-label="Hero photo" style="width:100%;height:460px;background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;border-radius:8px"><div style="font-size:40px;opacity:0.35">&#128247;</div><div style="color:rgba(255,255,255,0.4);font-size:13px;font-weight:600">Click to add photo</div></div>
+Hero: <div class="ws-img-slot" data-slot="hero" data-label="Hero photo" style="width:100%;height:460px;background:linear-gradient(135deg,#2b2620,#3a322a);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;border-radius:8px"><div style="font-size:40px;opacity:0.35">&#128247;</div><div style="color:rgba(255,255,255,0.4);font-size:13px;font-weight:600">Click to add photo</div></div>
 Content: <div class="ws-img-slot" data-slot="about" data-label="About photo" style="width:100%;height:300px;background:#f0f0f0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;border-radius:12px;border:2px dashed #ccc"><div style="font-size:36px;opacity:0.3">&#128247;</div><div style="color:#bbb;font-size:13px;font-weight:600">Click to add photo</div></div>
 If you create any image-like placeholder area, it MUST use this format. Never create a styled box that looks like an image area without ws-img-slot class and data-slot attribute.
 
@@ -99,7 +99,7 @@ IMAGE SECTIONS — critical rule:
 If the user asks to add a photo section, gallery, image area, team photos, or anything involving images, you MUST use this exact format for every image placeholder. This is required — users click these boxes to upload their own photos:
 
 For dark-background image areas:
-<div class="ws-img-slot" data-slot="UNIQUE_ID" data-label="Descriptive label" style="width:100%;height:320px;background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;border-radius:12px"><div style="font-size:36px;opacity:0.35">&#128247;</div><div style="color:rgba(255,255,255,0.45);font-size:13px;font-weight:600">Click to add photo</div></div>
+<div class="ws-img-slot" data-slot="UNIQUE_ID" data-label="Descriptive label" style="width:100%;height:320px;background:linear-gradient(135deg,#2b2620,#3a322a);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;border-radius:12px"><div style="font-size:36px;opacity:0.35">&#128247;</div><div style="color:rgba(255,255,255,0.45);font-size:13px;font-weight:600">Click to add photo</div></div>
 
 For light-background image areas:
 <div class="ws-img-slot" data-slot="UNIQUE_ID" data-label="Descriptive label" style="width:100%;height:280px;background:#f0f0f0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;border-radius:12px;border:2px dashed #ccc"><div style="font-size:36px;opacity:0.3">&#128247;</div><div style="color:#bbb;font-size:13px;font-weight:600">Click to add photo</div></div>
@@ -123,22 +123,27 @@ If adding or editing a contact form, always include action="#" method="POST" and
 QUALITY BAR: The edit should look intentional and professional — not like a quick find-and-replace.`;
 
 // Pushes generation toward genuinely impressive, modern design (appended to the generate prompt).
-const DESIGN_AMBITION = `DESIGN AMBITION — make this genuinely impressive, like a top design studio built it:
-- Dramatic, oversized typography with tight letter-spacing on headlines; clear size contrast vs body text.
-- A bold, cohesive color system. Use one or two rich gradients, or a subtle gradient-mesh / layered radial-gradient background for depth.
-- Layered depth: soft large shadows, and glassmorphism panels (semi-transparent background with backdrop-filter blur) where they fit the brand.
-- Editorial / asymmetric layouts where appropriate — avoid plain identical stacked rows. Vary alignment and column widths.
-- Refined micro-interactions: smooth hover states on cards/buttons (lift, shadow, color shift), and tasteful scroll-reveal entrance animations (fade + slide-up) on major sections.
-- Immersive hero: tall and full-bleed (min-height around 620-760px), with a strong focal headline and clear CTAs.
-- Cohesive spacing rhythm and a confident, modern aesthetic. Aim to make the visitor say "wow".
+const DESIGN_AMBITION = `DESIGN AMBITION — do NOT build a safe, templated business website. Build something genuinely memorable: the kind of site that gets featured on Awwwards and makes a visitor stop and say "whoa." Take a bold, opinionated aesthetic stance that fits the brand and fully commit to it. Generic and forgettable is the ONLY failure mode here.
 
-TYPOGRAPHY (the biggest lever between "designed" and "generic") — load TWO Google Fonts that match the brand and pair them: a characterful DISPLAY font for headlines plus a clean, highly readable font for body. Choose to fit the vibe — modern/tech: Sora, Space Grotesk, Manrope, Archivo; clean/neutral: Inter, DM Sans; editorial/premium: Playfair Display, Fraunces, Libre Baskerville for headings over a clean body; friendly: Poppins, Nunito Sans. Always keep a system fallback. Use strong size contrast: hero headline clamp(2.6rem,6vw,5rem), section titles ~2-2.6rem, body 16-18px at line-height 1.6-1.75; tight letter-spacing (-0.02 to -0.04em) on large headings only.
+COMMIT TO ONE CONCEPT — before building, lock in a single strong art direction that fits this exact business (e.g. dark-luxe with neon accents, warm sun-baked editorial, retro-futuristic, refined brutalist, organic & earthy, glassy & high-tech, bold & playful). Every decision — color, type, motion, shapes, spacing — reinforces that one concept so the page feels custom and intentional, never assembled from defaults.
 
-LAYOUT VARIETY (kill the templated feel) — do NOT make every section an identical centered stack of three equal cards. Vary the rhythm: keep most content in a centered max-width container (~1160px, side padding 24px+), but break out to full-bleed for the hero and one or two band sections. Consider a split hero (text on one side, visual on the other) when it suits the brand. Alternate about/feature sections image-left then image-right, or use asymmetric two-column splits (e.g. 5fr/7fr) instead of always three equal columns. Alternate section backgrounds (light → tinted → a dark or accent band → light) so the page gains depth and a sense of progression.
+TYPOGRAPHY IS THE #1 LEVER — be dramatic. Load TWO Google Fonts: a characterful DISPLAY font for headlines paired with a clean, readable body font, chosen to fit the concept (modern/tech: Sora, Space Grotesk, Archivo; editorial/premium: Fraunces, Playfair Display; friendly: Poppins, Nunito Sans; bold/quirky: Unbounded, Bricolage Grotesque). Hero headline is huge and confident: font-size clamp(2.6rem,7vw,5.5rem), weight 800-900, tracking -0.03em; section titles ~2-3rem; body 16-18px / line-height 1.65. Use big scale jumps and emphasize key words with a GRADIENT text fill or a bold colored highlight/underline. Type should dominate the page, never whisper.
 
-SPACING & POLISH (consistent, never eyeballed) — vertical section padding ~88-120px on desktop (less on mobile); derive every gap from an 8px scale (8/16/24/32/48/64). Reuse ONE border-radius (about 14-18px) and ONE soft shadow throughout. Align everything to the container; nothing touches the screen edges.
+A HERO THAT STOPS THE SCROLL — make the hero feel alive with pure CSS (no images required): an animated gradient / aurora / mesh background, OR a few large blurred color "blobs" drifting slowly behind the content, OR a subtle grain/noise texture over a rich gradient. Bold headline, a punchy one-sentence subhead, and two CTAs (primary = solid with a gradient + soft glow; secondary = ghost/outline). Tall and full-bleed (min-height ~640-780px using px, never vh).
 
-COPY CRAFT (specific and confident) — the hero headline states a concrete outcome or bold promise for THIS exact business, never "Welcome to X"; the subhead adds specifics in one sentence. Use real, concrete details — specific services, believable numbers, named packages. Every section earns its place. Scannable, benefit-led, human; no corporate mush, no filler.`;
+MOTION = PREMIUM (tasteful, purposeful) — bring the page to life: staggered scroll-reveal entrances (fade + slide-up) on every major section; rich hover states on cards/buttons (lift + shadow + subtle scale, gradient shift, glow); a shimmer or animated gradient on the primary CTA; at least one slow-scrolling MARQUEE / ticker band (services, taglines, or stats); and animated count-up numbers for any stats. Transitions 0.3-0.8s; honor prefers-reduced-motion.
+
+BREAK THE GRID — never just stack three identical centered cards. Vary the rhythm hard: asymmetric two-column splits (e.g. 5fr/7fr), a BENTO-style grid of different-sized cards for features or highlights, deliberately overlapping elements, oversized faded section numbers (01 / 02 / 03) or giant background words, and full-bleed dark or accent bands that alternate with lighter sections so the page builds dramatic contrast and momentum as you scroll.
+
+DEPTH & DETAIL — layer it: soft oversized shadows; glassmorphism panels (semi-transparent + backdrop-blur) where they fit; gradient borders; soft colored glows behind focal elements; pill-shaped badges/tags; gradient-text highlights; tasteful custom dividers; and a sticky nav that gains a blur + shadow once you scroll. Reuse ONE border-radius and ONE shadow system so it stays cohesive.
+
+COLOR PALETTE (match the brand — never default to generic blue) — choose a primary brand color plus one or two accents that authentically fit the business's industry, culture and mood, and use them consistently across buttons, links, icons and highlights. Avoid generic tech-blue unless the brand truly calls for it. Guides: Mexican/Latin/cantina to terracotta, agave green, amber, chili red, cream; Italian to deep red, olive, cream; coffee/bakery to warm browns, caramel, cream; BBQ/grill to charcoal, ember orange, oxblood; spa/salon/wellness to sage, eucalyptus, stone, blush; law/finance/professional to deep navy or forest, charcoal, gold; real estate to forest/slate, warm neutrals, brass; kids/play to bright cheerful primaries; luxury to near-black, gold, ivory; tech/SaaS to blues, violets, cyans. Pull the palette from the cuisine, materials, or feeling of the business.
+
+SPACING & POLISH — generous vertical section padding (~96-128px desktop, less on mobile); derive every gap from an 8px scale (8/16/24/32/48/64/96); keep everything aligned to a centered max-width container (~1160px) except intentional full-bleed bands; nothing touches the screen edges.
+
+COPY CRAFT — the hero headline states a concrete, bold promise for THIS exact business (never "Welcome to X"); the subhead adds specifics in one line. Use real, concrete details: specific services, believable numbers, named packages. Confident, human, benefit-led; zero corporate filler.
+
+GUARDRAILS — bold but never broken: readability wins every time (text must stay strongly contrasted against its exact background), NEVER cause horizontal scroll, and ALWAYS finish the entire page through the closing body and html tags. If you are running long, simplify a section rather than truncate — a complete, daring, readable page always beats an elaborate broken one.`;
 
 
 // ── Main HTML page ────────────────────────────────────────────
@@ -155,8 +160,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r58">
-<script>console.log("%c[Websprout] build 2026-06-10-r58 (generation: Flash thinking budget on for higher-quality sites)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r61">
+<script>console.log("%c[Websprout] build 2026-06-10-r61 (generation: bold award-worthy art-direction brief)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4535,7 +4540,7 @@ async function callGemini(keys, bodyStr) {
           let detail = ''; try { detail = JSON.stringify(d.error || d).toLowerCase(); } catch(e) {}
           try { console.warn('[Websprout] Gemini 429 — ' + (((d.error && d.error.message) || '') + '').slice(0, 240)); } catch(e) {}
           lastErr = (detail.indexOf('freetier') > -1 || detail.indexOf('free_tier') > -1 || detail.indexOf('free tier') > -1) ? 'RATE_LIMITED_FREE' : 'RATE_LIMITED';
-          continue;
+          break; // do not re-fire the same key on a 429 — it only burns another request against the quota; the frontend already waits and retries
         }
         if (!r.ok) return { error: (d.error && d.error.message) || ('API error ' + r.status) };
         return { data: d };
