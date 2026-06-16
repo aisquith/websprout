@@ -1,0 +1,24 @@
+name = "websprout"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# Your KV store — you already have one bound in the dashboard: WEBSPROUT_KV.
+# Storage & Databases -> KV -> (your namespace) -> copy the Namespace ID.
+[[kv_namespaces]]
+binding = "KV"
+id = "PASTE_YOUR_KV_NAMESPACE_ID_HERE"
+
+# Routes the worker runs on. The first two serve the app; the wildcard
+# powers your published name.websprout.app sites.
+# NOTE: you still add the wildcard DNS record ( * CNAME websprout.app, Proxied )
+# in the dashboard — routes and DNS are separate.
+routes = [
+  { pattern = "websprout.app/*", zone_name = "websprout.app" },
+  { pattern = "www.websprout.app/*", zone_name = "websprout.app" },
+  { pattern = "*.websprout.app/*", zone_name = "websprout.app" }
+]
+
+# Your secrets (GEMINI_API_KEY, RESEND_API_KEY, FORM_SECRET, GODADDY_KEY,
+# GODADDY_SECRET, GODADDY_AFFILIATE) are NOT listed here. Keep them in the
+# Cloudflare dashboard (Settings -> Variables and Secrets) — they persist
+# across deploys and stay encrypted.
