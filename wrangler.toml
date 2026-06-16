@@ -6,7 +6,7 @@ compatibility_date = "2025-01-01"
 # Storage & Databases -> KV -> (your namespace) -> copy the Namespace ID.
 [[kv_namespaces]]
 binding = "KV"
-id = "PASTE_YOUR_KV_NAMESPACE_ID_HERE"
+id = "f5def57998654229973b809dd4f3a463"
 
 # Routes the worker runs on. The first two serve the app; the wildcard
 # powers your published name.websprout.app sites.
