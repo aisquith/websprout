@@ -164,8 +164,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r75">
-<script>console.log("%c[Websprout] build 2026-06-10-r75 (AI image generation in the photo picker — Pro, via Gemini image model)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r78">
+<script>console.log("%c[Websprout] build 2026-06-10-r78 (gap 1: in-app Leads dashboard — view contact-form submissions + set notify email)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1036,6 +1036,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
           <button class="gs-item" data-tool="yourInfoBtn">&#128221; Your info<span class="gs-sub">Name, phone, email &amp; hours — everywhere</span></button>
           <button class="gs-item" data-tool="sectionsBtn">&#9783; Manage sections<span class="gs-sub">Add, remove or reorder</span></button>
           <button class="gs-item" data-tool="seoBtn">&#128269; SEO &amp; sharing<span class="gs-sub">Title, description, social preview</span></button>
+          <button class="gs-item" data-tool="leadsBtn">&#128236; Leads<span class="gs-sub">See who contacted you</span></button>
           <button class="gs-item" data-tool="regenBtn">&#8635; Regenerate the design</button>
           <button class="gs-item" data-tool="backBtn">&#8592; Start over</button>
         </div>
@@ -1044,6 +1045,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <button class="s-btn s-ghost" id="yourInfoBtn" data-needs-site="1">&#128221; Your info</button>
         <button class="s-btn s-ghost" id="sectionsBtn" data-needs-site="1">&#9783; Sections</button>
         <button class="s-btn s-ghost" id="seoBtn" data-needs-site="1">&#128269; SEO</button>
+        <button class="s-btn s-ghost" id="leadsBtn" data-needs-site="1">&#128236; Leads</button>
         <button class="s-btn s-ghost" id="backBtn">&#8592; Back</button>
         <button class="s-btn s-ghost" id="regenBtn">&#8635; Regen</button>
       </span>
@@ -1387,7 +1389,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
           <div class="biz-field">
             <label>Form submissions go to</label>
             <input class="biz-input" id="bizInfoForm" type="email" placeholder="you@email.com">
-            <span style="font-size:10px;color:rgba(255,255,255,.2);margin-top:2px;line-height:1.4">Free via Formspree — confirm once, then all contact form submissions land in your inbox</span>
+            <span style="font-size:10px;color:rgba(255,255,255,.2);margin-top:2px;line-height:1.4">Every contact-form submission on your published site is emailed here instantly and saved to your leads inbox. Leave blank to use your account email.</span>
           </div>
           <button class="biz-apply" id="bizApplyBtn">&#10003; Apply to site</button>
         </div>
@@ -1962,6 +1964,22 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   });
 })();
 </script>
+<div id="leadsModal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:18px">
+  <div style="background:#0c160a;border:1px solid rgba(45,122,58,.3);border-radius:16px;max-width:620px;width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.07)">
+      <div><div style="font-size:17px;font-weight:800;color:#fff">&#128236; Leads</div><div id="leadsSub" style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px">Contact-form submissions from your site</div></div>
+      <button id="leadsClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;line-height:1">&#10005;</button>
+    </div>
+    <div style="padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.06)">
+      <label style="font-size:12px;color:rgba(255,255,255,.5);display:block;margin-bottom:6px">Email me when a new lead arrives</label>
+      <div style="display:flex;gap:8px">
+        <input id="leadsNotify" type="email" placeholder="you@email.com" style="flex:1;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;outline:none">
+        <button id="leadsNotifySave" style="background:rgba(45,158,74,.18);border:1px solid rgba(45,158,74,.4);color:#7fe39a;border-radius:8px;padding:0 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Save</button>
+      </div>
+    </div>
+    <div id="leadsList" style="padding:14px 18px 20px;overflow-y:auto;flex:1"></div>
+  </div>
+</div>
 <div id="mySitesModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:18px">
   <div style="background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:18px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.6)">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.07)">
@@ -2329,6 +2347,8 @@ function setPreview(html){
       // Block all other links from navigating the iframe away
       'e.preventDefault();'+
     '});'+
+    // Never let a form submission navigate the preview away (it was loading the whole app inside the preview)
+    'document.addEventListener(\"submit\",function(e){e.preventDefault();},true);'+
 
   '</sc'+'ript>';
   // Use lastIndexOf to find the REAL </body> — not one inside a JS string
@@ -2928,6 +2948,37 @@ document.addEventListener('DOMContentLoaded',function(){
       if(j&&j.image){if(msg)msg.textContent='';if(inp)inp.value='';fillSlot(j.image);}
       else{if(msg){msg.style.color='#fca5a5';msg.textContent=(j&&j.error)||'Could not generate. Try a simpler description.';}}
     }).catch(function(){slotAiBtnEl.disabled=false;slotAiBtnEl.innerHTML=old;if(msg){msg.style.color='#fca5a5';msg.textContent='Something went wrong. Try again.';}});
+  });
+  // ── Leads dashboard (in-app) ──
+  function _leadEsc(s){var d=document.createElement('div');d.textContent=String(s==null?'':s);return d.innerHTML;}
+  window.openLeads=function(){
+    var sid=window._wsSite||localStorage.getItem('ws_site')||'';
+    var k=window._wsKey||localStorage.getItem('ws_key')||'';
+    var modal=document.getElementById('leadsModal'),list=document.getElementById('leadsList');
+    if(!modal)return;
+    modal.style.display='flex';
+    if(!sid||!k){if(list)list.innerHTML='<div style="color:rgba(255,255,255,.4);text-align:center;padding:32px 14px;line-height:1.6">Generate or open a site first \\u2014 your leads will appear here.</div>';return;}
+    if(list)list.innerHTML='<div style="color:rgba(255,255,255,.4);text-align:center;padding:30px 0">Loading\\u2026</div>';
+    fetch('/api/inbox?site='+encodeURIComponent(sid)+'&key='+encodeURIComponent(k)).then(function(r){return r.json();}).then(function(j){
+      if(j.error){if(list)list.innerHTML='<div style="color:#fca5a5;text-align:center;padding:30px 0">'+_leadEsc(j.error)+'</div>';return;}
+      var ni=document.getElementById('leadsNotify');if(ni&&j.notify)ni.value=j.notify;
+      var sub=document.getElementById('leadsSub');if(sub)sub.textContent=(j.count||0)+' lead'+(j.count===1?'':'s')+' \\u00b7 '+(j.total||0)+' page views';
+      var subs=j.submissions||[];
+      if(!subs.length){if(list)list.innerHTML='<div style="color:rgba(255,255,255,.4);text-align:center;padding:34px 14px;line-height:1.6">No leads yet.<br><span style="font-size:13px">Publish your site and share the link \\u2014 every contact-form submission shows up here.</span></div>';return;}
+      var html='';
+      for(var i=0;i<subs.length;i++){var s=subs[i],f=s.fields||{};var when=new Date(s.ts||0).toLocaleString();var rows='';for(var key in f){rows+='<div style="display:flex;gap:10px;margin-top:4px"><span style="color:rgba(255,255,255,.4);min-width:88px;font-size:12px;flex-shrink:0">'+_leadEsc(key)+'</span><span style="color:#eaf2e8;font-size:13px;word-break:break-word">'+_leadEsc(f[key])+'</span></div>';}
+        html+='<div style="background:#0f1a0d;border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:12px 14px;margin-bottom:10px"><div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:5px">'+_leadEsc(when)+'</div>'+rows+'</div>';}
+      if(list)list.innerHTML=html;
+    }).catch(function(){if(list)list.innerHTML='<div style="color:#fca5a5;text-align:center;padding:30px 0">Could not load leads. Try again.</div>';});
+  };
+  var _lb=document.getElementById('leadsBtn');if(_lb)_lb.addEventListener('click',window.openLeads);
+  var _lc=document.getElementById('leadsClose');if(_lc)_lc.addEventListener('click',function(){var m=document.getElementById('leadsModal');if(m)m.style.display='none';});
+  var _lmod=document.getElementById('leadsModal');if(_lmod)_lmod.addEventListener('click',function(e){if(e.target===_lmod)_lmod.style.display='none';});
+  var _lns=document.getElementById('leadsNotifySave');if(_lns)_lns.addEventListener('click',function(){
+    var sid=window._wsSite||localStorage.getItem('ws_site')||'';var k=window._wsKey||localStorage.getItem('ws_key')||'';
+    var em=((document.getElementById('leadsNotify')||{}).value||'').trim();
+    if(!sid||!k){if(window.toast)toast('Publish or generate a site first.');return;}
+    fetch('/api/inbox/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:sid,key:k,email:em})}).then(function(){if(window.toast)toast('Saved \\u2014 leads will be emailed to '+(em||'your account email'));}).catch(function(){if(window.toast)toast('Could not save. Try again.');});
   });
   if(slotFileInputEl)slotFileInputEl.addEventListener('change',function(){
     if(slotFileInputEl.files&&slotFileInputEl.files[0])slotCompressAndFill(slotFileInputEl.files[0]);
@@ -5277,7 +5328,24 @@ async function doPublish(request, env){
     if (existing){ try { if (JSON.parse(existing).siteId !== b.siteId) return fail('That name is already taken — try another'); } catch(e){} }
     if (b.html.length > 4*1024*1024) return fail('Site is too large to publish');
     let _pro = false; try { const _s = await getSession(request, env); if (_s) { const _u = JSON.parse(await env.KV.get('user:' + _s.email) || '{}'); _pro = !!(_u && _u.plan === 'pro'); } } catch(e){}
-    await env.KV.put('pub:' + slug, b.html);
+    // Capture leads through Websprout's own backend: point every form at our endpoint AND inject a
+    // tiny handler that submits via fetch + shows an inline thank-you (no third party, no raw JSON page).
+    let pubHtml = b.html;
+    try {
+      const formAction = 'https://websprout.app/api/form/' + b.siteId;
+      pubHtml = b.html.replace(/<form\b([^>]*)>/gi, function(m, attrs){
+        let a = attrs;
+        if (/\saction\s*=/i.test(a)) a = a.replace(/\saction\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/i, ' action="' + formAction + '"');
+        else a = ' action="' + formAction + '"' + a;
+        if (!/\smethod\s*=/i.test(a)) a = a + ' method="POST"';
+        return '<form' + a + '>';
+      });
+      const formJS = "<scr"+"ipt>(function(){var EP=" + JSON.stringify(formAction) + ";function r(fn){if(document.readyState!=='loading')fn();else document.addEventListener('DOMContentLoaded',fn);}r(function(){var fs=document.getElementsByTagName('form');Array.prototype.slice.call(fs).forEach(function(f){f.addEventListener('submit',function(e){e.preventDefault();var b=f.querySelector('[type=submit],button');var o=b?b.textContent:'';if(b){b.disabled=true;b.textContent='Sending\u2026';}fetch(EP,{method:'POST',body:new FormData(f)}).then(d).catch(d);function d(){var n=document.createElement('div');n.textContent='\u2713 Thanks! Your message was sent \u2014 we\u2019ll be in touch soon.';n.setAttribute('style','padding:15px 18px;margin-top:14px;background:#16a34a;color:#fff;border-radius:10px;font-weight:700;font-family:inherit;text-align:center');f.reset();if(b){b.disabled=false;b.textContent=o;}f.parentNode.insertBefore(n,f.nextSibling);setTimeout(function(){if(n.parentNode)n.parentNode.removeChild(n);},9000);}});});});})();</scr"+"ipt>";
+      if (pubHtml.indexOf('</body>') > -1) pubHtml = pubHtml.replace('</body>', formJS + '</body>'); else pubHtml = pubHtml + formJS;
+    } catch(e){ pubHtml = b.html; }
+    // Default the lead-notification email to the owner's account email (only if not already set)
+    try { const _s2 = await getSession(request, env); if (_s2 && _s2.email) { const _cur = await env.KV.get('notify:' + b.siteId); if (!_cur) await env.KV.put('notify:' + b.siteId, _s2.email); } } catch(e){}
+    await env.KV.put('pub:' + slug, pubHtml);
     await env.KV.put('pubmeta:' + slug, JSON.stringify({ siteId: b.siteId, updated: Date.now(), nobadge: _pro }));
     return succeed({ ok:true, slug: slug, url: 'https://' + slug + '.websprout.app', pathUrl: 'https://websprout.app/s/' + slug, nobadge: _pro });
   } catch(e){ return fail(e.message); }
