@@ -53,6 +53,7 @@ OUTPUT: Raw HTML only, <!DOCTYPE html> to </html>. No markdown, no backticks, no
    Include a submit button with clear label. Business info placeholders: [Your Address], [Your Phone], [your@email.com], [Your Hours]
    BOOKING: If this business runs on appointments or bookings (salons, barbers, spas, fitness/yoga, medical/dental, tattoo, photographers, charters/tours, home services & trades, consultants, tutors, repair shops, etc.), ALSO add a prominent "Book now" / "Book an appointment" button — once in the hero and once in the contact band — as a real link: <a href="[Your Booking Link]" target="_blank" rel="noopener">Book now</a>, styled as a primary button. Use the exact placeholder [Your Booking Link] for the href so the owner can drop in their Calendly / Cal.com / Square scheduler. For pure storefronts or info sites with no appointments, skip the booking button.
    ORDERING: If this is a restaurant, cafe, food truck, bakery, bar, or any food business with online ordering or delivery, render every "Order online" / "Order now" / "Get delivery" button as a real link: <a href="[Your Ordering Link]" target="_blank" rel="noopener">Order online</a>, styled as a primary button. Use the exact placeholder [Your Ordering Link] for the href so the owner drops in their Toast / Square / DoorDash / Uber Eats ordering URL. Never point an order button at "#".
+   PRODUCTS: If the business sells individual purchasable items — a shop/store, a maker selling products, paid menu items, digital downloads, classes/passes, or service packages with set prices — give EACH item its own buy button as a real link using the EXACT placeholder format <a href="[Pay Link: ITEM NAME]" target="_blank" rel="noopener">Buy</a> (or "Buy now" / "Get it" / "Purchase"), styled as a primary button, where ITEM NAME is that specific item's real name (e.g. [Pay Link: Blue Linen Shirt], [Pay Link: 10-Class Pass]). One unique placeholder per item so the owner can paste each product's own Stripe / PayPal / Square / Gumroad checkout link. Do NOT use [Pay Link: ...] for the hero CTA, nav, or contact buttons — only for actual purchasable items.
    CLICK-TO-CALL: Render EVERY phone number as a tappable link — <a href="tel:[Your Phone]">[Your Phone]</a> (use the [Your Phone] placeholder in BOTH the href and the visible text). For phone-driven local businesses (trades, repair, towing, plumbing, HVAC, locksmith, auto, etc.), add a clear "Call [Your Phone]" button in the hero and again in the contact band, styled as a primary or secondary button.
 10. FOOTER — dark background. 3 columns: brand+tagline, links, contact. Copyright line.
 
@@ -167,8 +168,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r88">
-<script>window._wsBuild="2026-06-10-r88";console.log("%c[Websprout] build 2026-06-10-r88 (business layer pt2: invoicing — create a Stripe payment link, email it to the client)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r92">
+<script>window._wsBuild="2026-06-10-r92";console.log("%c[Websprout] build 2026-06-10-r92 (profile: My sites button + saved-site count, opens the My sites list from your account)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1044,7 +1045,8 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
           <button class="gs-item" data-tool="seoBtn">&#128269; SEO &amp; sharing<span class="gs-sub">Title, description, social preview</span></button>
           <button class="gs-item" data-tool="leadsBtn">&#128236; Leads<span class="gs-sub">See who contacted you</span></button>
           <button class="gs-item" data-tool="postBtn">&#9997; Marketing copy<span class="gs-sub">AI posts, emails &amp; promos</span></button>
-          <button class="gs-item" data-tool="invoiceBtn">&#129534; Send an invoice<span class="gs-sub">Get paid with a Stripe link</span></button>
+          <button class="gs-item" id="invoiceMenuItem" data-tool="invoiceBtn" style="display:none">&#129534; Send an invoice<span class="gs-sub">Get paid with a Stripe link</span></button>
+          <button class="gs-item" data-tool="payBtn">&#128179; Product payments<span class="gs-sub">Add your own pay links to buttons</span></button>
           <button class="gs-item" data-tool="regenBtn">&#8635; Regenerate the design</button>
           <button class="gs-item" data-tool="backBtn">&#8592; Start over</button>
         </div>
@@ -1055,7 +1057,8 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <button class="s-btn s-ghost" id="seoBtn" data-needs-site="1">&#128269; SEO</button>
         <button class="s-btn s-ghost" id="leadsBtn" data-needs-site="1">&#128236; Leads</button>
         <button class="s-btn s-ghost" id="postBtn" data-needs-site="1">&#9997; Marketing</button>
-        <button class="s-btn s-ghost" id="invoiceBtn">&#129534; Invoice</button>
+        <button class="s-btn s-ghost" id="payBtn" data-needs-site="1">&#128179; Payments</button>
+        <button class="s-btn s-ghost" id="invoiceBtn" style="display:none">&#129534; Invoice</button>
         <button class="s-btn s-ghost" id="backBtn">&#8592; Back</button>
         <button class="s-btn s-ghost" id="regenBtn">&#8635; Regen</button>
       </span>
@@ -1816,6 +1819,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <span id="pfPlanBadge" style="font-size:11px;font-weight:800;letter-spacing:.5px;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);flex-shrink:0">FREE</span>
       </div>
       <div id="pfActions" style="margin-bottom:16px"></div>
+      <button id="pfMySites" style="width:100%;margin-bottom:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#eaf2e8;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">&#128194; My sites<span id="pfSitesCount" style="font-size:12px;color:rgba(255,255,255,.4);font-weight:500"></span></button>
       <button id="pfSignOut" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.8);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Sign out</button>
     </div>
   </div>
@@ -1853,9 +1857,11 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       }
       if(me&&me.owner){act.innerHTML+='<a href="/admin" style="display:block;text-align:center;margin-top:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#cfe;border-radius:10px;padding:11px;font-size:14px;font-weight:600;text-decoration:none">\uD83D\uDCCA Admin dashboard</a>';}
     }
+    try{var _ps=JSON.parse(localStorage.getItem('ws_projects')||'[]');var _pc=$('pfSitesCount');if(_pc)_pc.textContent=_ps.length?('('+_ps.length+')'):'';}catch(e){}
     if(pm)pm.style.display='flex';
   };
   if($('profileClose'))$('profileClose').addEventListener('click',closePf);
+  var _pfms=$('pfMySites');if(_pfms)_pfms.addEventListener('click',function(){closePf();if(window.openMySites)window.openMySites();else if(window.toast)toast('Loading your sites...');});
   if(pm)pm.addEventListener('click',function(e){if(e.target===pm)closePf();});
   var so=$('pfSignOut');
   if(so)so.addEventListener('click',function(){
@@ -1979,6 +1985,30 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   });
 })();
 </script>
+<div id="payModal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:18px">
+  <div style="background:#0c160a;border:1px solid rgba(45,122,58,.3);border-radius:16px;max-width:560px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.07)">
+      <div><div style="font-size:17px;font-weight:800;color:#fff">&#128179; Product payments</div><div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px">Paste your own checkout link for each product &mdash; money goes straight to you</div></div>
+      <button id="payClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;line-height:1">&#10005;</button>
+    </div>
+    <div style="padding:14px 18px;overflow-y:auto">
+      <div id="payList"></div>
+      <button id="paySave" style="width:100%;margin-top:6px;background:linear-gradient(135deg,#3dba52,#2d7a3a);color:#fff;border:none;border-radius:9px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Save payment links</button>
+      <div id="payMsg" style="font-size:12px;color:rgba(234,242,232,.5);margin-top:9px;min-height:13px"></div>
+      <details style="margin-top:14px;border-top:1px solid rgba(255,255,255,.07);padding-top:12px">
+        <summary style="cursor:pointer;font-size:13px;color:#7fe39a;font-weight:600;list-style:none">&#10067; How do I get a payment link?</summary>
+        <div style="font-size:12.5px;color:rgba(234,242,232,.7);line-height:1.65;margin-top:10px">
+          A payment link is a checkout page hosted by a payment provider. You create one per product on their site, copy the URL, and paste it above. The customer pays the provider, and the money lands in <b>your</b> account &mdash; Websprout never touches it.
+          <div style="margin-top:10px"><b style="color:#eaf2e8">Stripe</b> &mdash; in your <a href="https://dashboard.stripe.com/payment-links" target="_blank" rel="noopener" style="color:#7fe39a">Stripe dashboard</a>, open Payment Links, create one for the product, and copy it.</div>
+          <div style="margin-top:8px"><b style="color:#eaf2e8">PayPal</b> &mdash; in <a href="https://www.paypal.com/" target="_blank" rel="noopener" style="color:#7fe39a">PayPal</a>, look under &ldquo;Pay &amp; Get Paid&rdquo; for payment links / buttons, create one, and copy the link.</div>
+          <div style="margin-top:8px"><b style="color:#eaf2e8">Square</b> &mdash; in <a href="https://squareup.com/" target="_blank" rel="noopener" style="color:#7fe39a">Square</a>, use Online checkout to create a payment link, then copy it.</div>
+          <div style="margin-top:8px"><b style="color:#eaf2e8">Gumroad</b> &mdash; on <a href="https://gumroad.com/" target="_blank" rel="noopener" style="color:#7fe39a">Gumroad</a>, create a product and copy its share URL.</div>
+          <div style="margin-top:10px;color:rgba(234,242,232,.5)">Tip: most providers let you set &ldquo;buyer chooses the amount&rdquo; if you want one reusable link instead of one per price.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>
 <div id="invoiceModal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:18px">
   <div style="background:#0c160a;border:1px solid rgba(45,122,58,.3);border-radius:16px;max-width:520px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.07)">
@@ -2038,6 +2068,15 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <input id="leadsNotify" type="email" placeholder="you@email.com" style="flex:1;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;outline:none">
         <button id="leadsNotifySave" style="background:rgba(45,158,74,.18);border:1px solid rgba(45,158,74,.4);color:#7fe39a;border-radius:8px;padding:0 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Save</button>
       </div>
+    </div>
+    <div id="leadsStats" style="padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:none">
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <div style="flex:1;background:#0f1a0d;border:1px solid rgba(45,122,58,.25);border-radius:10px;padding:10px 12px"><div id="stViews" style="font-size:22px;font-weight:800;color:#fff;line-height:1">0</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:3px">Total views</div></div>
+        <div style="flex:1;background:#0f1a0d;border:1px solid rgba(45,122,58,.25);border-radius:10px;padding:10px 12px"><div id="stWeek" style="font-size:22px;font-weight:800;color:#fff;line-height:1">0</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:3px">This week</div></div>
+        <div style="flex:1;background:#0f1a0d;border:1px solid rgba(45,122,58,.25);border-radius:10px;padding:10px 12px"><div id="stLeads" style="font-size:22px;font-weight:800;color:#7fe39a;line-height:1">0</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:3px">Leads</div></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><div style="font-size:11px;color:rgba(255,255,255,.45)">Last 7 days</div><div id="stToday" style="font-size:11px;color:rgba(255,255,255,.45)"></div></div>
+      <div id="stSpark" style="display:flex;align-items:flex-end;gap:5px"></div>
     </div>
     <div id="leadsList" style="padding:14px 18px 20px;overflow-y:auto;flex:1"></div>
   </div>
@@ -3037,18 +3076,39 @@ document.addEventListener('DOMContentLoaded',function(){
   });
   // ── Leads dashboard (in-app) ──
   function _leadEsc(s){var d=document.createElement('div');d.textContent=String(s==null?'':s);return d.innerHTML;}
+  function _leadStats(j){
+    var stWrap=document.getElementById('leadsStats');if(!stWrap)return;
+    stWrap.style.display='block';
+    var sv=document.getElementById('stViews');if(sv)sv.textContent=(j.total||0);
+    var sw=document.getElementById('stWeek');if(sw)sw.textContent=(j.week||0);
+    var sl=document.getElementById('stLeads');if(sl)sl.textContent=(j.count||0);
+    var stt=document.getElementById('stToday');if(stt)stt.textContent=(j.today||0)+' today';
+    var sp=document.getElementById('stSpark');if(!sp)return;
+    var ds=j.days||[],mx=1,di;
+    for(di=0;di<ds.length;di++){if((ds[di].c||0)>mx)mx=ds[di].c;}
+    var lbl=['S','M','T','W','T','F','S'],sh='';
+    for(di=0;di<ds.length;di++){
+      var c=ds[di].c||0,pct=Math.round((c/mx)*100);if(c>0&&pct<8)pct=8;
+      var dd=ds[di].d||'',dn='';
+      try{dn=lbl[new Date(dd.slice(0,4)+'-'+dd.slice(4,6)+'-'+dd.slice(6,8)+'T00:00').getDay()];}catch(e){}
+      sh+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:100%;display:flex;align-items:flex-end;justify-content:center;height:36px"><div title="'+c+' views" style="width:70%;height:'+pct+'%;min-height:2px;background:linear-gradient(180deg,#3dba52,#2d7a3a);border-radius:3px 3px 0 0"></div></div><div style="font-size:9px;color:rgba(255,255,255,.35)">'+(dn||'')+'</div></div>';
+    }
+    sp.innerHTML=sh;
+  }
   window.openLeads=function(){
     var sid=window._wsSite||localStorage.getItem('ws_site')||'';
     var k=window._wsKey||localStorage.getItem('ws_key')||'';
     var modal=document.getElementById('leadsModal'),list=document.getElementById('leadsList');
     if(!modal)return;
     modal.style.display='flex';
+    var _sw0=document.getElementById('leadsStats');if(_sw0)_sw0.style.display='none';
     if(!sid||!k){if(list)list.innerHTML='<div style="color:rgba(255,255,255,.4);text-align:center;padding:32px 14px;line-height:1.6">Generate or open a site first \\u2014 your leads will appear here.</div>';return;}
     if(list)list.innerHTML='<div style="color:rgba(255,255,255,.4);text-align:center;padding:30px 0">Loading\\u2026</div>';
     fetch('/api/inbox?site='+encodeURIComponent(sid)+'&key='+encodeURIComponent(k)).then(function(r){return r.json();}).then(function(j){
       if(j.error){if(list)list.innerHTML='<div style="color:#fca5a5;text-align:center;padding:30px 0">'+_leadEsc(j.error)+'</div>';return;}
       var ni=document.getElementById('leadsNotify');if(ni&&j.notify)ni.value=j.notify;
       var sub=document.getElementById('leadsSub');if(sub)sub.textContent=(j.count||0)+' lead'+(j.count===1?'':'s')+' \\u00b7 '+(j.total||0)+' page views';
+      _leadStats(j);
       var subs=j.submissions||[];
       if(!subs.length){if(list)list.innerHTML='<div style="color:rgba(255,255,255,.4);text-align:center;padding:34px 14px;line-height:1.6">No leads yet.<br><span style="font-size:13px">Publish your site and share the link \\u2014 every contact-form submission shows up here.</span></div>';return;}
       var html='';
@@ -3126,6 +3186,48 @@ document.addEventListener('DOMContentLoaded',function(){
   var _im=document.getElementById('invoiceModal');if(_im)_im.addEventListener('click',function(e){if(e.target===_im)_im.style.display='none';});
   var _icp=document.getElementById('invCopy');if(_icp)_icp.addEventListener('click',function(){var res=document.getElementById('invResult');if(!res)return;res.select();try{navigator.clipboard.writeText(res.value);if(window.toast)toast('Copied!');}catch(e){try{document.execCommand('copy');if(window.toast)toast('Copied!');}catch(e2){}}});
   var _ibtn=document.getElementById('invoiceBtn');if(_ibtn)_ibtn.addEventListener('click',window.openInvoice);
+  // ── Product payments: paste your own checkout link per product ──
+  function _paySiteKey(){return 'ws_pay_'+(window._wsSite||localStorage.getItem('ws_site')||'default');}
+  function _getPayMap(){try{return JSON.parse(localStorage.getItem(_paySiteKey())||'{}');}catch(e){return {};}}
+  function _setPayMap(m){try{localStorage.setItem(_paySiteKey(),JSON.stringify(m));}catch(e){}}
+  function _payEsc(s){var d=document.createElement('div');d.textContent=String(s==null?'':s);return d.innerHTML.split('"').join('&quot;');}
+  function _scanPayItems(){
+    var items=[],seen={},map=_getPayMap(),h=gHTML||'',i=0;
+    while(true){var a=h.indexOf('[Pay Link: ',i);if(a<0)break;var b=h.indexOf(']',a);if(b<0)break;var nm=h.slice(a+11,b).trim();if(nm&&!seen[nm]){seen[nm]=1;items.push({name:nm,url:map[nm]||''});}i=b+1;}
+    for(var k in map){if(!seen[k]){seen[k]=1;items.push({name:k,url:map[k]||''});}}
+    return items;
+  }
+  function _renderPayList(){
+    var list=document.getElementById('payList');if(!list)return;
+    var items=_scanPayItems();
+    if(!items.length){list.innerHTML='<div style="color:rgba(255,255,255,.45);text-align:center;padding:24px 10px;line-height:1.6;font-size:13px">No product buttons found yet.<br>Ask the editor for a product or pricing section with \\u201cBuy\\u201d buttons, then come back to add your links.</div>';return;}
+    var h='';
+    for(var i=0;i<items.length;i++){
+      h+='<div class="pay-row" data-name="'+_payEsc(items[i].name)+'" style="margin-bottom:11px"><label style="font-size:13px;color:#eaf2e8;font-weight:600;display:block;margin-bottom:5px">'+_payEsc(items[i].name)+'</label><input type="url" value="'+_payEsc(items[i].url)+'" placeholder="https://buy.stripe.com/\\u2026 (Stripe, PayPal, Square\\u2026)" style="width:100%;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;outline:none"></div>';
+    }
+    list.innerHTML=h;
+  }
+  window.openPay=function(){var m=document.getElementById('payModal');if(!m)return;if(!gHTML){if(window.toast)toast('Generate a site first.');return;}_renderPayList();var msg=document.getElementById('payMsg');if(msg)msg.textContent='';m.style.display='flex';};
+  function _savePayLinks(){
+    var rows=document.querySelectorAll('#payList .pay-row'),map=_getPayMap(),updated=gHTML||'',changed=0;
+    for(var i=0;i<rows.length;i++){
+      var nm=rows[i].getAttribute('data-name'),inp=rows[i].querySelector('input'),url=((inp&&inp.value)||'').trim(),oldUrl=map[nm]||'',ph='[Pay Link: '+nm+']';
+      if(updated.indexOf(ph)>-1){updated=updated.split(ph).join(url||'#');if(url)changed++;}
+      else if(oldUrl&&url&&url!==oldUrl&&updated.indexOf(oldUrl)>-1){updated=updated.split(oldUrl).join(url);changed++;}
+      if(url)map[nm]=url;else delete map[nm];
+    }
+    var msg=document.getElementById('payMsg');
+    if(!changed){if(msg){msg.style.color='rgba(234,242,232,.5)';msg.textContent='Nothing to save yet \\u2014 paste a link first.';}return;}
+    _setPayMap(map);gHTML=updated;localStorage.setItem('wsh',gHTML);pushUndo(gHTML);bumpEditCount();
+    setTimeout(function(){setPreview(gHTML);},50);
+    if(msg){msg.style.color='#7fe39a';msg.textContent='Saved \\u2014 your buy buttons now point to your checkout.';}
+  }
+  var _payS=document.getElementById('paySave');if(_payS)_payS.addEventListener('click',_savePayLinks);
+  var _payC=document.getElementById('payClose');if(_payC)_payC.addEventListener('click',function(){var m=document.getElementById('payModal');if(m)m.style.display='none';});
+  var _payM=document.getElementById('payModal');if(_payM)_payM.addEventListener('click',function(e){if(e.target===_payM)_payM.style.display='none';});
+  var _payB=document.getElementById('payBtn');if(_payB)_payB.addEventListener('click',window.openPay);
+  // Invoicing routes funds to the platform's own Stripe account, so it's owner-only until per-user Connect exists.
+  (function(){var _ot=setInterval(function(){var u=window._wsUser;if(u){clearInterval(_ot);if(u.owner){var b=document.getElementById('invoiceBtn');if(b)b.style.display='';var mi=document.getElementById('invoiceMenuItem');if(mi)mi.style.display='';}}},400);setTimeout(function(){try{clearInterval(_ot);}catch(e){}},15000);})();
   if(slotFileInputEl)slotFileInputEl.addEventListener('change',function(){
     if(slotFileInputEl.files&&slotFileInputEl.files[0])slotCompressAndFill(slotFileInputEl.files[0]);
     slotFileInputEl.value='';
@@ -5404,9 +5506,10 @@ async function doInvoice(request, env){
   const s = await getSession(request, env);
   if(!s) return fail('Please sign in.');
   const ownerEmail = (s.email||'').toLowerCase();
-  let isPro=false;
-  try{ const isOwner=ownerEmail===SUPPORT_EMAIL.toLowerCase(); const u=JSON.parse((env.KV&&await env.KV.get('user:'+ownerEmail))||'{}'); isPro=isOwner||u.plan==='pro'; }catch(e){}
-  if(!isPro) return fail('Invoicing is a Pro feature \u2014 go Pro to unlock it.');
+  // Invoices are minted on the platform's own Stripe account, so funds land in the owner's
+  // balance. Until per-user Stripe Connect exists, ONLY the owner may create invoices —
+  // otherwise another user's client payments would be misrouted to the owner.
+  if(ownerEmail !== SUPPORT_EMAIL.toLowerCase()) return fail('Invoicing isn\u2019t available on your account yet.');
   const sk = (env.STRIPE_SECRET_KEY||'').trim();
   if(!sk) return fail('To send invoices, add your Stripe secret key as STRIPE_SECRET_KEY in your Worker settings.');
   let body; try{ body=await request.json(); }catch(e){ return fail('Invalid request'); }
@@ -5572,6 +5675,7 @@ async function doPublish(request, env){
       });
       const formJS = "<scr"+"ipt>(function(){var EP=" + JSON.stringify(formAction) + ";function r(fn){if(document.readyState!=='loading')fn();else document.addEventListener('DOMContentLoaded',fn);}r(function(){var fs=document.getElementsByTagName('form');Array.prototype.slice.call(fs).forEach(function(f){f.addEventListener('submit',function(e){e.preventDefault();var b=f.querySelector('[type=submit],button');var o=b?b.textContent:'';if(b){b.disabled=true;b.textContent='Sending\u2026';}fetch(EP,{method:'POST',body:new FormData(f)}).then(d).catch(d);function d(){var n=document.createElement('div');n.textContent='\u2713 Thanks! Your message was sent \u2014 we\u2019ll be in touch soon.';n.setAttribute('style','padding:15px 18px;margin-top:14px;background:#16a34a;color:#fff;border-radius:10px;font-weight:700;font-family:inherit;text-align:center');f.reset();if(b){b.disabled=false;b.textContent=o;}f.parentNode.insertBefore(n,f.nextSibling);setTimeout(function(){if(n.parentNode)n.parentNode.removeChild(n);},9000);}});});});})();</scr"+"ipt>";
       const errJS = "<scr"+"ipt>window.addEventListener('error',function(ev){try{fetch('https://websprout.app/api/clientlog',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({msg:(ev&&ev.message)||'error',src:(ev&&ev.filename)||'',line:(ev&&ev.lineno)||0,where:'published',url:location.href}),keepalive:true}).catch(function(){});}catch(e){}});</scr"+"ipt>";
+      pubHtml = pubHtml.replace(/href="\[Pay Link:[^\]]*\]"/g, 'href="#"');
       if (pubHtml.indexOf('</body>') > -1) pubHtml = pubHtml.replace('</body>', formJS + errJS + '</body>'); else pubHtml = pubHtml + formJS + errJS;
     } catch(e){ pubHtml = b.html; }
     // Default the lead-notification email to the owner's account email (only if not already set)
