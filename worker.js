@@ -162,8 +162,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r70">
-<script>console.log("%c[Websprout] build 2026-06-10-r70 (owner admin dashboard: accounts, plans, insights + inline grant/revoke)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r71">
+<script>console.log("%c[Websprout] build 2026-06-10-r71 (admin: distinguish Paid vs Comped vs Owner Pro accounts)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -5393,6 +5393,8 @@ async function setUserPlan(env, email, plan, cust, sub){
   let u={}; try{ u=JSON.parse(await env.KV.get(k)||'{}'); }catch(e){}
   if(!u.email) u.email=email.toLowerCase();
   u.plan=plan;
+  // Distinguish a real paying customer (came in with a Stripe customer) from a comped/gifted account
+  u.proSource = (plan==='pro') ? ((cust || u.stripeCustomer) ? 'paid' : 'comp') : '';
   if(cust){ u.stripeCustomer=cust; await env.KV.put('stripecust:'+cust, email.toLowerCase()); }
   if(sub!==undefined&&sub!=='') u.stripeSub=sub;
   u.planUpdated=Date.now();
@@ -5449,6 +5451,9 @@ tr:hover td{background:rgba(45,122,58,.06)}
 .badge{display:inline-block;font-size:10px;font-weight:800;padding:3px 9px;border-radius:999px;letter-spacing:.4px}
 .badge.pro{background:linear-gradient(135deg,#f5c542,#2d9e4a);color:#06120a}
 .badge.free{background:rgba(255,255,255,.1);color:rgba(255,255,255,.6)}
+.badge.comp{background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff}
+.badge.owner{background:#1f2937;color:#cbd5e1;border:1px solid #475569}
+.card.comp .n{color:#a78bfa}
 .act{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:7px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
 .act:hover{background:rgba(255,255,255,.16)}
 .act.mk{background:rgba(45,158,74,.18);border-color:rgba(45,158,74,.4);color:#7fe39a}
@@ -5472,11 +5477,13 @@ function load(){
   fetch('/admin/data').then(function(r){return r.json();}).then(function(j){
     if(j.error){document.getElementById('cards').innerHTML='<div class="err">'+esc(j.error)+'</div>';return;}
     var t=j.totals||{};
-    document.getElementById('cards').innerHTML=card(t.accounts||0,'Accounts')+card(t.pro||0,'Pro','pro')+card(t.free||0,'Free')+card((t.conversion||0)+'%','Conversion')+card(t.published||0,'Published')+card(t.signups7||0,'New (7d)');
+    document.getElementById('cards').innerHTML=card(t.accounts||0,'Accounts')+card(t.paid||0,'Paid Pro','pro')+card(t.comped||0,'Comped','comp')+card(t.free||0,'Free')+card((t.conversion||0)+'%','Paid conv.')+card(t.published||0,'Published')+card(t.signups7||0,'New (7d)');
     var us=j.users||[],ub='';
     if(!us.length)ub='<tr><td colspan="5" class="muted" style="padding:18px">No accounts yet</td></tr>';
     for(var i=0;i<us.length;i++){var u=us[i],isPro=u.plan==='pro';
-      ub+='<tr><td>'+esc(u.email)+'</td><td>'+(u.name?esc(u.name):'<span class="muted">&mdash;</span>')+'</td><td><span class="badge '+(isPro?'pro':'free')+'">'+(isPro?'PRO':'FREE')+'</span></td><td class="muted">'+dt(u.created)+'</td><td>'+(isPro?'<button class="act" data-email="'+esc(u.email)+'" data-plan="free">Revoke</button>':'<button class="act mk" data-email="'+esc(u.email)+'" data-plan="pro">Make Pro</button>')+'</td></tr>';}
+      var bcls='free',btxt='FREE';
+      if(u.owner){bcls='owner';btxt='OWNER';}else if(u.source==='paid'){bcls='pro';btxt='PAID';}else if(isPro){bcls='comp';btxt='COMPED';}
+      ub+='<tr><td>'+esc(u.email)+'</td><td>'+(u.name?esc(u.name):'<span class="muted">&mdash;</span>')+'</td><td><span class="badge '+bcls+'">'+btxt+'</span></td><td class="muted">'+dt(u.created)+'</td><td>'+(isPro?'<button class="act" data-email="'+esc(u.email)+'" data-plan="free">Revoke</button>':'<button class="act mk" data-email="'+esc(u.email)+'" data-plan="pro">Comp Pro</button>')+'</td></tr>';}
     document.getElementById('ubody').innerHTML=ub;
     var ps=j.published||[],pb='';
     if(!ps.length)pb='<tr><td colspan="3" class="muted" style="padding:18px">No published sites yet</td></tr>';
@@ -5496,15 +5503,15 @@ async function doAdminData(request, env){
   const users=[]; let cursor=undefined, guard=0;
   do{
     const r = await env.KV.list({ prefix:'user:', cursor, limit:1000 });
-    for(const k of r.keys){ try{ const u=JSON.parse(await env.KV.get(k.name)||'{}'); users.push({ email:u.email||k.name.slice(5), name:u.name||'', plan:u.plan||'free', created:u.created||0, planUpdated:u.planUpdated||0 }); }catch(e){} }
+    for(const k of r.keys){ try{ const u=JSON.parse(await env.KV.get(k.name)||'{}'); const em=(u.email||k.name.slice(5)); const src=(u.plan==='pro')?(u.proSource||(u.stripeCustomer?'paid':'comp')):''; users.push({ email:em, name:u.name||'', plan:u.plan||'free', created:u.created||0, source:src, owner: em.toLowerCase()===SUPPORT_EMAIL.toLowerCase() }); }catch(e){} }
     cursor = r.list_complete ? null : r.cursor; guard++;
   } while(cursor && guard<10);
   const pub=[]; { let c2=undefined, g2=0; do{ const r2=await env.KV.list({ prefix:'pubmeta:', cursor:c2, limit:1000 }); for(const k of r2.keys){ const slug=k.name.slice(8); try{ const m=JSON.parse(await env.KV.get(k.name)||'{}'); pub.push({ slug, updated:m.updated||0, nobadge:!!m.nobadge }); }catch(e){} } c2=r2.list_complete?null:r2.cursor; g2++; } while(c2 && g2<10); }
-  const now=Date.now(); let pro=0, free=0, signups7=0, signups1=0;
-  for(const u of users){ if(u.plan==='pro')pro++; else free++; if(u.created>now-7*86400000)signups7++; if(u.created>now-86400000)signups1++; }
+  const now=Date.now(); let paid=0, comped=0, free=0, signups7=0;
+  for(const u of users){ if(u.plan==='pro'){ if(u.source==='paid')paid++; else comped++; } else free++; if(u.created>now-7*86400000)signups7++; }
   users.sort((a,b)=>(b.created||0)-(a.created||0));
   pub.sort((a,b)=>(b.updated||0)-(a.updated||0));
-  return succeed({ totals:{ accounts:users.length, pro, free, conversion: users.length?Math.round(pro/users.length*1000)/10:0, published:pub.length, signups7, signups1 }, users, published:pub });
+  return succeed({ totals:{ accounts:users.length, paid, comped, pro:paid+comped, free, conversion: users.length?Math.round(paid/users.length*1000)/10:0, published:pub.length, signups7 }, users, published:pub });
 }
 async function doAdminPage(request, env){
   const s = await getSession(request, env);
