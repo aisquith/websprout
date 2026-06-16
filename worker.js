@@ -121,7 +121,7 @@ EDIT PRINCIPLES:
 - If the user says "make it darker/lighter": adjust the whole color palette coherently
 - READABILITY: after ANY color change, verify every text element still strongly contrasts with its background — never leave dark text on a dark background or light text on a light background. Hero or section text sitting over a dark background or photo must be white/near-white and instantly readable.
 - Preserve ALL JavaScript — routing, menus, animations, form handlers, FAQ toggles
-- Scroll-reveal / entrance animations and hover micro-interactions are welcome; just ensure every element ends fully visible.
+- ANIMATION REQUESTS: when the user asks to animate something (text, a headline, a button, a section), make it OBVIOUSLY and continuously animated — never rely on a one-time entrance they may have already missed, and never just claim it's done. Define real CSS @keyframes and apply them directly to the element the user pointed at with an animation: rule that loops (animation-iteration-count:infinite). Good options: an animated gradient sweep across headline text (color:transparent; background:linear-gradient(...); -webkit-background-clip:text; background-clip:text; with a keyframe that moves background-position), a gentle infinite glow/pulse, a slow float, or a shimmer. Make sure the @keyframes are actually present in the page CSS and the selector truly targets that element, and do NOT leave it hidden behind a scroll-reveal class. Keep it tasteful (1.5-4s, ease-in-out) and add @media(prefers-reduced-motion:reduce){ animation:none } for it.
 - Keep the site self-contained except Google Fonts, which are allowed (a <link> in the head). Preserve any existing Google Fonts link unless the user asks to change the typography; if they ask for a different font, swap to a fitting Google Font and keep a system fallback. No other CDNs or JS libraries. No vh/vw for heights — heroes/sections sized in px or %.
 If adding or editing a contact form, always include action="#" method="POST" and a hidden field: <input type="hidden" name="_subject" value="New message from your website">
 - End with </body></html>
@@ -168,8 +168,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r95">
-<script>window._wsBuild="2026-06-10-r95";console.log("%c[Websprout] build 2026-06-10-r95 (fix bottom gap: preview sizes to last real element + zero trailing margins on every generated site)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r96">
+<script>window._wsBuild="2026-06-10-r96";console.log("%c[Websprout] build 2026-06-10-r96 (AI edits: animation requests now produce a real, continuously-running animation instead of an invisible no-op)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
