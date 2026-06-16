@@ -162,8 +162,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r72">
-<script>console.log("%c[Websprout] build 2026-06-10-r72 (fix: Pro/comped members re-verify entitlement before any paywall — no more stale-session lockout)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r73">
+<script>console.log("%c[Websprout] build 2026-06-10-r73 (fix: How it works / Pricing / My sites nav links now use explicit handlers)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -771,9 +771,9 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
     <span class="lw">Web<em>sprout</em></span>
   </a>
   <ul class="nav-links">
-    <li><a href="#how">How it works</a></li>
-    <li><a href="#pricing">Pricing</a></li>
-    <li><a href="#" onclick="if(window.openMySites){openMySites();}return false;">My sites</a></li>
+    <li><a href="#how" id="howLink">How it works</a></li>
+    <li><a href="#pricing" id="pricingLink">Pricing</a></li>
+    <li><a href="#" id="mySitesLink">My sites</a></li>
     <li><a href="/deploy-guide" target="_blank">Deploy guide</a></li>
     <li><a href="#" id="supportLink">Support</a></li>
   </ul>
@@ -1720,6 +1720,9 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   if($('supportClose'))$('supportClose').addEventListener('click',closeS);
   if(m)m.addEventListener('click',function(e){if(e.target===m)closeS();});
   var lnk=$('supportLink');if(lnk)lnk.addEventListener('click',function(e){e.preventDefault();openS();});
+  var _hl=$('howLink');if(_hl)_hl.addEventListener('click',function(e){e.preventDefault();var t=$('how');if(t&&t.scrollIntoView)t.scrollIntoView({behavior:'smooth'});});
+  var _pl=$('pricingLink');if(_pl)_pl.addEventListener('click',function(e){e.preventDefault();var t=$('pricing');if(t&&t.scrollIntoView)t.scrollIntoView({behavior:'smooth'});});
+  var _ml=$('mySitesLink');if(_ml)_ml.addEventListener('click',function(e){e.preventDefault();try{if(window.openMySites)window.openMySites();else toast('Loading your sites\\u2026');}catch(err){}});
   try{var cs=document.querySelectorAll('a[href="mailto:support@websprout.app"]');for(var i=0;i<cs.length;i++){cs[i].addEventListener('click',function(e){e.preventDefault();openS();});}}catch(e){}
   var sb=$('supSend');
   if(sb)sb.addEventListener('click',function(){
