@@ -145,6 +145,8 @@ SPACING & POLISH — generous vertical section padding (~96-128px desktop, less 
 
 COPY CRAFT — the hero headline states a concrete, bold promise for THIS exact business (never "Welcome to X"); the subhead adds specifics in one line. Use real, concrete details: specific services, believable numbers, named packages. Confident, human, benefit-led; zero corporate filler.
 
+BANNED CLICHÉS (instant fail) — avoid the default "AI website" look entirely: a centered hero followed by three identical centered cards; Inter/Roboto/Open Sans as the HEADLINE font; a generic blue-to-purple gradient when the brand is not tech; emoji used as feature icons; "Welcome to [Business]" or "Your trusted partner" headlines; a plain white page with evenly-spaced grey cards and one flat accent; timid undersized headlines. If a draft looks like a free template, commit harder to the concept and the typography.
+
 GUARDRAILS — bold but never broken: readability wins every time (text must stay strongly contrasted against its exact background), NEVER cause horizontal scroll, and ALWAYS finish the entire page through the closing body and html tags. If you are running long, simplify a section rather than truncate — a complete, daring, readable page always beats an elaborate broken one.`;
 
 
@@ -162,8 +164,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r73">
-<script>console.log("%c[Websprout] build 2026-06-10-r73 (fix: How it works / Pricing / My sites nav links now use explicit handlers)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r75">
+<script>console.log("%c[Websprout] build 2026-06-10-r75 (AI image generation in the photo picker — Pro, via Gemini image model)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -664,6 +666,14 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .slot-lib-thumb:hover{border-color:#3dba52;transform:scale(1.05)}
 .slot-lib-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .slot-lib-empty{font-size:12px;color:rgba(255,255,255,.25);text-align:center;padding:8px 0}
+.slot-ai{margin-bottom:14px}
+.slot-ai-row{display:flex;gap:8px}
+.slot-ai-row input{flex:1;background:#0f1a0d;border:1px solid rgba(45,122,58,.32);color:#eaf2e8;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none}
+.slot-ai-row input:focus{border-color:#3dba52}
+.slot-ai-row button{white-space:nowrap;background:linear-gradient(135deg,#3dba52,#2d7a3a);color:#fff;border:none;border-radius:9px;padding:0 16px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.slot-ai-row button:hover{filter:brightness(1.08)}
+.slot-ai-row button:disabled{opacity:.6;cursor:default}
+.slot-ai-msg{font-size:12px;color:rgba(234,242,232,.45);margin-top:7px;min-height:14px}
 .slot-upload-btn{width:100%;background:#2d7a3a;color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
 .slot-upload-btn:hover{background:#3dba52}
 
@@ -1589,6 +1599,14 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <button class="slot-close-x" id="slotModalClose">&#10005;</button>
     </div>
     <div class="slot-body">
+      <div class="slot-ai">
+        <div class="slot-ai-row">
+          <input type="text" id="slotAiPrompt" placeholder="Describe an image to generate with AI&hellip;" autocomplete="off">
+          <button id="slotAiBtn">&#10024; Generate</button>
+        </div>
+        <div class="slot-ai-msg" id="slotAiMsg"></div>
+      </div>
+      <div class="slot-divider"><span>or upload your own</span></div>
       <div class="slot-drop" id="slotDrop">
         <span class="slot-drop-icon">&#128247;</span>
         <div class="slot-drop-text">Drop your photo here</div>
@@ -1720,9 +1738,17 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   if($('supportClose'))$('supportClose').addEventListener('click',closeS);
   if(m)m.addEventListener('click',function(e){if(e.target===m)closeS();});
   var lnk=$('supportLink');if(lnk)lnk.addEventListener('click',function(e){e.preventDefault();openS();});
-  var _hl=$('howLink');if(_hl)_hl.addEventListener('click',function(e){e.preventDefault();var t=$('how');if(t&&t.scrollIntoView)t.scrollIntoView({behavior:'smooth'});});
-  var _pl=$('pricingLink');if(_pl)_pl.addEventListener('click',function(e){e.preventDefault();var t=$('pricing');if(t&&t.scrollIntoView)t.scrollIntoView({behavior:'smooth'});});
-  var _ml=$('mySitesLink');if(_ml)_ml.addEventListener('click',function(e){e.preventDefault();try{if(window.openMySites)window.openMySites();else toast('Loading your sites\\u2026');}catch(err){}});
+  document.addEventListener('click',function(e){
+    var a=(e.target&&e.target.closest)?e.target.closest('a'):null;if(!a)return;
+    if(a.id==='howLink'||a.id==='pricingLink'){
+      e.preventDefault();
+      var t=document.getElementById(a.id==='howLink'?'how':'pricing');
+      if(t){if(t.scrollIntoView)t.scrollIntoView({behavior:'smooth',block:'start'});else window.scrollTo(0,(t.getBoundingClientRect().top+(window.pageYOffset||0))-58);}
+    }else if(a.id==='mySitesLink'){
+      e.preventDefault();
+      try{if(typeof window.openMySites==='function')window.openMySites();else if(window.toast)toast('Your sites are loading\\u2026');}catch(err){}
+    }
+  });
   try{var cs=document.querySelectorAll('a[href="mailto:support@websprout.app"]');for(var i=0;i<cs.length;i++){cs[i].addEventListener('click',function(e){e.preventDefault();openS();});}}catch(e){}
   var sb=$('supSend');
   if(sb)sb.addEventListener('click',function(){
@@ -2890,6 +2916,19 @@ document.addEventListener('DOMContentLoaded',function(){
   if(slotCloseX)slotCloseX.addEventListener('click',function(){if(slotModal)slotModal.classList.remove('on');});
   if(slotModal)slotModal.addEventListener('click',function(e){if(e.target===slotModal)slotModal.classList.remove('on');});
   if(slotUploadBtnEl)slotUploadBtnEl.addEventListener('click',function(){if(slotFileInputEl)slotFileInputEl.click();});
+  var slotAiBtnEl=document.getElementById('slotAiBtn');
+  if(slotAiBtnEl)slotAiBtnEl.addEventListener('click',function(){
+    var inp=document.getElementById('slotAiPrompt'),msg=document.getElementById('slotAiMsg');
+    var p=((inp&&inp.value)||'').trim();
+    if(!p){if(msg){msg.style.color='#fca5a5';msg.textContent='Type what you want to see first.';}return;}
+    var old=slotAiBtnEl.innerHTML;slotAiBtnEl.disabled=true;slotAiBtnEl.innerHTML='Generating\\u2026';
+    if(msg){msg.style.color='rgba(234,242,232,.55)';msg.textContent='Creating your image \\u2014 this can take ~10s\\u2026';}
+    fetch('/genimage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:p})}).then(function(r){return r.json();}).then(function(j){
+      slotAiBtnEl.disabled=false;slotAiBtnEl.innerHTML=old;
+      if(j&&j.image){if(msg)msg.textContent='';if(inp)inp.value='';fillSlot(j.image);}
+      else{if(msg){msg.style.color='#fca5a5';msg.textContent=(j&&j.error)||'Could not generate. Try a simpler description.';}}
+    }).catch(function(){slotAiBtnEl.disabled=false;slotAiBtnEl.innerHTML=old;if(msg){msg.style.color='#fca5a5';msg.textContent='Something went wrong. Try again.';}});
+  });
   if(slotFileInputEl)slotFileInputEl.addEventListener('change',function(){
     if(slotFileInputEl.files&&slotFileInputEl.files[0])slotCompressAndFill(slotFileInputEl.files[0]);
     slotFileInputEl.value='';
@@ -4664,6 +4703,7 @@ export default {
       }
     }
     if (url.pathname === '/generate' && request.method === 'POST') return doGenerate(request, env);
+    if (url.pathname === '/genimage' && request.method === 'POST') return doGenImage(request, env);
     if (url.pathname === '/track' && request.method === 'POST') return doTrack(request, env);
     if (url.pathname === '/send-email' && request.method === 'POST') return doSendEmail(request, env);
     if (url.pathname === '/stats' && request.method === 'GET') return doStats(request, env);
@@ -5691,6 +5731,43 @@ function getNicheDirection(prompt){
   return '';
 }
 
+async function doGenImage(request, env) {
+  const s = await getSession(request, env);
+  if (!s) return fail('Please sign in to generate images.');
+  let isPro = false;
+  try {
+    const isOwner = (s.email||'').toLowerCase() === SUPPORT_EMAIL.toLowerCase();
+    const u = JSON.parse((env.KV && await env.KV.get('user:'+(s.email||'').toLowerCase())) || '{}');
+    isPro = isOwner || u.plan === 'pro';
+  } catch (e) {}
+  if (!isPro) return fail('AI image generation is a Pro feature \u2014 go Pro to unlock it.');
+  let body; try { body = await request.json(); } catch { return fail('Invalid request'); }
+  const prompt = (body.prompt || '').trim();
+  if (!prompt) return fail('Describe the image you want.');
+  const keys = geminiKeys(env);
+  if (!keys.length) return fail('Image generation is not configured.');
+  const reqBody = JSON.stringify({
+    contents: [{ parts: [{ text: 'A high-quality, professional photographic image suitable for a website. ' + prompt }] }],
+    generationConfig: { responseModalities: ['IMAGE'] }
+  });
+  let lastErr = 'Could not generate an image. Try a simpler description.';
+  for (let i = 0; i < keys.length; i++) {
+    try {
+      const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=' + keys[i], {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: reqBody
+      });
+      const j = await r.json();
+      if (j.error) { lastErr = j.error.message || lastErr; continue; }
+      const parts = ((((j.candidates || [])[0] || {}).content) || {}).parts || [];
+      for (const part of parts) {
+        if (part.inlineData && part.inlineData.data) {
+          return succeed({ image: 'data:' + (part.inlineData.mimeType || 'image/png') + ';base64,' + part.inlineData.data });
+        }
+      }
+    } catch (e) { lastErr = 'Image service error.'; }
+  }
+  return fail(lastErr);
+}
 async function doGenerate(request, env) {
   const _sess = await getSession(request, env);
   if (!_sess) return fail('Please sign in to generate a site.');
@@ -5700,12 +5777,19 @@ async function doGenerate(request, env) {
   try { body = await request.json(); } catch { return fail('Invalid request'); }
   const prompt = (body.prompt || '').trim();
   if (!prompt) return fail('Prompt is required');
+  // Paying members (Pro/comped) generate on the higher-quality Pro model; free users stay on fast Flash.
+  let genModel = 'gemini-2.5-flash';
+  try {
+    const _isOwner = (_sess.email||'').toLowerCase() === SUPPORT_EMAIL.toLowerCase();
+    const _u = JSON.parse((env.KV && await env.KV.get('user:'+(_sess.email||'').toLowerCase())) || '{}');
+    if (_isOwner || _u.plan === 'pro') genModel = 'gemini-2.5-pro';
+  } catch (e) {}
   try {
     const body2 = JSON.stringify({
       contents: [{ parts: [{ text: PROMPT + '\n\nUser request: ' + prompt + getNicheDirection(prompt) + '\n\nSTYLE DIRECTION: ' + getStyleDirection(prompt) + '\n\n' + DESIGN_AMBITION + '\n\nCRITICAL RULES:\n1. CONTRAST IS THE #1 PRIORITY: every text element must be instantly readable against the EXACT background behind it — dark text only on light backgrounds, white/near-white text only on dark backgrounds, never dark-on-dark or light-on-light. If the hero background is dark or uses a photo/image slot, the hero headline and subtext MUST be white/near-white. A dark headline on a dark hero is a failure.\n2. Do NOT use vh or viewport-height units for section/hero HEIGHTS — size heights with px or % (e.g. min-height:640px), required for correct rendering. You SHOULD use clamp() with vw for responsive FONT-SIZE so large headings shrink on small screens and never overflow (e.g. font-size:clamp(2rem,6vw,4.5rem)).\n3. Scroll-reveal and entrance animations are ENCOURAGED, but every element MUST animate from hidden TO fully visible — nothing stays hidden. Keep transitions under 0.8s.\n4. ALWAYS end with </body></html> — never leave HTML incomplete.\n5. COMPLETION IS MANDATORY: always finish the entire page through </body></html>. Keep total output under ~800 lines; if the page is getting long, make each section more concise rather than leaving the page unfinished — a complete simpler page always beats a truncated elaborate one. 6. NO horizontal overflow: set box-sizing:border-box globally, never let any element be wider than the viewport, and the page must NEVER scroll sideways; headings and long text must wrap (overflow-wrap:break-word) and must never use white-space:nowrap on multi-word text. 7. SPACING: the nav logo must never touch the menu links, and text must never touch the screen edges — use container padding/margins and clear gaps between elements.' }] }],
       generationConfig: { maxOutputTokens: 32768, temperature: 0.95, thinkingConfig: { thinkingBudget: 24576 } }
     });
-    const result = await callGemini(keys, body2, 'gemini-2.5-flash');
+    const result = await callGemini(keys, body2, genModel);
     if (result.error) return fail(result.error);
     const generatedHtml = cleanHTML(result.data);
     let finalHtml = generatedHtml.includes('</html>') ? generatedHtml : generatedHtml + '\n</body>\n</html>';
