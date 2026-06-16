@@ -166,8 +166,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r82">
-<script>console.log("%c[Websprout] build 2026-06-10-r82 (online-ordering link for food sites; one nav CTA; stronger no-dead-button rules)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r83">
+<script>console.log("%c[Websprout] build 2026-06-10-r83 (fix: Pro/comped members never redirected to Stripe on deploy/publish)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1134,7 +1134,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     function site(){return window._wsSite||localStorage.getItem('ws_site')||'';}
     function key(){return window._wsKey||localStorage.getItem('ws_key')||'';}
     function curHtml(){try{return localStorage.getItem('wsh')||'';}catch(e){return '';}}
-    function isUnlocked(){try{return sessionStorage.getItem('wsu')==='1';}catch(e){return false;}}
+    function isUnlocked(){try{if(sessionStorage.getItem('wsu')==='1')return true;}catch(e){}if(window._wsUser&&window._wsUser.pro)return true;try{if(typeof unlocked!=='undefined'&&unlocked)return true;}catch(e){}return false;}
     function pslug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40);}
     function bizName(){
       try{var info=JSON.parse(localStorage.getItem('ws_info_'+site())||'{}');if(info.brand)return info.brand;}catch(e){}
@@ -4092,11 +4092,21 @@ function doPayment(){
   if(!gHTML){toast('Generate a site first!');return;}
   var me=window._wsUser;
   if(!me||!me.auth){toast('Sign in first so your subscription unlocks all your sites.',5000);try{openAuth();}catch(e){}return;}
-  var link='${SUB_LINK}';
-  if(!link||link.indexOf('PASTE_YOUR')>-1){toast('Payments are not set up yet — add your Stripe subscription link as the STRIPE_SUB_LINK variable in your Worker.',6500);return;}
-  localStorage.setItem('wsh',gHTML);
-  var email=me.email||'';
-  window.location.href=link+'?client_reference_id='+encodeURIComponent(email)+'&prefilled_email='+encodeURIComponent(email);
+  function goStripe(em){
+    var link='${SUB_LINK}';
+    if(!link||link.indexOf('PASTE_YOUR')>-1){toast('Payments are not set up yet — add your Stripe subscription link as the STRIPE_SUB_LINK variable in your Worker.',6500);return;}
+    localStorage.setItem('wsh',gHTML);
+    window.location.href=link+'?client_reference_id='+encodeURIComponent(em)+'&prefilled_email='+encodeURIComponent(em);
+  }
+  function unlockNow(){unlocked=true;try{sessionStorage.setItem('wsu','1');}catch(e){}try{applyUnlock();}catch(e){}toast('You are already Pro. Everything is unlocked!',5000);}
+  // Never send an already-Pro or comped member to Stripe.
+  if(me.pro){unlockNow();return;}
+  // _wsUser may be stale (comped account on a fresh session) — confirm live before charging anyone.
+  fetch('/me').then(function(r){return r.json();}).then(function(m){
+    if(m){window._wsUser=m;}
+    if(m&&m.pro){unlockNow();return;}
+    goStripe((m&&m.email)||me.email||'');
+  }).catch(function(){goStripe(me.email||'');});
 }
 
 // -- Image Library ---------------------------------------------
