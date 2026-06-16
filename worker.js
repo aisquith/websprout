@@ -31,7 +31,7 @@ OUTPUT: Raw HTML only, <!DOCTYPE html> to </html>. No markdown, no backticks, no
 
 1. NAVIGATION — sticky flex nav (display:flex; align-items:center; justify-content:space-between; gap at least 1.5rem). Brand/logo on the left with CLEAR space from the 4-5 links — the logo must never touch or overlap the links. Exactly ONE CTA button on the right — never output two CTA buttons in the nav. Collapse the links into a hamburger menu below 820px. Wrap the brand/logo text in a tag carrying the attribute data-ws-field="brand".
 2. HERO — dramatic full-width section. Large RESPONSIVE headline using font-size:clamp(2rem,6vw,4.5rem) so it scales down on phones and NEVER overflows or gets clipped; weight 900; letter-spacing -2px; the headline MUST be allowed to wrap onto multiple lines (never white-space:nowrap). Subheadline. Two CTA buttons. Keep generous side padding so text never touches the screen edges. All hero text must strongly contrast with the hero background: if the hero background is dark or uses a photo/image slot, the headline and subtext are white/near-white (with a dark overlay over any photo) — never dark text on a dark hero.
-3. TRUST/STATS BAR — strip with 3-4 real stats or trust signals specific to this business type
+3. TRUST/STATS BAR — a SINGLE horizontal strip with 3-4 real stats or trust signals specific to this business type, shown ONCE. Never repeat the same stat twice and never stack a second identical copy of the bar. On phones the items wrap cleanly into a column. If you make this a scrolling ticker, build it exactly per the MARQUEE rule below.
 4. SERVICES/FEATURES — 3-4 detailed cards. Each has an icon, bold title, 2-3 sentence description. Real content, not generic filler.
 5. ABOUT/STORY — two column layout. Left: compelling brand narrative. Right: 4 stats in a 2x2 grid with big bold numbers.
 6. INDUSTRY-SPECIFIC SECTION — this is critical. Think about what this business actually needs:
@@ -137,7 +137,7 @@ TYPOGRAPHY IS THE #1 LEVER — be dramatic. Load TWO Google Fonts: a characterfu
 
 A HERO THAT STOPS THE SCROLL — make the hero feel alive with pure CSS (no images required): an animated gradient / aurora / mesh background, OR a few large blurred color "blobs" drifting slowly behind the content, OR a subtle grain/noise texture over a rich gradient. Bold headline, a punchy one-sentence subhead, and two CTAs (primary = solid with a gradient + soft glow; secondary = ghost/outline). Tall and full-bleed (min-height ~640-780px using px, never vh).
 
-MOTION = PREMIUM (tasteful, purposeful) — bring the page to life: staggered scroll-reveal entrances (fade + slide-up) on every major section; rich hover states on cards/buttons (lift + shadow + subtle scale, gradient shift, glow); a shimmer or animated gradient on the primary CTA; at least one slow-scrolling MARQUEE / ticker band (services, taglines, or stats); and animated count-up numbers for any stats. Transitions 0.3-0.8s; honor prefers-reduced-motion.
+MOTION = PREMIUM (tasteful, purposeful) — bring the page to life: staggered scroll-reveal entrances (fade + slide-up) on every major section; rich hover states on cards/buttons (lift + shadow + subtle scale, gradient shift, glow); a shimmer or animated gradient on the primary CTA; at least one slow-scrolling MARQUEE / ticker band (services, taglines, or stats) — built as a SINGLE horizontal line that genuinely scrolls: the wrapper has overflow:hidden, and the inner track uses display:flex; flex-wrap:nowrap; white-space:nowrap; width:max-content and is animated with transform:translateX. Duplicate the item set ONCE only for a seamless loop, and the duplicated items must NEVER wrap onto a second visible row (a non-scrolling marquee that shows its content twice stacked is a bug — fix the CSS so it scrolls on one line). Don't reuse the exact trust-bar stats verbatim in the marquee; and animated count-up numbers for any stats. Transitions 0.3-0.8s; honor prefers-reduced-motion.
 
 BREAK THE GRID — never just stack three identical centered cards. Vary the rhythm hard: asymmetric two-column splits (e.g. 5fr/7fr), a BENTO-style grid of different-sized cards for features or highlights, deliberately overlapping elements, oversized faded section numbers (01 / 02 / 03) or giant background words, and full-bleed dark or accent bands that alternate with lighter sections so the page builds dramatic contrast and momentum as you scroll.
 
@@ -168,8 +168,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r93">
-<script>window._wsBuild="2026-06-10-r93";console.log("%c[Websprout] build 2026-06-10-r93 (unlock banner now promotes Websprout publishing + shareable link, not Netlify deploy)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r95">
+<script>window._wsBuild="2026-06-10-r95";console.log("%c[Websprout] build 2026-06-10-r95 (fix bottom gap: preview sizes to last real element + zero trailing margins on every generated site)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2489,7 +2489,10 @@ function setPreview(html){
     try{
       var d=f.contentDocument||f.contentWindow.document;
       if(d&&d.body){
-        var h=Math.max(d.documentElement.scrollHeight,d.body.scrollHeight);
+        var sh=Math.max(d.documentElement.scrollHeight,d.body.scrollHeight);
+        var lb=0,kids=d.body.children;
+        for(var ki=kids.length-1;ki>=0;ki--){var kr=kids[ki].getBoundingClientRect();if(kr.height>0){lb=Math.ceil(kr.bottom);break;}}
+        var h=(lb>200&&lb<=sh)?lb:sh;
         if(h>200){
           // Hide skeleton once content is ready
           var skel=document.getElementById('skelWrap');
@@ -6356,7 +6359,7 @@ function ensureMobile(html){
       else html = vp + html;
     }
     if(html.indexOf('ws-mobile-safety') === -1){
-      const css = '<style id="ws-mobile-safety">img,svg,video{max-width:100%}@media(max-width:600px){html,body{overflow-x:hidden;max-width:100vw}img,svg,video{height:auto}table,pre,code{max-width:100%;overflow-x:auto}}</style>';
+      const css = '<style id="ws-mobile-safety">html,body{margin:0}body>*:last-child{margin-bottom:0}img,svg,video{max-width:100%}@media(max-width:600px){html,body{overflow-x:hidden;max-width:100vw}img,svg,video{height:auto}table,pre,code{max-width:100%;overflow-x:auto}}</style>';
       if(/<\/head>/i.test(html)) html = html.replace(/<\/head>/i, css + '</head>');
       else html = css + html;
     }
