@@ -68,6 +68,7 @@ Every piece of text MUST be instantly readable against the EXACT color or image 
 - WORKING LINKS & BUTTONS (critical): every nav link and every CTA/button that is meant to jump somewhere MUST use href="#id" pointing to an id that ACTUALLY EXISTS on the page. Give each major section a matching id (id="solutions", id="services", id="pricing", id="about", id="contact", etc.) and point the nav links and buttons at those exact ids. If a button names content the site should contain ("Browse Catalog", "View Menu", "Our Work", "See Pricing", "View Plans"), BUILD that section and link the button to it. Conversion buttons ("Get a quote", "Get started", "Order online", "Sign up", "Contact us", "Open an account") link to the contact form section via href="#contact". NEVER output href="#", href="", or a link whose target id does not exist on the page — every button must lead somewhere real.
 - Secondary / muted text must still be readable: not lighter than rgba(255,255,255,.65) on dark backgrounds, and around #555–#666 (never lighter) on light backgrounds.
 - FINAL CHECK before you finish: scan every headline, paragraph, button, nav link and stat. If a human couldn't read it in a single glance, change the color until they can.
+- MOBILE-FIRST (most visitors are on phones — the page MUST look great at 375px wide): every multi-column layout (feature grids, pricing tables, the hero split, footer columns) collapses to a SINGLE column on phones via media queries. The nav links collapse into a hamburger that actually toggles — include the small JS to open/close it. Tap targets (buttons, links) are at least 44px tall with comfortable spacing between them. Body text is never smaller than 16px on mobile; headlines use clamp() so they shrink but stay bold and never clip. Reduce section padding on phones so content breathes without giant empty gaps. NOTHING may overflow horizontally — the page must never scroll sideways on a phone, and images never exceed their container.
 
 ━━━ IMAGE SLOTS ━━━
 Where images naturally belong, use this exact format (users click to upload real photos):
@@ -166,8 +167,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r83">
-<script>console.log("%c[Websprout] build 2026-06-10-r83 (fix: Pro/comped members never redirected to Stripe on deploy/publish)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r88">
+<script>window._wsBuild="2026-06-10-r88";console.log("%c[Websprout] build 2026-06-10-r88 (business layer pt2: invoicing — create a Stripe payment link, email it to the client)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -676,6 +677,9 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .slot-ai-row button:hover{filter:brightness(1.08)}
 .slot-ai-row button:disabled{opacity:.6;cursor:default}
 .slot-ai-msg{font-size:12px;color:rgba(234,242,232,.45);margin-top:7px;min-height:14px}
+.post-kind{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.75);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.post-kind:hover{background:rgba(255,255,255,.12)}
+.post-kind.active{background:linear-gradient(135deg,#3dba52,#2d7a3a);color:#fff;border-color:transparent}
 .slot-upload-btn{width:100%;background:#2d7a3a;color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
 .slot-upload-btn:hover{background:#3dba52}
 
@@ -1039,6 +1043,8 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
           <button class="gs-item" data-tool="sectionsBtn">&#9783; Manage sections<span class="gs-sub">Add, remove or reorder</span></button>
           <button class="gs-item" data-tool="seoBtn">&#128269; SEO &amp; sharing<span class="gs-sub">Title, description, social preview</span></button>
           <button class="gs-item" data-tool="leadsBtn">&#128236; Leads<span class="gs-sub">See who contacted you</span></button>
+          <button class="gs-item" data-tool="postBtn">&#9997; Marketing copy<span class="gs-sub">AI posts, emails &amp; promos</span></button>
+          <button class="gs-item" data-tool="invoiceBtn">&#129534; Send an invoice<span class="gs-sub">Get paid with a Stripe link</span></button>
           <button class="gs-item" data-tool="regenBtn">&#8635; Regenerate the design</button>
           <button class="gs-item" data-tool="backBtn">&#8592; Start over</button>
         </div>
@@ -1048,6 +1054,8 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <button class="s-btn s-ghost" id="sectionsBtn" data-needs-site="1">&#9783; Sections</button>
         <button class="s-btn s-ghost" id="seoBtn" data-needs-site="1">&#128269; SEO</button>
         <button class="s-btn s-ghost" id="leadsBtn" data-needs-site="1">&#128236; Leads</button>
+        <button class="s-btn s-ghost" id="postBtn" data-needs-site="1">&#9997; Marketing</button>
+        <button class="s-btn s-ghost" id="invoiceBtn">&#129534; Invoice</button>
         <button class="s-btn s-ghost" id="backBtn">&#8592; Back</button>
         <button class="s-btn s-ghost" id="regenBtn">&#8635; Regen</button>
       </span>
@@ -1971,6 +1979,53 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   });
 })();
 </script>
+<div id="invoiceModal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:18px">
+  <div style="background:#0c160a;border:1px solid rgba(45,122,58,.3);border-radius:16px;max-width:520px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.07)">
+      <div><div style="font-size:17px;font-weight:800;color:#fff">&#129534; Send an invoice</div><div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px">Create a Stripe payment link and email it to your client</div></div>
+      <button id="invClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;line-height:1">&#10005;</button>
+    </div>
+    <div style="padding:14px 18px;overflow-y:auto">
+      <label style="font-size:12px;color:rgba(255,255,255,.5);display:block;margin-bottom:5px">Amount (USD)</label>
+      <input id="invAmount" type="number" min="0.50" step="0.01" placeholder="150.00" style="width:100%;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;margin-bottom:12px">
+      <label style="font-size:12px;color:rgba(255,255,255,.5);display:block;margin-bottom:5px">What&#39;s it for?</label>
+      <input id="invDesc" type="text" placeholder="e.g. Logo design \u2014 final payment" style="width:100%;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;margin-bottom:12px">
+      <label style="font-size:12px;color:rgba(255,255,255,.5);display:block;margin-bottom:5px">Client email (optional \u2014 we&#39;ll email them the link)</label>
+      <input id="invEmail" type="email" placeholder="client@example.com" style="width:100%;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;margin-bottom:14px">
+      <button id="invGen" style="width:100%;background:linear-gradient(135deg,#3dba52,#2d7a3a);color:#fff;border:none;border-radius:9px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Create payment link</button>
+      <div id="invResultWrap" style="display:none;margin-top:14px">
+        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px">Payment link</div>
+        <div style="display:flex;gap:7px"><input id="invResult" readonly style="flex:1;min-width:0;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#7dd88f;border-radius:9px;padding:10px 12px;font-size:13px;font-family:inherit"><button id="invCopy" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Copy</button></div>
+      </div>
+      <div id="invMsg" style="font-size:12px;color:rgba(234,242,232,.5);margin-top:10px;min-height:14px"></div>
+    </div>
+  </div>
+</div>
+<div id="postModal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:18px">
+  <div style="background:#0c160a;border:1px solid rgba(45,122,58,.3);border-radius:16px;max-width:600px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.07)">
+      <div><div style="font-size:17px;font-weight:800;color:#fff">&#9997; Marketing copy</div><div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px">AI-written posts, emails &amp; promos from your site</div></div>
+      <button id="postClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;line-height:1">&#10005;</button>
+    </div>
+    <div style="padding:14px 18px;overflow-y:auto">
+      <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:7px">What do you need?</div>
+      <div id="postKinds" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px">
+        <button class="post-kind active" data-kind="social">Social post</button>
+        <button class="post-kind" data-kind="promo">Promo</button>
+        <button class="post-kind" data-kind="email">Email</button>
+        <button class="post-kind" data-kind="blog">Blog post</button>
+        <button class="post-kind" data-kind="sms">Text blast</button>
+      </div>
+      <input id="postTopic" type="text" placeholder="Optional: what's it about? (e.g. weekend special, new hours)" style="width:100%;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;margin-bottom:12px">
+      <button id="postGen" style="width:100%;background:linear-gradient(135deg,#3dba52,#2d7a3a);color:#fff;border:none;border-radius:9px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">&#10024; Write it</button>
+      <div id="postResultWrap" style="display:none;margin-top:14px">
+        <textarea id="postResult" style="width:100%;min-height:170px;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:9px;padding:12px 13px;font-size:14px;line-height:1.5;font-family:inherit;resize:vertical"></textarea>
+        <button id="postCopy" style="margin-top:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">&#128203; Copy</button>
+      </div>
+      <div id="postMsg" style="font-size:12px;color:rgba(234,242,232,.5);margin-top:10px;min-height:14px"></div>
+    </div>
+  </div>
+</div>
 <div id="leadsModal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:18px">
   <div style="background:#0c160a;border:1px solid rgba(45,122,58,.3);border-radius:16px;max-width:620px;width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.07)">
@@ -2089,6 +2144,22 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
 <script>
 // Websprout v3.1
 var gHTML='',unlocked=false,selectedType='',selectedStyle='';
+// ── Error visibility: report studio JS errors so breakage is seen, not guessed ──
+(function(){
+  var _errSent=0,_errSeen={};
+  window._wsReport=function(o){
+    try{
+      if(_errSent>15)return;
+      var key=(o.msg||'')+'|'+(o.line||'');
+      if(_errSeen[key])return;_errSeen[key]=1;_errSent++;
+      o.where=o.where||'studio';o.url=location.href;
+      try{o.build=window._wsBuild||'';}catch(e){}
+      fetch('/api/clientlog',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o),keepalive:true}).catch(function(){});
+    }catch(e){}
+  };
+  window.addEventListener('error',function(e){window._wsReport({msg:(e&&e.message)||'error',src:(e&&e.filename)||'',line:(e&&e.lineno)||0,stack:(e&&e.error&&e.error.stack)||''});});
+  window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;window._wsReport({msg:('promise: '+((r&&r.message)||String(r||''))).slice(0,200),stack:(r&&r.stack)||''});});
+})();
 var undoStack=[],redoStack=[],editCount=0;
 var loadMsgs=['Planting your prompt...','Writing your hero section...','Designing the layout...','Adding feature cards...','Styling the navigation...','Building the footer...','Writing your copy...','Polishing the details...','Almost ready...'];
 
@@ -2995,6 +3066,66 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!sid||!k){if(window.toast)toast('Publish or generate a site first.');return;}
     fetch('/api/inbox/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:sid,key:k,email:em})}).then(function(){if(window.toast)toast('Saved \\u2014 leads will be emailed to '+(em||'your account email'));}).catch(function(){if(window.toast)toast('Could not save. Try again.');});
   });
+  // ── Marketing copy (AI post writer) ──
+  var _postKind='social';
+  function postContext(){
+    try{
+      var doc=new DOMParser().parseFromString(gHTML||'','text/html');
+      var title=((doc.querySelector('title')||{}).textContent||'').trim();
+      var sc=doc.querySelectorAll('script,style');for(var i=0;i<sc.length;i++)sc[i].remove();
+      var txt=((doc.body?doc.body.textContent:'')||'').replace(/\s+/g,' ').trim().slice(0,1500);
+      return (title?('Business / site title: '+title+'\\n'):'')+txt;
+    }catch(e){return '';}
+  }
+  window.openPost=function(){
+    var m=document.getElementById('postModal');if(!m)return;
+    if(!gHTML){if(window.toast)toast('Generate a site first.');return;}
+    m.style.display='flex';
+    var rw=document.getElementById('postResultWrap');if(rw)rw.style.display='none';
+    var msg=document.getElementById('postMsg');if(msg)msg.textContent='';
+  };
+  var _pk=document.getElementById('postKinds');
+  if(_pk)_pk.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.post-kind');if(!b)return;_postKind=b.getAttribute('data-kind');var all=_pk.querySelectorAll('.post-kind');for(var i=0;i<all.length;i++)all[i].classList.remove('active');b.classList.add('active');});
+  var _pg=document.getElementById('postGen');
+  if(_pg)_pg.addEventListener('click',function(){
+    var msg=document.getElementById('postMsg'),rw=document.getElementById('postResultWrap'),res=document.getElementById('postResult');
+    var topic=((document.getElementById('postTopic')||{}).value||'').trim();
+    var old=_pg.innerHTML;_pg.disabled=true;_pg.innerHTML='Writing\\u2026';if(msg){msg.style.color='rgba(234,242,232,.55)';msg.textContent='Drafting your copy\\u2026';}
+    fetch('/api/post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:_postKind,topic:topic,context:postContext()})}).then(function(r){return r.json();}).then(function(j){
+      _pg.disabled=false;_pg.innerHTML=old;
+      if(j&&j.text){if(res)res.value=j.text;if(rw)rw.style.display='block';if(msg)msg.textContent='';}
+      else{if(msg){msg.style.color='#fca5a5';msg.textContent=(j&&j.error)||'Could not generate. Try again.';}}
+    }).catch(function(){_pg.disabled=false;_pg.innerHTML=old;if(msg){msg.style.color='#fca5a5';msg.textContent='Something went wrong. Try again.';}});
+  });
+  var _pc2=document.getElementById('postClose');if(_pc2)_pc2.addEventListener('click',function(){var m=document.getElementById('postModal');if(m)m.style.display='none';});
+  var _pm=document.getElementById('postModal');if(_pm)_pm.addEventListener('click',function(e){if(e.target===_pm)_pm.style.display='none';});
+  var _pcopy=document.getElementById('postCopy');if(_pcopy)_pcopy.addEventListener('click',function(){var res=document.getElementById('postResult');if(!res)return;res.select();try{navigator.clipboard.writeText(res.value);if(window.toast)toast('Copied!');}catch(e){try{document.execCommand('copy');if(window.toast)toast('Copied!');}catch(e2){}}});
+  var _pbtn=document.getElementById('postBtn');if(_pbtn)_pbtn.addEventListener('click',window.openPost);
+  // ── Invoicing ──
+  window.openInvoice=function(){
+    var m=document.getElementById('invoiceModal');if(!m)return;
+    m.style.display='flex';
+    var rw=document.getElementById('invResultWrap');if(rw)rw.style.display='none';
+    var msg=document.getElementById('invMsg');if(msg)msg.textContent='';
+  };
+  var _ig=document.getElementById('invGen');
+  if(_ig)_ig.addEventListener('click',function(){
+    var msg=document.getElementById('invMsg'),rw=document.getElementById('invResultWrap'),res=document.getElementById('invResult');
+    var amount=((document.getElementById('invAmount')||{}).value||'').trim();
+    var desc=((document.getElementById('invDesc')||{}).value||'').trim();
+    var email=((document.getElementById('invEmail')||{}).value||'').trim();
+    if(!amount||parseFloat(amount)<0.5){if(msg){msg.style.color='#fca5a5';msg.textContent='Enter an amount of at least $0.50.';}return;}
+    var old=_ig.innerHTML;_ig.disabled=true;_ig.innerHTML='Creating\\u2026';if(msg){msg.style.color='rgba(234,242,232,.55)';msg.textContent='Talking to Stripe\\u2026';}
+    fetch('/api/invoice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount:amount,desc:desc,email:email})}).then(function(r){return r.json();}).then(function(j){
+      _ig.disabled=false;_ig.innerHTML=old;
+      if(j&&j.url){if(res)res.value=j.url;if(rw)rw.style.display='block';if(msg){msg.style.color='#7dd88f';msg.textContent=j.emailed?('Sent to '+email+' \\u2014 link is below to copy too.'):'Link ready \\u2014 copy it and send it to your client.';}}
+      else{if(msg){msg.style.color='#fca5a5';msg.textContent=(j&&j.error)||'Could not create the invoice.';}}
+    }).catch(function(){_ig.disabled=false;_ig.innerHTML=old;if(msg){msg.style.color='#fca5a5';msg.textContent='Something went wrong. Try again.';}});
+  });
+  var _ic=document.getElementById('invClose');if(_ic)_ic.addEventListener('click',function(){var m=document.getElementById('invoiceModal');if(m)m.style.display='none';});
+  var _im=document.getElementById('invoiceModal');if(_im)_im.addEventListener('click',function(e){if(e.target===_im)_im.style.display='none';});
+  var _icp=document.getElementById('invCopy');if(_icp)_icp.addEventListener('click',function(){var res=document.getElementById('invResult');if(!res)return;res.select();try{navigator.clipboard.writeText(res.value);if(window.toast)toast('Copied!');}catch(e){try{document.execCommand('copy');if(window.toast)toast('Copied!');}catch(e2){}}});
+  var _ibtn=document.getElementById('invoiceBtn');if(_ibtn)_ibtn.addEventListener('click',window.openInvoice);
   if(slotFileInputEl)slotFileInputEl.addEventListener('change',function(){
     if(slotFileInputEl.files&&slotFileInputEl.files[0])slotCompressAndFill(slotFileInputEl.files[0]);
     slotFileInputEl.value='';
@@ -4786,6 +4917,8 @@ export default {
     }
     if (url.pathname === '/generate' && request.method === 'POST') return doGenerate(request, env);
     if (url.pathname === '/genimage' && request.method === 'POST') return doGenImage(request, env);
+    if (url.pathname === '/api/post' && request.method === 'POST') return doWritePost(request, env);
+    if (url.pathname === '/api/invoice' && request.method === 'POST') return doInvoice(request, env);
     if (url.pathname === '/track' && request.method === 'POST') return doTrack(request, env);
     if (url.pathname === '/send-email' && request.method === 'POST') return doSendEmail(request, env);
     if (url.pathname === '/stats' && request.method === 'GET') return doStats(request, env);
@@ -4797,6 +4930,10 @@ export default {
     if (url.pathname.startsWith('/api/form/')) {
       if (request.method === 'OPTIONS') return new Response(null, { headers: formCors() });
       if (request.method === 'POST') return doFormSubmit(request, env, decodeURIComponent(url.pathname.slice(10)));
+    }
+    if (url.pathname === '/api/clientlog') {
+      if (request.method === 'OPTIONS') return new Response(null, { headers: formCors() });
+      if (request.method === 'POST') return doClientLog(request, env);
     }
     if (url.pathname === '/inbox') return new Response(INBOX_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     if (url.pathname === '/publish' && request.method === 'POST') return doPublish(request, env);
@@ -5170,6 +5307,32 @@ async function siteKey(siteId, env){
 
 function formCors(){ return { 'Access-Control-Allow-Origin':'*', 'Access-Control-Allow-Methods':'POST, OPTIONS', 'Access-Control-Allow-Headers':'Content-Type' }; }
 
+async function doClientLog(request, env){
+  try{
+    let b; try{ b = await request.json(); }catch(e){ return new Response('{}', { headers: formCors() }); }
+    if(!env.KV) return new Response('{}', { headers: formCors() });
+    const ip = request.headers.get('cf-connecting-ip') || '0';
+    const rlKey = 'errrate:' + ip;
+    const n = parseInt((await env.KV.get(rlKey))||'0',10) || 0;
+    if(n > 60) return new Response('{}', { headers: formCors() });
+    await env.KV.put(rlKey, String(n+1), { expirationTtl: 3600 });
+    const rec = {
+      ts: Date.now(),
+      msg: String(b.msg||'').slice(0,400),
+      src: String(b.src||'').slice(0,200),
+      line: parseInt(b.line,10)||0,
+      stack: String(b.stack||'').slice(0,700),
+      url: String(b.url||'').slice(0,300),
+      where: String(b.where||'').slice(0,30),
+      build: String(b.build||'').slice(0,30),
+      ua: (request.headers.get('user-agent')||'').slice(0,180)
+    };
+    if(!rec.msg) return new Response('{}', { headers: formCors() });
+    await env.KV.put('clienterr:' + Date.now() + ':' + Math.random().toString(36).slice(2,8), JSON.stringify(rec), { expirationTtl: 30*86400 });
+    return new Response('{"ok":true}', { headers: formCors() });
+  }catch(e){ return new Response('{}', { headers: formCors() }); }
+}
+
 // ── Visitor analytics for published sites ──
 async function doHit(request, env){
   try {
@@ -5235,6 +5398,42 @@ async function sendFormEmail(env, to, siteId, fields){
   for (const k in fields){ rows += '<tr><td style="padding:7px 12px;font-weight:600;color:#0f1a0d;border-bottom:1px solid #eee;vertical-align:top">' + escHtml(k) + '</td><td style="padding:7px 12px;color:#333;border-bottom:1px solid #eee">' + escHtml(fields[k]).replace(/\n/g,'<br>') + '</td></tr>'; }
   const html = '<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:560px;margin:0 auto"><div style="background:#0f1a0d;padding:20px;text-align:center"><span style="color:#fff;font-size:20px;font-weight:800">🌱 New form submission</span></div><div style="padding:24px"><p style="color:#555;margin:0 0 14px">Someone just submitted a form on your website:</p><table style="width:100%;border-collapse:collapse;font-size:14px;border:1px solid #eee;border-radius:8px;overflow:hidden">' + rows + '</table><p style="margin:20px 0 0"><a href="https://websprout.app/inbox?site=' + siteId + '" style="color:#2d7a3a;font-weight:700;text-decoration:none">View all submissions in your inbox →</a></p></div></div>';
   await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'🌱 New submission from your website', html: html }) });
+}
+
+async function doInvoice(request, env){
+  const s = await getSession(request, env);
+  if(!s) return fail('Please sign in.');
+  const ownerEmail = (s.email||'').toLowerCase();
+  let isPro=false;
+  try{ const isOwner=ownerEmail===SUPPORT_EMAIL.toLowerCase(); const u=JSON.parse((env.KV&&await env.KV.get('user:'+ownerEmail))||'{}'); isPro=isOwner||u.plan==='pro'; }catch(e){}
+  if(!isPro) return fail('Invoicing is a Pro feature \u2014 go Pro to unlock it.');
+  const sk = (env.STRIPE_SECRET_KEY||'').trim();
+  if(!sk) return fail('To send invoices, add your Stripe secret key as STRIPE_SECRET_KEY in your Worker settings.');
+  let body; try{ body=await request.json(); }catch(e){ return fail('Invalid request'); }
+  const amount = Math.round(parseFloat(body.amount||'0')*100);
+  if(!amount || amount<50) return fail('Enter an amount of at least $0.50.');
+  const desc = (String(body.desc||'Invoice').slice(0,200).trim()) || 'Invoice';
+  const clientEmail = String(body.email||'').trim().slice(0,120);
+  const currency = (String(body.currency||'usd').toLowerCase().replace(/[^a-z]/g,'').slice(0,3)) || 'usd';
+  try{
+    const pr = await fetch('https://api.stripe.com/v1/prices', { method:'POST', headers:{ 'Authorization':'Bearer '+sk, 'Content-Type':'application/x-www-form-urlencoded' }, body:'unit_amount='+amount+'&currency='+encodeURIComponent(currency)+'&product_data[name]='+encodeURIComponent(desc) });
+    const prj = await pr.json();
+    if(!pr.ok || prj.error) return fail('Stripe: '+((prj.error&&prj.error.message)||'could not create price'));
+    const pl = await fetch('https://api.stripe.com/v1/payment_links', { method:'POST', headers:{ 'Authorization':'Bearer '+sk, 'Content-Type':'application/x-www-form-urlencoded' }, body:'line_items[0][price]='+encodeURIComponent(prj.id)+'&line_items[0][quantity]=1' });
+    const plj = await pl.json();
+    if(!pl.ok || plj.error || !plj.url) return fail('Stripe: '+((plj.error&&plj.error.message)||'could not create payment link'));
+    const url = plj.url;
+    try{ if(env.KV) await env.KV.put('invoice:'+ownerEmail+':'+Date.now()+':'+Math.random().toString(36).slice(2,7), JSON.stringify({ ts:Date.now(), amount:amount, currency:currency, desc:desc, clientEmail:clientEmail, url:url }), { expirationTtl: 365*86400 }); }catch(e){}
+    let emailed=false;
+    if(clientEmail && env.RESEND_API_KEY){ try{ await sendInvoiceEmail(env, clientEmail, s.email, desc, amount, currency, url); emailed=true; }catch(e){} }
+    return succeed({ url:url, emailed:emailed });
+  }catch(e){ return fail('Could not create the invoice. Please try again.'); }
+}
+async function sendInvoiceEmail(env, to, fromOwner, desc, amount, currency, url){
+  const amt = (amount/100).toFixed(2);
+  const cur = currency.toUpperCase();
+  const html = '<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:520px;margin:0 auto"><div style="background:#0f1a0d;padding:20px;text-align:center"><span style="color:#fff;font-size:20px;font-weight:800">Invoice</span></div><div style="padding:24px"><p style="color:#555;margin:0 0 6px">' + escHtml(desc) + '</p><p style="font-size:28px;font-weight:800;color:#0f1a0d;margin:0 0 18px">' + cur + ' ' + amt + '</p><p style="margin:0 0 22px"><a href="' + url + '" style="display:inline-block;background:#16a34a;color:#fff;padding:13px 26px;border-radius:8px;text-decoration:none;font-weight:700">Pay now</a></p><p style="color:#999;font-size:12px;margin:0">Sent via Websprout on behalf of ' + escHtml(fromOwner) + '. Reply to this email to reach them directly.</p></div></div>';
+  await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer '+env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout Invoices <hello@websprout.app>', to:[to], reply_to:fromOwner, subject:'Invoice: '+desc+' ('+cur+' '+amt+')', html:html }) });
 }
 
 async function doInboxData(request, env){
@@ -5372,7 +5571,8 @@ async function doPublish(request, env){
         return '<form' + a + '>';
       });
       const formJS = "<scr"+"ipt>(function(){var EP=" + JSON.stringify(formAction) + ";function r(fn){if(document.readyState!=='loading')fn();else document.addEventListener('DOMContentLoaded',fn);}r(function(){var fs=document.getElementsByTagName('form');Array.prototype.slice.call(fs).forEach(function(f){f.addEventListener('submit',function(e){e.preventDefault();var b=f.querySelector('[type=submit],button');var o=b?b.textContent:'';if(b){b.disabled=true;b.textContent='Sending\u2026';}fetch(EP,{method:'POST',body:new FormData(f)}).then(d).catch(d);function d(){var n=document.createElement('div');n.textContent='\u2713 Thanks! Your message was sent \u2014 we\u2019ll be in touch soon.';n.setAttribute('style','padding:15px 18px;margin-top:14px;background:#16a34a;color:#fff;border-radius:10px;font-weight:700;font-family:inherit;text-align:center');f.reset();if(b){b.disabled=false;b.textContent=o;}f.parentNode.insertBefore(n,f.nextSibling);setTimeout(function(){if(n.parentNode)n.parentNode.removeChild(n);},9000);}});});});})();</scr"+"ipt>";
-      if (pubHtml.indexOf('</body>') > -1) pubHtml = pubHtml.replace('</body>', formJS + '</body>'); else pubHtml = pubHtml + formJS;
+      const errJS = "<scr"+"ipt>window.addEventListener('error',function(ev){try{fetch('https://websprout.app/api/clientlog',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({msg:(ev&&ev.message)||'error',src:(ev&&ev.filename)||'',line:(ev&&ev.lineno)||0,where:'published',url:location.href}),keepalive:true}).catch(function(){});}catch(e){}});</scr"+"ipt>";
+      if (pubHtml.indexOf('</body>') > -1) pubHtml = pubHtml.replace('</body>', formJS + errJS + '</body>'); else pubHtml = pubHtml + formJS + errJS;
     } catch(e){ pubHtml = b.html; }
     // Default the lead-notification email to the owner's account email (only if not already set)
     try { const _s2 = await getSession(request, env); if (_s2 && _s2.email) { const _cur = await env.KV.get('notify:' + b.siteId); if (!_cur) await env.KV.put('notify:' + b.siteId, _s2.email); } } catch(e){}
@@ -5624,6 +5824,8 @@ a{color:#4ade80;text-decoration:none}.muted{color:rgba(234,242,232,.38)}.err{col
 <div class="wrap"><table><thead><tr><th>Email</th><th>Name</th><th>Plan</th><th>Joined</th><th>Action</th></tr></thead><tbody id="ubody"><tr><td colspan="5" class="muted" style="padding:18px">Loading&hellip;</td></tr></tbody></table></div>
 <h2>Published sites</h2>
 <div class="wrap"><table><thead><tr><th>Address</th><th>Updated</th><th>Badge</th></tr></thead><tbody id="pbody"><tr><td colspan="3" class="muted" style="padding:18px">Loading&hellip;</td></tr></tbody></table></div>
+<h2>Recent errors <span id="errCount" style="font-size:12px;color:rgba(234,242,232,.4);font-weight:400"></span></h2>
+<div class="wrap"><table><thead><tr><th>When</th><th>Where</th><th>Message</th><th>Build</th></tr></thead><tbody id="ebody"><tr><td colspan="4" class="muted" style="padding:18px">Loading&hellip;</td></tr></tbody></table></div>
 <script>
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function dt(ms){if(!ms)return '<span class="muted">&mdash;</span>';var d=new Date(ms);return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
@@ -5648,6 +5850,12 @@ function load(){
     if(!ps.length)pb='<tr><td colspan="3" class="muted" style="padding:18px">No published sites yet</td></tr>';
     for(var k=0;k<ps.length;k++){var p=ps[k];pb+='<tr><td><a href="https://websprout.app/s/'+esc(p.slug)+'" target="_blank">'+esc(p.slug)+'</a></td><td class="muted">'+dt(p.updated)+'</td><td>'+(p.nobadge?'<span class="muted">hidden (Pro)</span>':'shown')+'</td></tr>';}
     document.getElementById('pbody').innerHTML=pb;
+    var es=j.errors||[],eb='';
+    if(!es.length)eb='<tr><td colspan="4" class="muted" style="padding:18px">No errors reported \uD83C\uDF89</td></tr>';
+    for(var x=0;x<es.length;x++){var er=es[x];
+      eb+='<tr><td class="muted" style="white-space:nowrap">'+dt(er.ts)+'</td><td>'+esc(er.where||'')+'</td><td style="max-width:440px"><div style="color:#fca5a5;font-size:12px;word-break:break-word">'+esc(er.msg||'')+'</div>'+(er.url?'<div class="muted" style="font-size:11px;word-break:break-all">'+esc(er.url)+'</div>':'')+'</td><td class="muted" style="font-size:11px">'+esc((er.build||'').replace('2026-06-10-',''))+'</td></tr>';}
+    document.getElementById('ebody').innerHTML=eb;
+    var ec=document.getElementById('errCount');if(ec)ec.textContent=es.length?('('+es.length+' most recent)'):'';
   }).catch(function(){document.getElementById('cards').innerHTML='<div class="err">Could not load — make sure you are signed in as the owner.</div>';});
 }
 document.getElementById('ubody').addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('button[data-email]');if(b)setPlan(b.getAttribute('data-email'),b.getAttribute('data-plan'));});
@@ -5670,7 +5878,13 @@ async function doAdminData(request, env){
   for(const u of users){ if(u.plan==='pro'){ if(u.source==='paid')paid++; else comped++; } else free++; if(u.created>now-7*86400000)signups7++; }
   users.sort((a,b)=>(b.created||0)-(a.created||0));
   pub.sort((a,b)=>(b.updated||0)-(a.updated||0));
-  return succeed({ totals:{ accounts:users.length, paid, comped, pro:paid+comped, free, conversion: users.length?Math.round(paid/users.length*1000)/10:0, published:pub.length, signups7 }, users, published:pub });
+  const errors=[];
+  try{
+    const r3=await env.KV.list({ prefix:'clienterr:', limit:1000 });
+    const names=r3.keys.map(function(k){return k.name;}).sort().reverse().slice(0,60);
+    for(const nm of names){ try{ errors.push(JSON.parse(await env.KV.get(nm)||'{}')); }catch(e){} }
+  }catch(e){}
+  return succeed({ totals:{ accounts:users.length, paid, comped, pro:paid+comped, free, conversion: users.length?Math.round(paid/users.length*1000)/10:0, published:pub.length, signups7, errors:errors.length }, users, published:pub, errors:errors });
 }
 async function doAdminPage(request, env){
   const s = await getSession(request, env);
@@ -5867,6 +6081,40 @@ async function doGenImage(request, env) {
   }
   return fail(lastErr);
 }
+function buildPostPrompt(kind, topic, ctx){
+  const kinds = {
+    social: 'a short, punchy social media post (2-4 sentences) with a strong hook and 3-5 relevant hashtags',
+    blog: 'a short blog post of about 200-300 words with a clear headline and 2-3 tight paragraphs',
+    email: 'a friendly marketing email: a subject line on the first line, then a 120-180 word body ending with a clear call to action',
+    promo: 'a promotional announcement of 3-5 sentences highlighting an offer or news, energetic, ending with a call to action',
+    sms: 'a very short SMS/text blast under 160 characters with one clear call to action'
+  };
+  const want = kinds[kind] || kinds.social;
+  let p = 'You are a sharp marketing copywriter. Write ' + want + ' for this business. Use a confident, on-brand voice. No cliches, no Lorem Ipsum, no placeholder brackets. Output ONLY the copy itself \u2014 no preamble, no "here is", no explanation.\n\nBusiness context:\n' + (ctx || 'a small local business');
+  if(topic) p += '\n\nFocus the piece specifically on: ' + topic;
+  return p;
+}
+async function doWritePost(request, env){
+  const s = await getSession(request, env);
+  if(!s) return fail('Please sign in.');
+  let isPro=false;
+  try{ const isOwner=(s.email||'').toLowerCase()===SUPPORT_EMAIL.toLowerCase(); const u=JSON.parse((env.KV&&await env.KV.get('user:'+(s.email||'').toLowerCase()))||'{}'); isPro=isOwner||u.plan==='pro'; }catch(e){}
+  if(!isPro) return fail('Marketing copy is a Pro feature \u2014 go Pro to unlock it.');
+  let body; try{ body=await request.json(); }catch(e){ return fail('Invalid request'); }
+  const kind=String(body.kind||'social').slice(0,20);
+  const topic=String(body.topic||'').slice(0,300);
+  const ctx=String(body.context||'').slice(0,2000);
+  const keys=geminiKeys(env);
+  if(!keys.length) return fail('Not configured.');
+  const reqBody = JSON.stringify({ contents:[{ parts:[{ text: buildPostPrompt(kind, topic, ctx) }] }], generationConfig:{ maxOutputTokens:1200, temperature:0.9 } });
+  const result = await callGemini(keys, reqBody, 'gemini-2.5-flash');
+  if(result.error) return fail(result.error);
+  let text='';
+  try{ const parts=(((result.data.candidates||[])[0]||{}).content||{}).parts||[]; text=parts.map(function(p){return p.text||'';}).join(''); }catch(e){}
+  text=(text||'').trim();
+  if(!text) return fail('Could not generate \u2014 try again.');
+  return succeed({ text: text });
+}
 async function doGenerate(request, env) {
   const _sess = await getSession(request, env);
   if (!_sess) return fail('Please sign in to generate a site.');
@@ -5892,6 +6140,8 @@ async function doGenerate(request, env) {
     if (result.error) return fail(result.error);
     const generatedHtml = cleanHTML(result.data);
     let finalHtml = generatedHtml.includes('</html>') ? generatedHtml : generatedHtml + '\n</body>\n</html>';
+    finalHtml = sanitizeGenerated(finalHtml);
+    finalHtml = ensureMobile(finalHtml);
     finalHtml = withReveal(finalHtml);
     finalHtml = withFix(finalHtml);
     const siteId = 'ws' + Math.random().toString(36).slice(2,9);
@@ -5958,6 +6208,56 @@ async function doModify(request, env) {
     const mSite = (body.html.match(/name="ws-site" content="([^"]+)"/) || [])[1] || ('ws' + Math.random().toString(36).slice(2,9));
     return succeed({ html: withForms(withFix(withReveal(cleaned)), mSite), message: 'Done! Your site has been updated.' });
   } catch(e) { return fail(e.message); }
+}
+
+// Post-generation safety pass: repoint dead / empty / missing-target in-page links to a real
+// conversion section so generated sites never ship buttons that go nowhere.
+function sanitizeGenerated(html){
+  try{
+    const ids = new Set();
+    const idRe = /\sid\s*=\s*["']([^"']+)["']/gi;
+    let mm;
+    while((mm = idRe.exec(html))){ ids.add(mm[1].trim().toLowerCase()); }
+    function pick(cands){
+      for(const c of cands){ if(ids.has(c)) return c; }
+      for(const id of ids){ for(const c of cands){ if(id.indexOf(c) > -1) return id; } }
+      return null;
+    }
+    const target = pick(['contact','quote','book','booking','order','reserve','cta','getstarted','signup']);
+    if(!target) return html;
+    html = html.replace(/<a\b([^>]*?)\shref\s*=\s*"([^"]*)"([^>]*)>/gi, function(full, pre, href, post){
+      const attrs = pre + ' ' + post;
+      const h = (href||'').trim();
+      if(/^(https?:|mailto:|tel:|javascript:|\/\/)/i.test(h)) return full;       // external / protocol
+      if(h.charAt(0) === '[') return full;                                        // [Your Booking Link] etc.
+      if(/data-ws-field\s*=\s*["']brand["']/i.test(attrs)) return full;           // logo/brand
+      if(/class\s*=\s*["'][^"']*(logo|brand)/i.test(attrs)) return full;
+      let dead = false;
+      if(h === '' || h === '#') dead = true;
+      else if(h.charAt(0) === '#'){ if(!ids.has(h.slice(1).toLowerCase())) dead = true; }
+      return dead ? ('<a' + pre + ' href="#' + target + '"' + post + '>') : full;
+    });
+  }catch(e){}
+  return html;
+}
+
+// Guarantee mobile baseline: a viewport tag (without it phones render the desktop layout zoomed out)
+// plus a minimal, non-destructive safety stylesheet so nothing overflows sideways on a phone.
+function ensureMobile(html){
+  try{
+    if(!/<meta[^>]+name=["']viewport["']/i.test(html)){
+      const vp = '<meta name="viewport" content="width=device-width, initial-scale=1">';
+      if(/<head[^>]*>/i.test(html)) html = html.replace(/<head[^>]*>/i, function(m){ return m + vp; });
+      else if(/<html[^>]*>/i.test(html)) html = html.replace(/<html[^>]*>/i, function(m){ return m + '<head>' + vp + '</head>'; });
+      else html = vp + html;
+    }
+    if(html.indexOf('ws-mobile-safety') === -1){
+      const css = '<style id="ws-mobile-safety">img,svg,video{max-width:100%}@media(max-width:600px){html,body{overflow-x:hidden;max-width:100vw}img,svg,video{height:auto}table,pre,code{max-width:100%;overflow-x:auto}}</style>';
+      if(/<\/head>/i.test(html)) html = html.replace(/<\/head>/i, css + '</head>');
+      else html = css + html;
+    }
+  }catch(e){}
+  return html;
 }
 
 function cleanHTML(apiResponse) {
