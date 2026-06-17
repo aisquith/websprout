@@ -171,8 +171,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r118">
-<script>window._wsBuild="2026-06-10-r118";console.log("%c[Websprout] build 2026-06-10-r118 (editor: merged quick-changes + chat into one make-a-change zone; fixed stale testimonials labels to reviews)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r119">
+<script>window._wsBuild="2026-06-10-r119";console.log("%c[Websprout] build 2026-06-10-r119 (editor loads in clean preview, not edit-text mode; Edit text is now opt-in with matching guidance copy)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4214,9 +4214,9 @@ function setStudioReady(ready){
   var intro=document.getElementById('introMsg');
   if(ready){
     studio.classList.remove('studio-loading');
-    if(intro)intro.innerHTML='Your site’s ready 🌱  Click anything on your site to edit it — or describe a change below.';
-    try{editModeOn=true;var _eb=document.getElementById('editModeBtn');if(_eb)_eb.classList.add('on');var _ei=document.getElementById('editIndicator');if(_ei)_ei.classList.add('on');var _pf=document.getElementById('pf');var _em=function(){if(_pf&&_pf.contentWindow)_pf.contentWindow.postMessage({type:'wsSetEditMode',active:true},'*');};setTimeout(_em,300);setTimeout(_em,900);setTimeout(_em,1800);}catch(e){}
-    if(!window._wsCvHint){window._wsCvHint=1;setTimeout(function(){try{toast('👆 Click anything on your site to edit it — change colour, resize, or delete.',6000);}catch(e){}},800);}
+    if(intro)intro.innerHTML='Your site’s ready 🌱  Tap ✎ Edit text up top to change wording right on the page — or just describe any change below.';
+    try{editModeOn=false;var _eb=document.getElementById('editModeBtn');if(_eb)_eb.classList.remove('on');var _ei=document.getElementById('editIndicator');if(_ei)_ei.classList.remove('on');var _pf=document.getElementById('pf');var _em=function(){if(_pf&&_pf.contentWindow)_pf.contentWindow.postMessage({type:'wsSetEditMode',active:false},'*');};setTimeout(_em,300);setTimeout(_em,900);}catch(e){}
+    if(!window._wsCvHint){window._wsCvHint=1;setTimeout(function(){try{toast('👆 Tap ✎ Edit text to edit words right on the page — or describe any change in the chat below.',6000);}catch(e){}},800);}
   } else {
     studio.classList.add('studio-loading');
     if(intro)intro.innerHTML='Designing your site… this can take up to a minute 🌱';
@@ -6510,7 +6510,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r118';
+const BUILD_ID = '2026-06-10-r119';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
