@@ -171,8 +171,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r119">
-<script>window._wsBuild="2026-06-10-r119";console.log("%c[Websprout] build 2026-06-10-r119 (editor loads in clean preview, not edit-text mode; Edit text is now opt-in with matching guidance copy)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r124">
+<script>window._wsBuild="2026-06-10-r124";console.log("%c[Websprout] build 2026-06-10-r124 (lock preview-pane scroll during generation so the empty white iframe can no longer be scrolled into view behind the loading skeleton)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -445,9 +445,12 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .s-btn{border:none;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
 .s-ghost{background:rgba(255,255,255,.06);color:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.09)}
 .s-ghost:hover{background:rgba(255,255,255,.11);color:#fff}
+.s-manage{background:rgba(61,186,82,.16);color:#5fe08a;border:1px solid rgba(61,186,82,.5);font-weight:700}
+.s-manage:hover{background:rgba(61,186,82,.26);color:#8af0ab;border-color:rgba(61,186,82,.72);box-shadow:0 2px 14px rgba(61,186,82,.3)}
 .studio.studio-loading [data-needs-site]{opacity:.3;pointer-events:none;cursor:not-allowed}
 .studio.studio-loading .chat{opacity:.2;pointer-events:none;position:relative}
 .studio.studio-loading .chat::after{content:"";position:absolute;inset:0;z-index:10;cursor:not-allowed}
+.studio.studio-loading .preview-frame-wrap{overflow:hidden}
 .s-green{background:#2d7a3a;color:#fff}.s-green:hover{background:#3dba52}
 .s-deploy-hero{background:linear-gradient(135deg,#00c7b7,#00a89c)!important;color:#fff!important;border:none!important;animation:deploy-pulse 2s ease-in-out infinite;font-size:13px!important;padding:7px 16px!important}
 @keyframes deploy-pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,199,183,.4)}50%{box-shadow:0 0 0 8px rgba(0,199,183,0)}}
@@ -579,6 +582,10 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .chat-send:active:not(:disabled){transform:scale(.93)}
 .chat-send:disabled{opacity:.35;cursor:not-allowed}
 .chat-hint{font-size:10px;color:rgba(255,255,255,.22);margin-top:7px;text-align:center}
+.ed-hint{display:flex;align-items:flex-start;gap:8px;margin:10px 14px 2px;padding:10px 12px;background:rgba(61,186,82,.12);border:1px solid rgba(61,186,82,.3);border-radius:11px;font-size:12px;line-height:1.5;color:rgba(234,242,232,.85)}
+.ed-hint-txt{flex:1}.ed-hint-txt b{color:#7fe39a;font-weight:700}
+.ed-hint-x{background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;line-height:1;cursor:pointer;padding:0 2px;font-family:inherit;flex-shrink:0}
+.ed-hint-x:hover{color:#fff}
 
 /* ---- SEO MODAL ---- */
 .seo-modal{display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.6);align-items:center;justify-content:center;padding:20px}
@@ -1043,7 +1050,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <span class="edit-counter" id="editCounter"></span>
       <button class="s-btn s-ghost edit-mode-btn" id="editModeBtn" data-needs-site="1" title="Click any text to edit it">&#9998; Edit text</button>
       <span style="position:relative;display:inline-block">
-        <button class="s-btn s-ghost" id="toolsBtn" title="Your info, SEO, leads, payments & more">&#9881;&#65039; Manage &#9662;</button>
+        <button class="s-btn s-manage" id="toolsBtn" title="Your info, SEO, leads, payments & more">&#9881;&#65039; Manage &#9662;</button>
         <div id="toolsMenu" class="s-menu" style="display:none">
           <div class="gs-head">Set up your site</div>
           <button class="gs-item" data-tool="yourInfoBtn">&#128221; Your info<span class="gs-sub">Name, phone, email &amp; hours — everywhere</span></button>
@@ -1513,6 +1520,10 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         </div>
       </div>
       </div>
+      </div>
+      <div id="edFirstHint" class="ed-hint" style="display:none">
+        <span class="ed-hint-txt">👋 New here? <b>Tap a quick change</b> below, <b>type any request</b>, or hit <b>✎ Edit text</b> up top to edit on the page.</span>
+        <button class="ed-hint-x" id="edHintX" type="button" title="Got it">&times;</button>
       </div>
       <div class="quick-edits">
         <div class="qe-label">⚡ Tap a quick change — or type your own below</div>
@@ -2637,6 +2648,7 @@ document.addEventListener('DOMContentLoaded',function(){
   ci.addEventListener('input',function(){ci.style.height='auto';ci.style.height=Math.min(ci.scrollHeight,100)+'px';});
   ci.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doChat();}});
   document.getElementById('csb').addEventListener('click',doChat);
+  var _edx=document.getElementById('edHintX');if(_edx)_edx.addEventListener('click',dismissEdHint);
   document.querySelectorAll('.qe').forEach(function(btn){
     btn.addEventListener('click',function(){document.getElementById('ci').value=btn.dataset.msg;doChat();});
   });
@@ -4208,6 +4220,8 @@ function slotCompressAndFill(file){
   });
 }
 
+function dismissEdHint(){try{localStorage.setItem('ws_edhint','1');}catch(e){}var _h=document.getElementById('edFirstHint');if(_h)_h.style.display='none';}
+function flashPreview(){try{var wrap=document.querySelector('.preview-frame-wrap');if(!wrap)return;var fl=document.createElement('div');fl.style.cssText='position:absolute;inset:0;background:rgba(61,186,82,.18);pointer-events:none;z-index:40;opacity:0;transition:opacity .2s ease';wrap.appendChild(fl);requestAnimationFrame(function(){fl.style.opacity='1';});setTimeout(function(){fl.style.opacity='0';},280);setTimeout(function(){if(fl.parentNode)fl.parentNode.removeChild(fl);},760);}catch(e){}}
 function setStudioReady(ready){
   var studio=document.getElementById('studio');
   if(!studio)return;
@@ -4216,7 +4230,7 @@ function setStudioReady(ready){
     studio.classList.remove('studio-loading');
     if(intro)intro.innerHTML='Your site’s ready 🌱  Tap ✎ Edit text up top to change wording right on the page — or just describe any change below.';
     try{editModeOn=false;var _eb=document.getElementById('editModeBtn');if(_eb)_eb.classList.remove('on');var _ei=document.getElementById('editIndicator');if(_ei)_ei.classList.remove('on');var _pf=document.getElementById('pf');var _em=function(){if(_pf&&_pf.contentWindow)_pf.contentWindow.postMessage({type:'wsSetEditMode',active:false},'*');};setTimeout(_em,300);setTimeout(_em,900);}catch(e){}
-    if(!window._wsCvHint){window._wsCvHint=1;setTimeout(function(){try{toast('👆 Tap ✎ Edit text to edit words right on the page — or describe any change in the chat below.',6000);}catch(e){}},800);}
+    try{ if(!localStorage.getItem('ws_edhint')){ var _efh=document.getElementById('edFirstHint'); if(_efh)_efh.style.display='flex'; } }catch(e){}
   } else {
     studio.classList.add('studio-loading');
     if(intro)intro.innerHTML='Designing your site… this can take up to a minute 🌱';
@@ -4366,7 +4380,8 @@ function doChat(){
       }
       gHTML=r.d.html;localStorage.setItem('wsh',gHTML);
       pushUndo(gHTML);bumpEditCount();
-      setTimeout(function(){setPreview(gHTML);},50);
+      setTimeout(function(){setPreview(gHTML);flashPreview();},50);
+      try{dismissEdHint();}catch(e){}
       addMsg('ai',r.d.message||'Done! Check the preview.');
       document.getElementById('cms').scrollTop=99999;
     })
@@ -4907,6 +4922,7 @@ footer{border-top:1px solid #e8f0e5;padding:28px 5vw;display:flex;align-items:ce
 <footer>
   <a href="/" class="foot-logo"><div class="logo-mark" style="width:24px;height:24px;font-size:12px">🌱</div><span class="lw">Web<em>sprout</em></span></a>
   <div class="foot-links">
+    <a href="/showcase">Showcase</a>
     <a href="/terms">Terms</a>
     <a href="/privacy">Privacy</a>
     <a href="mailto:support@websprout.app">Contact</a>
@@ -5085,9 +5101,97 @@ const OG_IMAGE = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="6
 <text x="94" y="476" font-family="-apple-system,Segoe UI,Arial,sans-serif" font-size="28" font-weight="500" fill="#ffffff" fill-opacity="0.62">AI website builder - a complete site in about 18 seconds. Free to preview.</text>
 </svg>`;
 
+const SHOWCASE_PAGE = `<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Showcase — Real websites made with Websprout</title>
+<meta name="description" content="See real websites built with Websprout in about 18 seconds. Describe your business, get a complete professional site, and publish it live for free.">
+<link rel="canonical" href="https://websprout.app/showcase">
+<meta property="og:title" content="Made with Websprout — website showcase">
+<meta property="og:description" content="Real businesses, real websites, built in seconds with Websprout.">
+<meta property="og:url" content="https://websprout.app/showcase">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%8C%B1%3C/text%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Arial,sans-serif;background:#060d05;color:#eaf2e8;line-height:1.6}
+a{color:inherit;text-decoration:none}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:18px 26px;max-width:1200px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:18px}
+.brand em{color:#4ade80;font-style:normal}
+.nav-cta{background:#2d7a3a;color:#fff;padding:9px 18px;border-radius:9px;font-size:14px;font-weight:700}
+.nav-cta:hover{background:#3dba52}
+.hero{text-align:center;max-width:760px;margin:0 auto;padding:54px 24px 26px}
+.hero h1{font-size:clamp(2rem,6vw,3.4rem);font-weight:900;letter-spacing:-1.5px;line-height:1.1}
+.hero h1 em{color:#4ade80;font-style:normal}
+.hero p{color:rgba(234,242,232,.62);font-size:18px;margin-top:16px}
+.hero-cta{display:inline-block;margin-top:24px;background:linear-gradient(135deg,#3dba52,#2d7a3a);color:#fff;padding:13px 28px;border-radius:11px;font-size:16px;font-weight:700;box-shadow:0 10px 30px -8px rgba(45,122,58,.7)}
+.hero-cta:hover{transform:translateY(-2px)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px;max-width:1200px;margin:30px auto 60px;padding:0 24px}
+.card{display:block;background:#0f1a0d;border:1px solid rgba(45,122,58,.22);border-radius:15px;overflow:hidden;transition:transform .18s,border-color .18s,box-shadow .18s}
+.card:hover{transform:translateY(-4px);border-color:rgba(61,186,82,.5);box-shadow:0 18px 40px -16px rgba(0,0,0,.7)}
+.thumb{position:relative;width:100%;height:222px;overflow:hidden;background:#fff}
+.thumb iframe{position:absolute;top:0;left:0;width:1200px;height:900px;border:0;transform:scale(.305);transform-origin:top left;pointer-events:none}
+.thumb-shade{position:absolute;inset:0;z-index:2}
+.card-foot{display:flex;align-items:center;justify-content:space-between;padding:13px 16px}
+.card-name{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-visit{color:#4ade80;font-size:13px;font-weight:600;flex-shrink:0;margin-left:10px}
+.empty{grid-column:1/-1;text-align:center;color:rgba(234,242,232,.5);padding:50px 20px;font-size:16px}
+.empty a{color:#4ade80;font-weight:700}
+.loading{grid-column:1/-1;text-align:center;color:rgba(234,242,232,.35);padding:40px}
+footer{border-top:1px solid rgba(255,255,255,.07);margin-top:30px;padding:26px;text-align:center;color:rgba(234,242,232,.4);font-size:13px}
+footer a{margin:0 9px}footer a:hover{color:#4ade80}
+</style></head><body>
+<div class="nav"><a class="brand" href="/">🌱 Web<em>sprout</em></a><a class="nav-cta" href="/">Build yours free</a></div>
+<div class="hero">
+  <h1>Real sites, <em>built with Websprout</em></h1>
+  <p>Every one of these started as a sentence. Describe your business, get a complete website in about 18 seconds, and publish it live — free.</p>
+  <a class="hero-cta" href="/">🌱 Build your site free</a>
+</div>
+<div class="grid" id="grid"><div class="loading">Loading the showcase…</div></div>
+<footer><a href="/">Home</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="mailto:support@websprout.app">Contact</a></footer>
+<script>
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+fetch('/showcase/data').then(function(r){return r.json();}).then(function(j){
+  var sites=(j&&j.sites)||[];var g=document.getElementById('grid');
+  if(!sites.length){g.innerHTML='<div class="empty">The showcase is just getting started. <a href="/">Build your site free</a> — yours could be here.</div>';return;}
+  var h='';
+  for(var i=0;i<sites.length;i++){var s=sites[i];var u='https://'+esc(s.slug)+'.websprout.app';
+    h+='<a class="card" href="'+u+'" target="_blank" rel="noopener"><div class="thumb"><div class="thumb-shade"></div><iframe src="'+u+'" loading="lazy" scrolling="no" tabindex="-1" title="'+esc(s.name)+'"></iframe></div><div class="card-foot"><span class="card-name">'+esc(s.name)+'</span><span class="card-visit">Visit &#8594;</span></div></a>';}
+  g.innerHTML=h;
+}).catch(function(){document.getElementById('grid').innerHTML='<div class="empty">Could not load the showcase right now.</div>';});
+</script></body></html>`;
+
+async function doShowcasePage(request, env){
+  return new Response(SHOWCASE_PAGE, { headers:{ 'Content-Type':'text/html; charset=utf-8', 'X-Robots-Tag':'all' } });
+}
+async function doShowcaseData(env){
+  if(!env || !env.KV) return jsonR({ sites:[] });
+  const sites=[];
+  try{ const r=await env.KV.list({ prefix:'featured:', limit:1000 }); for(const k of r.keys){ try{ const o=JSON.parse(await env.KV.get(k.name)||'{}'); if(o && o.slug) sites.push({ slug:o.slug, name:o.name||o.slug, added:o.added||0 }); }catch(e){} } }catch(e){}
+  sites.sort(function(a,b){return (b.added||0)-(a.added||0);});
+  return jsonR({ sites });
+}
+async function doAdminFeature(request, env){
+  const s = await getSession(request, env);
+  if(!s || (s.email||'').toLowerCase() !== SUPPORT_EMAIL.toLowerCase()) return new Response(JSON.stringify({ ok:false, error:'Not authorized' }), { status:403, headers:{ 'Content-Type':'application/json' } });
+  const url = new URL(request.url);
+  const slug = String(url.searchParams.get('slug')||'').toLowerCase().trim();
+  const on = url.searchParams.get('on') !== '0';
+  if(!slug) return jsonR({ ok:false, error:'no slug' }, 400);
+  if(!env.KV) return jsonR({ ok:false });
+  if(on){
+    let name = slug;
+    try{ const html = await env.KV.get('pub:'+slug); if(html){ const a=html.indexOf('<title>'), z=html.indexOf('</title>'); if(a>-1 && z>a){ let t=html.slice(a+7,z); t=t.split('|')[0].split(' - ')[0].trim(); if(t) name=t; } } }catch(e){}
+    await env.KV.put('featured:'+slug, JSON.stringify({ slug, name:name.slice(0,80), added:Date.now() }));
+  } else {
+    try{ await env.KV.delete('featured:'+slug); }catch(e){}
+  }
+  return jsonR({ ok:true, featured:on });
+}
+
 const SITEMAP = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://websprout.app/</loc><lastmod>2026-06-01</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://websprout.app/showcase</loc><lastmod>2026-06-01</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://websprout.app/deploy-guide</loc><lastmod>2026-06-01</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://websprout.app/terms</loc><lastmod>2026-06-01</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://websprout.app/privacy</loc><lastmod>2026-06-01</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
@@ -5162,6 +5266,9 @@ export default {
     if (url.pathname === '/admin' && request.method === 'GET') return doAdminPage(request, env);
     if (url.pathname === '/admin/data' && request.method === 'GET') return doAdminData(request, env);
     if (url.pathname === '/admin/grant') return doAdminGrant(request, env);
+    if (url.pathname === '/admin/feature') return doAdminFeature(request, env);
+    if (url.pathname === '/showcase') return doShowcasePage(request, env);
+    if (url.pathname === '/showcase/data') return doShowcaseData(env);
     if (url.pathname === '/dev' && request.method === 'GET') return doDevPage(request, env);
     if (url.pathname === '/dev/data' && request.method === 'GET') return doDevData(request, env);
     if (url.pathname === '/auth/google' && request.method === 'GET') return doGoogleStart(request, env);
@@ -5218,7 +5325,7 @@ function geminiKeys(env) {
   return set;
 }
 
-async function callGemini(keys, bodyStr, model) {
+async function callGemini(keys, bodyStr, model, timeoutMs, budgetMs) {
   if (!Array.isArray(keys)) keys = [keys];
   keys = keys.filter(Boolean);
   if (!keys.length) return { error: 'GEMINI_API_KEY not set.' };
@@ -5227,21 +5334,25 @@ async function callGemini(keys, bodyStr, model) {
   const MODEL = model || 'gemini-2.5-flash';
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + MODEL + ':generateContent';
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+  const FETCH_TIMEOUT = timeoutMs || 60000;   // per-request abort, kept well under Cloudflare's ~100s edge limit
+  const START = Date.now();                     // overall budget guard so multiple slow keys can't cumulatively 524
   let lastErr = 'RATE_LIMITED';
   // For each available key, allow one backoff retry on a 429 (free-tier per-minute
   // limits are bursty and usually clear within a couple of seconds). We move to the
   // next key after exhausting retries, and only surface RATE_LIMITED once everything
   // is truly out of capacity.
   for (let i = 0; i < keys.length; i++) {
+    if (budgetMs && (Date.now() - START) > budgetMs) break;  // out of time budget — stop before risking a 524
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         if (i > 0 && attempt === 0) await sleep(800);  // brief gap before trying the next key
         if (attempt > 0) await sleep(2800);             // backoff before retrying the same key
+        if (budgetMs && (Date.now() - START) > budgetMs) { lastErr = 'The AI took too long to respond — please try again.'; break; }
         const r = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-goog-api-key': keys[i] },
           body: bodyStr,
-          signal: AbortSignal.timeout(140000)
+          signal: AbortSignal.timeout(FETCH_TIMEOUT)
         });
         const text = await r.text();
         let d;
@@ -6382,7 +6493,7 @@ a{color:#4ade80;text-decoration:none}.muted{color:rgba(234,242,232,.38)}.err{col
 <h2>Accounts</h2>
 <div class="wrap"><table><thead><tr><th>Email</th><th>Name</th><th>Plan</th><th>Builds</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="ubody"><tr><td colspan="6" class="muted" style="padding:18px">Loading&hellip;</td></tr></tbody></table></div>
 <h2>Published sites</h2>
-<div class="wrap"><table><thead><tr><th>Address</th><th>Views</th><th>Leads</th><th>Updated</th><th>Badge</th></tr></thead><tbody id="pbody"><tr><td colspan="5" class="muted" style="padding:18px">Loading&hellip;</td></tr></tbody></table></div>
+<div class="wrap"><table><thead><tr><th>Address</th><th>Views</th><th>Leads</th><th>Updated</th><th>Badge</th><th>Showcase</th></tr></thead><tbody id="pbody"><tr><td colspan="6" class="muted" style="padding:18px">Loading&hellip;</td></tr></tbody></table></div>
 <h2>Custom domains</h2>
 <div class="wrap"><table><thead><tr><th>Domain</th><th>Points to</th></tr></thead><tbody id="dbody"><tr><td colspan="2" class="muted" style="padding:18px">Loading&hellip;</td></tr></tbody></table></div>
 <h2>Invoices <span id="invSub" style="font-size:12px;color:rgba(234,242,232,.4);font-weight:400"></span></h2>
@@ -6400,6 +6511,9 @@ function setPlan(email,plan){
 function setDev(email,role){
   if(role==='user'&&!confirm('Revoke developer access from '+email+'?'))return;
   fetch('/admin/grant?email='+encodeURIComponent(email)+'&role='+role).then(function(r){return r.text();}).then(function(){load();}).catch(function(){alert('Failed \u2014 try again');});
+}
+function setFeature(slug,on){
+  fetch('/admin/feature?slug='+encodeURIComponent(slug)+'&on='+on).then(function(r){return r.json();}).then(function(){load();}).catch(function(){alert('Failed \u2014 try again');});
 }
 function load(){
   fetch('/admin/data').then(function(r){return r.json();}).then(function(j){
@@ -6419,7 +6533,7 @@ function load(){
     document.getElementById('ubody').innerHTML=ub;
     var ps=j.published||[],pb='';
     if(!ps.length)pb='<tr><td colspan="5" class="muted" style="padding:18px">No published sites yet</td></tr>';
-    for(var k=0;k<ps.length;k++){var p=ps[k];pb+='<tr><td><a href="https://'+esc(p.slug)+'.websprout.app" target="_blank">'+esc(p.slug)+'</a></td><td>'+(p.views||0)+'</td><td>'+(p.leads||0)+'</td><td class="muted">'+dt(p.updated)+'</td><td>'+(p.nobadge?'<span class="muted">hidden (Pro)</span>':'shown')+'</td></tr>';}
+    for(var k=0;k<ps.length;k++){var p=ps[k];pb+='<tr><td><a href="https://'+esc(p.slug)+'.websprout.app" target="_blank">'+esc(p.slug)+'</a></td><td>'+(p.views||0)+'</td><td>'+(p.leads||0)+'</td><td class="muted">'+dt(p.updated)+'</td><td>'+(p.nobadge?'<span class="muted">hidden (Pro)</span>':'shown')+'</td><td>'+(p.featured?'<button class="act dv" data-feat="0" data-slug="'+esc(p.slug)+'">&#9733; Featured</button>':'<button class="act" data-feat="1" data-slug="'+esc(p.slug)+'">Feature</button>')+'</td></tr>';}
     document.getElementById('pbody').innerHTML=pb;
     var ds=j.domains||[],db='';
     if(!ds.length)db='<tr><td colspan="2" class="muted" style="padding:18px">No custom domains yet</td></tr>';
@@ -6440,6 +6554,7 @@ function load(){
   }).catch(function(){document.getElementById('cards').innerHTML='<div class="err">Could not load \u2014 make sure you are signed in as the owner.</div>';});
 }
 document.getElementById('ubody').addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('button[data-act]');if(!b)return;var act=b.getAttribute('data-act');if(act==='plan')setPlan(b.getAttribute('data-email'),b.getAttribute('data-v'));else if(act==='dev')setDev(b.getAttribute('data-email'),b.getAttribute('data-v'));});
+document.getElementById('pbody').addEventListener('click',function(e){var fb=e.target.closest&&e.target.closest('button[data-feat]');if(!fb)return;setFeature(fb.getAttribute('data-slug'),fb.getAttribute('data-feat'));});
 document.getElementById('refresh').addEventListener('click',load);
 load();
 </script></body></html>`;
@@ -6463,7 +6578,8 @@ async function doAdminData(request, env){
   const leadMap={}; let leadTotal=0;
   try{ let cur=undefined,g=0; do{ const r=await env.KV.list({ prefix:'form:', cursor:cur, limit:1000 }); for(const k of r.keys){ const sid=(k.name.split(':')[1])||''; leadMap[sid]=(leadMap[sid]||0)+1; leadTotal++; } cur=r.list_complete?null:r.cursor; g++; } while(cur&&g<25); }catch(e){}
   // published sites with views + leads
-  const pub=[]; { let c2=undefined, g2=0; do{ const r2=await env.KV.list({ prefix:'pubmeta:', cursor:c2, limit:1000 }); for(const k of r2.keys){ const slug=k.name.slice(8); try{ const m=JSON.parse(await env.KV.get(k.name)||'{}'); const sid=m.siteId||''; let views=0; try{ views=parseInt(await env.KV.get('views:'+sid+':total')||'0',10)||0; }catch(e){} pub.push({ slug, updated:m.updated||0, nobadge:!!m.nobadge, views, leads:leadMap[sid]||0 }); }catch(e){} } c2=r2.list_complete?null:r2.cursor; g2++; } while(c2 && g2<10); }
+  const featuredSet=new Set(); try{ const fr=await env.KV.list({ prefix:'featured:', limit:1000 }); for(const fk of fr.keys){ featuredSet.add(fk.name.slice(9)); } }catch(e){}
+  const pub=[]; { let c2=undefined, g2=0; do{ const r2=await env.KV.list({ prefix:'pubmeta:', cursor:c2, limit:1000 }); for(const k of r2.keys){ const slug=k.name.slice(8); try{ const m=JSON.parse(await env.KV.get(k.name)||'{}'); const sid=m.siteId||''; let views=0; try{ views=parseInt(await env.KV.get('views:'+sid+':total')||'0',10)||0; }catch(e){} pub.push({ slug, updated:m.updated||0, nobadge:!!m.nobadge, views, leads:leadMap[sid]||0, featured:featuredSet.has(slug) }); }catch(e){} } c2=r2.list_complete?null:r2.cursor; g2++; } while(c2 && g2<10); }
   // custom domains
   const domains=[];
   try{ const r=await env.KV.list({ prefix:'domain:', limit:1000 }); for(const k of r.keys){ try{ const sl=await env.KV.get(k.name); domains.push({ host:k.name.slice(7), slug:sl||'' }); }catch(e){} } }catch(e){}
@@ -6510,7 +6626,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r119';
+const BUILD_ID = '2026-06-10-r124';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -6882,7 +6998,13 @@ async function doGenerate(request, env) {
       contents: [{ parts: [{ text: PROMPT + '\n\nUser request: ' + prompt + getNicheDirection(prompt) + '\n\nSTYLE DIRECTION: ' + getStyleDirection(prompt) + '\n\n' + DESIGN_AMBITION + '\n\nCRITICAL RULES:\n1. CONTRAST IS THE #1 PRIORITY: every text element must be instantly readable against the EXACT background behind it — dark text only on light backgrounds, white/near-white text only on dark backgrounds, never dark-on-dark or light-on-light. If the hero background is dark or uses a photo/image slot, the hero headline and subtext MUST be white/near-white. A dark headline on a dark hero is a failure.\n2. Do NOT use vh or viewport-height units for section/hero HEIGHTS — size heights with px or % (e.g. min-height:640px), required for correct rendering. You SHOULD use clamp() with vw for responsive FONT-SIZE so large headings shrink on small screens and never overflow (e.g. font-size:clamp(2rem,6vw,4.5rem)).\n3. Scroll-reveal and entrance animations are ENCOURAGED, but every element MUST animate from hidden TO fully visible — nothing stays hidden. Keep transitions under 0.8s.\n4. ALWAYS end with </body></html> — never leave HTML incomplete.\n5. COMPLETION IS MANDATORY: always finish the entire page through </body></html>. Keep total output under ~800 lines; if the page is getting long, make each section more concise rather than leaving the page unfinished — a complete simpler page always beats a truncated elaborate one. 6. NO horizontal overflow: set box-sizing:border-box globally, never let any element be wider than the viewport, and the page must NEVER scroll sideways; headings and long text must wrap (overflow-wrap:break-word) and must never use white-space:nowrap on multi-word text. 7. SPACING: the nav logo must never touch the menu links, and text must never touch the screen edges — use container padding/margins and clear gaps between elements.' }] }],
       generationConfig: { maxOutputTokens: 32768, temperature: 0.95, thinkingConfig: { thinkingBudget: 24576 } }
     });
-    const result = await callGemini(keys, body2, genModel);
+    // Generation budget: give Pro a tight window so that if it stalls we can still fall back to the
+    // faster, more reliable Flash model and return a site instead of a Cloudflare 524 timeout.
+    let result = await callGemini(keys, body2, genModel, genModel === 'gemini-2.5-pro' ? 52000 : 75000, genModel === 'gemini-2.5-pro' ? 56000 : 80000);
+    if (result.error && genModel === 'gemini-2.5-pro') {
+      try { console.warn('[Websprout] Pro generation failed (' + result.error + ') — falling back to Flash'); } catch (e) {}
+      result = await callGemini(keys, body2, 'gemini-2.5-flash', 34000, 38000);
+    }
     if (result.error) return fail(result.error);
     const generatedHtml = cleanHTML(result.data);
     let finalHtml = generatedHtml.includes('</html>') ? generatedHtml : generatedHtml + '\n</body>\n</html>';
