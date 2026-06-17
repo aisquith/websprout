@@ -165,14 +165,14 @@ const PAGE = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Websprout: AI Website Builder | Make a Website in Seconds, Free</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
-<meta name="description" content="Websprout is an AI website builder that turns one sentence into a complete, professional, multi-page website in about 18 seconds. Free to generate and preview. Go Pro for $10/month to download the source code and deploy anywhere — cancel anytime.">
+<meta name="description" content="Websprout is an AI website builder that turns one sentence into a complete, professional, multi-page website in about 18 seconds. Build and publish your site live for free. Go Pro for $10/month to remove the badge, connect your own domain, and download the code — cancel anytime.">
 <link rel="canonical" href="https://websprout.app/">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r109">
-<script>window._wsBuild="2026-06-10-r109";console.log("%c[Websprout] build 2026-06-10-r109 (free users can now publish a live badged site; Pro removes the badge + unlocks custom domains and download — the real free-tier payoff)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r110">
+<script>window._wsBuild="2026-06-10-r110";console.log("%c[Websprout] build 2026-06-10-r110 (pricing + positioning copy aligned to reality: free publishes a live badged site, Pro removes badge + adds domain + code; fixed the false ‘unlimited’ claim)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -193,7 +193,7 @@ const PAGE = `<!DOCTYPE html>
 <meta name="twitter:image" content="https://websprout.app/og.svg">
 <meta name="twitter:image:alt" content="Websprout - AI Website Builder">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232d7a3a'/><text y='.9em' font-size='75' x='12'>&#127807;</text></svg>">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"Websprout","url":"https://websprout.app/","description":"AI website builder that generates a complete, professional, multi-page website from a short description in about 18 seconds.","applicationCategory":"DesignApplication","operatingSystem":"Web browser","browserRequirements":"Requires JavaScript","offers":{"@type":"Offer","price":"10.00","priceCurrency":"USD","description":"$10/month Pro subscription to download the full source code and deploy anywhere. Generating and previewing is free, and you can cancel anytime."},"featureList":["AI website generation in seconds","Live preview before paying","Conversational AI editing","Download full HTML source code","Free one-click deploy to Netlify or Cloudflare Pages"]},{"@type":"Organization","name":"Websprout","url":"https://websprout.app/","logo":"https://websprout.app/og.svg","sameAs":[]},{"@type":"WebSite","name":"Websprout","url":"https://websprout.app/"},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do I need to pay for hosting?","acceptedAnswer":{"@type":"Answer","text":"No. Both Netlify and Cloudflare Pages have permanently free tiers that are more than enough for most websites. Netlify gives you 100GB of bandwidth per month free, and Cloudflare Pages offers unlimited bandwidth."}},{"@type":"Question","name":"Can I update my site after deploying?","acceptedAnswer":{"@type":"Answer","text":"Yes. Use the chat in Websprout to make changes, re-download your site, and re-deploy. On Netlify you can drag and drop a new file onto your existing site to update it, and on Cloudflare Pages you upload a new version through the dashboard."}},{"@type":"Question","name":"How do I connect a custom domain?","acceptedAnswer":{"@type":"Answer","text":"Both platforms make this easy and free. On Netlify, go to Site Settings, Domain Management, Add custom domain, then follow the DNS instructions from your registrar. On Cloudflare Pages, use Custom Domains, Add a domain."}},{"@type":"Question","name":"Is my site secure with HTTPS?","acceptedAnswer":{"@type":"Answer","text":"Yes, automatically. Both Netlify and Cloudflare Pages issue free SSL certificates the moment your site is deployed, so your site always serves over HTTPS with no extra configuration."}},{"@type":"Question","name":"How much does Websprout cost?","acceptedAnswer":{"@type":"Answer","text":"Generating and previewing websites is completely free. Go Pro for $10 per month to download the full source code, deploy your sites, and edit across all of them. You can cancel anytime."}},{"@type":"Question","name":"How long does it take to build a website?","acceptedAnswer":{"@type":"Answer","text":"About 18 seconds. You describe your business, and the AI generates a complete multi-page website that you can preview live and then edit with chat."}}]}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"Websprout","url":"https://websprout.app/","description":"AI website builder that generates a complete, professional, multi-page website from a short description in about 18 seconds.","applicationCategory":"DesignApplication","operatingSystem":"Web browser","browserRequirements":"Requires JavaScript","offers":{"@type":"Offer","price":"10.00","priceCurrency":"USD","description":"$10/month Pro subscription. Building and publishing your site live is free; Pro removes the Websprout badge, connects your own domain, and lets you download the source code. Cancel anytime."},"featureList":["AI website generation in seconds","Live preview before paying","Conversational AI editing","Download full HTML source code","Free one-click deploy to Netlify or Cloudflare Pages"]},{"@type":"Organization","name":"Websprout","url":"https://websprout.app/","logo":"https://websprout.app/og.svg","sameAs":[]},{"@type":"WebSite","name":"Websprout","url":"https://websprout.app/"},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do I need to pay for hosting?","acceptedAnswer":{"@type":"Answer","text":"No. Both Netlify and Cloudflare Pages have permanently free tiers that are more than enough for most websites. Netlify gives you 100GB of bandwidth per month free, and Cloudflare Pages offers unlimited bandwidth."}},{"@type":"Question","name":"Can I update my site after deploying?","acceptedAnswer":{"@type":"Answer","text":"Yes. Use the chat in Websprout to make changes, re-download your site, and re-deploy. On Netlify you can drag and drop a new file onto your existing site to update it, and on Cloudflare Pages you upload a new version through the dashboard."}},{"@type":"Question","name":"How do I connect a custom domain?","acceptedAnswer":{"@type":"Answer","text":"Both platforms make this easy and free. On Netlify, go to Site Settings, Domain Management, Add custom domain, then follow the DNS instructions from your registrar. On Cloudflare Pages, use Custom Domains, Add a domain."}},{"@type":"Question","name":"Is my site secure with HTTPS?","acceptedAnswer":{"@type":"Answer","text":"Yes, automatically. Both Netlify and Cloudflare Pages issue free SSL certificates the moment your site is deployed, so your site always serves over HTTPS with no extra configuration."}},{"@type":"Question","name":"How much does Websprout cost?","acceptedAnswer":{"@type":"Answer","text":"Building and publishing your website live is completely free, with a small Websprout badge. Go Pro for $10 per month to remove the badge, connect your own custom domain, and download the source code. You can cancel anytime."}},{"@type":"Question","name":"How long does it take to build a website?","acceptedAnswer":{"@type":"Answer","text":"About 18 seconds. You describe your business, and the AI generates a complete multi-page website that you can preview live and then edit with chat."}}]}]}</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -935,8 +935,8 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       </div>
       <div class="how-card">
         <div class="how-step-num">3</div>
-        <h3>Harvest your sites</h3>
-        <p>Go Pro for $10/month to download the full source code and deploy free on Netlify or Cloudflare Pages — across all your sites. Cancel anytime.</p>
+        <h3>Launch your sites</h3>
+        <p>Publish your site live for free at name.websprout.app. Go Pro to remove the badge, connect your own domain, and download the code. Cancel anytime.</p>
       </div>
     </div>
   </div>
@@ -952,10 +952,10 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <div class="cmp-head">&#127807; Websprout <span class="cmp-badge">You're here</span></div>
         <ul class="cmp-list">
           <li class="cmp-item">4-page site built in under 20 seconds</li>
-          <li class="cmp-item">Preview free, forever</li>
+          <li class="cmp-item">Publish it live, free</li>
           <li class="cmp-item">$10/month - cancel anytime</li>
-          <li class="cmp-item">Download your code &amp; deploy anywhere</li>
-          <li class="cmp-item">Deploy anywhere for free</li>
+          <li class="cmp-item">No badge &amp; your own domain on Pro</li>
+          <li class="cmp-item">Hosted free on websprout.app</li>
           <li class="cmp-item">Chat with AI to change anything</li>
         </ul>
       </div>
@@ -978,18 +978,19 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
 <div class="pricing" id="pricing">
   <div class="pricing-inner">
     <div class="section-eyebrow">Pricing</div>
-    <div class="section-title">Plant for free. Harvest for $10.</div>
-    <p style="color:#888;font-size:15px">Generate and preview your site free. Pay only when you love what grew.</p>
+    <div class="section-title">Plant for free. Own it for $10.</div>
+    <p style="color:#888;font-size:15px">Build and launch your site live for free. Go Pro to make it fully yours &mdash; your domain, no badge, the code.</p>
     <div class="price-grid">
       <div class="price-card">
         <div class="price-name">Free</div>
         <div class="price-amt">$0</div>
         <div class="price-freq">always free to grow</div>
         <ul class="price-list">
-          <li class="price-item">Unlimited generations</li>
-          <li class="price-item">4-page live preview</li>
-          <li class="price-item">AI chat to refine</li>
-          <li class="price-item dim">Download source code</li>
+          <li class="price-item">Publish a live website, free</li>
+          <li class="price-item">10 free AI site builds</li>
+          <li class="price-item">AI chat editing</li>
+          <li class="price-item dim">Remove the Websprout badge</li>
+          <li class="price-item dim">Your own domain &amp; code download</li>
         </ul>
       </div>
       <div class="price-card pick">
@@ -997,9 +998,10 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <div class="price-amt"><sup>$</sup>10</div>
         <div class="price-freq">per month &middot; unlimited</div>
         <ul class="price-list">
-          <li class="price-item">Unlimited sites</li>
-          <li class="price-item">Edit &amp; download anytime</li>
-          <li class="price-item">Deploy anywhere</li>
+          <li class="price-item">No Websprout badge</li>
+          <li class="price-item">Connect your own domain</li>
+          <li class="price-item">Unlimited AI builds</li>
+          <li class="price-item">Download &amp; deploy the code</li>
           <li class="price-item">Cancel anytime</li>
         </ul>
       </div>
@@ -1010,7 +1012,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
 <!-- CTA BAND -->
 <div class="cta-band">
   <h2>Your website is one<br>seed away.</h2>
-  <p>Free to plant. Free to preview. $10/month to harvest.</p>
+  <p>Free to build and launch. $10/month to make it yours.</p>
   <button class="btn-white" id="ctaBtn">Plant my website free &#127807;</button>
 </div>
 
@@ -1330,7 +1332,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <div class="drop-overlay" id="dropOverlay"><div class="drop-overlay-txt">🌱 Drop photo to add to site</div></div>
       <div class="lock-badge" id="lkbadge">
         <div class="lock-title">🔒 Love what you see?</div>
-        <div class="lock-sub">Go Pro for $10/month — download, deploy, and keep all your sites. Cancel anytime.</div>
+        <div class="lock-sub">Go Pro to remove the Websprout badge, use your own domain, and download the code. Cancel anytime.</div>
         <input type="email" id="emailCapture" class="lock-email" placeholder="your@email.com">
         <button class="s-btn s-purple" style="width:100%;padding:10px;border-radius:8px;font-size:13px" id="lockPayBtn">Go Pro — $10/mo</button>
       </div>
