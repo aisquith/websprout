@@ -171,8 +171,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r112">
-<script>window._wsBuild="2026-06-10-r112";console.log("%c[Websprout] build 2026-06-10-r112 (admin overhaul: MRR/revenue, total builds, per-site views and leads, custom-domains table, Make-Developer controls)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r113">
+<script>window._wsBuild="2026-06-10-r113";console.log("%c[Websprout] build 2026-06-10-r113 (platform fee on connected-account invoices: 1%, min 50c, max \$5, transparently disclosed in the invoice UI)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2064,6 +2064,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <input id="invDesc" type="text" placeholder="e.g. Logo design \u2014 final payment" style="width:100%;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;margin-bottom:12px">
       <label style="font-size:12px;color:rgba(255,255,255,.5);display:block;margin-bottom:5px">Client email (optional \u2014 we&#39;ll email them the link)</label>
       <input id="invEmail" type="email" placeholder="client@example.com" style="width:100%;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;margin-bottom:14px">
+      <div id="invFeeNote" style="display:none;font-size:11.5px;color:rgba(234,242,232,.45);margin-bottom:12px;line-height:1.5"></div>
       <button id="invGen" style="width:100%;background:linear-gradient(135deg,#3dba52,#2d7a3a);color:#fff;border:none;border-radius:9px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Create payment link</button>
       <div id="invResultWrap" style="display:none;margin-top:14px">
         <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px">Payment link</div>
@@ -3221,6 +3222,8 @@ document.addEventListener('DOMContentLoaded',function(){
     var fEl=document.getElementById('invForm'),cEl=document.getElementById('invConnect');
     if(fEl)fEl.style.display=canBill?'':'none';
     if(cEl)cEl.style.display=canBill?'none':'block';
+    var fn=document.getElementById('invFeeNote');
+    if(fn){ if(canBill && !u.owner){ fn.style.display='block'; fn.innerHTML='Websprout keeps a 1% platform fee (minimum $0.50, maximum $5.00) on each paid invoice. Your client pays the full amount; the fee comes out of your payout.'; } else { fn.style.display='none'; } }
   };
   var _ig=document.getElementById('invGen');
   if(_ig)_ig.addEventListener('click',function(){
@@ -3232,7 +3235,7 @@ document.addEventListener('DOMContentLoaded',function(){
     var old=_ig.innerHTML;_ig.disabled=true;_ig.innerHTML='Creating\\u2026';if(msg){msg.style.color='rgba(234,242,232,.55)';msg.textContent='Talking to Stripe\\u2026';}
     fetch('/api/invoice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount:amount,desc:desc,email:email})}).then(function(r){return r.json();}).then(function(j){
       _ig.disabled=false;_ig.innerHTML=old;
-      if(j&&j.url){if(res)res.value=j.url;if(rw)rw.style.display='block';if(msg){msg.style.color='#7dd88f';msg.textContent=j.emailed?('Sent to '+email+' \\u2014 link is below to copy too.'):'Link ready \\u2014 copy it and send it to your client.';}}
+      if(j&&j.url){if(res)res.value=j.url;if(rw)rw.style.display='block';if(msg){msg.style.color='#7dd88f';var _b=j.emailed?('Sent to '+email+' \\u2014 link is below to copy too.'):'Link ready \\u2014 copy it and send it to your client.';var _f=(j.fee&&j.fee>0)?(' Websprout fee: $'+(j.fee/100).toFixed(2)+'.'):'';msg.textContent=_b+_f;}}
       else{if(msg){msg.style.color='#fca5a5';msg.textContent=(j&&j.error)||'Could not create the invoice.';}}
     }).catch(function(){_ig.disabled=false;_ig.innerHTML=old;if(msg){msg.style.color='#fca5a5';msg.textContent='Something went wrong. Try again.';}});
   });
@@ -5718,6 +5721,16 @@ async function doInvoice(request, env){
   let body; try{ body=await request.json(); }catch(e){ return fail('Invalid request'); }
   const amount = Math.round(parseFloat(body.amount||'0')*100);
   if(!amount || amount<50) return fail('Enter an amount of at least $0.50.');
+  // Websprout platform fee: 1% per invoice, $0.50 floor, $5.00 cap. Applied only to connected-account
+  // (non-owner) invoices, which are direct charges - the fee transfers to the platform automatically.
+  let appFee = 0;
+  if(stripeAccount){
+    appFee = Math.round(amount * 0.01);
+    if(appFee < 50) appFee = 50;
+    if(appFee > 500) appFee = 500;
+    if(appFee > amount - 1) appFee = amount - 1;
+    if(appFee < 0) appFee = 0;
+  }
   const desc = (String(body.desc||'Invoice').slice(0,200).trim()) || 'Invoice';
   const clientEmail = String(body.email||'').trim().slice(0,120);
   const currency = (String(body.currency||'usd').toLowerCase().replace(/[^a-z]/g,'').slice(0,3)) || 'usd';
@@ -5727,14 +5740,15 @@ async function doInvoice(request, env){
     const pr = await fetch('https://api.stripe.com/v1/prices', { method:'POST', headers:sHeaders, body:'unit_amount='+amount+'&currency='+encodeURIComponent(currency)+'&product_data[name]='+encodeURIComponent(desc) });
     const prj = await pr.json();
     if(!pr.ok || prj.error) return fail('Stripe: '+((prj.error&&prj.error.message)||'could not create price'));
-    const pl = await fetch('https://api.stripe.com/v1/payment_links', { method:'POST', headers:sHeaders, body:'line_items[0][price]='+encodeURIComponent(prj.id)+'&line_items[0][quantity]=1' });
+    const plBody = 'line_items[0][price]='+encodeURIComponent(prj.id)+'&line_items[0][quantity]=1' + (appFee>0 ? ('&application_fee_amount='+appFee) : '');
+    const pl = await fetch('https://api.stripe.com/v1/payment_links', { method:'POST', headers:sHeaders, body:plBody });
     const plj = await pl.json();
     if(!pl.ok || plj.error || !plj.url) return fail('Stripe: '+((plj.error&&plj.error.message)||'could not create payment link'));
     const url = plj.url;
-    try{ if(env.KV) await env.KV.put('invoice:'+ownerEmail+':'+Date.now()+':'+Math.random().toString(36).slice(2,7), JSON.stringify({ ts:Date.now(), amount:amount, currency:currency, desc:desc, clientEmail:clientEmail, url:url }), { expirationTtl: 365*86400 }); }catch(e){}
+    try{ if(env.KV) await env.KV.put('invoice:'+ownerEmail+':'+Date.now()+':'+Math.random().toString(36).slice(2,7), JSON.stringify({ ts:Date.now(), amount:amount, fee:appFee, currency:currency, desc:desc, clientEmail:clientEmail, url:url }), { expirationTtl: 365*86400 }); }catch(e){}
     let emailed=false;
     if(clientEmail && env.RESEND_API_KEY){ try{ await sendInvoiceEmail(env, clientEmail, s.email, desc, amount, currency, url); emailed=true; }catch(e){} }
-    return succeed({ url:url, emailed:emailed });
+    return succeed({ url:url, emailed:emailed, fee:appFee });
   }catch(e){ return fail('Could not create the invoice. Please try again.'); }
 }
 async function sendInvoiceEmail(env, to, fromOwner, desc, amount, currency, url){
@@ -6251,7 +6265,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r112';
+const BUILD_ID = '2026-06-10-r113';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
