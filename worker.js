@@ -171,8 +171,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r116">
-<script>window._wsBuild="2026-06-10-r116";console.log("%c[Websprout] build 2026-06-10-r116 (reviews moderation: owner /reviews panel to approve pending + add placeholder reviews; Manage reviews link in publish panel)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r118">
+<script>window._wsBuild="2026-06-10-r118";console.log("%c[Websprout] build 2026-06-10-r118 (editor: merged quick-changes + chat into one make-a-change zone; fixed stale testimonials labels to reviews)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -559,7 +559,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .font-btn:hover{background:rgba(45,122,58,.15);border-color:rgba(45,122,58,.4);color:#4ade80}
 .font-btn-name{font-size:13px;font-weight:600;display:block}
 .font-btn-sample{font-size:10px;color:rgba(255,255,255,.3);display:block;margin-top:1px}
-.quick-edits{padding:11px 14px 12px;display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.05)}
+.quick-edits{padding:12px 14px 4px;display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.012)}
 .qe{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.5);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
 .qe:hover{background:rgba(45,122,58,.15);border-color:rgba(45,122,58,.4);color:#4ade80}
 .font-btn.sel{background:rgba(45,122,58,.18);border-color:#2d7a3a;color:#4ade80}
@@ -569,7 +569,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .sec-pick .qe{color:rgba(255,255,255,.6)}
 .qe.on{background:rgba(45,122,58,.2);border-color:#2d7a3a;color:#4ade80}
 .qe-label{flex-basis:100%;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.3);margin-bottom:1px}
-.chat-input{padding:12px 14px 14px;border-top:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.012)}
+.chat-input{padding:8px 14px 14px;background:rgba(255,255,255,.012)}
 .chat-row{display:flex;gap:7px;align-items:flex-end;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:13px;padding:6px 6px 6px 13px;transition:border-color .15s,box-shadow .15s}
 .chat-row:focus-within{border-color:rgba(74,222,128,.5);box-shadow:0 0 0 3px rgba(45,122,58,.16)}
 .chat-ta{flex:1;background:transparent;border:none;border-radius:0;padding:6px 0;color:#eafbe6;font-family:inherit;font-size:14px;line-height:1.5;resize:none;outline:none;min-height:34px;max-height:120px}
@@ -1043,17 +1043,20 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <span class="edit-counter" id="editCounter"></span>
       <button class="s-btn s-ghost edit-mode-btn" id="editModeBtn" data-needs-site="1" title="Click any text to edit it">&#9998; Edit text</button>
       <span style="position:relative;display:inline-block">
-        <button class="s-btn s-ghost" id="toolsBtn" title="More editing tools">&#9881;&#65039; Tools &#9662;</button>
+        <button class="s-btn s-ghost" id="toolsBtn" title="Your info, SEO, leads, payments & more">&#9881;&#65039; Manage &#9662;</button>
         <div id="toolsMenu" class="s-menu" style="display:none">
+          <div class="gs-head">Set up your site</div>
           <button class="gs-item" data-tool="yourInfoBtn">&#128221; Your info<span class="gs-sub">Name, phone, email &amp; hours — everywhere</span></button>
           <button class="gs-item" data-tool="sectionsBtn">&#9783; Manage sections<span class="gs-sub">Add, remove or reorder</span></button>
           <button class="gs-item" data-tool="seoBtn">&#128269; SEO &amp; sharing<span class="gs-sub">Title, description, social preview</span></button>
+          <div class="gs-head">Grow your business</div>
           <button class="gs-item" data-tool="leadsBtn">&#128236; Leads<span class="gs-sub">See who contacted you</span></button>
           <button class="gs-item" data-tool="postBtn">&#9997; Marketing copy<span class="gs-sub">AI posts, emails &amp; promos</span></button>
-          <button class="gs-item" id="invoiceMenuItem" data-tool="invoiceBtn" style="display:none">&#129534; Send an invoice<span class="gs-sub">Get paid with a Stripe link</span></button>
           <button class="gs-item" data-tool="payBtn">&#128179; Product payments<span class="gs-sub">Add your own pay links to buttons</span></button>
-          <button class="gs-item" data-tool="regenBtn">&#8635; Regenerate the design</button>
-          <button class="gs-item" data-tool="backBtn">&#8592; Start over</button>
+          <button class="gs-item" id="invoiceMenuItem" data-tool="invoiceBtn" style="display:none">&#129534; Send an invoice<span class="gs-sub">Get paid with a Stripe link</span></button>
+          <div class="gs-head">Start fresh</div>
+          <button class="gs-item" data-tool="regenBtn">&#8635; Regenerate the design<span class="gs-sub">Keep your words, new look</span></button>
+          <button class="gs-item" data-tool="backBtn">&#8592; Start over<span class="gs-sub">Build a different site</span></button>
         </div>
       </span>
       <span id="editTools" style="display:none">
@@ -1081,7 +1084,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <button class="s-btn s-ghost" id="copyBtn" data-needs-site="1" title="Copy full HTML to clipboard">&#128203; Copy code</button>
       <button class="s-btn s-ghost" id="deployBtn" data-needs-site="1">&#128640; Deploy</button>
       </span>
-      <style>.gs-item{display:block;width:100%;text-align:left;background:none;border:none;color:#fff;padding:10px 12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}.gs-item:hover{background:rgba(45,122,58,.18)}.gs-sub{display:block;font-size:11px;color:rgba(255,255,255,.4);font-weight:400;margin-top:1px}.s-sep{width:1px;height:20px;background:rgba(255,255,255,.1);margin:0 3px;flex-shrink:0;align-self:center}.s-menu{position:absolute;top:calc(100% + 6px);right:0;background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:6px;min-width:218px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:1000}.s-icon{padding:6px 9px}</style>
+      <style>.gs-item{display:block;width:100%;text-align:left;background:none;border:none;color:#fff;padding:10px 12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}.gs-item:hover{background:rgba(45,122,58,.18)}.gs-sub{display:block;font-size:11px;color:rgba(255,255,255,.4);font-weight:400;margin-top:1px}.gs-head{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:rgba(255,255,255,.34);padding:10px 12px 4px}.gs-head:first-child{padding-top:4px}.s-sep{width:1px;height:20px;background:rgba(255,255,255,.1);margin:0 3px;flex-shrink:0;align-self:center}.s-menu{position:absolute;top:calc(100% + 6px);right:0;background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:6px;min-width:218px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:1000}.s-icon{padding:6px 9px}</style>
       <span style="position:relative;display:inline-block">
         <button class="s-btn" id="getSiteBtn" data-needs-site="1" style="background:#2d7a3a;color:#fff;border-color:#2d7a3a;font-weight:700" title="Publish, download or share your site">&#128640; Get your site &#9662;</button>
         <div id="getSiteMenu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:12px;padding:6px;min-width:212px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:1000">
@@ -1512,21 +1515,21 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       </div>
       </div>
       <div class="quick-edits">
-        <div class="qe-label">⚡ Quick ideas</div>
+        <div class="qe-label">⚡ Tap a quick change — or type your own below</div>
         <button class="qe" id="regenSectionBtn" title="Regenerate one section with fresh AI">↻ Redo a section</button>
         <div class="sec-pick" id="secPick">
           <button class="qe" data-sec="hero">Hero</button>
           <button class="qe" data-sec="navigation">Navigation</button>
           <button class="qe" data-sec="features">Features</button>
           <button class="qe" data-sec="about">About</button>
-          <button class="qe" data-sec="testimonials">Testimonials</button>
+          <button class="qe" data-sec="reviews">Reviews</button>
           <button class="qe" data-sec="pricing">Pricing</button>
           <button class="qe" data-sec="contact">Contact</button>
           <button class="qe" data-sec="footer">Footer</button>
         </div>
         <button class="qe" data-msg="Make the color scheme darker and more premium">Darker</button>
         <button class="qe" data-msg="Make the hero section bigger and more dramatic">Bigger hero</button>
-        <button class="qe" data-msg="Add a testimonials section with 3 customer reviews">Testimonials</button>
+        <button class="qe" data-msg="Add an image gallery section showcasing the work">Add gallery</button>
         <button class="qe" data-msg="Change the accent color to deep blue">Blue theme</button>
         <button class="qe" data-msg="Make it more minimal with more whitespace">Minimal</button>
         <button class="qe" data-msg="Add a FAQ section with 5 relevant questions">Add FAQ</button>
@@ -6507,7 +6510,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r116';
+const BUILD_ID = '2026-06-10-r118';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
