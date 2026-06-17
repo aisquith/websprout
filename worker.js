@@ -78,7 +78,7 @@ Content: <div class="ws-img-slot" data-slot="about" data-label="About photo" sty
 If you create any image-like placeholder area, it MUST use this format. Never create a styled box that looks like an image area without ws-img-slot class and data-slot attribute.
 
 ━━━ COPY ━━━
-Invent a specific memorable brand name. Write like a professional copywriter who knows this industry. No Lorem Ipsum anywhere. Keep locations generic unless the user specified one. CONTACT DETAILS — CRITICAL: output these FOUR tokens EXACTLY and verbatim wherever contact info appears — [Your Phone], [your@email.com], [Your Address], [Your Hours] — in both visible text AND links (href="tel:[Your Phone]", href="mailto:[your@email.com]"). Do NOT invent realistic-looking phone numbers, emails, or street addresses — the owner fills these in with one click in the editor, which only works if these exact tokens are present. These four are the ONLY placeholders allowed; everywhere else write real, polished copy. The brand name is NOT a placeholder: use the real invented name, and make sure the brand element carries data-ws-field="brand" and the same name appears in the <title>.
+Invent a specific memorable brand name. Write like a professional copywriter who knows this industry. No Lorem Ipsum anywhere. Keep locations generic unless the user specified one. CONTACT DETAILS — CRITICAL: output these FOUR tokens EXACTLY and verbatim wherever contact info appears — [Your Phone], [your@email.com], [Your Address], [Your Hours] — in both visible text AND links (href="tel:[Your Phone]", href="mailto:[your@email.com]"). Do NOT invent realistic-looking phone numbers, emails, or street addresses — the owner fills these in with one click in the editor, which only works if these exact tokens are present. These four are the ONLY placeholders allowed; everywhere else write real, polished copy. The brand name is NOT a placeholder: use the real invented name, and make sure the brand element carries data-ws-field="brand" and the same name appears in the <title>. FAVICON: also give the site a branded tab icon — a simple, bold SVG logo mark (a monogram of the brand's initial or a minimal emblem that fits the business) in the brand's main color, placed in the <head> as <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,..."> with the inline SVG URL-encoded; keep it crisp and instantly readable at 16px.
 
 ━━━ MOTION & INTERACTION ━━━
 The site MUST have clearly visible motion — never a static page:
@@ -170,8 +170,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r101">
-<script>window._wsBuild="2026-06-10-r101";console.log("%c[Websprout] build 2026-06-10-r101 (Stripe Connect: Pro users link their own Stripe; invoices bill on their account so clients pay them directly)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r105">
+<script>window._wsBuild="2026-06-10-r105";console.log("%c[Websprout] build 2026-06-10-r105 (editor chat: brainstorming phrasings route to Q&A instead of edits, and the chat brain now offers concrete idea options)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3498,6 +3498,9 @@ function doGenerate(){
 
       if(!name&&!email&&!phone&&!addr&&!formEmail&&!booking&&!ordering&&!hours){toast('Fill in at least one field first');return;}
 
+      var _skb=window._wsSite||localStorage.getItem('ws_site')||'';
+      var prev={};try{prev=JSON.parse(localStorage.getItem('ws_info_'+_skb)||'{}');}catch(e){}
+
       var updated=gHTML;
       var count=0;
 
@@ -3516,6 +3519,15 @@ function doGenerate(){
         try{var _pf=document.getElementById('pf');var _pd=_pf&&(_pf.contentDocument||_pf.contentWindow.document);if(_pd){var _bd=_pd.querySelector('[data-ws-field="brand"]');if(_bd&&_bd.textContent.trim())oldBrand=_bd.textContent.trim();}}catch(e){}
         if(!oldBrand){var _a=updated.indexOf('<title>'),_b=updated.indexOf('</title>');if(_a>-1&&_b>_a){var _t=updated.slice(_a+7,_b);_t=_t.split('|')[0];_t=_t.split(' - ')[0];oldBrand=_t.trim();}}
         if(oldBrand&&oldBrand.length>1&&oldBrand!==name){updated=updated.split(oldBrand).join(name);count++;}
+        // Refresh the tab favicon so it matches the new name (mirrors the server monogram)
+        try{
+          var _fl=(name.replace(/[^A-Za-z0-9]/g,'').charAt(0)||'W').toUpperCase();
+          var _fh=0;for(var _fi=0;_fi<name.length;_fi++){_fh=(_fh*31+name.charCodeAt(_fi))>>>0;}
+          var _fsvg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="hsl('+(_fh%360)+',62%,46%)"/><text x="32" y="45" font-family="Arial,Helvetica,sans-serif" font-size="38" font-weight="800" fill="#ffffff" text-anchor="middle">'+_fl+'</text></svg>';
+          var _flink='<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,'+encodeURIComponent(_fsvg)+'">';
+          if(/<link[^>]+rel=["'][^"']*icon[^>]*>/i.test(updated)){updated=updated.replace(/<link[^>]+rel=["'][^"']*icon[^>]*>/i,_flink);count++;}
+          else if(updated.indexOf('</head>')>-1){updated=updated.replace('</head>',_flink+'</head>');count++;}
+        }catch(_efe){}
         // Persist the new brand so the publish slug, download filename and saved-projects name all reflect the rename
         try{var _sk=window._wsSite||localStorage.getItem('ws_site')||'';if(_sk){var _ik='ws_info_'+_sk,_io={};try{_io=JSON.parse(localStorage.getItem(_ik)||'{}');}catch(_e2){}_io.brand=name;localStorage.setItem(_ik,JSON.stringify(_io));}}catch(_e3){}
       }
@@ -3527,7 +3539,7 @@ function doGenerate(){
           '[Email Address]','[your@business.com]','[youremail@example.com]',
           'your@email.com','hello@example.com','info@example.com',
           'contact@example.com','support@example.com'
-        ],email);
+        ].concat((prev.email&&prev.email!==email)?[prev.email]:[]),email);
         // Update mailto: links
         updated=updated.replace(/mailto:[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g,'mailto:'+email);
         // Update contact form action if it points to a placeholder
@@ -3542,34 +3554,35 @@ function doGenerate(){
         updated=updated.split('tel:[Your Phone]').join('tel:'+telD);
         updated=updated.split('tel:[Phone]').join('tel:'+telD);
         updated=updated.split('tel:[Your Phone Number]').join('tel:'+telD);
+        if(prev.phone){var _otd=prev.phone.replace(/[^0-9+]/g,'');if(_otd&&_otd!==telD)updated=updated.split('tel:'+_otd).join('tel:'+telD);}
       }
       updated=rep(updated,[
         '[Your Phone]','[Your Phone Number]','[Phone Number]',
         '[Phone]','[(555) 000-0000]','[555-000-0000]',
         '(555) 000-0000','555-000-0000','(000) 000-0000'
-      ],phone);
+      ].concat((phone&&prev.phone&&prev.phone!==phone)?[prev.phone]:[]),phone);
 
       // Address replacements
       updated=rep(updated,[
         '[Your Address]','[Your Location]','[Address]',
         '[City, State]','[Your City, State]','[Street Address, City, State]'
-      ],addr);
+      ].concat((addr&&prev.addr&&prev.addr!==addr)?[prev.addr]:[]),addr);
 
       // Booking link replacements (Calendly / Cal.com / Square scheduler)
       updated=rep(updated,[
         '[Your Booking Link]','[Booking Link]','[Your Scheduling Link]',
         '[Schedule Link]','[Your Calendar Link]','[Booking URL]'
-      ],booking);
+      ].concat((booking&&prev.booking&&prev.booking!==booking)?[prev.booking]:[]),booking);
 
       // Online ordering link replacements (Toast / Square / DoorDash) — empty falls back to the menu section
       updated=rep(updated,[
         '[Your Ordering Link]','[Ordering Link]','[Your Order Link]','[Order Link]','[Order Online Link]','[Your Online Ordering Link]'
-      ],ordering||'#menu');
+      ].concat((ordering&&prev.ordering&&prev.ordering!==ordering)?[prev.ordering]:[]),ordering||'#menu');
 
       // Business hours replacements
       updated=rep(updated,[
         '[Your Hours]','[Business Hours]','[Your Business Hours]','[Hours]','[Hours of Operation]'
-      ],hours);
+      ].concat((hours&&prev.hours&&prev.hours!==hours)?[prev.hours]:[]),hours);
 
       // Formspree: wire up all contact forms
       if(formEmail){
@@ -3602,6 +3615,8 @@ function doGenerate(){
         toast('No placeholders found — your site may already have real info');
         return;
       }
+
+      try{if(_skb){var _iob=prev||{};if(name)_iob.brand=name;if(email)_iob.email=email;if(phone)_iob.phone=phone;if(addr)_iob.addr=addr;if(booking)_iob.booking=booking;if(ordering)_iob.ordering=ordering;if(hours)_iob.hours=hours;if(formEmail)_iob.formEmail=formEmail;localStorage.setItem('ws_info_'+_skb,JSON.stringify(_iob));}}catch(e){}
 
       gHTML=updated;
       localStorage.setItem('wsh',gHTML);
@@ -4215,6 +4230,10 @@ function isQuestion(msg){
   }
   var editWords=['make','change','add','remove','update','replace','edit','fix','move','delete','create','put','use','set','turn','switch','give','hide','show','increase','decrease','swap','rename','rewrite','redesign','adjust','tweak','shorten','lengthen','bold','italic','center','align','capitalize','recolor','restyle'];
   var firstWord=q.split(' ')[0]||'';
+  // Exploration / brainstorming phrasings go to chat even when they open with an edit-ish verb (give, suggest...)
+  var ideaStarts=['give me ideas','give me some ideas','come up with','brainstorm','suggest','any ideas','some ideas','more ideas','need ideas','ideas for','idea for','what if','help me brainstorm','help me think','thoughts on','what would you','what do you','do you think','options for','what are some','what should i','what could i','can you think of'];
+  for(var ix=0;ix<ideaStarts.length;ix++){if(q.indexOf(ideaStarts[ix])===0)return true;}
+  if(q.indexOf('thinking about')>-1)return true;
   if(editWords.indexOf(firstWord)>-1)return false; // explicit edit instruction -> route to /modify
   if(raw.endsWith('?'))return true;
   var qstarts=['what','how','why','which','who','where','when','should i','is there','are there','do you','does','explain','tell me','advice','recommend','suggestion','difference','versus','is this','will this','does this','is it','are you'];
@@ -6382,6 +6401,7 @@ async function doGenerate(request, env) {
     finalHtml = sanitizeGenerated(finalHtml);
     finalHtml = ensureMobile(finalHtml);
     finalHtml = tidyGenerated(finalHtml);
+    finalHtml = ensureFavicon(finalHtml);
     finalHtml = withReveal(finalHtml);
     finalHtml = withFix(finalHtml);
     const siteId = 'ws' + Math.random().toString(36).slice(2,9);
@@ -6406,6 +6426,7 @@ The user's current site: ` + (body.context||'No site generated yet') + `
 
 Rules:
 - Read the question carefully and answer EXACTLY what they asked
+- If they are exploring or asking for ideas (e.g. "give me ideas", "what if", "suggest", "come up with"), brainstorm WITH them: offer 2-3 concrete, specific options — real headlines, real color pairings with hex codes, real section ideas, never vague categories — each on its own short line. Phrase each option so they can apply it just by replying with a plain instruction (for instance, they might say: make the headline "Fresh by 6am"). End by asking which direction they want.
 - Give specific, expert answers (hex codes for colors, specific font names, concrete steps)
 - Use context about their site when relevant
 - NEVER say generic things like "Working on that!" or "Great question!" -- just answer
@@ -6486,6 +6507,27 @@ function sanitizeGenerated(html){
 // Deterministic post-generation cleanup for issues prompts keep missing:
 // (1) collapse a nav that ended up with the same CTA twice down to one, and
 // (2) strip empty trailing elements that leave a gap at the bottom.
+// Guarantee a branded favicon (the little tab icon). If the model didn't include one,
+// inject a clean monogram of the brand's initial in a colour derived from the brand name.
+function ensureFavicon(html){
+  try{
+    if(/<link[^>]+rel=["'][^"']*icon/i.test(html)) return html;
+    let brand='';
+    let m = html.match(/data-ws-field=["']brand["'][^>]*>([^<]{1,40})</i);
+    if(m) brand = m[1];
+    if(!brand){ const t = html.match(/<title>([^<]{1,60})<\/title>/i); if(t) brand = t[1].split('|')[0].split(' - ')[0]; }
+    brand = (brand||'W').trim();
+    const letter = ((brand.replace(/[^A-Za-z0-9]/g,'').charAt(0))||'W').toUpperCase();
+    let h=0; for(let i=0;i<brand.length;i++){ h=(h*31 + brand.charCodeAt(i))>>>0; }
+    const bg = 'hsl('+(h % 360)+',62%,46%)';
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="'+bg+'"/><text x="32" y="45" font-family="Arial,Helvetica,sans-serif" font-size="38" font-weight="800" fill="#ffffff" text-anchor="middle">'+letter+'</text></svg>';
+    const link = '<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,'+encodeURIComponent(svg)+'">';
+    if(/<\/head>/i.test(html)) return html.replace(/<\/head>/i, link+'</head>');
+    if(/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, mm=>mm+link);
+    return link+html;
+  }catch(e){ return html; }
+}
+
 function tidyGenerated(html){
   try{ html = dedupeNavCta(html); html = stripTrailingEmpty(html); }catch(e){}
   return html;
