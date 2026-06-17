@@ -72,8 +72,9 @@ Every piece of text MUST be instantly readable against the EXACT color or image 
 - MOBILE-FIRST (most visitors are on phones — the page MUST look great at 375px wide): every multi-column layout (feature grids, pricing tables, the hero split, footer columns) collapses to a SINGLE column on phones via media queries. The nav links collapse into a hamburger that actually toggles — include the small JS to open/close it. Tap targets (buttons, links) are at least 44px tall with comfortable spacing between them. Body text is never smaller than 16px on mobile; headlines use clamp() so they shrink but stay bold and never clip. Reduce section padding on phones so content breathes without giant empty gaps. NOTHING may overflow horizontally — the page must never scroll sideways on a phone, and images never exceed their container.
 
 ━━━ IMAGE SLOTS ━━━
-Where images naturally belong, use this exact format (users click to upload real photos):
-Hero: <div class="ws-img-slot" data-slot="hero" data-label="Hero photo" style="width:100%;height:460px;background:linear-gradient(135deg,#2b2620,#3a322a);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;border-radius:8px"><div style="font-size:40px;opacity:0.35">&#128247;</div><div style="color:rgba(255,255,255,0.4);font-size:13px;font-weight:600">Click to add photo</div></div>
+HERO IS NEVER AN EMPTY IMAGE SLOT: the hero MUST have a rich, finished, DESIGNED background — a bold gradient or layered color treatment in the brand palette, optionally with subtle texture, shapes or a soft mesh — so it looks striking and complete the instant the page loads. Do NOT put a ws-img-slot in the hero or leave a "click to add photo" box as the hero; the owner can swap in a real hero photo later from the editor.
+For genuine CONTENT photo areas (about, gallery, team, products) where photos naturally belong, use this exact format (users click to upload real photos):
+Large area: <div class="ws-img-slot" data-slot="feature" data-label="Feature photo" style="width:100%;height:460px;background:linear-gradient(135deg,#2b2620,#3a322a);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;border-radius:8px"><div style="font-size:40px;opacity:0.35">&#128247;</div><div style="color:rgba(255,255,255,0.4);font-size:13px;font-weight:600">Click to add photo</div></div>
 Content: <div class="ws-img-slot" data-slot="about" data-label="About photo" style="width:100%;height:300px;background:#f0f0f0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;border-radius:12px;border:2px dashed #ccc"><div style="font-size:36px;opacity:0.3">&#128247;</div><div style="color:#bbb;font-size:13px;font-weight:600">Click to add photo</div></div>
 If you create any image-like placeholder area, it MUST use this format. Never create a styled box that looks like an image area without ws-img-slot class and data-slot attribute.
 
@@ -170,8 +171,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r105">
-<script>window._wsBuild="2026-06-10-r105";console.log("%c[Websprout] build 2026-06-10-r105 (editor chat: brainstorming phrasings route to Q&A instead of edits, and the chat brain now offers concrete idea options)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r109">
+<script>window._wsBuild="2026-06-10-r109";console.log("%c[Websprout] build 2026-06-10-r109 (free users can now publish a live badged site; Pro removes the badge + unlocks custom domains and download — the real free-tier payoff)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1125,7 +1126,17 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
             <button id="pubCopy" style="flex:1;background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Copy link</button>
           </div>
           <button id="pubUpdate" style="width:100%;background:rgba(255,255,255,.05);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">&#8635; Re-publish my latest edits</button>
-          <div style="border-top:1px solid rgba(255,255,255,.07);margin-top:18px;padding-top:18px">
+          <div id="pubBadgeNudge" style="display:none;background:linear-gradient(180deg,rgba(45,122,58,.14),rgba(45,122,58,.04));border:1px solid rgba(74,222,128,.22);border-radius:12px;padding:14px 16px;margin-top:14px">
+            <div style="font-size:13.5px;color:#fff;font-weight:700;margin-bottom:3px">&#127793; Your site is live &mdash; with a small Websprout badge</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:11px">Go Pro to remove the badge, connect your own domain, and download the code.</div>
+            <button id="pubBadgeGoPro" class="s-btn s-purple" style="width:100%;padding:10px;border-radius:9px;font-size:13.5px;font-weight:700;cursor:pointer">&#10024; Go Pro &mdash; remove the badge</button>
+          </div>
+          <div id="pubDomainLocked" style="display:none;border-top:1px solid rgba(255,255,255,.07);margin-top:18px;padding-top:18px">
+            <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px">&#128274; Use your own domain</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:10px">Connecting a custom domain is a Pro feature.</div>
+            <button id="pubDomGoPro" style="width:100%;background:rgba(109,40,217,.18);color:#c4b5fd;border:1px solid rgba(109,40,217,.4);border-radius:9px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Go Pro to use your domain</button>
+          </div>
+          <div id="pubDomainPro" style="border-top:1px solid rgba(255,255,255,.07);margin-top:18px;padding-top:18px">
             <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px">Use your own domain</div>
             <div style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:10px">Find one, buy it on GoDaddy, then point it here.</div>
             <div style="display:flex;gap:8px">
@@ -1163,19 +1174,24 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       window._wsSub=subUrl;window._wsLive=pathUrl;
       var u=$('pubUrl');u.textContent=pathUrl.replace('https://','');u.href=pathUrl;
       $('pubStep1').style.display='none';$('pubStep2').style.display='block';
+      var _pro=isUnlocked();
+      var _bn=$('pubBadgeNudge');if(_bn)_bn.style.display=_pro?'none':'block';
+      var _dp=$('pubDomainPro');if(_dp)_dp.style.display=_pro?'block':'none';
+      var _dl=$('pubDomainLocked');if(_dl)_dl.style.display=_pro?'none':'block';
       var probed=false;var pto=setTimeout(function(){probed=true;},3500);
       fetch(subUrl,{mode:'no-cors',cache:'no-store'}).then(function(){if(probed)return;probed=true;clearTimeout(pto);window._wsLive=subUrl;u.textContent=subUrl.replace('https://','');u.href=subUrl;}).catch(function(){});
     }
     var pubBtn=$('publishBtn');
     if(pubBtn)pubBtn.addEventListener('click',function(){
       if(!curHtml()||curHtml().length<50){if(window.toast)toast('Generate a site first');return;}
-      if(!isUnlocked()){var u=$('unlockBtn');if(u)u.click();return;}
       modal.style.display='flex';
       var sv=savedSlug();
       if(sv){showLive(sv);}
       else{$('pubStep1').style.display='block';$('pubStep2').style.display='none';if(!slugIn.value)slugIn.value=defSlug();checkSlug();}
     });
     $('pubClose').addEventListener('click',function(){modal.style.display='none';});
+    var _bgp=$('pubBadgeGoPro');if(_bgp)_bgp.addEventListener('click',function(){var u=$('unlockBtn');if(u)u.click();});
+    var _dgp=$('pubDomGoPro');if(_dgp)_dgp.addEventListener('click',function(){var u=$('unlockBtn');if(u)u.click();});
     modal.addEventListener('click',function(e){if(e.target===modal)modal.style.display='none';});
     var tmr=null;
     slugIn.addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(checkSlug,350);});
@@ -1319,6 +1335,22 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <button class="s-btn s-purple" style="width:100%;padding:10px;border-radius:8px;font-size:13px" id="lockPayBtn">Go Pro — $10/mo</button>
       </div>
     </div>
+
+      <div class="fl-modal" id="freeLimitModal" style="display:none;position:fixed;inset:0;z-index:100000;background:rgba(4,8,4,.78);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px">
+        <div style="max-width:430px;width:100%;background:linear-gradient(180deg,#12200f,#0c140a);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:30px 26px;box-shadow:0 30px 80px -20px rgba(0,0,0,.8);text-align:center">
+          <div style="width:54px;height:54px;margin:0 auto 16px;border-radius:15px;background:linear-gradient(150deg,#4ade80,#1f5f2a);display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 8px 22px -6px rgba(74,222,128,.6)">&#127793;</div>
+          <h2 style="margin:0 0 8px;font-size:21px;color:#fff;font-weight:800;letter-spacing:-.02em">You've used all your free builds</h2>
+          <p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:rgba(234,251,230,.62)">Your sites are still yours &mdash; keep editing and exploring what you made. Go Pro to keep building sites like these and put them online for real.</p>
+          <div style="text-align:left;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 16px;margin-bottom:18px">
+            <div style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:rgba(234,251,230,.85);margin-bottom:9px"><span style="color:#4ade80">&#10003;</span> Unlimited new sites, top-quality AI</div>
+            <div style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:rgba(234,251,230,.85);margin-bottom:9px"><span style="color:#4ade80">&#10003;</span> Publish live with no Websprout badge</div>
+            <div style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:rgba(234,251,230,.85);margin-bottom:9px"><span style="color:#4ade80">&#10003;</span> Connect your own custom domain</div>
+            <div style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:rgba(234,251,230,.85)"><span style="color:#4ade80">&#10003;</span> Leads, edits and updates anytime</div>
+          </div>
+          <button id="flmGoPro" class="s-btn s-purple" style="width:100%;padding:13px;border-radius:11px;font-size:15px;font-weight:700;margin-bottom:10px">&#10024; Go Pro &mdash; $10/mo</button>
+          <button id="flmKeep" style="width:100%;padding:10px;background:none;border:none;color:rgba(234,251,230,.5);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Keep editing my site</button>
+        </div>
+      </div>
 
     <!-- Fullscreen overlay -->
     <div class="fs-overlay" id="fsOverlay">
@@ -3456,6 +3488,21 @@ function doGenerate(){
         var secs=60,tel=document.getElementById('toast');
         tel.textContent='⏳ High demand - retrying in '+secs+'s...';tel.classList.add('on');
         var cd=setInterval(function(){secs--;tel.textContent='⏳ High demand - retrying in '+secs+'s...';if(secs<=0){clearInterval(cd);tel.classList.remove('on');doGenerate();}},1000);
+        return;
+      }
+      if(r.d.error==='FREE_LIMIT_REACHED'){
+        var _kw=document.getElementById('skelWrap');if(_kw)_kw.classList.remove('show');
+        var _ld2=document.getElementById('loading');if(_ld2)_ld2.classList.remove('on');
+        var _lb2=document.getElementById('loadBar');if(_lb2)_lb2.style.display='none';
+        var _flm=document.getElementById('freeLimitModal');
+        if(_flm){
+          if(!window._flmWired){window._flmWired=true;
+            var _gp=document.getElementById('flmGoPro');if(_gp)_gp.addEventListener('click',function(){_flm.style.display='none';var _u=document.getElementById('unlockBtn');if(_u)_u.click();});
+            var _kp=document.getElementById('flmKeep');if(_kp)_kp.addEventListener('click',function(){_flm.style.display='none';document.body.style.overflow='';try{var _st2=document.getElementById('studio');if(gHTML&&_st2&&!_st2.classList.contains('on'))openStudio(gHTML);}catch(e){}});
+            _flm.addEventListener('click',function(e){if(e.target===_flm){_flm.style.display='none';document.body.style.overflow='';}});
+          }
+          _flm.style.display='flex';document.body.style.overflow='';
+        }
         return;
       }
       var _sk=document.getElementById('skelWrap');if(_sk)_sk.classList.remove('show');var _st=document.getElementById('studio');if(_st)_st.classList.remove('on');document.body.style.overflow='';try{console.error('[Websprout] /generate failed:',r.d.error);}catch(e3){}toast('🌱 '+(r.d.error||'Please try again'),12000);return;
@@ -5891,6 +5938,8 @@ async function doConnectDomain(request, env){
     if (!env.KV) return fail('KV not configured');
     const b = await request.json();
     if (!b.domain || !b.slug || !b.siteId || !b.key) return fail('Missing data');
+    let _dpro = false; try { const _ds = await getSession(request, env); if (_ds) { const _du = JSON.parse((await env.KV.get('user:' + (_ds.email||'').toLowerCase())) || '{}'); _dpro = !!(_du && _du.plan === 'pro') || ((_ds.email||'').toLowerCase() === SUPPORT_EMAIL.toLowerCase()); } } catch(e){}
+    if (!_dpro) return fail('Custom domains are a Pro feature.');
     if (b.key !== (await siteKey(b.siteId, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
     const m = await env.KV.get('pubmeta:' + b.slug);
     if (!m) return fail('Publish your site first, then connect the domain');
@@ -6373,6 +6422,9 @@ async function doWritePost(request, env){
   if(!text) return fail('Could not generate \u2014 try again.');
   return succeed({ text: text });
 }
+// Free accounts can generate this many sites before Pro is required. Generation is the real
+// per-use cost (a metered Gemini call), so this both caps spend and creates the upgrade moment.
+const FREE_GEN_LIMIT = 10;
 async function doGenerate(request, env) {
   const _sess = await getSession(request, env);
   if (!_sess) return fail('Please sign in to generate a site.');
@@ -6383,12 +6435,24 @@ async function doGenerate(request, env) {
   const prompt = (body.prompt || '').trim();
   if (!prompt) return fail('Prompt is required');
   // Paying members (Pro/comped) generate on the higher-quality Pro model; free users stay on fast Flash.
+  const _email = (_sess.email||'').toLowerCase();
   let genModel = 'gemini-2.5-flash';
+  let _isPaid = false;
   try {
-    const _isOwner = (_sess.email||'').toLowerCase() === SUPPORT_EMAIL.toLowerCase();
-    const _u = JSON.parse((env.KV && await env.KV.get('user:'+(_sess.email||'').toLowerCase())) || '{}');
-    if (_isOwner || _u.plan === 'pro') genModel = 'gemini-2.5-pro';
+    const _isOwner = _email === SUPPORT_EMAIL.toLowerCase();
+    const _u = JSON.parse((env.KV && await env.KV.get('user:'+_email)) || '{}');
+    _isPaid = (_isOwner || _u.plan === 'pro');
+    if (_isPaid) genModel = 'gemini-2.5-pro';
   } catch (e) {}
+  // Free tier: cap total generations per account (Pro/owner unlimited). A new account's FIRST
+  // generation runs on the Pro model so the make-or-break first impression is the best quality.
+  if (!_isPaid && env.KV) {
+    try {
+      const _gc = parseInt((await env.KV.get('gencount:' + _email)) || '0', 10) || 0;
+      if (_gc >= FREE_GEN_LIMIT) return fail('FREE_LIMIT_REACHED');
+      if (_gc === 0) genModel = 'gemini-2.5-pro';
+    } catch (e) {}
+  }
   try {
     const body2 = JSON.stringify({
       contents: [{ parts: [{ text: PROMPT + '\n\nUser request: ' + prompt + getNicheDirection(prompt) + '\n\nSTYLE DIRECTION: ' + getStyleDirection(prompt) + '\n\n' + DESIGN_AMBITION + '\n\nCRITICAL RULES:\n1. CONTRAST IS THE #1 PRIORITY: every text element must be instantly readable against the EXACT background behind it — dark text only on light backgrounds, white/near-white text only on dark backgrounds, never dark-on-dark or light-on-light. If the hero background is dark or uses a photo/image slot, the hero headline and subtext MUST be white/near-white. A dark headline on a dark hero is a failure.\n2. Do NOT use vh or viewport-height units for section/hero HEIGHTS — size heights with px or % (e.g. min-height:640px), required for correct rendering. You SHOULD use clamp() with vw for responsive FONT-SIZE so large headings shrink on small screens and never overflow (e.g. font-size:clamp(2rem,6vw,4.5rem)).\n3. Scroll-reveal and entrance animations are ENCOURAGED, but every element MUST animate from hidden TO fully visible — nothing stays hidden. Keep transitions under 0.8s.\n4. ALWAYS end with </body></html> — never leave HTML incomplete.\n5. COMPLETION IS MANDATORY: always finish the entire page through </body></html>. Keep total output under ~800 lines; if the page is getting long, make each section more concise rather than leaving the page unfinished — a complete simpler page always beats a truncated elaborate one. 6. NO horizontal overflow: set box-sizing:border-box globally, never let any element be wider than the viewport, and the page must NEVER scroll sideways; headings and long text must wrap (overflow-wrap:break-word) and must never use white-space:nowrap on multi-word text. 7. SPACING: the nav logo must never touch the menu links, and text must never touch the screen edges — use container padding/margins and clear gaps between elements.' }] }],
@@ -6407,6 +6471,7 @@ async function doGenerate(request, env) {
     const siteId = 'ws' + Math.random().toString(36).slice(2,9);
     finalHtml = withForms(finalHtml, siteId);
     const formKey = await siteKey(siteId, env);
+    if (!_isPaid && env.KV) { try { const _gc2 = parseInt((await env.KV.get('gencount:' + _email)) || '0', 10) || 0; await env.KV.put('gencount:' + _email, String(_gc2 + 1)); } catch (e) {} }
     return succeed({ html: finalHtml, siteId: siteId, formKey: formKey, inboxUrl: 'https://websprout.app/inbox?site=' + siteId + '&key=' + formKey });
   } catch(e) { return fail(e.message); }
 }
