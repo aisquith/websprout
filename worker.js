@@ -170,8 +170,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r97">
-<script>window._wsBuild="2026-06-10-r97";console.log("%c[Websprout] build 2026-06-10-r97 (photo slots: fillSlot falls back to the lone empty slot; AI converts areas into real upload slots so Could-not-find-slot stops)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r101">
+<script>window._wsBuild="2026-06-10-r101";console.log("%c[Websprout] build 2026-06-10-r101 (Stripe Connect: Pro users link their own Stripe; invoices bill on their account so clients pay them directly)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2018,6 +2018,12 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <button id="invClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;line-height:1">&#10005;</button>
     </div>
     <div style="padding:14px 18px;overflow-y:auto">
+      <div id="invConnect" style="display:none;text-align:center;padding:8px 4px 4px">
+        <div style="font-size:13px;color:rgba(234,242,232,.7);line-height:1.6;margin-bottom:14px">To send invoices, connect your own Stripe account. Your clients pay <b>you</b> directly &mdash; Websprout never touches the money.</div>
+        <a id="invConnectBtn" href="/connect/start" style="display:inline-block;background:linear-gradient(135deg,#635bff,#4b45c6);color:#fff;border-radius:9px;padding:12px 22px;font-size:14px;font-weight:700;text-decoration:none;font-family:inherit">Connect Stripe</a>
+        <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:10px">Takes about a minute &mdash; you can come right back here after.</div>
+      </div>
+      <div id="invForm">
       <label style="font-size:12px;color:rgba(255,255,255,.5);display:block;margin-bottom:5px">Amount (USD)</label>
       <input id="invAmount" type="number" min="0.50" step="0.01" placeholder="150.00" style="width:100%;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;margin-bottom:12px">
       <label style="font-size:12px;color:rgba(255,255,255,.5);display:block;margin-bottom:5px">What&#39;s it for?</label>
@@ -2028,6 +2034,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <div id="invResultWrap" style="display:none;margin-top:14px">
         <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px">Payment link</div>
         <div style="display:flex;gap:7px"><input id="invResult" readonly style="flex:1;min-width:0;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#7dd88f;border-radius:9px;padding:10px 12px;font-size:13px;font-family:inherit"><button id="invCopy" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Copy</button></div>
+      </div>
       </div>
       <div id="invMsg" style="font-size:12px;color:rgba(234,242,232,.5);margin-top:10px;min-height:14px"></div>
     </div>
@@ -2398,6 +2405,7 @@ function setPreview(html){
         'if(s._wsW)return;s._wsW=1;'+
         's.style.cssText+=\";cursor:pointer!important;pointer-events:auto!important\";'+
         's.onclick=function(e){e.preventDefault();e.stopPropagation();'+
+          'try{document.querySelectorAll(\"[data-ws-active]\").forEach(function(x){x.removeAttribute(\"data-ws-active\")});s.setAttribute(\"data-ws-active\",\"1\");}catch(_e){}'+
           'parent.postMessage({type:\"wsSlotClick\",slotId:s.getAttribute(\"data-slot\")||\"image\",label:s.getAttribute(\"data-label\")||\"Add photo\"},\"*\");'+
         '};'+
       '});'+
@@ -2415,6 +2423,7 @@ function setPreview(html){
         's.onmouseenter=function(){ov.style.opacity=\"1\";};'+
         's.onmouseleave=function(){ov.style.opacity=\"0\";};'+
         's.onclick=function(e){e.preventDefault();e.stopPropagation();'+
+          'try{document.querySelectorAll(\"[data-ws-active]\").forEach(function(x){x.removeAttribute(\"data-ws-active\")});s.setAttribute(\"data-ws-active\",\"1\");}catch(_e){}'+
           'parent.postMessage({type:\"wsSlotClick\",slotId:s.getAttribute(\"data-slot-filled\")||\"image\",label:\"Change photo\"},\"*\");'+
         '};'+
       '});'+
@@ -2439,7 +2448,7 @@ function setPreview(html){
             'btn._slot=s;'+
             'btn.textContent=\"\\uD83D\\uDCF7 Add background photo\";'+
             'btn.style.cssText=\"position:absolute;z-index:2147483600;padding:9px 16px;background:rgba(17,17,17,.85);color:#fff;font:600 13px -apple-system,BlinkMacSystemFont,sans-serif;border-radius:100px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.35);white-space:nowrap\";'+
-            'btn.onclick=function(e){e.preventDefault();e.stopPropagation();parent.postMessage({type:\"wsSlotClick\",slotId:s.getAttribute(\"data-slot\")||\"image\",label:s.getAttribute(\"data-label\")||\"Add photo\"},\"*\");};'+
+            'btn.onclick=function(e){e.preventDefault();e.stopPropagation();try{document.querySelectorAll(\"[data-ws-active]\").forEach(function(x){x.removeAttribute(\"data-ws-active\")});s.setAttribute(\"data-ws-active\",\"1\");}catch(_e){}parent.postMessage({type:\"wsSlotClick\",slotId:s.getAttribute(\"data-slot\")||\"image\",label:s.getAttribute(\"data-label\")||\"Add photo\"},\"*\");};'+
             'document.body.appendChild(btn);'+
             's._wsFloatBtn=btn;'+
           '}'+
@@ -3172,6 +3181,12 @@ document.addEventListener('DOMContentLoaded',function(){
     m.style.display='flex';
     var rw=document.getElementById('invResultWrap');if(rw)rw.style.display='none';
     var msg=document.getElementById('invMsg');if(msg)msg.textContent='';
+    // Owner bills on the platform account; everyone else must connect their own Stripe first.
+    var u=window._wsUser||{};
+    var canBill=u.owner||u.connectReady;
+    var fEl=document.getElementById('invForm'),cEl=document.getElementById('invConnect');
+    if(fEl)fEl.style.display=canBill?'':'none';
+    if(cEl)cEl.style.display=canBill?'none':'block';
   };
   var _ig=document.getElementById('invGen');
   if(_ig)_ig.addEventListener('click',function(){
@@ -3232,7 +3247,7 @@ document.addEventListener('DOMContentLoaded',function(){
   var _payM=document.getElementById('payModal');if(_payM)_payM.addEventListener('click',function(e){if(e.target===_payM)_payM.style.display='none';});
   var _payB=document.getElementById('payBtn');if(_payB)_payB.addEventListener('click',window.openPay);
   // Invoicing routes funds to the platform's own Stripe account, so it's owner-only until per-user Connect exists.
-  (function(){var _ot=setInterval(function(){var u=window._wsUser;if(u){clearInterval(_ot);if(u.owner){var b=document.getElementById('invoiceBtn');if(b)b.style.display='';var mi=document.getElementById('invoiceMenuItem');if(mi)mi.style.display='';}}},400);setTimeout(function(){try{clearInterval(_ot);}catch(e){}},15000);})();
+  (function(){var _ot=setInterval(function(){var u=window._wsUser;if(u){clearInterval(_ot);if(u.owner||u.pro){var b=document.getElementById('invoiceBtn');if(b)b.style.display='';var mi=document.getElementById('invoiceMenuItem');if(mi)mi.style.display='';}}},400);setTimeout(function(){try{clearInterval(_ot);}catch(e){}},15000);})();
   if(slotFileInputEl)slotFileInputEl.addEventListener('change',function(){
     if(slotFileInputEl.files&&slotFileInputEl.files[0])slotCompressAndFill(slotFileInputEl.files[0]);
     slotFileInputEl.value='';
@@ -4027,7 +4042,8 @@ function fillSlot(dataUrl){
 
   try{
     var doc=pf.contentDocument||pf.contentWindow.document;
-    var slot=doc.querySelector('[data-slot="'+currentSlotId+'"]');
+    var slot=doc.querySelector('[data-ws-active]');
+    if(!slot)slot=doc.querySelector('[data-slot="'+currentSlotId+'"]');
     if(!slot)slot=doc.querySelector("[data-slot='"+currentSlotId+"']");
     if(!slot){
       // The AI may have created the slot with a different id than what was clicked.
@@ -5011,6 +5027,9 @@ Sitemap: https://websprout.app/sitemap.xml`;
 
 
 export default {
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runWeeklyDigest(env));
+  },
   async fetch(request, env) {
     const url = new URL(request.url);
     const _host = url.hostname.toLowerCase();
@@ -5031,6 +5050,8 @@ export default {
     if (url.pathname === '/genimage' && request.method === 'POST') return doGenImage(request, env);
     if (url.pathname === '/api/post' && request.method === 'POST') return doWritePost(request, env);
     if (url.pathname === '/api/invoice' && request.method === 'POST') return doInvoice(request, env);
+    if (url.pathname === '/connect/start' && request.method === 'GET') return doConnectStart(request, env);
+    if (url.pathname === '/connect/return' && request.method === 'GET') return doConnectReturn(request, env);
     if (url.pathname === '/track' && request.method === 'POST') return doTrack(request, env);
     if (url.pathname === '/send-email' && request.method === 'POST') return doSendEmail(request, env);
     if (url.pathname === '/stats' && request.method === 'GET') return doStats(request, env);
@@ -5505,6 +5526,59 @@ async function doFormSubmit(request, env, siteId){
   } catch(e){ return jsonR({ ok:false, error:'error' }, 500); }
 }
 
+async function runWeeklyDigest(env){
+  if(!env.KV || !env.RESEND_API_KEY) return;
+  const seen = new Set();
+  const sites = [];
+  let cursor, guard = 0;
+  do{
+    const r = await env.KV.list({ prefix:'pubmeta:', cursor, limit:1000 });
+    for(const k of r.keys){
+      try{ const m = JSON.parse((await env.KV.get(k.name))||'{}'); if(m.siteId && !seen.has(m.siteId)){ seen.add(m.siteId); sites.push(m.siteId); } }catch(e){}
+    }
+    cursor = r.list_complete ? null : r.cursor; guard++;
+  }while(cursor && guard < 5);
+  const now = Date.now();
+  const cutoff = now - 7*86400000;
+  let sent = 0;
+  for(const siteId of sites){
+    if(sent >= 300) break;
+    try{
+      const notify = await env.KV.get('notify:'+siteId);
+      if(!notify) continue;
+      let weekViews = 0;
+      for(let i=0;i<7;i++){ const ds = new Date(now - i*86400000).toISOString().slice(0,10).replace(/-/g,''); weekViews += parseInt((await env.KV.get('views:'+siteId+':'+ds))||'0',10)||0; }
+      const totalViews = parseInt((await env.KV.get('views:'+siteId+':total'))||'0',10)||0;
+      let weekLeads = 0;
+      try{
+        const fr = await env.KV.list({ prefix:'form:'+siteId+':', limit:1000 });
+        for(const fk of fr.keys){ const parts = fk.name.split(':'); const ts = parseInt(parts[2],10)||0; if(ts >= cutoff) weekLeads++; }
+      }catch(e){}
+      if(weekViews === 0 && weekLeads === 0) continue;
+      await sendDigestEmail(env, notify, siteId, weekViews, weekLeads, totalViews);
+      sent++;
+    }catch(e){}
+  }
+}
+async function sendDigestEmail(env, to, siteId, weekViews, weekLeads, totalViews){
+  const inboxUrl = 'https://websprout.app/inbox?site=' + encodeURIComponent(siteId);
+  const leadLine = weekLeads > 0
+    ? ('<p style="margin:0 0 6px;font-size:15px;color:#0f1a0d"><b>' + weekLeads + '</b> new ' + (weekLeads===1?'lead':'leads') + ' this week \u2014 don\u2019t leave them waiting.</p>')
+    : '<p style="margin:0 0 6px;font-size:15px;color:#555">No new leads this week \u2014 a quick share of your link can help.</p>';
+  const html = '<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:520px;margin:0 auto">'
+    + '<div style="background:#0f1a0d;padding:20px;text-align:center"><span style="color:#fff;font-size:20px;font-weight:800">\uD83C\uDF31 Your week on Websprout</span></div>'
+    + '<div style="padding:24px">'
+    + '<p style="color:#555;margin:0 0 16px">Here is how your website did over the last 7 days:</p>'
+    + '<div style="display:flex;gap:12px;margin-bottom:16px">'
+    + '<div style="flex:1;background:#f4f8f3;border-radius:10px;padding:14px;text-align:center"><div style="font-size:26px;font-weight:800;color:#0f1a0d">' + weekViews + '</div><div style="font-size:12px;color:#777">views this week</div></div>'
+    + '<div style="flex:1;background:#f4f8f3;border-radius:10px;padding:14px;text-align:center"><div style="font-size:26px;font-weight:800;color:#1a7a32">' + weekLeads + '</div><div style="font-size:12px;color:#777">new leads</div></div>'
+    + '</div>'
+    + leadLine
+    + '<p style="margin:0 0 22px;font-size:13px;color:#999">' + totalViews + ' total views all-time</p>'
+    + '<p style="margin:0"><a href="' + inboxUrl + '" style="display:inline-block;background:#16a34a;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">View your leads</a></p>'
+    + '</div></div>';
+  await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer '+env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'\uD83C\uDF31 Your website got ' + weekViews + ' views this week', html: html }) });
+}
 async function sendFormEmail(env, to, siteId, fields){
   let rows = '';
   for (const k in fields){ rows += '<tr><td style="padding:7px 12px;font-weight:600;color:#0f1a0d;border-bottom:1px solid #eee;vertical-align:top">' + escHtml(k) + '</td><td style="padding:7px 12px;color:#333;border-bottom:1px solid #eee">' + escHtml(fields[k]).replace(/\n/g,'<br>') + '</td></tr>'; }
@@ -5512,27 +5586,78 @@ async function sendFormEmail(env, to, siteId, fields){
   await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'🌱 New submission from your website', html: html }) });
 }
 
+async function doConnectStart(request, env){
+  const s = await getSession(request, env);
+  if(!s) return Response.redirect(SITE_ORIGIN+'/?connect=signin',302);
+  const sk = (env.STRIPE_SECRET_KEY||'').trim();
+  if(!sk) return Response.redirect(SITE_ORIGIN+'/?connect=error',302);
+  const email = (s.email||'').toLowerCase();
+  let u=null; try{ u=JSON.parse(await env.KV.get('user:'+email)||'null'); }catch(e){}
+  if(!u) return Response.redirect(SITE_ORIGIN+'/?connect=error',302);
+  try{
+    let acct = u.stripeConnect||'';
+    if(!acct){
+      const ar = await fetch('https://api.stripe.com/v1/accounts', { method:'POST', headers:{ 'Authorization':'Bearer '+sk, 'Content-Type':'application/x-www-form-urlencoded' }, body:'type=express&email='+encodeURIComponent(email) });
+      const aj = await ar.json();
+      if(!ar.ok || aj.error || !aj.id) return Response.redirect(SITE_ORIGIN+'/?connect=error',302);
+      acct = aj.id;
+      u.stripeConnect = acct; u.stripeConnectReady = false;
+      await env.KV.put('user:'+email, JSON.stringify(u));
+    }
+    const lr = await fetch('https://api.stripe.com/v1/account_links', { method:'POST', headers:{ 'Authorization':'Bearer '+sk, 'Content-Type':'application/x-www-form-urlencoded' }, body:'account='+encodeURIComponent(acct)+'&refresh_url='+encodeURIComponent(SITE_ORIGIN+'/connect/start')+'&return_url='+encodeURIComponent(SITE_ORIGIN+'/connect/return')+'&type=account_onboarding' });
+    const lj = await lr.json();
+    if(!lr.ok || lj.error || !lj.url) return Response.redirect(SITE_ORIGIN+'/?connect=error',302);
+    return Response.redirect(lj.url, 302);
+  }catch(e){ return Response.redirect(SITE_ORIGIN+'/?connect=error',302); }
+}
+async function doConnectReturn(request, env){
+  const s = await getSession(request, env);
+  if(!s) return Response.redirect(SITE_ORIGIN+'/?connect=signin',302);
+  const sk = (env.STRIPE_SECRET_KEY||'').trim();
+  const email = (s.email||'').toLowerCase();
+  let u=null; try{ u=JSON.parse(await env.KV.get('user:'+email)||'null'); }catch(e){}
+  let ready=false;
+  try{
+    if(sk && u && u.stripeConnect){
+      const ar = await fetch('https://api.stripe.com/v1/accounts/'+encodeURIComponent(u.stripeConnect), { headers:{ 'Authorization':'Bearer '+sk } });
+      const aj = await ar.json();
+      if(ar.ok && aj && aj.charges_enabled) ready=true;
+      u.stripeConnectReady = ready;
+      await env.KV.put('user:'+email, JSON.stringify(u));
+    }
+  }catch(e){}
+  return Response.redirect(SITE_ORIGIN+'/?connect='+(ready?'ok':'pending'),302);
+}
 async function doInvoice(request, env){
   const s = await getSession(request, env);
   if(!s) return fail('Please sign in.');
   const ownerEmail = (s.email||'').toLowerCase();
-  // Invoices are minted on the platform's own Stripe account, so funds land in the owner's
-  // balance. Until per-user Stripe Connect exists, ONLY the owner may create invoices —
-  // otherwise another user's client payments would be misrouted to the owner.
-  if(ownerEmail !== SUPPORT_EMAIL.toLowerCase()) return fail('Invoicing isn\u2019t available on your account yet.');
   const sk = (env.STRIPE_SECRET_KEY||'').trim();
-  if(!sk) return fail('To send invoices, add your Stripe secret key as STRIPE_SECRET_KEY in your Worker settings.');
+  if(!sk) return fail('Invoicing isn\u2019t configured yet.');
+  const isOwner = ownerEmail === SUPPORT_EMAIL.toLowerCase();
+  let u=null; try{ u=JSON.parse(await env.KV.get('user:'+ownerEmail)||'null'); }catch(e){}
+  const isPro = isOwner || (u && u.plan==='pro');
+  if(!isPro) return fail('Invoicing is a Pro feature \u2014 go Pro to unlock it.');
+  // Account routing: the owner bills on the platform account; everyone else bills on THEIR OWN
+  // connected Stripe account (via Stripe Connect) so client payments go to them, never the platform.
+  let stripeAccount = '';
+  if(!isOwner){
+    if(!(u && u.stripeConnect && u.stripeConnectReady)) return fail('Connect your Stripe account first so payments go to you.');
+    stripeAccount = u.stripeConnect;
+  }
   let body; try{ body=await request.json(); }catch(e){ return fail('Invalid request'); }
   const amount = Math.round(parseFloat(body.amount||'0')*100);
   if(!amount || amount<50) return fail('Enter an amount of at least $0.50.');
   const desc = (String(body.desc||'Invoice').slice(0,200).trim()) || 'Invoice';
   const clientEmail = String(body.email||'').trim().slice(0,120);
   const currency = (String(body.currency||'usd').toLowerCase().replace(/[^a-z]/g,'').slice(0,3)) || 'usd';
+  const sHeaders = { 'Authorization':'Bearer '+sk, 'Content-Type':'application/x-www-form-urlencoded' };
+  if(stripeAccount) sHeaders['Stripe-Account'] = stripeAccount;
   try{
-    const pr = await fetch('https://api.stripe.com/v1/prices', { method:'POST', headers:{ 'Authorization':'Bearer '+sk, 'Content-Type':'application/x-www-form-urlencoded' }, body:'unit_amount='+amount+'&currency='+encodeURIComponent(currency)+'&product_data[name]='+encodeURIComponent(desc) });
+    const pr = await fetch('https://api.stripe.com/v1/prices', { method:'POST', headers:sHeaders, body:'unit_amount='+amount+'&currency='+encodeURIComponent(currency)+'&product_data[name]='+encodeURIComponent(desc) });
     const prj = await pr.json();
     if(!pr.ok || prj.error) return fail('Stripe: '+((prj.error&&prj.error.message)||'could not create price'));
-    const pl = await fetch('https://api.stripe.com/v1/payment_links', { method:'POST', headers:{ 'Authorization':'Bearer '+sk, 'Content-Type':'application/x-www-form-urlencoded' }, body:'line_items[0][price]='+encodeURIComponent(prj.id)+'&line_items[0][quantity]=1' });
+    const pl = await fetch('https://api.stripe.com/v1/payment_links', { method:'POST', headers:sHeaders, body:'line_items[0][price]='+encodeURIComponent(prj.id)+'&line_items[0][quantity]=1' });
     const plj = await pl.json();
     if(!pl.ok || plj.error || !plj.url) return fail('Stripe: '+((plj.error&&plj.error.message)||'could not create payment link'));
     const url = plj.url;
@@ -5836,7 +5961,7 @@ async function doMe(request, env){
     try{ await setUserPlan(env, s.email, 'pro', '', ''); u=JSON.parse(await env.KV.get('user:'+s.email)||'null'); }catch(e){}
   }
   const _owner = (s.email||'').toLowerCase() === SUPPORT_EMAIL.toLowerCase();
-  return succeed({ auth:true, email:s.email, name:(u&&u.name)||'', plan:(u&&u.plan)||'free', pro:!!(u&&u.plan==='pro'), owner:_owner });
+  return succeed({ auth:true, email:s.email, name:(u&&u.name)||'', plan:(u&&u.plan)||'free', pro:!!(u&&u.plan==='pro'), owner:_owner, connectReady:!!(u&&u.stripeConnectReady) });
 }
 async function doLogout(request, env){
   const t=parseCookies(request)['ws_sess'];
@@ -6256,6 +6381,7 @@ async function doGenerate(request, env) {
     let finalHtml = generatedHtml.includes('</html>') ? generatedHtml : generatedHtml + '\n</body>\n</html>';
     finalHtml = sanitizeGenerated(finalHtml);
     finalHtml = ensureMobile(finalHtml);
+    finalHtml = tidyGenerated(finalHtml);
     finalHtml = withReveal(finalHtml);
     finalHtml = withFix(finalHtml);
     const siteId = 'ws' + Math.random().toString(36).slice(2,9);
@@ -6357,6 +6483,46 @@ function sanitizeGenerated(html){
 
 // Guarantee mobile baseline: a viewport tag (without it phones render the desktop layout zoomed out)
 // plus a minimal, non-destructive safety stylesheet so nothing overflows sideways on a phone.
+// Deterministic post-generation cleanup for issues prompts keep missing:
+// (1) collapse a nav that ended up with the same CTA twice down to one, and
+// (2) strip empty trailing elements that leave a gap at the bottom.
+function tidyGenerated(html){
+  try{ html = dedupeNavCta(html); html = stripTrailingEmpty(html); }catch(e){}
+  return html;
+}
+function dedupeNavCta(html){
+  let open = html.search(/<nav\b/i), tag='nav';
+  if(open<0){ open = html.search(/<header\b/i); tag='header'; }
+  if(open<0) return html;
+  const closeStr='</'+tag+'>';
+  const rel = html.slice(open).search(new RegExp(closeStr,'i'));
+  if(rel<0) return html;
+  const closeEnd = open + rel + closeStr.length;
+  const navBlock = html.slice(open, closeEnd);
+  const anchors = navBlock.match(/<a\b[^>]*>[\s\S]*?<\/a>/gi) || [];
+  if(anchors.length < 2) return html;
+  const txt = a => a.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().toLowerCase();
+  const counts = {};
+  anchors.forEach(a=>{ const t=txt(a); if(t&&t.length<30) counts[t]=(counts[t]||0)+1; });
+  let newNav = navBlock;
+  Object.keys(counts).forEach(t=>{
+    if(counts[t]>1){
+      const matching = anchors.filter(a=>txt(a)===t);
+      for(let i=0;i<matching.length-1;i++){
+        const idx = newNav.indexOf(matching[i]);
+        if(idx>-1) newNav = newNav.slice(0,idx) + newNav.slice(idx+matching[i].length);
+      }
+    }
+  });
+  if(newNav===navBlock) return html;
+  return html.slice(0,open) + newNav + html.slice(closeEnd);
+}
+function stripTrailingEmpty(html){
+  let prev;
+  do{ prev = html; html = html.replace(/<(div|section|span|p)\b[^>]*>\s*<\/\1>\s*(?=<\/body>)/i, ''); }while(html!==prev);
+  return html;
+}
+
 function ensureMobile(html){
   try{
     if(!/<meta[^>]+name=["']viewport["']/i.test(html)){
