@@ -46,7 +46,7 @@ OUTPUT: Raw HTML only, <!DOCTYPE html> to </html>. No markdown, no backticks, no
    - Consulting: service packages, methodology, client results
    - Local business: service list with descriptions, service area, pricing
    Write content that ONLY makes sense for this specific business. No generic filler.
-7. TESTIMONIALS — 3 cards. Large quote mark in accent color. Italic quote text. Name, role, 5 stars.
+7. REVIEWS — a "Reviews" or "What our customers say" section styled to match the site (heading, accent color, generous padding, a background that fits the page rhythm). Do NOT invent fake customers, names, quotes, or star ratings. Instead place exactly ONE empty container in this section and nothing else inside the reviews area: <div data-ws-reviews></div> — Websprout injects the business's real reviews plus a "Leave a review" form into that div at publish time. You may add one short subheading line under the heading inviting visitors to share their experience, but never output fabricated testimonial cards.
 8. PRICING — 3 tiers adapted to this business. Center tier highlighted. Feature lists with checkmarks.
 9. CONTACT/CTA — full-width colored band. Bold headline. Contact form with fields relevant to this industry. For service / quote / appointment businesses, make this a "Request a quote" (or "Request a callback") form with STRUCTURED fields, each with a name attribute: full name, phone, email, the specific service needed (a <select> with 4–6 realistic options for THIS industry), preferred timeframe/urgency (a <select>: ASAP / This week / This month / Just exploring), and a details textarea. Always give a phone field. The form MUST have action="#" method="POST" so it can be wired to a real email service later. Include these hidden fields inside every form:
    <input type="hidden" name="_subject" value="New message from your website">
@@ -171,8 +171,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r114">
-<script>window._wsBuild="2026-06-10-r114";console.log("%c[Websprout] build 2026-06-10-r114 (admin: real platform fees collected from Stripe, invoices created + amounts, recent-invoices table)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r116">
+<script>window._wsBuild="2026-06-10-r116";console.log("%c[Websprout] build 2026-06-10-r116 (reviews moderation: owner /reviews panel to approve pending + add placeholder reviews; Manage reviews link in publish panel)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1128,6 +1128,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
             <button id="pubCopy" style="flex:1;background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Copy link</button>
           </div>
           <button id="pubUpdate" style="width:100%;background:rgba(255,255,255,.05);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">&#8635; Re-publish my latest edits</button>
+          <a id="pubReviews" href="#" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:11px;font-size:13px;font-weight:600;text-decoration:none;font-family:inherit;box-sizing:border-box">&#11088; Manage reviews</a>
           <div id="pubBadgeNudge" style="display:none;background:linear-gradient(180deg,rgba(45,122,58,.14),rgba(45,122,58,.04));border:1px solid rgba(74,222,128,.22);border-radius:12px;padding:14px 16px;margin-top:14px">
             <div style="font-size:13.5px;color:#fff;font-weight:700;margin-bottom:3px">&#127793; Your site is live &mdash; with a small Websprout badge</div>
             <div style="font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:11px">Go Pro to remove the badge, connect your own domain, and download the code.</div>
@@ -1180,6 +1181,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       var _bn=$('pubBadgeNudge');if(_bn)_bn.style.display=_pro?'none':'block';
       var _dp=$('pubDomainPro');if(_dp)_dp.style.display=_pro?'block':'none';
       var _dl=$('pubDomainLocked');if(_dl)_dl.style.display=_pro?'none':'block';
+      var _rv=$('pubReviews');if(_rv)_rv.href='/reviews?site='+encodeURIComponent(site());
       var probed=false;var pto=setTimeout(function(){probed=true;},3500);
       fetch(subUrl,{mode:'no-cors',cache:'no-store'}).then(function(){if(probed)return;probed=true;clearTimeout(pto);window._wsLive=subUrl;u.textContent=subUrl.replace('https://','');u.href=subUrl;}).catch(function(){});
     }
@@ -5135,11 +5137,21 @@ export default {
       if (request.method === 'OPTIONS') return new Response(null, { headers: formCors() });
       if (request.method === 'POST') return doFormSubmit(request, env, decodeURIComponent(url.pathname.slice(10)));
     }
+    if (url.pathname === '/api/review') {
+      if (request.method === 'OPTIONS') return new Response(null, { headers: formCors() });
+      if (request.method === 'POST') return doReviewSubmit(request, env);
+    }
+    if (url.pathname === '/api/reviews' && request.method === 'GET') return doReviewsGet(new URL(request.url), env);
     if (url.pathname === '/api/clientlog') {
       if (request.method === 'OPTIONS') return new Response(null, { headers: formCors() });
       if (request.method === 'POST') return doClientLog(request, env);
     }
     if (url.pathname === '/inbox') return new Response(INBOX_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    if (url.pathname === '/reviews' && request.method === 'GET') return doReviewsPage(request, env);
+    if (url.pathname === '/api/reviews/manage') {
+      if (request.method === 'OPTIONS') return new Response(null, { headers: formCors() });
+      if (request.method === 'GET' || request.method === 'POST') return doReviewsManage(request, env);
+    }
     if (url.pathname === '/publish' && request.method === 'POST') return doPublish(request, env);
     if (url.pathname === '/unpublish' && request.method === 'POST') return doUnpublish(request, env);
     if (url.pathname === '/slug-check' && request.method === 'GET') return doSlugCheck(request, env);
@@ -5803,6 +5815,220 @@ async function doInboxClear(request, env){
 }
 
 // Injected into every generated site: auto-wires all <form>s to the inbox.
+async function rebuildReviewsPub(env, siteId){
+  if(!env || !env.KV || !siteId) return;
+  const out=[];
+  try{ let cur=undefined,g=0; do{ const r=await env.KV.list({ prefix:'review:'+siteId+':', cursor:cur, limit:1000 }); for(const k of r.keys){ try{ const o=JSON.parse(await env.KV.get(k.name)||'{}'); if(o && o.status==='approved'){ out.push({ name:o.name||'', rating:o.rating||5, text:o.text||'', ts:o.ts||0 }); } }catch(e){} } cur=r.list_complete?null:r.cursor; g++; } while(cur&&g<10); }catch(e){}
+  out.sort(function(a,b){return (b.ts||0)-(a.ts||0);});
+  try{ await env.KV.put('reviewsPub:'+siteId, JSON.stringify(out.slice(0,60))); }catch(e){}
+}
+async function doReviewSubmit(request, env){
+  try{
+    let b; try{ b = await request.json(); }catch(e){ return jsonR({ ok:false, error:'bad' }, 400); }
+    const siteId = String(b.site||'').slice(0,40).trim();
+    if(!siteId || siteId.length < 4) return jsonR({ ok:false, error:'bad site' }, 400);
+    if(b._ws_hp) return jsonR({ ok:true });
+    if(!env.KV) return jsonR({ ok:true });
+    let rating = parseInt(b.rating,10); if(!(rating>=1 && rating<=5)) rating=5;
+    const name = String(b.name||'').slice(0,80).trim();
+    const text = String(b.text||'').slice(0,1500).trim();
+    if(text.length < 2) return jsonR({ ok:false, error:'empty' }, 400);
+    const ip = request.headers.get('cf-connecting-ip') || '0';
+    const rlKey = 'rrl:' + siteId + ':' + ip;
+    const rl = parseInt(await env.KV.get(rlKey) || '0', 10) || 0;
+    if(rl > 15) return jsonR({ ok:false, error:'rate' }, 429);
+    await env.KV.put(rlKey, String(rl+1), { expirationTtl: 3600 });
+    const id = Date.now() + ':' + Math.random().toString(36).slice(2,8);
+    await env.KV.put('review:'+siteId+':'+id, JSON.stringify({ id, name, rating, text, ts:Date.now(), status:'pending', source:'visitor' }), { expirationTtl: 400*86400 });
+    return jsonR({ ok:true });
+  }catch(e){ return jsonR({ ok:false, error:'error' }, 500); }
+}
+async function doReviewsGet(url, env){
+  const siteId = String((url.searchParams.get('site')||'')).slice(0,40).trim();
+  if(!siteId || !env.KV) return jsonR({ reviews:[] });
+  let reviews=[]; try{ const raw=await env.KV.get('reviewsPub:'+siteId); if(raw) reviews=JSON.parse(raw)||[]; }catch(e){}
+  return jsonR({ reviews });
+}
+function reviewScript(siteId){
+  const sub = 'https://websprout.app/api/review';
+  const get = 'https://websprout.app/api/reviews?site=' + encodeURIComponent(siteId);
+  return '<scr'+'ipt id="_wsReviews">(function(){'
+  +'var MOUNT=document.querySelector("[data-ws-reviews]");if(!MOUNT)return;'
+  +'var SITE="'+siteId+'";var SUB="'+sub+'";var GET="'+get+'";'
+  +'function el(tag,css,txt){var e=document.createElement(tag);if(css)e.style.cssText=css;if(txt!=null)e.textContent=txt;return e;}'
+  +'function starRow(n,size){var w=el("div","letter-spacing:2px;font-size:"+(size||15)+"px;line-height:1");for(var i=0;i<5;i++){var s=el("span",null,"\\u2605");s.style.color=(i<n?"#f5b301":"rgba(127,127,127,.35)");w.appendChild(s);}return w;}'
+  +'function card(r){var c=el("div","background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.16);border-radius:12px;padding:18px;text-align:left");c.appendChild(starRow(r.rating|0,15));c.appendChild(el("div","font-size:15px;line-height:1.6;opacity:.9;margin:10px 0",r.text||""));c.appendChild(el("div","font-weight:700;font-size:14px",(r.name&&String(r.name).trim())?r.name:"Verified customer"));return c;}'
+  +'function render(list){MOUNT.innerHTML="";var wrap=el("div","font-family:inherit;color:inherit");'
+  +'if(list&&list.length){var grid=el("div","display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:22px");for(var i=0;i<list.length;i++){grid.appendChild(card(list[i]));}wrap.appendChild(grid);}'
+  +'else{wrap.appendChild(el("div","opacity:.6;font-size:15px;margin-bottom:20px","No reviews yet \\u2014 be the first to share your experience."));}'
+  +'var cta=el("div","text-align:center");var btn=el("button","font-family:inherit;font-size:15px;font-weight:700;padding:11px 22px;border-radius:10px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer;opacity:.85","Leave a review");btn.type="button";cta.appendChild(btn);wrap.appendChild(cta);MOUNT.appendChild(wrap);'
+  +'btn.addEventListener("click",function(){showForm();});}'
+  +'function showForm(){MOUNT.innerHTML="";var sel=0;'
+  +'var f=el("div","max-width:520px;margin:0 auto;text-align:left;background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.16);border-radius:12px;padding:20px");'
+  +'f.appendChild(el("div","font-weight:700;margin-bottom:12px;font-size:16px","Leave a review"));'
+  +'var pick=el("div","font-size:30px;letter-spacing:6px;margin-bottom:14px;cursor:pointer;user-select:none;line-height:1");'
+  +'function paint(){pick.innerHTML="";for(var i=0;i<5;i++){var s=el("span",null,"\\u2605");s.style.color=(i<sel?"#f5b301":"rgba(127,127,127,.4)");s.setAttribute("data-i",String(i));pick.appendChild(s);}}paint();'
+  +'pick.addEventListener("click",function(e){var t=e.target;if(t&&t.getAttribute("data-i")!=null){sel=(parseInt(t.getAttribute("data-i"),10)|0)+1;paint();}});f.appendChild(pick);'
+  +'var nm=el("input","width:100%;font-family:inherit;font-size:15px;padding:11px 12px;margin-bottom:10px;border-radius:9px;border:1px solid rgba(127,127,127,.3);background:rgba(127,127,127,.06);color:inherit;box-sizing:border-box");nm.placeholder="Your name";f.appendChild(nm);'
+  +'var tx=el("textarea","width:100%;font-family:inherit;font-size:15px;padding:11px 12px;margin-bottom:12px;border-radius:9px;border:1px solid rgba(127,127,127,.3);background:rgba(127,127,127,.06);color:inherit;box-sizing:border-box;resize:vertical");tx.rows=4;tx.placeholder="Tell others about your experience";f.appendChild(tx);'
+  +'var send=el("button","font-family:inherit;font-size:15px;font-weight:700;padding:11px 24px;border-radius:10px;border:none;background:#2d7a3a;color:#fff;cursor:pointer","Submit review");send.type="button";f.appendChild(send);MOUNT.appendChild(f);'
+  +'send.addEventListener("click",function(){var text=(tx.value||"").trim();if(text.length<2){alert("Please write a short review.");return;}if(!sel)sel=5;send.disabled=true;send.textContent="Sending...";'
+  +'fetch(SUB,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({site:SITE,name:nm.value||"",rating:sel,text:text})}).then(function(r){return r.json();}).then(function(j){'
+  +'if(j&&(j.ok||j.success)){f.innerHTML="";f.appendChild(el("div","padding:18px;text-align:center;font-weight:600;color:#2d7a3a","Thank you! Your review has been submitted and will appear once approved."));}'
+  +'else{send.disabled=false;send.textContent="Submit review";alert("Sorry, something went wrong. Please try again.");}'
+  +'}).catch(function(){send.disabled=false;send.textContent="Submit review";alert("Could not submit right now. Please try again.");});});}'
+  +'fetch(GET).then(function(r){return r.json();}).then(function(j){render((j&&j.reviews)||[]);}).catch(function(){render([]);});'
+  +'})();</scr'+'ipt>';
+}
+function withReviews(html, siteId){
+  if (!html || html.indexOf('_wsReviews') > -1) return html;
+  if (html.indexOf('data-ws-reviews') === -1) return html;
+  const s = reviewScript(siteId);
+  const bi = html.lastIndexOf('</body>');
+  return bi > -1 ? html.slice(0,bi) + s + html.slice(bi) : html + s;
+}
+
+async function ownsSite(s, env, siteId){
+  if(!s || !s.email || !siteId || !env || !env.KV) return false;
+  const em = s.email.toLowerCase();
+  if(em === SUPPORT_EMAIL.toLowerCase()) return true;
+  try{ const owner = (await env.KV.get('notify:'+siteId) || '').toLowerCase(); return !!owner && owner === em; }catch(e){ return false; }
+}
+async function listAllReviews(env, siteId){
+  const out=[];
+  try{ let cur=undefined,g=0; do{ const r=await env.KV.list({ prefix:'review:'+siteId+':', cursor:cur, limit:1000 }); for(const k of r.keys){ try{ const o=JSON.parse(await env.KV.get(k.name)||'{}'); if(o && o.id) out.push({ id:o.id, name:o.name||'', rating:o.rating||5, text:o.text||'', ts:o.ts||0, status:o.status||'pending', source:o.source||'visitor' }); }catch(e){} } cur=r.list_complete?null:r.cursor; g++; } while(cur&&g<15); }catch(e){}
+  out.sort(function(a,b){ var ap=(a.status==='pending'), bp=(b.status==='pending'); if(ap!==bp) return ap?-1:1; return (b.ts||0)-(a.ts||0); });
+  return out;
+}
+async function doReviewsManage(request, env){
+  const s = await getSession(request, env);
+  const url = new URL(request.url);
+  if(request.method === 'GET'){
+    const siteId = String(url.searchParams.get('site')||'').slice(0,40).trim();
+    if(!siteId) return jsonR({ ok:false, owner:false, error:'no site' }, 400);
+    if(!(await ownsSite(s, env, siteId))) return jsonR({ ok:false, owner:false, error:'not authorized' }, 403);
+    return jsonR({ ok:true, owner:true, reviews: await listAllReviews(env, siteId) });
+  }
+  let b; try{ b = await request.json(); }catch(e){ return jsonR({ ok:false, error:'bad' }, 400); }
+  const siteId = String(b.site||'').slice(0,40).trim();
+  if(!(await ownsSite(s, env, siteId))) return jsonR({ ok:false, owner:false, error:'not authorized' }, 403);
+  const action = String(b.action||'');
+  if(action === 'add'){
+    let rating = parseInt(b.rating,10); if(!(rating>=1 && rating<=5)) rating=5;
+    const name = String(b.name||'').slice(0,80).trim();
+    const text = String(b.text||'').slice(0,1500).trim();
+    if(text.length < 1) return jsonR({ ok:false, error:'empty' }, 400);
+    const id = Date.now() + ':' + Math.random().toString(36).slice(2,8);
+    await env.KV.put('review:'+siteId+':'+id, JSON.stringify({ id, name, rating, text, ts:Date.now(), status:'approved', source:'owner' }), { expirationTtl: 400*86400 });
+  } else if(action === 'approve' || action === 'delete'){
+    const id = String(b.id||''); if(!id) return jsonR({ ok:false, error:'no id' }, 400);
+    const key = 'review:'+siteId+':'+id;
+    if(action === 'delete'){ try{ await env.KV.delete(key); }catch(e){} }
+    else { try{ const o=JSON.parse(await env.KV.get(key)||'{}'); if(o && o.id){ o.status='approved'; await env.KV.put(key, JSON.stringify(o), { expirationTtl: 400*86400 }); } }catch(e){} }
+  } else { return jsonR({ ok:false, error:'bad action' }, 400); }
+  await rebuildReviewsPub(env, siteId);
+  return jsonR({ ok:true, owner:true, reviews: await listAllReviews(env, siteId) });
+}
+async function doReviewsPage(request, env){
+  return new Response(REVIEWS_PAGE, { headers:{ 'Content-Type':'text/html; charset=utf-8' } });
+}
+const REVIEWS_PAGE = `<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>Manage reviews &middot; Websprout</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#070d06;color:#eaf2e8;padding:24px;max-width:820px;margin:0 auto}
+h1{font-size:22px;font-weight:800}
+.sub{color:rgba(234,242,232,.5);font-size:13px;margin-top:2px}
+.top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:22px}
+.rl{font-size:13px;color:rgba(234,242,232,.55);cursor:pointer;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:7px 12px;background:none;font-family:inherit}
+.rl:hover{background:rgba(255,255,255,.06)}
+h2{font-size:14px;font-weight:700;margin:24px 0 10px;display:flex;align-items:center;gap:8px}
+.pill{font-size:11px;font-weight:700;background:rgba(245,179,1,.16);color:#f5b301;border:1px solid rgba(245,179,1,.35);border-radius:999px;padding:2px 9px}
+.card{background:#0f1a0d;border:1px solid rgba(45,122,58,.22);border-radius:14px;padding:16px;margin-bottom:12px}
+.stars{font-size:16px;letter-spacing:2px;line-height:1}
+.st-on{color:#f5b301}.st-off{color:rgba(127,127,127,.4)}
+.rtext{font-size:14.5px;line-height:1.6;opacity:.92;margin:9px 0}
+.rmeta{font-size:12.5px;color:rgba(234,242,232,.5);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rname{font-weight:700;color:#eaf2e8;opacity:1}
+.src{font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.6)}
+.src.owner{background:rgba(45,122,58,.2);color:#7fe39a}
+.acts{margin-top:12px;display:flex;gap:8px}
+.btn{font-family:inherit;font-size:13px;font-weight:700;padding:8px 16px;border-radius:9px;border:none;cursor:pointer}
+.ok{background:#2d7a3a;color:#fff}.ok:hover{background:#349244}
+.del{background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.13)}.del:hover{background:rgba(248,113,113,.14);color:#fca5a5;border-color:rgba(248,113,113,.3)}
+.add{background:#0f1a0d;border:1px solid rgba(45,122,58,.22);border-radius:14px;padding:18px;margin-bottom:8px}
+.add input,.add textarea{width:100%;font-family:inherit;font-size:14px;padding:11px 12px;margin-bottom:10px;border-radius:9px;border:1px solid rgba(45,122,58,.3);background:#060d05;color:#fff;outline:none}
+.add textarea{resize:vertical}
+.pickr{font-size:28px;letter-spacing:5px;cursor:pointer;user-select:none;margin-bottom:12px;line-height:1}
+.muted{color:rgba(234,242,232,.4)}.empty{color:rgba(234,242,232,.4);font-size:14px;padding:14px 2px}
+.err{color:#fca5a5;text-align:center;padding:40px 16px;line-height:1.6}
+a{color:#4ade80;text-decoration:none}
+</style></head><body>
+<div class="top"><div><h1>&#11088; Reviews</h1><div class="sub" id="sub">Loading&hellip;</div></div><button class="rl" id="refresh">&#8635; Refresh</button></div>
+<div id="main" style="display:none">
+  <div class="add">
+    <div style="font-weight:700;margin-bottom:12px;font-size:15px">Add a review</div>
+    <div style="font-size:12px;color:rgba(234,242,232,.5);margin-bottom:10px">Add a real review you collected elsewhere, or a placeholder to get started. These appear on your site right away.</div>
+    <div class="pickr" id="addStars"></div>
+    <input id="addName" placeholder="Name (e.g. Sarah M.)" maxlength="80">
+    <textarea id="addText" rows="3" placeholder="What did they say?" maxlength="1500"></textarea>
+    <button class="btn ok" id="addBtn">Add review</button>
+  </div>
+  <h2>Pending approval <span class="pill" id="pendCount" style="display:none">0</span></h2>
+  <div id="pending"></div>
+  <h2>Published on your site</h2>
+  <div id="published"></div>
+</div>
+<div id="denied" class="err" style="display:none"></div>
+<script>
+var SITE = new URLSearchParams(location.search).get('site') || '';
+function qs(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function dt(ms){if(!ms)return '';var d=new Date(ms);return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
+function starsHtml(n){n=Math.max(0,Math.min(5,n|0));var o='';for(var i=0;i<5;i++){o+='<span class="'+(i<n?'st-on':'st-off')+'">\\u2605</span>';}return o;}
+var addSel=5;
+function paintAdd(){var p=qs('addStars');var o='';for(var i=0;i<5;i++){o+='<span data-i="'+i+'" class="'+(i<addSel?'st-on':'st-off')+'">\\u2605</span>';}p.innerHTML=o;}
+function rcard(r,pending){
+  var src=(r.source==='owner')?'<span class="src owner">Added by you</span>':'<span class="src">Visitor</span>';
+  var acts=pending
+    ? '<div class="acts"><button class="btn ok" data-act="approve" data-id="'+esc(r.id)+'">Approve</button><button class="btn del" data-act="delete" data-id="'+esc(r.id)+'">Reject</button></div>'
+    : '<div class="acts"><button class="btn del" data-act="delete" data-id="'+esc(r.id)+'">Remove</button></div>';
+  return '<div class="card"><div class="stars">'+starsHtml(r.rating)+'</div><div class="rtext">'+esc(r.text)+'</div><div class="rmeta"><span class="rname">'+(esc(r.name)||'Anonymous')+'</span>'+src+'<span>'+dt(r.ts)+'</span></div>'+acts+'</div>';
+}
+function render(list){
+  var pend=[],pub=[];
+  for(var i=0;i<list.length;i++){ if(list[i].status==='pending') pend.push(list[i]); else pub.push(list[i]); }
+  var pc=qs('pendCount'); if(pend.length){pc.style.display='inline-block';pc.textContent=pend.length;} else {pc.style.display='none';}
+  qs('pending').innerHTML = pend.length ? pend.map(function(r){return rcard(r,true);}).join('') : '<div class="empty">No reviews waiting. New visitor reviews show up here for you to approve.</div>';
+  qs('published').innerHTML = pub.length ? pub.map(function(r){return rcard(r,false);}).join('') : '<div class="empty">Nothing published yet. Approve a pending review or add one above.</div>';
+}
+function act(action,id){
+  fetch('/api/reviews/manage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:SITE,action:action,id:id})}).then(function(r){return r.json();}).then(function(j){ if(j&&j.reviews) render(j.reviews); }).catch(function(){alert('Something went wrong. Try again.');});
+}
+function load(){
+  if(!SITE){ qs('denied').style.display='block'; qs('denied').innerHTML='No site specified. Open this from the publish panel in your studio.'; return; }
+  fetch('/api/reviews/manage?site='+encodeURIComponent(SITE)).then(function(r){return r.json();}).then(function(j){
+    if(!j||!j.ok||j.owner===false){ qs('denied').style.display='block'; qs('denied').innerHTML='You need to be signed in as the owner of this site to manage its reviews.<br><br><a href="https://websprout.app">Go to Websprout</a>'; return; }
+    qs('main').style.display='block';
+    qs('sub').innerHTML='Approve what visitors leave, or add your own &middot; <a href="https://'+esc(SITE)+'.websprout.app" target="_blank">view site</a>';
+    render(j.reviews||[]);
+  }).catch(function(){ qs('denied').style.display='block'; qs('denied').textContent='Could not load reviews. Please refresh.'; });
+}
+qs('addStars').addEventListener('click',function(e){var t=e.target;if(t&&t.getAttribute('data-i')!=null){addSel=(parseInt(t.getAttribute('data-i'),10)|0)+1;paintAdd();}});
+qs('addBtn').addEventListener('click',function(){
+  var text=(qs('addText').value||'').trim(); if(text.length<1){alert('Write the review text first.');return;}
+  var btn=qs('addBtn');btn.disabled=true;btn.textContent='Adding...';
+  fetch('/api/reviews/manage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:SITE,action:'add',name:qs('addName').value||'',rating:addSel,text:text})}).then(function(r){return r.json();}).then(function(j){
+    btn.disabled=false;btn.textContent='Add review';
+    if(j&&j.reviews){ qs('addName').value='';qs('addText').value='';addSel=5;paintAdd();render(j.reviews); } else { alert('Could not add. Try again.'); }
+  }).catch(function(){btn.disabled=false;btn.textContent='Add review';alert('Could not add. Try again.');});
+});
+document.addEventListener('click',function(e){var b=e.target;if(b&&b.getAttribute&&b.getAttribute('data-act')){act(b.getAttribute('data-act'),b.getAttribute('data-id'));}});
+qs('refresh').addEventListener('click',load);
+paintAdd(); load();
+</script></body></html>`;
+
 function formScript(siteId){
   const ep = 'https://websprout.app/api/form/' + siteId;
   return '<scr'+'ipt id="_wsForms">(function(){'
@@ -6281,7 +6507,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r114';
+const BUILD_ID = '2026-06-10-r116';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -6665,6 +6891,7 @@ async function doGenerate(request, env) {
     finalHtml = withFix(finalHtml);
     const siteId = 'ws' + Math.random().toString(36).slice(2,9);
     finalHtml = withForms(finalHtml, siteId);
+    finalHtml = withReviews(finalHtml, siteId);
     const formKey = await siteKey(siteId, env);
     if (!_isPaid && env.KV) { try { const _gc2 = parseInt((await env.KV.get('gencount:' + _email)) || '0', 10) || 0; await env.KV.put('gencount:' + _email, String(_gc2 + 1)); } catch (e) {} }
     return succeed({ html: finalHtml, siteId: siteId, formKey: formKey, inboxUrl: 'https://websprout.app/inbox?site=' + siteId + '&key=' + formKey });
@@ -6727,7 +6954,7 @@ async function doModify(request, env) {
       return fail('Edit produced incomplete output — please try again with a simpler instruction.');
     }
     const mSite = (body.html.match(/name="ws-site" content="([^"]+)"/) || [])[1] || ('ws' + Math.random().toString(36).slice(2,9));
-    return succeed({ html: withForms(withFix(withReveal(cleaned)), mSite), message: 'Done! Your site has been updated.' });
+    return succeed({ html: withReviews(withForms(withFix(withReveal(cleaned)), mSite), mSite), message: 'Done! Your site has been updated.' });
   } catch(e) { return fail(e.message); }
 }
 
