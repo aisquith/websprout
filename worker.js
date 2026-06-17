@@ -171,8 +171,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r113">
-<script>window._wsBuild="2026-06-10-r113";console.log("%c[Websprout] build 2026-06-10-r113 (platform fee on connected-account invoices: 1%, min 50c, max \$5, transparently disclosed in the invoice UI)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r114">
+<script>window._wsBuild="2026-06-10-r114";console.log("%c[Websprout] build 2026-06-10-r114 (admin: real platform fees collected from Stripe, invoices created + amounts, recent-invoices table)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -6156,6 +6156,8 @@ a{color:#4ade80;text-decoration:none}.muted{color:rgba(234,242,232,.38)}.err{col
 <div class="wrap"><table><thead><tr><th>Address</th><th>Views</th><th>Leads</th><th>Updated</th><th>Badge</th></tr></thead><tbody id="pbody"><tr><td colspan="5" class="muted" style="padding:18px">Loading&hellip;</td></tr></tbody></table></div>
 <h2>Custom domains</h2>
 <div class="wrap"><table><thead><tr><th>Domain</th><th>Points to</th></tr></thead><tbody id="dbody"><tr><td colspan="2" class="muted" style="padding:18px">Loading&hellip;</td></tr></tbody></table></div>
+<h2>Invoices <span id="invSub" style="font-size:12px;color:rgba(234,242,232,.4);font-weight:400"></span></h2>
+<div class="wrap"><table><thead><tr><th>When</th><th>For</th><th>Amount</th><th>Fee</th><th>Client</th></tr></thead><tbody id="ibody"><tr><td colspan="5" class="muted" style="padding:18px">Loading&hellip;</td></tr></tbody></table></div>
 <h2>Recent errors <span id="errCount" style="font-size:12px;color:rgba(234,242,232,.4);font-weight:400"></span></h2>
 <div class="wrap"><table><thead><tr><th>When</th><th>Where</th><th>Message</th><th>Build</th></tr></thead><tbody id="ebody"><tr><td colspan="4" class="muted" style="padding:18px">Loading&hellip;</td></tr></tbody></table></div>
 <script>
@@ -6174,7 +6176,8 @@ function load(){
   fetch('/admin/data').then(function(r){return r.json();}).then(function(j){
     if(j.error){document.getElementById('cards').innerHTML='<div class="err">'+esc(j.error)+'</div>';return;}
     var t=j.totals||{};
-    document.getElementById('cards').innerHTML=card(t.accounts||0,'Accounts')+card(t.paid||0,'Paid Pro','pro')+card('$'+(t.mrr||0),'MRR','mrr')+card(t.comped||0,'Comped','comp')+card(t.free||0,'Free')+card((t.conversion||0)+'%','Paid conv.')+card(t.published||0,'Published')+card(t.generations||0,'Builds')+card(t.leads||0,'Leads')+card(t.signups7||0,'New (7d)');
+    var feesTxt=t.feesOk?('$'+((t.feesCollected||0)/100).toFixed(2)):'\u2014';
+    document.getElementById('cards').innerHTML=card(t.accounts||0,'Accounts')+card(t.paid||0,'Paid Pro','pro')+card('$'+(t.mrr||0),'MRR','mrr')+card(feesTxt,'Fees collected','mrr')+card(t.comped||0,'Comped','comp')+card(t.free||0,'Free')+card((t.conversion||0)+'%','Paid conv.')+card(t.published||0,'Published')+card(t.generations||0,'Builds')+card(t.leads||0,'Leads')+card(t.invoices||0,'Invoices')+card(t.signups7||0,'New (7d)');
     var us=j.users||[],ub='';
     if(!us.length)ub='<tr><td colspan="6" class="muted" style="padding:18px">No accounts yet</td></tr>';
     for(var i=0;i<us.length;i++){var u=us[i],isPro=u.plan==='pro';
@@ -6193,6 +6196,12 @@ function load(){
     if(!ds.length)db='<tr><td colspan="2" class="muted" style="padding:18px">No custom domains yet</td></tr>';
     for(var y=0;y<ds.length;y++){var dm=ds[y];db+='<tr><td><a href="https://'+esc(dm.host)+'" target="_blank">'+esc(dm.host)+'</a></td><td class="muted">'+esc(dm.slug)+'</td></tr>';}
     document.getElementById('dbody').innerHTML=db;
+    var ivs=j.invoices||[],ib='';
+    if(!ivs.length)ib='<tr><td colspan="5" class="muted" style="padding:18px">No invoices yet</td></tr>';
+    for(var z=0;z<ivs.length;z++){var iv=ivs[z];var icur=(iv.currency||'usd').toUpperCase();
+      ib+='<tr><td class="muted" style="white-space:nowrap">'+dt(iv.ts)+'</td><td>'+(iv.desc?esc(iv.desc):'<span class="muted">&mdash;</span>')+'</td><td>'+icur+' '+((iv.amount||0)/100).toFixed(2)+'</td><td'+(iv.fee?' style="color:#4ade80"':' class="muted"')+'>'+(iv.fee?('$'+((iv.fee||0)/100).toFixed(2)):'&mdash;')+'</td><td class="muted">'+(iv.client?esc(iv.client):'&mdash;')+'</td></tr>';}
+    document.getElementById('ibody').innerHTML=ib;
+    var isub=document.getElementById('invSub');if(isub)isub.textContent=(t.invoices||0)+' created \u00b7 '+(t.feesOk?('$'+((t.feesCollected||0)/100).toFixed(2)+' collected'):('$'+((t.feeBilled||0)/100).toFixed(2)+' billed'));
     var es=j.errors||[],eb='';
     if(!es.length)eb='<tr><td colspan="4" class="muted" style="padding:18px">No errors reported \uD83C\uDF89</td></tr>';
     for(var x=0;x<es.length;x++){var er=es[x];
@@ -6229,13 +6238,20 @@ async function doAdminData(request, env){
   // custom domains
   const domains=[];
   try{ const r=await env.KV.list({ prefix:'domain:', limit:1000 }); for(const k of r.keys){ try{ const sl=await env.KV.get(k.name); domains.push({ host:k.name.slice(7), slug:sl||'' }); }catch(e){} } }catch(e){}
+  // invoices created (KV) - amounts + fees configured at creation time
+  const invoices=[]; let invTotal=0, feeBilled=0;
+  try{ let cur=undefined,g=0; do{ const r=await env.KV.list({ prefix:'invoice:', cursor:cur, limit:1000 }); for(const k of r.keys){ try{ const o=JSON.parse(await env.KV.get(k.name)||'{}'); invoices.push({ ts:o.ts||0, owner:(k.name.split(':')[1])||'', amount:o.amount||0, fee:o.fee||0, currency:(o.currency||'usd'), desc:o.desc||'', client:o.clientEmail||'' }); invTotal+=(o.amount||0); feeBilled+=(o.fee||0); }catch(e){} } cur=r.list_complete?null:r.cursor; g++; } while(cur&&g<15); }catch(e){}
+  invoices.sort((a,b)=>(b.ts||0)-(a.ts||0));
+  // real platform fees collected (Stripe application_fees, net of refunds)
+  let feesCollected=0, feesCount=0, feesOk=false;
+  try{ const sk=(env.STRIPE_SECRET_KEY||'').trim(); if(sk){ let starting=undefined, pages=0; do{ const u2='https://api.stripe.com/v1/application_fees?limit=100'+(starting?('&starting_after='+encodeURIComponent(starting)):''); const r=await fetch(u2,{ headers:{ 'Authorization':'Bearer '+sk } }); const j=await r.json(); if(!j||!Array.isArray(j.data)) break; for(const af of j.data){ feesCollected += ((af.amount||0)-(af.amount_refunded||0)); feesCount++; } feesOk=true; if(j.has_more && j.data.length){ starting=j.data[j.data.length-1].id; } else { starting=undefined; } pages++; } while(starting && pages<5); } }catch(e){ feesOk=false; }
   const now=Date.now(); let paid=0, comped=0, free=0, signups7=0, devs=0;
   for(const u of users){ if(u.plan==='pro'){ if(u.source==='paid')paid++; else comped++; } else free++; if(u.created>now-7*86400000)signups7++; if(u.dev)devs++; }
   users.sort((a,b)=>(b.created||0)-(a.created||0));
   pub.sort((a,b)=>(b.updated||0)-(a.updated||0));
   const errors=[];
   try{ const r3=await env.KV.list({ prefix:'clienterr:', limit:1000 }); const names=r3.keys.map(function(k){return k.name;}).sort().reverse().slice(0,60); for(const nm of names){ try{ errors.push(JSON.parse(await env.KV.get(nm)||'{}')); }catch(e){} } }catch(e){}
-  return succeed({ totals:{ accounts:users.length, paid, comped, pro:paid+comped, free, conversion: users.length?Math.round(paid/users.length*1000)/10:0, mrr: paid*10, published:pub.length, generations:genTotal, leads:leadTotal, domains:domains.length, devs, signups7, errors:errors.length }, users, published:pub, errors, domains });
+  return succeed({ totals:{ accounts:users.length, paid, comped, pro:paid+comped, free, conversion: users.length?Math.round(paid/users.length*1000)/10:0, mrr: paid*10, published:pub.length, generations:genTotal, leads:leadTotal, domains:domains.length, devs, signups7, errors:errors.length, invoices:invoices.length, invoiced:invTotal, feeBilled, feesCollected, feesCount, feesOk }, users, published:pub, errors, domains, invoices: invoices.slice(0,40) });
 }
 async function doAdminPage(request, env){
   const s = await getSession(request, env);
@@ -6265,7 +6281,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r113';
+const BUILD_ID = '2026-06-10-r114';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
