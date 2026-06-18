@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r131">
-<script>window._wsBuild="2026-06-10-r131";console.log("%c[Websprout] build 2026-06-10-r131 (re-paced the generation loading screen for the now-faster Flash builds: compressed status messages + quicker progress curve, tightened client abort to 115s)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r132">
+<script>window._wsBuild="2026-06-10-r132";console.log("%c[Websprout] build 2026-06-10-r132 (Pro generation budget rebalanced: Pro now gets ~84s of the window instead of 56s so paying users actually receive Pro output; Flash fallback trimmed to a last-ditch)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -6716,7 +6716,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r131';
+const BUILD_ID = '2026-06-10-r132';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -7090,10 +7090,10 @@ async function doGenerate(request, env) {
     });
     // Generation budget: give Pro a tight window so that if it stalls we can still fall back to the
     // faster, more reliable Flash model and return a site instead of a Cloudflare 524 timeout.
-    let result = await callGemini(keys, body2, genModel, genModel === 'gemini-2.5-pro' ? 52000 : 75000, genModel === 'gemini-2.5-pro' ? 56000 : 80000);
+    let result = await callGemini(keys, body2, genModel, genModel === 'gemini-2.5-pro' ? 82000 : 75000, genModel === 'gemini-2.5-pro' ? 84000 : 80000);
     if (result.error && genModel === 'gemini-2.5-pro') {
       try { console.warn('[Websprout] Pro generation failed (' + result.error + ') — falling back to Flash'); } catch (e) {}
-      result = await callGemini(keys, body2, 'gemini-2.5-flash', 34000, 38000);
+      result = await callGemini(keys, body2, 'gemini-2.5-flash', 10000, 11000);
     }
     if (result.error) return fail(result.error);
     const generatedHtml = cleanHTML(result.data);
