@@ -171,14 +171,14 @@ const PAGE = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Websprout: AI Website Builder | Make a Website in Seconds, Free</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
-<meta name="description" content="Websprout is an AI website builder that turns one sentence into a complete, professional, multi-page website in about 18 seconds. Build and publish your site live for free. Go Pro for $10/month to remove the badge, connect your own domain, and download the code — cancel anytime.">
+<meta name="description" content="Websprout is an AI website builder that turns one sentence into a complete, professional, multi-page website in about 90 seconds. Build and publish your site live for free. Go Pro for $10/month to remove the badge, connect your own domain, and download the code — cancel anytime.">
 <link rel="canonical" href="https://websprout.app/">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r127">
-<script>window._wsBuild="2026-06-10-r127";console.log("%c[Websprout] build 2026-06-10-r127 (expanded element controls: set a button/link target with smart URL/tel/mailto/section normalizing, plus text alignment cycle — added to the click-to-edit toolbar)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r128">
+<script>window._wsBuild="2026-06-10-r128";console.log("%c[Websprout] build 2026-06-10-r128 (build-time claim updated 18s->90s across hero stat + meta/OG/Twitter/JSON-LD/OG-image/showcase copy)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -187,7 +187,7 @@ const PAGE = `<!DOCTYPE html>
 <meta property="og:site_name" content="Websprout">
 <meta property="og:locale" content="en_US">
 <meta property="og:title" content="Websprout: Build a Website with AI in Seconds">
-<meta property="og:description" content="Describe your business, get a complete professional website in about 18 seconds. Free to preview, $10/month to download the code and deploy anywhere.">
+<meta property="og:description" content="Describe your business, get a complete professional website in about 90 seconds. Free to preview, $10/month to download the code and deploy anywhere.">
 <meta property="og:url" content="https://websprout.app/">
 <meta property="og:image" content="https://websprout.app/og.svg">
 <meta property="og:image:width" content="1200">
@@ -195,11 +195,11 @@ const PAGE = `<!DOCTYPE html>
 <meta property="og:image:alt" content="Websprout - AI Website Builder">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Websprout: Build a Website with AI in Seconds">
-<meta name="twitter:description" content="Describe your business, get a complete professional website in about 18 seconds. Free to preview, $10/month to download the code and deploy anywhere.">
+<meta name="twitter:description" content="Describe your business, get a complete professional website in about 90 seconds. Free to preview, $10/month to download the code and deploy anywhere.">
 <meta name="twitter:image" content="https://websprout.app/og.svg">
 <meta name="twitter:image:alt" content="Websprout - AI Website Builder">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232d7a3a'/><text y='.9em' font-size='75' x='12'>&#127807;</text></svg>">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"Websprout","url":"https://websprout.app/","description":"AI website builder that generates a complete, professional, multi-page website from a short description in about 18 seconds.","applicationCategory":"DesignApplication","operatingSystem":"Web browser","browserRequirements":"Requires JavaScript","offers":{"@type":"Offer","price":"10.00","priceCurrency":"USD","description":"$10/month Pro subscription. Building and publishing your site live is free; Pro removes the Websprout badge, connects your own domain, and lets you download the source code. Cancel anytime."},"featureList":["AI website generation in seconds","Live preview before paying","Conversational AI editing","Download full HTML source code","Free one-click deploy to Netlify or Cloudflare Pages"]},{"@type":"Organization","name":"Websprout","url":"https://websprout.app/","logo":"https://websprout.app/og.svg","sameAs":[]},{"@type":"WebSite","name":"Websprout","url":"https://websprout.app/"},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do I need to pay for hosting?","acceptedAnswer":{"@type":"Answer","text":"No. Both Netlify and Cloudflare Pages have permanently free tiers that are more than enough for most websites. Netlify gives you 100GB of bandwidth per month free, and Cloudflare Pages offers unlimited bandwidth."}},{"@type":"Question","name":"Can I update my site after deploying?","acceptedAnswer":{"@type":"Answer","text":"Yes. Use the chat in Websprout to make changes, re-download your site, and re-deploy. On Netlify you can drag and drop a new file onto your existing site to update it, and on Cloudflare Pages you upload a new version through the dashboard."}},{"@type":"Question","name":"How do I connect a custom domain?","acceptedAnswer":{"@type":"Answer","text":"Both platforms make this easy and free. On Netlify, go to Site Settings, Domain Management, Add custom domain, then follow the DNS instructions from your registrar. On Cloudflare Pages, use Custom Domains, Add a domain."}},{"@type":"Question","name":"Is my site secure with HTTPS?","acceptedAnswer":{"@type":"Answer","text":"Yes, automatically. Both Netlify and Cloudflare Pages issue free SSL certificates the moment your site is deployed, so your site always serves over HTTPS with no extra configuration."}},{"@type":"Question","name":"How much does Websprout cost?","acceptedAnswer":{"@type":"Answer","text":"Building and publishing your website live is completely free, with a small Websprout badge. Go Pro for $10 per month to remove the badge, connect your own custom domain, and download the source code. You can cancel anytime."}},{"@type":"Question","name":"How long does it take to build a website?","acceptedAnswer":{"@type":"Answer","text":"About 18 seconds. You describe your business, and the AI generates a complete multi-page website that you can preview live and then edit with chat."}}]}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"Websprout","url":"https://websprout.app/","description":"AI website builder that generates a complete, professional, multi-page website from a short description in about 90 seconds.","applicationCategory":"DesignApplication","operatingSystem":"Web browser","browserRequirements":"Requires JavaScript","offers":{"@type":"Offer","price":"10.00","priceCurrency":"USD","description":"$10/month Pro subscription. Building and publishing your site live is free; Pro removes the Websprout badge, connects your own domain, and lets you download the source code. Cancel anytime."},"featureList":["AI website generation in seconds","Live preview before paying","Conversational AI editing","Download full HTML source code","Free one-click deploy to Netlify or Cloudflare Pages"]},{"@type":"Organization","name":"Websprout","url":"https://websprout.app/","logo":"https://websprout.app/og.svg","sameAs":[]},{"@type":"WebSite","name":"Websprout","url":"https://websprout.app/"},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do I need to pay for hosting?","acceptedAnswer":{"@type":"Answer","text":"No. Both Netlify and Cloudflare Pages have permanently free tiers that are more than enough for most websites. Netlify gives you 100GB of bandwidth per month free, and Cloudflare Pages offers unlimited bandwidth."}},{"@type":"Question","name":"Can I update my site after deploying?","acceptedAnswer":{"@type":"Answer","text":"Yes. Use the chat in Websprout to make changes, re-download your site, and re-deploy. On Netlify you can drag and drop a new file onto your existing site to update it, and on Cloudflare Pages you upload a new version through the dashboard."}},{"@type":"Question","name":"How do I connect a custom domain?","acceptedAnswer":{"@type":"Answer","text":"Both platforms make this easy and free. On Netlify, go to Site Settings, Domain Management, Add custom domain, then follow the DNS instructions from your registrar. On Cloudflare Pages, use Custom Domains, Add a domain."}},{"@type":"Question","name":"Is my site secure with HTTPS?","acceptedAnswer":{"@type":"Answer","text":"Yes, automatically. Both Netlify and Cloudflare Pages issue free SSL certificates the moment your site is deployed, so your site always serves over HTTPS with no extra configuration."}},{"@type":"Question","name":"How much does Websprout cost?","acceptedAnswer":{"@type":"Answer","text":"Building and publishing your website live is completely free, with a small Websprout badge. Go Pro for $10 per month to remove the badge, connect your own custom domain, and download the source code. You can cancel anytime."}},{"@type":"Question","name":"How long does it take to build a website?","acceptedAnswer":{"@type":"Answer","text":"About 90 seconds. You describe your business, and the AI generates a complete multi-page website that you can preview live and then edit with chat."}}]}]}</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -846,7 +846,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
       <div class="stat-l">Sites grown</div>
     </div>
     <div class="hero-stat">
-      <div class="stat-n">~18s</div>
+      <div class="stat-n">~90s</div>
       <div class="stat-l">Avg grow time</div>
     </div>
     <div class="hero-stat">
@@ -5186,13 +5186,13 @@ const OG_IMAGE = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="6
 </g>
 <text x="206" y="306" font-family="-apple-system,Segoe UI,Arial,sans-serif" font-size="78" font-weight="800" fill="#ffffff">Websprout</text>
 <text x="94" y="416" font-family="-apple-system,Segoe UI,Arial,sans-serif" font-size="42" font-weight="700" fill="url(#grad)">Plant an idea. Grow a website.</text>
-<text x="94" y="476" font-family="-apple-system,Segoe UI,Arial,sans-serif" font-size="28" font-weight="500" fill="#ffffff" fill-opacity="0.62">AI website builder - a complete site in about 18 seconds. Free to preview.</text>
+<text x="94" y="476" font-family="-apple-system,Segoe UI,Arial,sans-serif" font-size="28" font-weight="500" fill="#ffffff" fill-opacity="0.62">AI website builder - a complete site in about 90 seconds. Free to preview.</text>
 </svg>`;
 
 const SHOWCASE_PAGE = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Showcase — Real websites made with Websprout</title>
-<meta name="description" content="See real websites built with Websprout in about 18 seconds. Describe your business, get a complete professional site, and publish it live for free.">
+<meta name="description" content="See real websites built with Websprout in about 90 seconds. Describe your business, get a complete professional site, and publish it live for free.">
 <link rel="canonical" href="https://websprout.app/showcase">
 <meta property="og:title" content="Made with Websprout — website showcase">
 <meta property="og:description" content="Real businesses, real websites, built in seconds with Websprout.">
@@ -5231,7 +5231,7 @@ footer a{margin:0 9px}footer a:hover{color:#4ade80}
 <div class="nav"><a class="brand" href="/">🌱 Web<em>sprout</em></a><a class="nav-cta" href="/">Build yours free</a></div>
 <div class="hero">
   <h1>Real sites, <em>built with Websprout</em></h1>
-  <p>Every one of these started as a sentence. Describe your business, get a complete website in about 18 seconds, and publish it live — free.</p>
+  <p>Every one of these started as a sentence. Describe your business, get a complete website in about 90 seconds, and publish it live — free.</p>
   <a class="hero-cta" href="/">🌱 Build your site free</a>
 </div>
 <div class="grid" id="grid"><div class="loading">Loading the showcase…</div></div>
@@ -6714,7 +6714,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r127';
+const BUILD_ID = '2026-06-10-r128';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
