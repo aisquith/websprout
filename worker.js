@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r132">
-<script>window._wsBuild="2026-06-10-r132";console.log("%c[Websprout] build 2026-06-10-r132 (Pro generation budget rebalanced: Pro now gets ~84s of the window instead of 56s so paying users actually receive Pro output; Flash fallback trimmed to a last-ditch)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r133">
+<script>window._wsBuild="2026-06-10-r133";console.log("%c[Websprout] build 2026-06-10-r133 (generation now runs on Flash for everyone incl. Pro accounts — the Pro model cannot finish a full site inside Cloudflare 100s window; reliability over model. Pro perks unchanged)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -6716,7 +6716,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r132';
+const BUILD_ID = '2026-06-10-r133';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -7072,7 +7072,13 @@ async function doGenerate(request, env) {
     const _isOwner = _email === SUPPORT_EMAIL.toLowerCase();
     const _u = JSON.parse((env.KV && await env.KV.get('user:'+_email)) || '{}');
     _isPaid = (_isOwner || _u.plan === 'pro');
-    if (_isPaid) genModel = 'gemini-2.5-pro';
+    // Generation runs on Flash for EVERYONE — including Pro. A full site is ~12-18k output tokens, and
+    // the Pro model emits those too slowly to finish inside Cloudflare's ~100s request window, which was
+    // causing paid users to hit timeouts. The bottleneck is output length, not thinking, so trimming
+    // thinking can't fix it. Pro's other perks (no badge, custom domain, code download) are unaffected.
+    // To bring the Pro MODEL back for generation, it must run as a background job (Durable Objects /
+    // Queues) so it isn't bound by the synchronous request limit.
+    // if (_isPaid) genModel = 'gemini-2.5-pro';
   } catch (e) {}
   // Free tier: cap total generations per account (Pro/owner unlimited). Free generations — including
   // the first — run on the fast Flash model so the make-or-break first impression is quick and reliable.
