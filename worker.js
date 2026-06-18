@@ -89,6 +89,12 @@ The site MUST have clearly visible motion — never a static page:
 - Mobile hamburger toggles the nav; anchor links smooth-scroll; FAQ accordion if included; form validation with a success state.
 Animations must ENHANCE and ALWAYS settle into a fully visible state — never leave anything permanently hidden. Keep entrance transitions under 0.8s.
 
+━━━ SEO & DISCOVERY ━━━
+The site MUST be search- and share-ready. Set <html lang="en">. In <head>, in order: <meta charset="utf-8">; a responsive viewport meta; the brand <title> (about 50–60 chars: brand name + what the business does); and a <meta name="description"> of 140–160 chars written specifically for THIS business (benefit-led, naming the business type, and the location only if the user gave one). Add Open Graph tags (og:type=website, og:title, og:description, og:site_name = brand name) and Twitter tags (twitter:card=summary_large_image, twitter:title, twitter:description), reusing the title and description. Add ONE <script type="application/ld+json"> describing the business with the most fitting schema.org @type — a specific LocalBusiness subtype when one fits (Restaurant, Plumber, Dentist, Bakery, Electrician, Store, ProfessionalService, etc.), otherwise LocalBusiness, or Organization only if truly none apply — including name (the brand), description, url, telephone "[Your Phone]", email "[your@email.com]", an address object containing "[Your Address]", and openingHours "[Your Hours]". Keep those four contact values as the EXACT placeholder tokens so the owner's one-click contact fill updates the structured data too. Every <img> MUST have a descriptive, business-specific alt attribute — never empty, never just "image". Do NOT add a canonical or og:url tag (the final domain is unknown at build time).
+
+━━━ LOCAL BUSINESS ESSENTIALS ━━━
+For any business that serves customers at a place or by appointment, include a clear, visible "Visit us" / "Hours & location" block (its own section, or part of the contact band) showing the address as "[Your Address]" and hours as "[Your Hours]", plus a directions link that opens a map: <a href="https://maps.google.com/?q=[Your Address]" target="_blank" rel="noopener">Get directions</a> (keep the [Your Address] token in the href so it works the moment the owner fills it in). Do NOT embed a live map iframe — the address is a placeholder at build time, so the directions link is the right call.
+
 ━━━ TECHNICAL ━━━
 All CSS in one <style> tag. All JS in one <script> tag before </body>. The ONLY permitted external resource is Google Fonts: include ONE <link> in the <head> that loads two complementary font families and actually use them (everything else must be self-contained — no other CDNs, no JS libraries, no remote images). Always include a system fallback in every font-family stack (e.g. ...,system-ui,-apple-system,sans-serif). Never use vh or vw for HEIGHTS (use px or %). opacity:0 is fine as the START of an entrance animation, as long as the element animates to full opacity. End with </body></html>.`;
 
@@ -171,8 +177,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r124">
-<script>window._wsBuild="2026-06-10-r124";console.log("%c[Websprout] build 2026-06-10-r124 (lock preview-pane scroll during generation so the empty white iframe can no longer be scrolled into view behind the loading skeleton)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r127">
+<script>window._wsBuild="2026-06-10-r127";console.log("%c[Websprout] build 2026-06-10-r127 (expanded element controls: set a button/link target with smart URL/tel/mailto/section normalizing, plus text alignment cycle — added to the click-to-edit toolbar)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -552,6 +558,13 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .design-drawer:not(.collapsed) .dd-caret{transform:rotate(180deg)}
 .design-drawer:not(.collapsed){border-bottom:1px solid rgba(255,255,255,.05)}
 .design-drawer.collapsed .dd-body{display:none}
+.style-section{padding:10px 12px;border-top:1px solid rgba(255,255,255,.05)}
+.ds-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
+.ds-label{font-size:11px;color:rgba(255,255,255,.5);flex-shrink:0}
+.ds-seg{display:flex;background:rgba(255,255,255,.05);border-radius:7px;padding:2px;gap:2px}
+.ds-seg button{background:none;border:none;color:rgba(255,255,255,.55);font-size:11px;font-family:inherit;padding:4px 9px;border-radius:5px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.ds-seg button:hover{color:#fff}
+.ds-seg button.on{background:#2d7a3a;color:#fff;font-weight:600}
 .palette-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
 .palette-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
 .pal{width:100%;aspect-ratio:1;border-radius:7px;border:2px solid transparent;cursor:pointer;transition:all .15s;position:relative}
@@ -1518,6 +1531,13 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
           <button class="pal" style="background:#be185d" data-palette="deep rose" title="Deep Rose"></button>
           <button class="pal" style="background:#1d4ed8" data-palette="royal blue" title="Royal Blue"></button>
         </div>
+      </div>
+      <!-- Global style controls -->
+      <div class="style-section" id="styleSection">
+        <div class="palette-label">&#10022; Style</div>
+        <div class="ds-row"><span class="ds-label">Corners</span><div class="ds-seg" data-style="corners"><button type="button" data-v="sharp">Sharp</button><button type="button" data-v="default" class="on">Default</button><button type="button" data-v="rounded">Rounded</button></div></div>
+        <div class="ds-row"><span class="ds-label">Text size</span><div class="ds-seg" data-style="text"><button type="button" data-v="small">Small</button><button type="button" data-v="default" class="on">Default</button><button type="button" data-v="large">Large</button></div></div>
+        <div class="ds-row"><span class="ds-label">Buttons</span><div class="ds-seg" data-style="btn"><button type="button" data-v="default" class="on">Default</button><button type="button" data-v="pill">Pill</button></div></div>
       </div>
       </div>
       </div>
@@ -3115,7 +3135,17 @@ document.addEventListener('DOMContentLoaded',function(){
   var ddToggle=document.getElementById('ddToggle');
   var ddEl=document.getElementById('designDrawer');
   if(ddToggle&&ddEl){
-    ddToggle.addEventListener('click',function(){ddEl.classList.toggle('collapsed');});
+    ddToggle.addEventListener('click',function(){ddEl.classList.toggle('collapsed');if(!ddEl.classList.contains('collapsed')){try{loadStyleOpts();}catch(e){}}});
+  }
+  var styleSec=document.getElementById('styleSection');
+  if(styleSec){
+    styleSec.addEventListener('click',function(e){
+      var b=e.target.closest&&e.target.closest('.ds-seg button[data-v]');if(!b)return;
+      var seg=b.closest('.ds-seg');if(!seg)return;
+      var key=seg.getAttribute('data-style');
+      wsStyleOpts[key]=b.getAttribute('data-v');
+      reflectStyleUI();applyGlobalStyle();
+    });
   }
 
   // -- Slot modal wiring -----------------------------------------
@@ -3780,8 +3810,11 @@ function wsShowBar(kind,tag,slotId){
     wsCvBtn(acts,'\uD83D\uDDD1 Delete',wsCvDelete,'Delete section');
   }else{
     wsCvBtn(acts,'\u270F Edit',wsCvEdit,'Edit the words');
+    var _T=(tag||'').toUpperCase();
+    if(_T==='A'||_T==='BUTTON')wsCvBtn(acts,'\uD83D\uDD17 Link',wsCvLink,'Set where this button goes');
     wsCvBtn(acts,'A+',function(){wsCvFont(1);},'Bigger');
     wsCvBtn(acts,'A\u2212',function(){wsCvFont(-1);},'Smaller');
+    wsCvBtn(acts,'\u2630 Align',wsCvAlign,'Align left / center / right');
     wsCvBtn(acts,'<b>B</b>',wsCvBold,'Bold');
     wsCvBtn(acts,'\uD83C\uDFA8 Colour',wsCvColor,'Text colour');
     wsCvBtn(acts,'\uD83D\uDDD1',wsCvDelete,'Delete');
@@ -3798,6 +3831,24 @@ function wsCvColor(){var el=wsSelEl();if(!el)return;wsCvColorInput(function(v){e
 function wsCvBg(){var el=wsSelEl();if(!el)return;wsCvColorInput(function(v){el.style.background=v;wsSyncFromFrame();});}
 function wsCvMove(dir){var el=wsSelEl();if(!el||!el.parentNode)return;var p=el.parentNode;if(dir<0){var pv=el.previousElementSibling;if(pv)p.insertBefore(el,pv);}else{var nx=el.nextElementSibling;if(nx)p.insertBefore(nx,el);}wsSyncFromFrame();if(el.scrollIntoView)el.scrollIntoView({block:'center'});}
 function wsCvEdit(){var el=wsSelEl();if(!el)return;el.contentEditable='true';el.focus();var done=function(){el.removeAttribute('contenteditable');el.removeEventListener('blur',done);wsSyncFromFrame();};el.addEventListener('blur',done);toast('Type to edit — click away when done',3500);}
+function wsCvAlign(){var el=wsSelEl();if(!el)return;var d=wsPfDoc();if(!d)return;var cur=d.defaultView.getComputedStyle(el).textAlign;var order=['left','center','right'];var idx=order.indexOf(cur);var next=order[(idx+1)%3];if(idx===-1)next='center';el.style.textAlign=next;wsSyncFromFrame();toast('Aligned '+next,1600);}
+function wsCvLink(){
+  var el=wsSelEl();if(!el)return;
+  var cur=el.getAttribute('href')||'';
+  var v=prompt('Where should this button go?  Examples:  https://calendly.com/you   ·   tel:5551234567   ·   mailto:you@email.com   ·   #contact',cur);
+  if(v===null)return;
+  v=(''+v).trim();
+  if(v===''){el.removeAttribute('href');wsSyncFromFrame();toast('Link cleared',2000);return;}
+  var low=v.toLowerCase();
+  var scheme=(low.indexOf('http:')===0||low.indexOf('https:')===0||low.indexOf('tel:')===0||low.indexOf('mailto:')===0||v.charAt(0)==='#'||v.charAt(0)==='/');
+  if(!scheme){
+    if(v.indexOf('@')>-1&&v.indexOf(' ')===-1){v='mailto:'+v;}
+    else{var raw=v.replace(/[ ().+-]/g,'');var allDigits=raw.length>=7&&raw.length<=15;for(var ci=0;ci<raw.length&&allDigits;ci++){var cc=raw.charCodeAt(ci);if(cc<48||cc>57)allDigits=false;}if(allDigits){v='tel:'+v.replace(/[^0-9+]/g,'');}else{v='https://'+v;}}
+  }
+  el.setAttribute('href',v);
+  if((el.tagName||'').toUpperCase()==='A'&&v.toLowerCase().indexOf('http')===0){el.setAttribute('target','_blank');el.setAttribute('rel','noopener');}
+  wsSyncFromFrame();toast('Link set \u2713',2200);
+}
 window.addEventListener('message',function(e){if(e.data&&e.data.type==='wsSelect'){wsShowBar(e.data.kind,e.data.tag,e.data.slotId);}});
 
 // -- Instant color replacement ---------------------------------
@@ -3859,6 +3910,43 @@ function applyFontStack(stack){
   localStorage.setItem('wsh',gHTML);
   pushUndo(gHTML);bumpEditCount();
   setTimeout(function(){setPreview(gHTML);},50);
+}
+
+var wsStyleOpts={corners:'default',text:'default',btn:'default'};
+function wsStyleSid(){return window._wsSite||localStorage.getItem('ws_site')||'';}
+function buildStyleCSS(o){
+  var sel='button,input,select,textarea,img,[class*="card"],[class*="Card"],[class*="btn"],[class*="button"],[class*="box"],[class*="tile"],[class*="feature"]';
+  var css='';
+  if(o.corners==='sharp')css+=sel+'{border-radius:0 !important}';
+  else if(o.corners==='rounded')css+=sel+'{border-radius:16px !important}';
+  if(o.text==='small')css+='html{font-size:91% !important}';
+  else if(o.text==='large')css+='html{font-size:112% !important}';
+  if(o.btn==='pill')css+='button,[class*="btn"],[class*="button"],a[class*="cta"],a[class*="Cta"],input[type="submit"]{border-radius:999px !important}';
+  return css;
+}
+function applyGlobalStyle(){
+  if(!gHTML){toast('Generate a site first!');return;}
+  var css=buildStyleCSS(wsStyleOpts);
+  var marker='<style id="_ws_style">';
+  var s=gHTML.indexOf(marker);
+  if(s>-1){var e=gHTML.indexOf('</'+'style>',s);if(e>-1)e+=8;else e=s+marker.length;gHTML=gHTML.slice(0,s)+gHTML.slice(e);}
+  if(css){var block=marker+css+'</'+'style>';var h=gHTML.indexOf('</head>');if(h>-1)gHTML=gHTML.slice(0,h)+block+gHTML.slice(h);else gHTML=block+gHTML;}
+  localStorage.setItem('wsh',gHTML);
+  try{localStorage.setItem('ws_style_'+wsStyleSid(),JSON.stringify(wsStyleOpts));}catch(e){}
+  pushUndo(gHTML);bumpEditCount();
+  setTimeout(function(){setPreview(gHTML);try{flashPreview();}catch(e){}},50);
+}
+function reflectStyleUI(){
+  var sec=document.getElementById('styleSection');if(!sec)return;
+  sec.querySelectorAll('.ds-seg').forEach(function(seg){
+    var key=seg.getAttribute('data-style');var val=wsStyleOpts[key]||'default';
+    seg.querySelectorAll('button').forEach(function(b){if(b.getAttribute('data-v')===val)b.classList.add('on');else b.classList.remove('on');});
+  });
+}
+function loadStyleOpts(){
+  wsStyleOpts={corners:'default',text:'default',btn:'default'};
+  try{var raw=localStorage.getItem('ws_style_'+wsStyleSid());if(raw){var o=JSON.parse(raw);if(o&&typeof o==='object'){wsStyleOpts.corners=o.corners||'default';wsStyleOpts.text=o.text||'default';wsStyleOpts.btn=o.btn||'default';}}}catch(e){}
+  reflectStyleUI();
 }
 
 function applyColorChange(oldColor,newColor){
@@ -6626,7 +6714,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r124';
+const BUILD_ID = '2026-06-10-r127';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
