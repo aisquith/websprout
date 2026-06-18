@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r137">
-<script>window._wsBuild="2026-06-10-r137";console.log("%c[Websprout] build 2026-06-10-r137 (generation rule: no dead clickable controls — nav links scroll to real sections, and any hamburger icon must be hidden on desktop and wired to a real mobile menu)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r141">
+<script>window._wsBuild="2026-06-10-r141";console.log("%c[Websprout] build 2026-06-10-r141 (review-waiting email: when a visitor leaves a review, the owner is emailed at the contact address on their published site (falling back to their account email), throttled per site, with an approve link)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1544,7 +1544,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       </div>
       </div>
       <div id="edFirstHint" class="ed-hint" style="display:none">
-        <span class="ed-hint-txt">👋 New here? <b>Tap a quick change</b> below, <b>type any request</b>, or hit <b>✎ Edit text</b> up top to edit on the page.</span>
+        <span class="ed-hint-txt">👋 New here? <b>Tap a quick change</b> below, <b>type any request</b>, or hit <b>✎ Edit text</b> to edit on the page. For your info, SEO, leads &amp; payments, open <b>&#9881;&#65039; Manage</b> up top.</span>
         <button class="ed-hint-x" id="edHintX" type="button" title="Got it">&times;</button>
       </div>
       <div class="quick-edits">
@@ -2225,16 +2225,39 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     if(!p.length){listEl.innerHTML='<div style="text-align:center;color:rgba(255,255,255,.45);padding:40px 10px;line-height:1.6">No saved sites yet.<br>Sites you create are saved here automatically so you can come back and edit them.</div>';return;}
     var h='';
     for(var i=0;i<p.length;i++){var it=p[i];
+      var _live=false;try{_live=!!localStorage.getItem('ws_slug_'+it.siteId);}catch(e){}
+      var _badge=_live?'<span id="msb_'+esc(it.siteId)+'" style="flex-shrink:0;font-size:10px;font-weight:800;color:#4ade80;background:rgba(61,186,82,.16);border:1px solid rgba(61,186,82,.42);border-radius:5px;padding:1px 7px;letter-spacing:.4px">\u25CF LIVE</span>':'<span id="msb_'+esc(it.siteId)+'" style="flex-shrink:0;font-size:10px;font-weight:700;color:rgba(255,255,255,.5);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:5px;padding:1px 7px">In progress</span>';
       h+='<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid rgba(255,255,255,.07);border-radius:12px;margin-bottom:10px">'
-       +'<div style="flex:1;min-width:0"><div style="color:#fff;font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(it.name)+'</div><div style="color:rgba(255,255,255,.4);font-size:12px">Saved '+fmt(it.ts)+' <span id="msv_'+esc(it.siteId)+'" style="color:rgba(255,255,255,.55)"></span></div></div>'
+       +'<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:7px;min-width:0"><span style="color:#fff;font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(it.name)+'</span>'+_badge+'</div><div style="color:rgba(255,255,255,.4);font-size:12px">Saved '+fmt(it.ts)+' <span id="msv_'+esc(it.siteId)+'" style="color:rgba(255,255,255,.55)"></span></div></div>'
        +'<button class="ms-edit" data-sid="'+esc(it.siteId)+'" style="background:#2d7a3a;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Edit</button>'
        +'<button class="ms-del" data-sid="'+esc(it.siteId)+'" title="Remove from list" style="background:none;border:none;color:rgba(255,255,255,.35);font-size:18px;cursor:pointer;line-height:1">&times;</button>'
        +'</div>';
     }
     listEl.innerHTML=h;
     var eds=listEl.querySelectorAll('.ms-edit');for(var j=0;j<eds.length;j++){eds[j].addEventListener('click',function(){openProject(this.getAttribute('data-sid'),this);});}
-    var dls=listEl.querySelectorAll('.ms-del');for(var m=0;m<dls.length;m++){dls[m].addEventListener('click',function(){var sid=this.getAttribute('data-sid');setProjects(getProjects().filter(function(x){return x.siteId!==sid;}));fetch('/my-sites/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({siteId:sid})}).catch(function(){});render();});}
-    for(var v=0;v<p.length;v++){(function(it){fetch('/api/views?site='+encodeURIComponent(it.siteId)+'&key='+encodeURIComponent(it.key||'')).then(function(r){return r.json();}).then(function(j){var el=document.getElementById('msv_'+it.siteId);if(el&&j&&typeof j.total==='number'&&j.total>0)el.textContent='· '+j.total+' view'+(j.total===1?'':'s')+(j.week?(' ('+j.week+' this week)'):'');}).catch(function(){});})(p[v]);}
+    var dls=listEl.querySelectorAll('.ms-del');for(var m=0;m<dls.length;m++){dls[m].addEventListener('click',function(){
+      var sid=this.getAttribute('data-sid');
+      var nm='this site',pkey='';try{var pp=getProjects();for(var z=0;z<pp.length;z++){if(pp[z].siteId===sid){nm=pp[z].name||nm;pkey=pp[z].key||'';break;}}}catch(e){}
+      var slug='';try{slug=localStorage.getItem('ws_slug_'+sid)||'';}catch(e){}
+      if(slug){
+        var typed=prompt('\u26A0\uFE0F \u201C'+nm+'\u201D is LIVE at '+slug+'.websprout.app \u2014 deleting is permanent and takes it offline. To confirm, type the site name exactly:');
+        if(typed===null)return;
+        if((typed||'').trim().toLowerCase()!==(nm||'').trim().toLowerCase()){alert('That did not match \u2014 your site was NOT deleted.');return;}
+        try{fetch('/unpublish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:slug,siteId:sid,key:pkey})}).catch(function(){});localStorage.removeItem('ws_slug_'+sid);}catch(e){}
+      } else {
+        if(!confirm('Remove \u201C'+nm+'\u201D from your sites?'))return;
+      }
+      setProjects(getProjects().filter(function(x){return x.siteId!==sid;}));
+      fetch('/my-sites/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({siteId:sid})}).catch(function(){});
+      render();
+    });}
+    for(var v=0;v<p.length;v++){(function(it){fetch('/api/views?site='+encodeURIComponent(it.siteId)+'&key='+encodeURIComponent(it.key||'')).then(function(r){return r.json();}).then(function(j){var el=document.getElementById('msv_'+it.siteId);if(el&&j&&typeof j.total==='number'&&j.total>0)el.textContent='· '+j.total+' view'+(j.total===1?'':'s')+(j.week?(' ('+j.week+' this week)'):'');
+      if(j&&typeof j.live==='boolean'){
+        try{ if(j.live&&j.slug){localStorage.setItem('ws_slug_'+it.siteId,j.slug);}else{localStorage.removeItem('ws_slug_'+it.siteId);} }catch(e){}
+        var bg=document.getElementById('msb_'+it.siteId);
+        if(bg){ if(j.live){bg.style.cssText='flex-shrink:0;font-size:10px;font-weight:800;color:#4ade80;background:rgba(61,186,82,.16);border:1px solid rgba(61,186,82,.42);border-radius:5px;padding:1px 7px;letter-spacing:.4px';bg.textContent='\u25CF LIVE';} else {bg.style.cssText='flex-shrink:0;font-size:10px;font-weight:700;color:rgba(255,255,255,.5);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:5px;padding:1px 7px';bg.textContent='In progress';} }
+      }
+    }).catch(function(){});})(p[v]);}
   }
   function openProject(sid,b){
     var p=getProjects(),it=null;for(var i=0;i<p.length;i++){if(p[i].siteId===sid){it=p[i];break;}}
@@ -2356,11 +2379,31 @@ function siteFilename(){
 }
 
 // -- Undo Stack ------------------------------------------------
+var _wsLiveSyncTimer=null,_wsSyncToastAt=0,_wsSyncErrAt=0;
+function autoSyncLive(){
+  try{
+    var sid=window._wsSite||localStorage.getItem('ws_site')||'';
+    if(!sid)return;
+    var slug=localStorage.getItem('ws_slug_'+sid)||'';
+    if(!slug)return; // only auto-update sites that are actually published/live
+    if(_wsLiveSyncTimer)clearTimeout(_wsLiveSyncTimer);
+    _wsLiveSyncTimer=setTimeout(function(){
+      var html=(typeof gHTML==='string'&&gHTML)||localStorage.getItem('wsh')||'';
+      if(!html)return;
+      var k=window._wsKey||localStorage.getItem('ws_key')||'';
+      fetch('/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html:html,slug:slug,siteId:sid,key:k})}).then(function(r){return r.json();}).then(function(j){
+        if(j&&!j.error){var n=Date.now();if(n-_wsSyncToastAt>7000){_wsSyncToastAt=n;if(window.toast)toast('\u2713 Live site updated',1600);}}
+        else{var n2=Date.now();if(n2-_wsSyncErrAt>20000){_wsSyncErrAt=n2;if(window.toast)toast('Could not update your live site \u2014 use Update in the publish panel',2800);}}
+      }).catch(function(){var n3=Date.now();if(n3-_wsSyncErrAt>20000){_wsSyncErrAt=n3;if(window.toast)toast('Could not update your live site \u2014 use Update in the publish panel',2800);}});
+    },1600);
+  }catch(e){}
+}
 function pushUndo(html){
   undoStack.push(html);
   if(undoStack.length>10)undoStack.shift();
   redoStack=[]; // a new edit invalidates the redo history
   refreshHistoryBtns();
+  autoSyncLive();
 }
 
 function refreshHistoryBtns(){
@@ -2386,6 +2429,7 @@ function doUndo(){
   refreshHistoryBtns();
   addMsg('ai','<< Undone! Restored previous version.');
   toast('<< Undone - previous version restored');
+  autoSyncLive();
 }
 
 function doRedo(){
@@ -2400,6 +2444,7 @@ function doRedo(){
   refreshHistoryBtns();
   addMsg('ai','>> Redone! Re-applied that change.');
   toast('>> Redone - change re-applied');
+  autoSyncLive();
 }
 
 // -- Edit counter -----------------------------------------------
@@ -5785,7 +5830,8 @@ async function doViews(request, env){
       const c = parseInt((await env.KV.get('views:'+site+':'+ds))||'0',10)||0;
       days.push({ d: ds, c: c }); week += c; if (i===0) today = c;
     }
-    return succeed({ total: total, today: today, week: week, days: days });
+    let liveSlug = ''; try { liveSlug = (await env.KV.get('slugof:'+site)) || ''; } catch(e){}
+    return succeed({ total: total, today: today, week: week, days: days, live: !!liveSlug, slug: liveSlug });
   } catch(e){ return fail(e.message); }
 }
 function jsonR(obj, status){ return new Response(JSON.stringify(obj), { status: status||200, headers: { ...formCors(), 'Content-Type':'application/json' } }); }
@@ -5873,6 +5919,53 @@ async function sendFormEmail(env, to, siteId, fields){
   for (const k in fields){ rows += '<tr><td style="padding:7px 12px;font-weight:600;color:#0f1a0d;border-bottom:1px solid #eee;vertical-align:top">' + escHtml(k) + '</td><td style="padding:7px 12px;color:#333;border-bottom:1px solid #eee">' + escHtml(fields[k]).replace(/\n/g,'<br>') + '</td></tr>'; }
   const html = '<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:560px;margin:0 auto"><div style="background:#0f1a0d;padding:20px;text-align:center"><span style="color:#fff;font-size:20px;font-weight:800">🌱 New form submission</span></div><div style="padding:24px"><p style="color:#555;margin:0 0 14px">Someone just submitted a form on your website:</p><table style="width:100%;border-collapse:collapse;font-size:14px;border:1px solid #eee;border-radius:8px;overflow:hidden">' + rows + '</table><p style="margin:20px 0 0"><a href="https://websprout.app/inbox?site=' + siteId + '" style="color:#2d7a3a;font-weight:700;text-decoration:none">View all submissions in your inbox →</a></p></div></div>';
   await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'🌱 New submission from your website', html: html }) });
+}
+
+async function sendReviewEmail(env, to, siteId, siteName, rev){
+  let stars=''; const full=(rev&&rev.rating)||5; for(let i=0;i<5;i++) stars += (i<full?'\u2605':'\u2606');
+  const safeName = escHtml((rev&&rev.name)||'A visitor');
+  const safeText = escHtml(((rev&&rev.text)||'').slice(0,600)).replace(/\n/g,'<br>');
+  const title = siteName ? escHtml(siteName) : 'your website';
+  const url = 'https://websprout.app/reviews?site=' + encodeURIComponent(siteId);
+  const html = '<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:560px;margin:0 auto">'
+    + '<div style="background:#0f1a0d;padding:20px;text-align:center"><span style="color:#fff;font-size:20px;font-weight:800">\u2B50 New review waiting</span></div>'
+    + '<div style="padding:24px">'
+    + '<p style="color:#555;margin:0 0 14px">Someone left a review on ' + title + '. It is waiting for your approval \u2014 nothing appears on your site until you say so:</p>'
+    + '<div style="background:#f4f8f3;border-radius:10px;padding:16px;margin-bottom:18px">'
+    + '<div style="font-size:18px;color:#f5a623;letter-spacing:3px;margin-bottom:6px">' + stars + '</div>'
+    + '<div style="font-weight:700;color:#0f1a0d;margin-bottom:6px">' + safeName + '</div>'
+    + '<div style="color:#333;font-size:14px;line-height:1.5">' + safeText + '</div>'
+    + '</div>'
+    + '<p style="margin:0"><a href="' + url + '" style="display:inline-block;background:#16a34a;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Review &amp; approve \u2192</a></p>'
+    + '<p style="margin:18px 0 0;font-size:12px;color:#999">Approve it to publish it, or reject it \u2014 your call.</p>'
+    + '</div></div>';
+  await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'\u2B50 New review waiting for your approval', html: html }) });
+}
+function isRealEmail(e){
+  if(!e) return false;
+  e=String(e).toLowerCase().trim();
+  const at=e.indexOf('@');
+  if(at<1 || e.indexOf(' ')>-1 || e.indexOf('[')>-1 || e.indexOf(']')>-1) return false;
+  if(!/^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/.test(e)) return false;
+  const dom=e.slice(at+1);
+  if(dom==='email.com'||dom==='example.com'||dom==='domain.com'||dom==='yourdomain.com'||dom==='yoursite.com'||dom==='website.com') return false;
+  if(e.indexOf('your@')>-1||e.indexOf('youremail')>-1||e.indexOf('yourname')>-1) return false;
+  return true;
+}
+function extractContactEmail(html){
+  if(!html) return '';
+  try{
+    let m; const re=/mailto:([^"'?>\s]+)/gi;
+    while((m=re.exec(html))){ let e=m[1]||''; try{ e=decodeURIComponent(e); }catch(_){ } if(isRealEmail(e)) return String(e).toLowerCase().trim(); }
+    const re2=/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/g;
+    while((m=re2.exec(html))){ if(isRealEmail(m[0])) return String(m[0]).toLowerCase().trim(); }
+  }catch(e){}
+  return '';
+}
+function extractTitle(html){
+  if(!html) return '';
+  try{ const i=html.indexOf('<title>'), j=html.indexOf('</title>'); if(i>-1&&j>i) return html.slice(i+7,j).trim().slice(0,60); }catch(e){}
+  return '';
 }
 
 async function doConnectStart(request, env){
@@ -6044,6 +6137,18 @@ async function doReviewSubmit(request, env){
     await env.KV.put(rlKey, String(rl+1), { expirationTtl: 3600 });
     const id = Date.now() + ':' + Math.random().toString(36).slice(2,8);
     await env.KV.put('review:'+siteId+':'+id, JSON.stringify({ id, name, rating, text, ts:Date.now(), status:'pending', source:'visitor' }), { expirationTtl: 400*86400 });
+    // Best-effort: email the owner that a review is waiting (throttled per site so a flood can't spam them)
+    try{
+      if(env.RESEND_API_KEY){
+        const tk='revnotify:'+siteId;
+        if(!(await env.KV.get(tk))){
+          let to='', siteName='';
+          try{ const slug=await env.KV.get('slugof:'+siteId); if(slug){ const ph=await env.KV.get('pub:'+slug); to=extractContactEmail(ph); siteName=extractTitle(ph); } }catch(e){}
+          if(!to){ try{ to=(await env.KV.get('notify:'+siteId))||''; }catch(e){} }
+          if(to){ await env.KV.put(tk, '1', { expirationTtl: 900 }); try{ await sendReviewEmail(env, to, siteId, siteName, { name:name, rating:rating, text:text }); }catch(e){} }
+        }
+      }
+    }catch(e){}
     return jsonR({ ok:true });
   }catch(e){ return jsonR({ ok:false, error:'error' }, 500); }
 }
@@ -6331,6 +6436,7 @@ async function doPublish(request, env){
     try { const _s2 = await getSession(request, env); if (_s2 && _s2.email) { const _cur = await env.KV.get('notify:' + b.siteId); if (!_cur) await env.KV.put('notify:' + b.siteId, _s2.email); } } catch(e){}
     await env.KV.put('pub:' + slug, pubHtml);
     await env.KV.put('pubmeta:' + slug, JSON.stringify({ siteId: b.siteId, updated: Date.now(), nobadge: _pro }));
+    try { await env.KV.put('slugof:' + b.siteId, slug); } catch(e){}
     return succeed({ ok:true, slug: slug, url: 'https://' + slug + '.websprout.app', pathUrl: 'https://websprout.app/s/' + slug, nobadge: _pro });
   } catch(e){ return fail(e.message); }
 }
@@ -6343,7 +6449,7 @@ async function doUnpublish(request, env){
     if (b.key !== (await siteKey(b.siteId, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
     const m = await env.KV.get('pubmeta:' + b.slug);
     if (m){ try { if (JSON.parse(m).siteId !== b.siteId) return fail('Not your site'); } catch(e){} }
-    await env.KV.delete('pub:' + b.slug); await env.KV.delete('pubmeta:' + b.slug);
+    await env.KV.delete('pub:' + b.slug); await env.KV.delete('pubmeta:' + b.slug); try { await env.KV.delete('slugof:' + b.siteId); } catch(e){}
     return succeed({ ok:true });
   } catch(e){ return fail(e.message); }
 }
@@ -6716,7 +6822,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r137';
+const BUILD_ID = '2026-06-10-r141';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
