@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r141">
-<script>window._wsBuild="2026-06-10-r141";console.log("%c[Websprout] build 2026-06-10-r141 (review-waiting email: when a visitor leaves a review, the owner is emailed at the contact address on their published site (falling back to their account email), throttled per site, with an approve link)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r142">
+<script>window._wsBuild="2026-06-10-r142";console.log("%c[Websprout] build 2026-06-10-r142 (analytics panel: Manage > Analytics shows total/weekly views, a 7-day views bar chart, lead count and review count with pending-to-approve, plus live status — all from existing endpoints)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1073,6 +1073,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
           <button class="gs-item" data-tool="seoBtn">&#128269; SEO &amp; sharing<span class="gs-sub">Title, description, social preview</span></button>
           <div class="gs-head">Grow your business</div>
           <button class="gs-item" data-tool="leadsBtn">&#128236; Leads<span class="gs-sub">See who contacted you</span></button>
+          <button class="gs-item" data-tool="statsBtn">&#128202; Analytics<span class="gs-sub">Your views, leads &amp; reviews</span></button>
           <button class="gs-item" data-tool="postBtn">&#9997; Marketing copy<span class="gs-sub">AI posts, emails &amp; promos</span></button>
           <button class="gs-item" data-tool="payBtn">&#128179; Product payments<span class="gs-sub">Add your own pay links to buttons</span></button>
           <button class="gs-item" id="invoiceMenuItem" data-tool="invoiceBtn" style="display:none">&#129534; Send an invoice<span class="gs-sub">Get paid with a Stripe link</span></button>
@@ -1086,6 +1087,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <button class="s-btn s-ghost" id="sectionsBtn" data-needs-site="1">&#9783; Sections</button>
         <button class="s-btn s-ghost" id="seoBtn" data-needs-site="1">&#128269; SEO</button>
         <button class="s-btn s-ghost" id="leadsBtn" data-needs-site="1">&#128236; Leads</button>
+        <button class="s-btn s-ghost" id="statsBtn" data-needs-site="1" style="display:none">&#128202; Analytics</button>
         <button class="s-btn s-ghost" id="postBtn" data-needs-site="1">&#9997; Marketing</button>
         <button class="s-btn s-ghost" id="payBtn" data-needs-site="1">&#128179; Payments</button>
         <button class="s-btn s-ghost" id="invoiceBtn" style="display:none">&#129534; Invoice</button>
@@ -2172,6 +2174,73 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     <div id="msList" style="padding:14px 18px 22px"></div>
   </div>
 </div>
+<div id="statsModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:18px">
+  <div style="background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:18px;max-width:480px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.6)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.07)">
+      <div style="font-size:17px;font-weight:800;color:#fff">&#128202; Site analytics</div>
+      <button id="statsClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;line-height:1">&times;</button>
+    </div>
+    <div id="statsBody" style="padding:18px 20px 22px"></div>
+  </div>
+</div>
+<script>
+(function(){
+  function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+  function sSite(){return window._wsSite||lsGet('ws_site')||'';}
+  function sKey(){return window._wsKey||lsGet('ws_key')||'';}
+  var modal=document.getElementById('statsModal'), body=document.getElementById('statsBody');
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function dow(ymd){ try{ var y=+ymd.slice(0,4),m=+ymd.slice(4,6)-1,d=+ymd.slice(6,8); return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(y,m,d).getDay()]; }catch(e){return '';} }
+  function statCard(num,label,accent){ return '<div style="flex:1;min-width:0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 10px;text-align:center"><div style="font-size:26px;font-weight:800;color:'+(accent||'#fff')+';line-height:1">'+num+'</div><div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:5px">'+label+'</div></div>'; }
+  function chart(days){
+    if(!days||!days.length) return '';
+    var max=1; for(var i=0;i<days.length;i++){ if((days[i].c||0)>max)max=days[i].c; }
+    var bars='',labels='';
+    for(var j=0;j<days.length;j++){
+      var c=days[j].c||0; var h=Math.round((c/max)*60); if(c>0&&h<4)h=4;
+      bars+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%"><div style="font-size:10px;color:rgba(255,255,255,.5);margin-bottom:3px;height:12px">'+(c||'')+'</div><div style="width:62%;height:'+h+'px;background:linear-gradient(180deg,#5fe08a,#2d7a3a);border-radius:4px 4px 2px 2px"></div></div>';
+      labels+='<div style="flex:1;text-align:center;font-size:9px;color:rgba(255,255,255,.4)">'+dow(days[j].d)+'</div>';
+    }
+    return '<div style="margin-top:18px"><div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.6);margin-bottom:12px">Views \u2014 last 7 days</div><div style="display:flex;align-items:flex-end;gap:6px;height:84px">'+bars+'</div><div style="display:flex;gap:6px;margin-top:6px">'+labels+'</div></div>';
+  }
+  function open(){
+    if(!modal)return;
+    var sid=sSite(), k=sKey();
+    body.innerHTML='<div style="text-align:center;color:rgba(255,255,255,.45);padding:40px 10px">Loading your numbers\u2026</div>';
+    modal.style.display='flex';
+    if(!sid){ body.innerHTML='<div style="text-align:center;color:rgba(255,255,255,.5);padding:40px 10px;line-height:1.6">Create or open a site first to see its analytics.</div>'; return; }
+    var slug=lsGet('ws_slug_'+sid)||'';
+    var stats={total:0,week:0,today:0,leads:0,days:[],reviews:0,pending:0,live:!!slug,slug:slug};
+    var done=0, need=2;
+    function paint(){
+      var liveLine = stats.live
+        ? '<div style="display:inline-flex;align-items:center;gap:7px;background:rgba(61,186,82,.14);border:1px solid rgba(61,186,82,.4);border-radius:8px;padding:6px 12px;font-size:12px;color:#7fe39a;font-weight:600">\u25CF Live at '+esc(stats.slug)+'.websprout.app</div>'
+        : '<div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:6px 12px;font-size:12px;color:rgba(255,255,255,.55);font-weight:600">Not published yet</div>';
+      var revLabel = stats.pending>0 ? ('Reviews <span style="color:#f5a623">('+stats.pending+' to approve)</span>') : 'Reviews';
+      var h = liveLine
+        + '<div style="display:flex;gap:8px;margin-top:16px">' + statCard(stats.total,'Total views','#fff') + statCard(stats.week,'This week','#5fe08a') + '</div>'
+        + '<div style="display:flex;gap:8px;margin-top:8px">' + statCard(stats.leads,'Leads','#fff') + statCard(stats.reviews,revLabel,'#fff') + '</div>'
+        + chart(stats.days);
+      h += '<div style="display:flex;gap:8px;margin-top:18px">'
+        + '<a href="/inbox?site='+encodeURIComponent(sid)+'&key='+encodeURIComponent(k)+'" target="_blank" rel="noopener" style="flex:1;text-align:center;background:rgba(255,255,255,.05);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:10px;font-size:12px;font-weight:600;text-decoration:none">View leads \u2192</a>'
+        + '<a href="/reviews?site='+encodeURIComponent(sid)+'" target="_blank" rel="noopener" style="flex:1;text-align:center;background:rgba(255,255,255,.05);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:10px;font-size:12px;font-weight:600;text-decoration:none">Manage reviews \u2192</a>'
+        + '</div>';
+      if(!stats.total && !stats.leads){ h += '<div style="text-align:center;color:rgba(255,255,255,.4);font-size:12px;margin-top:16px;line-height:1.6">'+(stats.live?'No visits yet. Share your link to start getting traffic!':'Publish your site to start tracking views.')+'</div>'; }
+      body.innerHTML=h;
+    }
+    function tick(){ done++; if(done>=need) paint(); }
+    fetch('/api/inbox?site='+encodeURIComponent(sid)+'&key='+encodeURIComponent(k)).then(function(r){return r.json();}).then(function(j){
+      if(j){ stats.total=j.total||0; stats.week=j.week||0; stats.today=j.today||0; stats.leads=(typeof j.count==='number'?j.count:0); stats.days=j.days||[]; }
+    }).catch(function(){}).then(tick);
+    fetch('/api/reviews/manage?site='+encodeURIComponent(sid)).then(function(r){return r.json();}).then(function(j){
+      if(j&&j.reviews){ stats.reviews=j.reviews.length; stats.pending=j.reviews.filter(function(x){return x.status==='pending';}).length; }
+    }).catch(function(){}).then(tick);
+  }
+  var sb=document.getElementById('statsBtn'); if(sb)sb.addEventListener('click',open);
+  var sc=document.getElementById('statsClose'); if(sc)sc.addEventListener('click',function(){modal.style.display='none';});
+  if(modal)modal.addEventListener('click',function(e){if(e.target===modal)modal.style.display='none';});
+})();
+</script>
 <script>
 (function(){
   function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
@@ -6822,7 +6891,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r141';
+const BUILD_ID = '2026-06-10-r142';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
