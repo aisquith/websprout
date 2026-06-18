@@ -160,6 +160,8 @@ COPY CRAFT — the hero headline states a concrete, bold promise for THIS exact 
 
 BANNED CLICHÉS (instant fail) — avoid the default "AI website" look entirely: a centered hero followed by three identical centered cards; Inter/Roboto/Open Sans as the HEADLINE font; a generic blue-to-purple gradient when the brand is not tech; emoji used as feature icons; "Welcome to [Business]" or "Your trusted partner" headlines; a plain white page with evenly-spaced grey cards and one flat accent; timid undersized headlines. If a draft looks like a free template, commit harder to the concept and the typography.
 
+SIGNATURE MOVES — a fast build must STILL ship every one of these; they are what make a page feel premium and most are pure CSS, so they cost almost nothing: (1) an animated hero background — CSS gradient/aurora/mesh or a few slowly drifting blurred color blobs, NEVER a flat fill; (2) at least one headline word with a gradient text-fill or a bold colored highlight/underline; (3) staggered scroll-reveal (fade + slide-up) on every major section, written in your own CSS, with every element ending fully visible; (4) rich hover states on every card and button (lift + shadow + slight scale or glow); (5) one seamless single-line marquee/ticker band; (6) animated count-up on any stat numbers; (7) at least one asymmetric split or bento layout instead of identical centered cards; (8) a sticky nav that gains blur + shadow after you scroll. These are REQUIRED, not optional. If output budget runs short, SHORTEN the copy and MERGE sections to make room — never drop the motion, gradients, or hover polish to save space.
+
 GUARDRAILS — bold but never broken: readability wins every time (text must stay strongly contrasted against its exact background), NEVER cause horizontal scroll, and ALWAYS finish the entire page through the closing body and html tags. If you are running long, simplify a section rather than truncate — a complete, daring, readable page always beats an elaborate broken one.`;
 
 
@@ -177,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r128">
-<script>window._wsBuild="2026-06-10-r128";console.log("%c[Websprout] build 2026-06-10-r128 (build-time claim updated 18s->90s across hero stat + meta/OG/Twitter/JSON-LD/OG-image/showcase copy)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r131">
+<script>window._wsBuild="2026-06-10-r131";console.log("%c[Websprout] build 2026-06-10-r131 (re-paced the generation loading screen for the now-faster Flash builds: compressed status messages + quicker progress curve, tightened client abort to 115s)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3505,14 +3507,14 @@ function doGenerate(){
 
   var skelProg=document.getElementById('skelProgress');
   function _loadPhase(el){
-    if(el<3)return 'Planting your prompt...';
-    if(el<7)return 'Sketching the layout...';
-    if(el<13)return 'Designing your hero section...';
-    if(el<20)return 'Building your sections and feature cards...';
-    if(el<30)return 'Writing your copy...';
-    if(el<42)return 'Styling the navigation and colors...';
-    if(el<58)return 'Adding finishing touches...';
-    if(el<80)return 'Polishing the details...';
+    if(el<2)return 'Planting your prompt...';
+    if(el<5)return 'Sketching the layout...';
+    if(el<9)return 'Designing your hero section...';
+    if(el<14)return 'Building your sections and feature cards...';
+    if(el<20)return 'Writing your copy...';
+    if(el<27)return 'Styling the navigation and colors...';
+    if(el<34)return 'Adding finishing touches...';
+    if(el<46)return 'Polishing the details...';
     return 'Finalizing your site... ('+el+'s)';
   }
   var _t0=Date.now(),iv=setInterval(function(){
@@ -3520,11 +3522,11 @@ function doGenerate(){
     var _m=_loadPhase(_el);
     lt.textContent=_m;
     if(skelMsg)skelMsg.textContent=_m;
-    var _pct=92*(1-Math.exp(-_el/38));
+    var _pct=93*(1-Math.exp(-_el/17));
     if(skelProg)skelProg.style.width=_pct.toFixed(1)+'%';
   },800);
   var _ac=(typeof AbortController!=='undefined')?new AbortController():null;
-  var _to=_ac?setTimeout(function(){try{_ac.abort();}catch(e){}},150000):0;
+  var _to=_ac?setTimeout(function(){try{_ac.abort();}catch(e){}},115000):0;
   fetch('/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt}),signal:_ac?_ac.signal:undefined})
   .then(function(r){return r.text().then(function(t){try{var d=JSON.parse(t);return{ok:r.ok,d:d};}catch(e){return{ok:false,d:{error:'Server error: '+t.slice(0,100)}};}});})
   .then(function(r){
@@ -6714,7 +6716,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r128';
+const BUILD_ID = '2026-06-10-r131';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -7072,19 +7074,19 @@ async function doGenerate(request, env) {
     _isPaid = (_isOwner || _u.plan === 'pro');
     if (_isPaid) genModel = 'gemini-2.5-pro';
   } catch (e) {}
-  // Free tier: cap total generations per account (Pro/owner unlimited). A new account's FIRST
-  // generation runs on the Pro model so the make-or-break first impression is the best quality.
+  // Free tier: cap total generations per account (Pro/owner unlimited). Free generations — including
+  // the first — run on the fast Flash model so the make-or-break first impression is quick and reliable.
+  // (A ~90s Pro wait loses first-timers, and long Pro generations brush against Cloudflare's request limit.)
   if (!_isPaid && env.KV) {
     try {
       const _gc = parseInt((await env.KV.get('gencount:' + _email)) || '0', 10) || 0;
       if (_gc >= FREE_GEN_LIMIT) return fail('FREE_LIMIT_REACHED');
-      if (_gc === 0) genModel = 'gemini-2.5-pro';
     } catch (e) {}
   }
   try {
     const body2 = JSON.stringify({
       contents: [{ parts: [{ text: PROMPT + '\n\nUser request: ' + prompt + getNicheDirection(prompt) + '\n\nSTYLE DIRECTION: ' + getStyleDirection(prompt) + '\n\n' + DESIGN_AMBITION + '\n\nCRITICAL RULES:\n1. CONTRAST IS THE #1 PRIORITY: every text element must be instantly readable against the EXACT background behind it — dark text only on light backgrounds, white/near-white text only on dark backgrounds, never dark-on-dark or light-on-light. If the hero background is dark or uses a photo/image slot, the hero headline and subtext MUST be white/near-white. A dark headline on a dark hero is a failure.\n2. Do NOT use vh or viewport-height units for section/hero HEIGHTS — size heights with px or % (e.g. min-height:640px), required for correct rendering. You SHOULD use clamp() with vw for responsive FONT-SIZE so large headings shrink on small screens and never overflow (e.g. font-size:clamp(2rem,6vw,4.5rem)).\n3. Scroll-reveal and entrance animations are ENCOURAGED, but every element MUST animate from hidden TO fully visible — nothing stays hidden. Keep transitions under 0.8s.\n4. ALWAYS end with </body></html> — never leave HTML incomplete.\n5. COMPLETION IS MANDATORY: always finish the entire page through </body></html>. Keep total output under ~800 lines; if the page is getting long, make each section more concise rather than leaving the page unfinished — a complete simpler page always beats a truncated elaborate one. 6. NO horizontal overflow: set box-sizing:border-box globally, never let any element be wider than the viewport, and the page must NEVER scroll sideways; headings and long text must wrap (overflow-wrap:break-word) and must never use white-space:nowrap on multi-word text. 7. SPACING: the nav logo must never touch the menu links, and text must never touch the screen edges — use container padding/margins and clear gaps between elements.' }] }],
-      generationConfig: { maxOutputTokens: 32768, temperature: 0.95, thinkingConfig: { thinkingBudget: 24576 } }
+      generationConfig: { maxOutputTokens: 32768, temperature: 0.95, thinkingConfig: { thinkingBudget: 8192 } }
     });
     // Generation budget: give Pro a tight window so that if it stalls we can still fall back to the
     // faster, more reliable Flash model and return a site instead of a Cloudflare 524 timeout.
