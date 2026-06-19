@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r145">
-<script>window._wsBuild="2026-06-10-r145";console.log("%c[Websprout] build 2026-06-10-r145 (reliable save: every edit and photo now triggers a debounced server save ~1.2s later instead of only on a 12s timer, plus a sendBeacon save on tab close/navigate so the last change is never lost)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r146">
+<script>window._wsBuild="2026-06-10-r146";console.log("%c[Websprout] build 2026-06-10-r146 (mobile call bar is now OFF by default on every site and owner-controlled via a toggle in Design settings; only appears on phones when switched on; also visitor-dismissible)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1542,6 +1542,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <div class="ds-row"><span class="ds-label">Corners</span><div class="ds-seg" data-style="corners"><button type="button" data-v="sharp">Sharp</button><button type="button" data-v="default" class="on">Default</button><button type="button" data-v="rounded">Rounded</button></div></div>
         <div class="ds-row"><span class="ds-label">Text size</span><div class="ds-seg" data-style="text"><button type="button" data-v="small">Small</button><button type="button" data-v="default" class="on">Default</button><button type="button" data-v="large">Large</button></div></div>
         <div class="ds-row"><span class="ds-label">Buttons</span><div class="ds-seg" data-style="btn"><button type="button" data-v="default" class="on">Default</button><button type="button" data-v="pill">Pill</button></div></div>
+        <div class="ds-row"><span class="ds-label">Mobile call bar</span><div class="ds-seg" id="callBarSeg"><button type="button" data-cb="off" class="on">Off</button><button type="button" data-cb="on">On</button></div></div>
       </div>
       </div>
       </div>
@@ -3261,7 +3262,7 @@ document.addEventListener('DOMContentLoaded',function(){
   var ddToggle=document.getElementById('ddToggle');
   var ddEl=document.getElementById('designDrawer');
   if(ddToggle&&ddEl){
-    ddToggle.addEventListener('click',function(){ddEl.classList.toggle('collapsed');if(!ddEl.classList.contains('collapsed')){try{loadStyleOpts();}catch(e){}}});
+    ddToggle.addEventListener('click',function(){ddEl.classList.toggle('collapsed');if(!ddEl.classList.contains('collapsed')){try{loadStyleOpts();}catch(e){}try{reflectCallBar();}catch(e){}}});
   }
   var styleSec=document.getElementById('styleSection');
   if(styleSec){
@@ -3272,6 +3273,10 @@ document.addEventListener('DOMContentLoaded',function(){
       wsStyleOpts[key]=b.getAttribute('data-v');
       reflectStyleUI();applyGlobalStyle();
     });
+  }
+  var callBarSeg=document.getElementById('callBarSeg');
+  if(callBarSeg){
+    callBarSeg.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('button[data-cb]');if(!b)return;setCallBar(b.getAttribute('data-cb')==='on');reflectCallBar();});
   }
 
   // -- Slot modal wiring -----------------------------------------
@@ -4050,6 +4055,17 @@ function buildStyleCSS(o){
   if(o.btn==='pill')css+='button,[class*="btn"],[class*="button"],a[class*="cta"],a[class*="Cta"],input[type="submit"]{border-radius:999px !important}';
   return css;
 }
+function callBarOn(){try{return !!gHTML && gHTML.indexOf('<meta name="ws-callbar" content="on">')>-1;}catch(e){return false;}}
+function setCallBar(on){
+  if(!gHTML){toast('Generate a site first!');return;}
+  var marker='<meta name="ws-callbar" content="on">';
+  gHTML=gHTML.split(marker).join('');
+  if(on){var h=gHTML.indexOf('</head>');if(h>-1)gHTML=gHTML.slice(0,h)+marker+gHTML.slice(h);else gHTML=marker+gHTML;}
+  localStorage.setItem('wsh',gHTML);pushUndo(gHTML);bumpEditCount();
+  setTimeout(function(){setPreview(gHTML);},50);
+  toast(on?'Mobile call bar ON \u2014 shows on phones when your site has a phone number':'Mobile call bar removed',3500);
+}
+function reflectCallBar(){var seg=document.getElementById('callBarSeg');if(!seg)return;var on=callBarOn();seg.querySelectorAll('button').forEach(function(b){if((b.getAttribute('data-cb')==='on')===on)b.classList.add('on');else b.classList.remove('on');});}
 function applyGlobalStyle(){
   if(!gHTML){toast('Generate a site first!');return;}
   var css=buildStyleCSS(wsStyleOpts);
@@ -6431,7 +6447,7 @@ function formScript(siteId){
   +'else{if(btn){btn.disabled=false;btn.textContent=bt;}alert("Sorry, something went wrong. Please try again.");}'
   +'}).catch(function(){if(btn){btn.disabled=false;btn.textContent=bt;}alert("Could not send right now. Please try again.");});'
   +'});}'
-  +'function callbar(){try{if(window.self!==window.top)return;if(window.innerWidth>640)return;if(document.getElementById("_wsCall"))return;var ls=document.getElementsByTagName("a");var t=null;for(var i=0;i<ls.length;i++){var hh=ls[i].getAttribute("href")||"";if(hh.indexOf("tel:")===0){t=ls[i];break;}}if(!t)return;var bar=document.createElement("a");bar.id="_wsCall";bar.href=t.getAttribute("href");bar.setAttribute("style","position:fixed;left:0;right:0;bottom:0;z-index:99999;display:flex;align-items:center;justify-content:center;gap:8px;padding:15px 16px;background:#16a34a;color:#fff;font-weight:700;font-size:16px;letter-spacing:.01em;text-decoration:none;font-family:inherit;box-shadow:0 -2px 14px rgba(0,0,0,.2)");bar.textContent="\u260E  Call now";document.body.appendChild(bar);document.body.style.paddingBottom="74px";}catch(e){}}'
+  +'function callbar(){try{if(window.self!==window.top)return;if(window.innerWidth>640)return;if(document.getElementById("_wsCall"))return;var mt=document.querySelector("meta[name=ws-callbar]");if(!mt||mt.getAttribute("content")!=="on")return;if(sessionStorage.getItem("_wsCallX"))return;var ls=document.getElementsByTagName("a");var t=null;for(var i=0;i<ls.length;i++){var hh=ls[i].getAttribute("href")||"";if(hh.indexOf("tel:")===0){t=ls[i];break;}}if(!t)return;var bar=document.createElement("a");bar.id="_wsCall";bar.href=t.getAttribute("href");bar.setAttribute("style","position:fixed;left:0;right:0;bottom:0;z-index:99999;display:flex;align-items:center;justify-content:center;gap:8px;padding:15px 16px;background:#16a34a;color:#fff;font-weight:700;font-size:16px;letter-spacing:.01em;text-decoration:none;font-family:inherit;box-shadow:0 -2px 14px rgba(0,0,0,.2)");bar.textContent="\u260E  Call now";document.body.appendChild(bar);document.body.style.paddingBottom="74px";}catch(e){}}'
   +'function init(){var fs=document.querySelectorAll("form");for(var i=0;i<fs.length;i++){if(fs[i].getAttribute("data-ws-skip")!=null)continue;wire(fs[i]);}callbar();window.addEventListener("resize",callbar);}'
   +'if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",init);}else{init();}'
   +'try{if(window.self===window.top){var _vk="wsv_'+siteId+'";if(!sessionStorage.getItem(_vk)){sessionStorage.setItem(_vk,"1");fetch("https://websprout.app/api/hit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({site:"'+siteId+'"}),keepalive:true,mode:"no-cors"}).catch(function(){});}}}catch(e){}'
@@ -6902,7 +6918,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r145';
+const BUILD_ID = '2026-06-10-r146';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
