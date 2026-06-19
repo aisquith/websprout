@@ -173,14 +173,14 @@ const PAGE = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Websprout: AI Website Builder | Make a Website in Seconds, Free</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
-<meta name="description" content="Websprout is an AI website builder that turns one sentence into a complete, professional, multi-page website in about 90 seconds. Build and publish your site live for free. Go Pro for $10/month to remove the badge, connect your own domain, and download the code — cancel anytime.">
+<meta name="description" content="Websprout is an AI website builder that turns one sentence into a complete, professional website in about 90 seconds. Build and publish your site live for free. Go Pro for $10/month to remove the badge, connect your own domain, and download the code — cancel anytime.">
 <link rel="canonical" href="https://websprout.app/">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r154">
-<script>window._wsBuild="2026-06-10-r154";console.log("%c[Websprout] build 2026-06-10-r154 (reverted the multi-page experiment: generated sites are single-page again, exactly as before r153)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r160">
+<script>window._wsBuild="2026-06-10-r160";console.log("%c[Websprout] build 2026-06-10-r160 (mobile nav: the How it works / Pricing / My sites / Deploy guide / Support links now collapse into a single hamburger dropdown on phones instead of being unreachable; desktop unchanged)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -201,7 +201,7 @@ const PAGE = `<!DOCTYPE html>
 <meta name="twitter:image" content="https://websprout.app/og.svg">
 <meta name="twitter:image:alt" content="Websprout - AI Website Builder">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232d7a3a'/><text y='.9em' font-size='75' x='12'>&#127807;</text></svg>">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"Websprout","url":"https://websprout.app/","description":"AI website builder that generates a complete, professional, multi-page website from a short description in about 90 seconds.","applicationCategory":"DesignApplication","operatingSystem":"Web browser","browserRequirements":"Requires JavaScript","offers":{"@type":"Offer","price":"10.00","priceCurrency":"USD","description":"$10/month Pro subscription. Building and publishing your site live is free; Pro removes the Websprout badge, connects your own domain, and lets you download the source code. Cancel anytime."},"featureList":["AI website generation in seconds","Live preview before paying","Conversational AI editing","Download full HTML source code","Free one-click deploy to Netlify or Cloudflare Pages"]},{"@type":"Organization","name":"Websprout","url":"https://websprout.app/","logo":"https://websprout.app/og.svg","sameAs":[]},{"@type":"WebSite","name":"Websprout","url":"https://websprout.app/"},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do I need to pay for hosting?","acceptedAnswer":{"@type":"Answer","text":"No. Both Netlify and Cloudflare Pages have permanently free tiers that are more than enough for most websites. Netlify gives you 100GB of bandwidth per month free, and Cloudflare Pages offers unlimited bandwidth."}},{"@type":"Question","name":"Can I update my site after deploying?","acceptedAnswer":{"@type":"Answer","text":"Yes. Use the chat in Websprout to make changes, re-download your site, and re-deploy. On Netlify you can drag and drop a new file onto your existing site to update it, and on Cloudflare Pages you upload a new version through the dashboard."}},{"@type":"Question","name":"How do I connect a custom domain?","acceptedAnswer":{"@type":"Answer","text":"Both platforms make this easy and free. On Netlify, go to Site Settings, Domain Management, Add custom domain, then follow the DNS instructions from your registrar. On Cloudflare Pages, use Custom Domains, Add a domain."}},{"@type":"Question","name":"Is my site secure with HTTPS?","acceptedAnswer":{"@type":"Answer","text":"Yes, automatically. Both Netlify and Cloudflare Pages issue free SSL certificates the moment your site is deployed, so your site always serves over HTTPS with no extra configuration."}},{"@type":"Question","name":"How much does Websprout cost?","acceptedAnswer":{"@type":"Answer","text":"Building and publishing your website live is completely free, with a small Websprout badge. Go Pro for $10 per month to remove the badge, connect your own custom domain, and download the source code. You can cancel anytime."}},{"@type":"Question","name":"How long does it take to build a website?","acceptedAnswer":{"@type":"Answer","text":"About 90 seconds. You describe your business, and the AI generates a complete multi-page website that you can preview live and then edit with chat."}}]}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"Websprout","url":"https://websprout.app/","description":"AI website builder that generates a complete, professional website from a short description in about 90 seconds.","applicationCategory":"DesignApplication","operatingSystem":"Web browser","browserRequirements":"Requires JavaScript","offers":{"@type":"Offer","price":"10.00","priceCurrency":"USD","description":"$10/month Pro subscription. Building and publishing your site live is free; Pro removes the Websprout badge, connects your own domain, and lets you download the source code. Cancel anytime."},"featureList":["AI website generation in seconds","Live preview before paying","Conversational AI editing","Download full HTML source code","Free one-click deploy to Netlify or Cloudflare Pages"]},{"@type":"Organization","name":"Websprout","url":"https://websprout.app/","logo":"https://websprout.app/og.svg","sameAs":[]},{"@type":"WebSite","name":"Websprout","url":"https://websprout.app/"},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do I need to pay for hosting?","acceptedAnswer":{"@type":"Answer","text":"No. Both Netlify and Cloudflare Pages have permanently free tiers that are more than enough for most websites. Netlify gives you 100GB of bandwidth per month free, and Cloudflare Pages offers unlimited bandwidth."}},{"@type":"Question","name":"Can I update my site after deploying?","acceptedAnswer":{"@type":"Answer","text":"Yes. Use the chat in Websprout to make changes, re-download your site, and re-deploy. On Netlify you can drag and drop a new file onto your existing site to update it, and on Cloudflare Pages you upload a new version through the dashboard."}},{"@type":"Question","name":"How do I connect a custom domain?","acceptedAnswer":{"@type":"Answer","text":"Both platforms make this easy and free. On Netlify, go to Site Settings, Domain Management, Add custom domain, then follow the DNS instructions from your registrar. On Cloudflare Pages, use Custom Domains, Add a domain."}},{"@type":"Question","name":"Is my site secure with HTTPS?","acceptedAnswer":{"@type":"Answer","text":"Yes, automatically. Both Netlify and Cloudflare Pages issue free SSL certificates the moment your site is deployed, so your site always serves over HTTPS with no extra configuration."}},{"@type":"Question","name":"How much does Websprout cost?","acceptedAnswer":{"@type":"Answer","text":"Building and publishing your website live is completely free, with a small Websprout badge. Go Pro for $10 per month to remove the badge, connect your own custom domain, and download the source code. You can cancel anytime."}},{"@type":"Question","name":"How long does it take to build a website?","acceptedAnswer":{"@type":"Answer","text":"About 90 seconds. You describe your business, and the AI generates a complete, professional website that you can preview live and then edit with chat."}}]}]}</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -218,6 +218,9 @@ nav{position:sticky;top:0;z-index:100;height:58px;background:rgba(6,13,5,.9);bac
 .nav-links{display:flex;gap:24px;list-style:none}
 .nav-links a{font-size:14px;color:rgba(255,255,255,.5);text-decoration:none;font-weight:500;transition:color .15s}
 .nav-links a:hover{color:#fff}
+.nav-burger{display:none;border:none;background:transparent;cursor:pointer;padding:6px;align-items:center;justify-content:center;border-radius:8px;line-height:0}
+.nav-burger:hover{background:rgba(255,255,255,.06)}
+.nav-burger svg{display:block}
 .nav-cta{background:#2d7a3a;color:#fff;padding:8px 18px;border-radius:7px;font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
 .nav-cta:hover{background:#3dba52;transform:translateY(-1px)}
 
@@ -774,8 +777,15 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .s-mobtabs{display:none;gap:6px;padding:8px 10px;background:#0a1208;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
 .s-mobtab{flex:1;background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
 .s-mobtab.active{background:rgba(45,122,58,.2);color:#4ade80;border-color:rgba(45,122,58,.4)}
+.auth-ava{display:none;width:30px;height:30px;border-radius:50%;background:#2d7a3a;color:#fff;align-items:center;justify-content:center;font-weight:700;font-size:13px;line-height:1}
 @media(max-width:860px){
-  .nav-links{display:none}
+  .nav-burger{display:inline-flex}
+  nav{gap:12px}
+  .nav-links{display:none;position:absolute;top:calc(100% + 6px);right:5vw;flex-direction:column;gap:2px;background:#0b1709;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:6px;min-width:190px;box-shadow:0 14px 36px rgba(0,0,0,.55);z-index:120}
+  .nav-links.open{display:flex}
+  .nav-links li{width:100%}
+  .nav-links a{display:block;padding:11px 13px;border-radius:8px;color:rgba(255,255,255,.82);font-size:15px}
+  .nav-links a:hover,.nav-links a:active{background:rgba(255,255,255,.06);color:#fff}
   .how-grid,.compare-grid,.price-grid{grid-template-columns:1fr 1fr}
   .type-grid{grid-template-columns:repeat(5,1fr)}
   .detail-grid{grid-template-columns:1fr}
@@ -800,6 +810,10 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 @media(max-width:600px){
   .type-grid{grid-template-columns:repeat(3,1fr)}
   .how-grid,.compare-grid,.price-grid{grid-template-columns:1fr}
+  nav{gap:8px;padding:0 12px}
+  #signInBtn.is-authed{border:none !important;background:transparent !important;padding:0 !important;margin-right:4px;max-width:none;min-width:0}
+  #signInBtn.is-authed .auth-name{display:none}
+  #signInBtn.is-authed .auth-ava{display:inline-flex}
 }
 </style>
 </head>
@@ -819,6 +833,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
     <li><a href="/deploy-guide" target="_blank">Deploy guide</a></li>
     <li><a href="#" id="supportLink">Support</a></li>
   </ul>
+  <button class="nav-burger" id="navBurger" aria-label="Open menu" aria-expanded="false"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></button>
   <button class="nav-cta" id="signInBtn" style="background:transparent;border:1px solid rgba(255,255,255,.18);color:#fff;margin-right:8px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Sign in</button>
   <button class="nav-cta" id="navCta">Build for free &#8594;</button>
 </nav>
@@ -829,7 +844,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
     Free to generate &amp; preview
   </div>
   <h1>Plant an idea.<br><em>Grow a website.</em></h1>
-  <p class="hero-sub">Describe your business. Get a complete, professional, multi-page website in seconds.</p>
+  <p class="hero-sub">Describe your business. Get a complete, professional website in seconds.</p>
 
   <div class="ex-wrap">
     <div class="ex-label">New here? Tap an example and watch it build &#8595;</div>
@@ -1109,6 +1124,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <button class="s-btn s-ghost" id="deployBtn" data-needs-site="1">&#128640; Deploy</button>
       </span>
       <style>.gs-item{display:block;width:100%;text-align:left;background:none;border:none;color:#fff;padding:10px 12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}.gs-item:hover{background:rgba(45,122,58,.18)}.gs-sub{display:block;font-size:11px;color:rgba(255,255,255,.4);font-weight:400;margin-top:1px}.gs-head{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:rgba(255,255,255,.34);padding:10px 12px 4px}.gs-head:first-child{padding-top:4px}.s-sep{width:1px;height:20px;background:rgba(255,255,255,.1);margin:0 3px;flex-shrink:0;align-self:center}.s-menu{position:absolute;top:calc(100% + 6px);right:0;background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:6px;min-width:218px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:1000}.s-icon{padding:6px 9px}</style>
+      <span id="saveStatus" style="font-size:12px;color:rgba(255,255,255,.55);font-weight:600;margin-right:6px;opacity:0;transition:opacity .3s;white-space:nowrap" title="Your work autosaves as you edit">Saved</span>
       <span style="position:relative;display:inline-block">
         <button class="s-btn" id="getSiteBtn" data-needs-site="1" style="background:#2d7a3a;color:#fff;border-color:#2d7a3a;font-weight:700" title="Publish, download or share your site">&#128640; Get your site &#9662;</button>
         <div id="getSiteMenu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:12px;padding:6px;min-width:266px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:1000">
@@ -1983,8 +1999,8 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   }
   function applyAuthBtn(btn,me,prefix){
     if(!btn)return;
-    if(me&&me.auth){btn.textContent='Hello, '+displayName(me);btn.title='Signed in as '+(me.email||'')+' — view your account';btn.onclick=function(){if(window.openProfile)window.openProfile();};}
-    else{btn.textContent=(prefix||'')+'Sign in';btn.title='Sign in to save your sites to your account';btn.onclick=openAuth;}
+    if(me&&me.auth){var dn=displayName(me);btn.textContent='';var nmS=document.createElement('span');nmS.className='auth-name';nmS.textContent='Hello, '+dn;var avS=document.createElement('span');avS.className='auth-ava';avS.textContent=(dn?dn.charAt(0):'?').toUpperCase();btn.appendChild(nmS);btn.appendChild(avS);btn.title='Signed in as '+(me.email||'')+' — view your account';btn.onclick=function(){if(window.openProfile)window.openProfile();};btn.classList.add('is-authed');}
+    else{btn.textContent=(prefix||'')+'Sign in';btn.title='Sign in to save your sites to your account';btn.onclick=openAuth;btn.classList.remove('is-authed');}
   }
   function setAuthUI(me){
     window._wsUser=me;
@@ -2255,7 +2271,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
   function site(){return window._wsSite||lsGet('ws_site')||'';}
   function key(){return window._wsKey||lsGet('ws_key')||'';}
-  function curHtml(){return lsGet('wsh')||'';}
+  function curHtml(){var L=window._wsLiveHtml;return (typeof L==='string'&&L.length>100?L:(lsGet('wsh')||''))||'';}
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function nameFrom(h){var a=h.indexOf('<title>'),b=h.indexOf('</title>');var n=(a>-1&&b>-1)?h.slice(a+7,b):'';n=n.replace(/\s*\|.*$/,'').trim();return n.slice(0,60)||'My site';}
   function getProjects(){try{return JSON.parse(lsGet('ws_projects')||'[]');}catch(e){return [];}}
@@ -2288,15 +2304,25 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   function upsert(sid,k,nm){var p=getProjects(),f=null;for(var i=0;i<p.length;i++){if(p[i].siteId===sid){f=p[i];break;}}if(f){f.name=nm;f.key=k||f.key;f.ts=Date.now();}else{p.push({siteId:sid,key:k,name:nm,ts:Date.now()});}p.sort(function(a,b){return b.ts-a.ts;});setProjects(p);}
   var lastSite='',lastHtml='';
   function tick(){
+    if(window._wsSaveReady===false)return;
     var s=site(),k=key(),h=curHtml();
     if(!s||!h||h.length<100)return;
     if(s===lastSite&&h===lastHtml)return;
     lastSite=s;lastHtml=h;var nm=nameFrom(h);upsert(s,k,nm);
-    fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({siteId:s,key:k,html:h,name:nm})}).catch(function(){});
+    var _ss=document.getElementById('saveStatus');
+    if(_ss){_ss.textContent='Saving\u2026';_ss.style.color='rgba(255,255,255,.55)';_ss.style.opacity='1';}
+    fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({siteId:s,key:k,html:h,name:nm})}).then(function(r){
+      if(!r.ok)throw new Error('save '+r.status);
+      try{sessionStorage.removeItem('ws_freshgen');}catch(_fg){}  // confirmed on the server now
+      if(_ss){_ss.textContent='Saved \u2713';_ss.style.color='rgba(127,227,154,.9)';_ss.style.opacity='1';setTimeout(function(){if(_ss&&_ss.textContent.indexOf('Saved')===0)_ss.style.opacity='.45';},1500);}
+    }).catch(function(){
+      lastHtml='';                 // failed — clear dedup so the next heartbeat/interval retries
+      if(_ss){_ss.textContent='Not saved \u2014 retrying';_ss.style.color='rgba(240,170,90,.95)';_ss.style.opacity='1';}
+    });
   }
   setInterval(tick,12000);setTimeout(tick,4000);window._wsTrackNow=tick;
   document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')tick();});
-  function _wsBeacon(){try{var s=site(),k=key(),h=curHtml();if(!s||!h||h.length<100)return;var nm=nameFrom(h);var payload=JSON.stringify({siteId:s,key:k,html:h,name:nm});if(navigator.sendBeacon){var blob=new Blob([payload],{type:'application/json'});if(navigator.sendBeacon('/save',blob)){lastSite=s;lastHtml=h;upsert(s,k,nm);return;}}try{fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},body:payload,keepalive:true});lastSite=s;lastHtml=h;upsert(s,k,nm);}catch(e){}}catch(e){}}
+  function _wsBeacon(){if(window._wsSaveReady===false)return;try{var s=site(),k=key(),h=curHtml();if(!s||!h||h.length<100)return;var nm=nameFrom(h);var payload=JSON.stringify({siteId:s,key:k,html:h,name:nm});if(navigator.sendBeacon){var blob=new Blob([payload],{type:'application/json'});if(navigator.sendBeacon('/save',blob)){lastSite=s;lastHtml=h;upsert(s,k,nm);return;}}try{fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},body:payload,keepalive:true});lastSite=s;lastHtml=h;upsert(s,k,nm);}catch(e){}}catch(e){}}
   window.addEventListener('pagehide',_wsBeacon);window.addEventListener('beforeunload',_wsBeacon);
   var modal=document.getElementById('mySitesModal'),listEl=document.getElementById('msList');
   function fmt(ts){try{return new Date(ts).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});}catch(e){return '';}}
@@ -2480,9 +2506,25 @@ function autoSyncLive(){
 }
 var _wsSaveTimer=null;
 function scheduleSave(){
+  try{window._wsLiveHtml=gHTML;}catch(e){}
   if(_wsSaveTimer)clearTimeout(_wsSaveTimer);
   _wsSaveTimer=setTimeout(function(){ try{ if(window._wsTrackNow)window._wsTrackNow(); }catch(e){} },1200);
 }
+// Real-time autosave heartbeat: every 2s, if the live editor buffer changed at all,
+// mirror it to localStorage and push it to the server — no matter which edit path made
+// the change. This is the safety net so EVERY edit persists quickly, not just ones that
+// happen to call scheduleSave().
+var _wsHbLast='';
+setInterval(function(){
+  try{
+    if(typeof gHTML==='string'&&gHTML.length>100&&gHTML!==_wsHbLast){
+      _wsHbLast=gHTML;
+      window._wsLiveHtml=gHTML;
+      try{localStorage.setItem('wsh',gHTML);}catch(e){}
+      if(window._wsTrackNow)window._wsTrackNow();
+    }
+  }catch(e){}
+},2000);
 function pushUndo(html){
   undoStack.push(html);
   if(undoStack.length>10)undoStack.shift();
@@ -2742,6 +2784,26 @@ function showPanel(n){
 document.addEventListener('DOMContentLoaded',function(){
   // Wrap in try-catch to catch silent errors
   try{
+  // Mobile nav dropdown toggle
+  (function(){
+    var burger=document.getElementById('navBurger');
+    var links=document.querySelector('.nav-links');
+    if(burger&&links){
+      burger.addEventListener('click',function(e){
+        e.stopPropagation();
+        var open=links.classList.toggle('open');
+        burger.setAttribute('aria-expanded',open?'true':'false');
+      });
+      links.addEventListener('click',function(e){
+        if(e.target.closest('a')){links.classList.remove('open');burger.setAttribute('aria-expanded','false');}
+      });
+      document.addEventListener('click',function(e){
+        if(links.classList.contains('open')&&!links.contains(e.target)&&!burger.contains(e.target)){
+          links.classList.remove('open');burger.setAttribute('aria-expanded','false');
+        }
+      });
+    }
+  })();
   // Type buttons
   document.querySelectorAll('.type-btn').forEach(function(btn){
     btn.addEventListener('click',function(){
@@ -3239,7 +3301,7 @@ document.addEventListener('DOMContentLoaded',function(){
       // Track payment
       fetch('/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'payment'})}).catch(function(){});
     },100);}
-    else if(sessionStorage.getItem('ws_studio')==='1'){setTimeout(function(){openStudio(gHTML);},100);}
+    else if(sessionStorage.getItem('ws_studio')==='1'){window._wsSaveReady=false;setTimeout(function(){openStudio(gHTML);_wsRecoverDraft();},100);}
   }
 
 
@@ -3698,7 +3760,7 @@ function doGenerate(){
       }
       var _sk=document.getElementById('skelWrap');if(_sk)_sk.classList.remove('show');var _st=document.getElementById('studio');if(_st)_st.classList.remove('on');document.body.style.overflow='';try{console.error('[Websprout] /generate failed:',r.d.error);}catch(e3){}toast('🌱 '+(r.d.error||'Please try again'),12000);return;
     }
-    gHTML=r.d.html;localStorage.setItem('wsh',gHTML);undoStack=[gHTML];redoStack=[];editCount=0;var ec=document.getElementById('editCounter');if(ec)ec.style.display='none';refreshHistoryBtns();document.querySelectorAll('.font-btn.sel').forEach(function(b){b.classList.remove('sel');});var sp=document.getElementById('secPick');if(sp)sp.classList.remove('on');openStudio(gHTML);setTimeout(populateLiveColors,1200);try{if(r.d.siteId){window._wsSite=r.d.siteId;window._wsKey=r.d.formKey;localStorage.setItem('ws_site',r.d.siteId);localStorage.setItem('ws_key',r.d.formKey||'');}if(r.d.inboxUrl){window._wsInbox=r.d.inboxUrl;localStorage.setItem('ws_inbox',r.d.inboxUrl);console.log('%c[Websprout] Form inbox for this site -> '+r.d.inboxUrl,'color:#2d7a3a;font-weight:700');setTimeout(function(){var tl=document.getElementById('toast');if(tl){tl.innerHTML='📬 Form inbox ready — <u style="cursor:pointer">click to open &amp; save the link</u>';tl.classList.add('on');tl.onclick=function(){window.open(r.d.inboxUrl,'_blank');};setTimeout(function(){tl.classList.remove('on');tl.onclick=null;},10000);}},2600);}}catch(e4){}
+    gHTML=r.d.html;localStorage.setItem('wsh',gHTML);undoStack=[gHTML];redoStack=[];editCount=0;try{sessionStorage.setItem('ws_freshgen','1');}catch(_fg){}var ec=document.getElementById('editCounter');if(ec)ec.style.display='none';refreshHistoryBtns();document.querySelectorAll('.font-btn.sel').forEach(function(b){b.classList.remove('sel');});var sp=document.getElementById('secPick');if(sp)sp.classList.remove('on');openStudio(gHTML);setTimeout(populateLiveColors,1200);try{if(r.d.siteId){window._wsSite=r.d.siteId;window._wsKey=r.d.formKey;localStorage.setItem('ws_site',r.d.siteId);localStorage.setItem('ws_key',r.d.formKey||'');}if(r.d.inboxUrl){window._wsInbox=r.d.inboxUrl;localStorage.setItem('ws_inbox',r.d.inboxUrl);console.log('%c[Websprout] Form inbox for this site -> '+r.d.inboxUrl,'color:#2d7a3a;font-weight:700');setTimeout(function(){var tl=document.getElementById('toast');if(tl){tl.innerHTML='📬 Form inbox ready — <u style="cursor:pointer">click to open &amp; save the link</u>';tl.classList.add('on');tl.onclick=function(){window.open(r.d.inboxUrl,'_blank');};setTimeout(function(){tl.classList.remove('on');tl.onclick=null;},10000);}},2600);}}catch(e4){}
   })
   .catch(function(e){
     clearInterval(iv);clearTimeout(_to);ld.classList.remove('on');lb.style.display='none';
@@ -4475,7 +4537,41 @@ function setStudioReady(ready){
   }
 }
 
+// Restore the latest COMPLETE copy from the server after a refresh. Browser storage is
+// capped (~5MB), so a photo-heavy site can lose its newest images locally; the server has
+// the full copy (saved straight from memory). If the server draft is meaningfully larger
+// than what we restored locally, adopt it. Runs ONLY on refresh-restore, never after a
+// fresh generation (which would risk pulling back an older draft). Saving stays paused
+// (window._wsSaveReady=false) until this settles so a stale local copy can't overwrite it.
+function _wsRecoverDraft(){
+  var done=function(){window._wsSaveReady=true;};
+  setTimeout(done,5000); // safety net: never block saving indefinitely
+  try{
+    // A just-generated site that hasn't confirmed its first save yet is authoritative
+    // locally — never let recovery pull an older server draft back over it.
+    if(sessionStorage.getItem('ws_freshgen')==='1'){done();return;}
+    var sid=window._wsSite||localStorage.getItem('ws_site')||'';
+    var k=window._wsKey||localStorage.getItem('ws_key')||'';
+    if(!sid||!k){done();return;}
+    fetch('/load?site='+encodeURIComponent(sid)+'&key='+encodeURIComponent(k)).then(function(r){return r.json();}).then(function(j){
+      try{
+        if(j&&j.html&&j.html.length>100){
+          var localLen=(typeof gHTML==='string'?gHTML.length:0);
+          if(localLen<100||j.html.length>localLen+1000){
+            gHTML=j.html;window._wsLiveHtml=j.html;
+            try{localStorage.setItem('wsh',j.html);}catch(e){}
+            try{undoStack=[gHTML];redoStack=[];refreshHistoryBtns();}catch(e){}
+            try{setPreview(gHTML);}catch(e){}
+            try{toast('Restored your latest saved version \u2713',3000);}catch(e){}
+          }
+        }
+      }catch(e){}
+      done();
+    }).catch(function(){done();});
+  }catch(e){done();}
+}
 function openStudio(html){
+  try{if(typeof html==='string'&&html.length>100)window._wsLiveHtml=html;}catch(e){}
   var m=html.split('<title>')[1],t=m?m.split('</title>')[0]:'Your site';
   document.getElementById('stitle').textContent=t.slice(0,50);
   document.getElementById('studio').classList.add('on');
@@ -6926,7 +7022,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r154';
+const BUILD_ID = '2026-06-10-r160';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
