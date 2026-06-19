@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r143">
-<script>window._wsBuild="2026-06-10-r143";console.log("%c[Websprout] build 2026-06-10-r143 (fix: edits on image-heavy sites no longer hit the model token limit — large inline base64 images are swapped for placeholders before the modify request and restored after; friendlier oversized-site error)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r144">
+<script>window._wsBuild="2026-06-10-r144";console.log("%c[Websprout] build 2026-06-10-r144 (modify edits get up to 90s instead of 60s so theme/restyle requests on larger sites finish instead of timing out; pairs with r143 image-stripping)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -6892,7 +6892,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r143';
+const BUILD_ID = '2026-06-10-r144';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -7365,7 +7365,7 @@ async function doModify(request, env) {
       contents: [{ parts: [{ text: MODIFY + imgNote + '\n\nCurrent HTML:\n' + stripped.html + '\n\nInstruction: ' + body.instruction.trim() }] }],
       generationConfig: { maxOutputTokens: 32768, temperature: 0.5, thinkingConfig: { thinkingBudget: 0 } }
     });
-    const result = await callGemini(keys, mbody);
+    const result = await callGemini(keys, mbody, undefined, 90000, 92000);
     if (result.error) return fail(result.error);
     let cleaned = restoreDataUris(cleanHTML(result.data), stripped.map);
     // Safety check: if result is way shorter than input, Gemini truncated — reject it
