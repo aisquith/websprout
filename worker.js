@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r144">
-<script>window._wsBuild="2026-06-10-r144";console.log("%c[Websprout] build 2026-06-10-r144 (modify edits get up to 90s instead of 60s so theme/restyle requests on larger sites finish instead of timing out; pairs with r143 image-stripping)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r145">
+<script>window._wsBuild="2026-06-10-r145";console.log("%c[Websprout] build 2026-06-10-r145 (reliable save: every edit and photo now triggers a debounced server save ~1.2s later instead of only on a 12s timer, plus a sendBeacon save on tab close/navigate so the last change is never lost)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2287,6 +2287,8 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   }
   setInterval(tick,12000);setTimeout(tick,4000);window._wsTrackNow=tick;
   document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')tick();});
+  function _wsBeacon(){try{var s=site(),k=key(),h=curHtml();if(!s||!h||h.length<100)return;var nm=nameFrom(h);var payload=JSON.stringify({siteId:s,key:k,html:h,name:nm});if(navigator.sendBeacon){var blob=new Blob([payload],{type:'application/json'});if(navigator.sendBeacon('/save',blob)){lastSite=s;lastHtml=h;upsert(s,k,nm);return;}}try{fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},body:payload,keepalive:true});lastSite=s;lastHtml=h;upsert(s,k,nm);}catch(e){}}catch(e){}}
+  window.addEventListener('pagehide',_wsBeacon);window.addEventListener('beforeunload',_wsBeacon);
   var modal=document.getElementById('mySitesModal'),listEl=document.getElementById('msList');
   function fmt(ts){try{return new Date(ts).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});}catch(e){return '';}}
   function render(){
@@ -2467,12 +2469,18 @@ function autoSyncLive(){
     },1600);
   }catch(e){}
 }
+var _wsSaveTimer=null;
+function scheduleSave(){
+  if(_wsSaveTimer)clearTimeout(_wsSaveTimer);
+  _wsSaveTimer=setTimeout(function(){ try{ if(window._wsTrackNow)window._wsTrackNow(); }catch(e){} },1200);
+}
 function pushUndo(html){
   undoStack.push(html);
   if(undoStack.length>10)undoStack.shift();
   redoStack=[]; // a new edit invalidates the redo history
   refreshHistoryBtns();
   autoSyncLive();
+  scheduleSave();
 }
 
 function refreshHistoryBtns(){
@@ -2499,6 +2507,7 @@ function doUndo(){
   addMsg('ai','<< Undone! Restored previous version.');
   toast('<< Undone - previous version restored');
   autoSyncLive();
+  scheduleSave();
 }
 
 function doRedo(){
@@ -2514,6 +2523,7 @@ function doRedo(){
   addMsg('ai','>> Redone! Re-applied that change.');
   toast('>> Redone - change re-applied');
   autoSyncLive();
+  scheduleSave();
 }
 
 // -- Edit counter -----------------------------------------------
@@ -6892,7 +6902,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r144';
+const BUILD_ID = '2026-06-10-r145';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
