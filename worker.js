@@ -14,7 +14,7 @@ const SUPPORT_EMAIL = 'michael.aisquith@gmail.com';
 // scrolling into view (rescuing a broken or absent observer), so scroll-reveal and
 // entrance animations play normally while a stuck animation can never leave a blank
 // page. Skips positioned overlays (modals, menus, dropdowns) so hidden UI keeps working.
-const REVEAL_SCRIPT = '<scr'+'ipt id="_wsReveal">(function(){var SEL="section,header,footer,main,article,aside,div,nav,h1,h2,h3,h4,h5,h6,p,img,ul,ol,li,figure,blockquote,span,a,button";function inflow(el){var p=getComputedStyle(el).position;return !(p==="fixed"||p==="absolute");}function hidden(el){var s=getComputedStyle(el);return parseFloat(s.opacity)<0.05||s.visibility==="hidden";}function show(el){el.style.setProperty("opacity","1","important");el.style.setProperty("visibility","visible","important");el.style.setProperty("transform","none","important");}function base(){var de=document.documentElement;if(de&&parseFloat(getComputedStyle(de).opacity)<0.05)de.style.opacity="1";var b=document.body;if(b){if(parseFloat(getComputedStyle(b).opacity)<0.05)b.style.opacity="1";if(getComputedStyle(b).visibility==="hidden")b.style.visibility="visible";}}function arm(){base();var els=document.body?document.body.querySelectorAll(SEL):[];if("IntersectionObserver" in window){var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){var t=en.target;io.unobserve(t);setTimeout(function(){if(inflow(t)&&hidden(t))show(t);},1700);}});},{threshold:0.01,rootMargin:"0px 0px -8% 0px"});for(var i=0;i<els.length;i++){try{if(inflow(els[i])&&hidden(els[i]))io.observe(els[i]);}catch(e){}}}else{for(var j=0;j<els.length;j++){try{if(inflow(els[j])&&hidden(els[j]))show(els[j]);}catch(e){}}}}function sweep(){base();var els=document.body?document.body.querySelectorAll(SEL):[];var vh=window.innerHeight||800;for(var k=0;k<els.length;k++){try{if(inflow(els[k])&&hidden(els[k])){var r=els[k].getBoundingClientRect();if(r.top<vh)show(els[k]);}}catch(e){}}}base();if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",arm);}else{arm();}setTimeout(sweep,6000);window.addEventListener("load",function(){setTimeout(sweep,3500);});})();</scr'+'ipt>';
+const REVEAL_SCRIPT = '<scr'+'ipt id="_wsReveal">(function(){var SEL="section,header,footer,main,article,aside,div,nav,h1,h2,h3,h4,h5,h6,p,img,ul,ol,li,figure,blockquote,span,a,button";function inflow(el){var p=getComputedStyle(el).position;return !(p==="fixed"||p==="absolute");}function hidden(el){var s=getComputedStyle(el);return parseFloat(s.opacity)<0.05||s.visibility==="hidden";}function show(el){el.style.setProperty("opacity","1","important");el.style.setProperty("visibility","visible","important");el.style.setProperty("transform","none","important");}function base(){var de=document.documentElement;if(de&&parseFloat(getComputedStyle(de).opacity)<0.05)de.style.opacity="1";var b=document.body;if(b){if(parseFloat(getComputedStyle(b).opacity)<0.05)b.style.opacity="1";if(getComputedStyle(b).visibility==="hidden")b.style.visibility="visible";}}function arm(){base();var els=document.body?document.body.querySelectorAll(SEL):[];if("IntersectionObserver" in window){var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){var t=en.target;io.unobserve(t);setTimeout(function(){if(inflow(t)&&hidden(t))show(t);},1700);}});},{threshold:0.01,rootMargin:"0px 0px -8% 0px"});for(var i=0;i<els.length;i++){try{if(inflow(els[i])&&hidden(els[i]))io.observe(els[i]);}catch(e){}}}else{for(var j=0;j<els.length;j++){try{if(inflow(els[j])&&hidden(els[j]))show(els[j]);}catch(e){}}}}function sweep(){base();var els=document.body?document.body.querySelectorAll(SEL):[];var vh=window.innerHeight||800;for(var k=0;k<els.length;k++){try{if(inflow(els[k])&&hidden(els[k])){var r=els[k].getBoundingClientRect();if(r.top<vh)show(els[k]);}}catch(e){}}}base();if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",arm);}else{arm();}setTimeout(sweep,6000);window.addEventListener("load",function(){setTimeout(sweep,3500);});function rpg(){return document.querySelectorAll(".ws-page");}function rreveal(el){var rs=el.querySelectorAll(SEL);for(var q=0;q<rs.length;q++){try{if(inflow(rs[q])&&hidden(rs[q]))show(rs[q]);}catch(e){}}if(inflow(el)&&hidden(el))show(el);}function rroute(){var ps=rpg();if(!ps.length)return;var hh=location.hash?location.hash.substring(1):"";var tg=hh?document.getElementById(hh):null;if(!tg||!tg.classList||!tg.classList.contains("ws-page"))tg=document.getElementById("page-home")||ps[0];for(var p=0;p<ps.length;p++){ps[p].style.display=(ps[p]===tg)?"":"none";}try{window.scrollTo(0,0);}catch(e){}rreveal(tg);try{if(window.parent&&window.parent!==window)window.parent.postMessage({type:"wsRouteChange"},"*");}catch(e){}}if(document.querySelector(".ws-page")){window.addEventListener("hashchange",rroute);if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",rroute);}else{rroute();}}})();</scr'+'ipt>';
 
 // Bake the reveal net into a finished HTML document (idempotent)
 function withReveal(html){
@@ -95,6 +95,15 @@ The site MUST be search- and share-ready. Set <html lang="en">. In <head>, in or
 ━━━ LOCAL BUSINESS ESSENTIALS ━━━
 For any business that serves customers at a place or by appointment, include a clear, visible "Visit us" / "Hours & location" block (its own section, or part of the contact band) showing the address as "[Your Address]" and hours as "[Your Hours]", plus a directions link that opens a map: <a href="https://maps.google.com/?q=[Your Address]" target="_blank" rel="noopener">Get directions</a> (keep the [Your Address] token in the href so it works the moment the owner fills it in). Do NOT embed a live map iframe — the address is a placeholder at build time, so the directions link is the right call.
 
+━━━ MULTI-PAGE NAVIGATION (optional — a router is built in, so you NEVER write page-switching JavaScript) ━━━
+You MAY split the site into real, separate pages the visitor navigates between (e.g. Home, Services, About, Contact) when the business clearly benefits from it. If you do, follow this EXACT pattern and nothing else:
+- Wrap each page in its own section. Home: <section class="ws-page" id="page-home"> ...home content... </section>. Every OTHER page starts hidden: <section class="ws-page" id="page-services" style="display:none"> ... </section>, <section class="ws-page" id="page-about" style="display:none"> ... </section>, etc.
+- Give every page a unique id beginning with "page-" (page-home, page-about, page-services, page-menu, page-gallery, page-contact, page-pricing). ALWAYS include exactly one id="page-home" — it shows first automatically.
+- Links/buttons that jump to another page use href="#page-XXXX" pointing at an id that EXISTS, e.g. <a href="#page-about">About</a>. Put the nav bar (logo + links) INSIDE every page section so it shows on all pages.
+- A built-in router automatically shows the chosen page, hides the others, scrolls to top, and reveals the content. Do NOT write showPage(), do NOT add navigation click/scroll handlers, do NOT toggle display beyond the initial style="display:none" on non-home pages. Only create the .ws-page sections and the #page-XXXX links — the router handles everything else.
+- Ordinary in-page anchors that scroll to a section on the SAME page still use href="#section-id" as normal — those are not pages.
+KEEP THE SAME TOTAL SIZE as a one-page site (the line target below) — SPLIT the content across 2-4 pages, never multiply it. Simple businesses should stay a single page; only go multi-page when it genuinely helps. Using no .ws-page sections produces a normal single-page site, which is completely fine.
+
 ━━━ TECHNICAL ━━━
 All CSS in one <style> tag. All JS in one <script> tag before </body>. The ONLY permitted external resource is Google Fonts: include ONE <link> in the <head> that loads two complementary font families and actually use them (everything else must be self-contained — no other CDNs, no JS libraries, no remote images). Always include a system fallback in every font-family stack (e.g. ...,system-ui,-apple-system,sans-serif). Never use vh or vw for HEIGHTS (use px or %). opacity:0 is fine as the START of an entrance animation, as long as the element animates to full opacity. End with </body></html>.`;
 
@@ -102,11 +111,7 @@ const MODIFY = `You are an expert front-end developer making precise, surgical e
 
 Return ONLY the complete updated HTML from <!DOCTYPE html> to </html>. No markdown, no backticks, no explanation.
 
-IMPORTANT — this site may use multi-page JS routing with elements like:
-- .page divs with id="page-home", id="page-about" etc
-- showPage() function for navigation
-- .nav-link elements with data-page attributes
-Preserve ALL routing logic exactly. Never break the page switching.
+MULTI-PAGE SITES: if the existing HTML uses <section class="ws-page" id="page-..."> blocks with href="#page-..." links, it is a multi-page site driven by a built-in router. PRESERVE that structure exactly — keep every .ws-page section with its id, keep non-home pages starting with style="display:none", and keep page-home present and shown. Never merge the pages into one long page, never write showPage()/router/navigation JS, and make each edit inside the correct page. To add a new page, copy the pattern: a new <section class="ws-page" id="page-XXXX" style="display:none"> plus an href="#page-XXXX" link to it.
 
 IMAGE SECTIONS — critical rule:
 If the user asks to add a photo section, gallery, image area, team photos, or anything involving images, you MUST use this exact format for every image placeholder. This is required — users click these boxes to upload their own photos:
@@ -179,8 +184,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r152">
-<script>window._wsBuild="2026-06-10-r152";console.log("%c[Websprout] build 2026-06-10-r152 (fix generation timeouts: each site now gets 1-2 recipe-built specialty features instead of 2-3, cutting output length back under the Flash time window while keeping full between-site variety)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r153">
+<script>window._wsBuild="2026-06-10-r153";console.log("%c[Websprout] build 2026-06-10-r153 (optional real multi-page sites: the model can wrap pages in <section class=ws-page id=page-*> and link with href=#page-*; a bulletproof built-in router shows/hides pages and is completely inert on single-page sites so nothing existing changes)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2687,6 +2692,7 @@ function setPreview(html){
       // would resolve to websprout.app and load the app, so we keep them in-page: scroll to the matching
       // section, or fall back to the contact form so the button always does something.
       'if((h.indexOf(\"http://\")===0||h.indexOf(\"https://\")===0)&&h.indexOf(\"websprout.app\")===-1){try{window.open(h,\"_blank\",\"noopener\");}catch(err){}return;}'+
+      'if(h.length>1&&h.charAt(0)===\"#\"){var _pg=document.getElementById(h.slice(1));if(_pg&&_pg.className&&(\" \"+_pg.className+\" \").indexOf(\" ws-page \")>-1){try{location.hash=h;}catch(_e){}return;}}'+
       'try{var t=(h.length>1&&h.charAt(0)===\"#\")?document.getElementById(h.slice(1)):null;if(!t)t=document.querySelector(\"form\");if(t&&t.scrollIntoView)t.scrollIntoView({behavior:\"smooth\"});}catch(err){}'+
     '},true);'+
     // Never let a form submission navigate the preview away (it was loading the whole app inside the preview)
@@ -3898,6 +3904,10 @@ window.addEventListener('message',function(e){
   }
   if(e.data.type==='wsSlotClick'){
     openSlotPicker(e.data.slotId||'image',e.data.label||'Add photo');
+  }
+  if(e.data.type==='wsRouteChange'){
+    var _pf=document.getElementById('pf');
+    if(_pf){try{var _d=_pf.contentDocument||_pf.contentWindow.document;if(_d&&_d.body){var _sh=Math.max(_d.documentElement.scrollHeight,_d.body.scrollHeight);if(_sh>200)_pf.style.height=(_sh+24)+'px';}}catch(_e){}}
   }
 });
 
@@ -6926,7 +6936,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r152';
+const BUILD_ID = '2026-06-10-r153';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
