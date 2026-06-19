@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r142">
-<script>window._wsBuild="2026-06-10-r142";console.log("%c[Websprout] build 2026-06-10-r142 (analytics panel: Manage > Analytics shows total/weekly views, a 7-day views bar chart, lead count and review count with pending-to-approve, plus live status — all from existing endpoints)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r143">
+<script>window._wsBuild="2026-06-10-r143";console.log("%c[Websprout] build 2026-06-10-r143 (fix: edits on image-heavy sites no longer hit the model token limit — large inline base64 images are swapped for placeholders before the modify request and restored after; friendlier oversized-site error)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4542,6 +4542,7 @@ function friendlyErr(e){
   if(!e)return "Hmm, something went wrong — please try again.";
   if(e==="RATE_LIMITED_FREE")return "Google says this key hit a FREE-tier Gemini quota. If you enabled billing, the API key in your Worker most likely belongs to a different Google Cloud project than the billed one — recreate the key under the billing-enabled project and update GEMINI_API_KEY.";
   if(e==="RATE_LIMITED"||e==="rate")return "I'm getting rate-limited by the AI service right now 🌱  Give it a few seconds and try again — if it keeps happening, the free AI quota may just need a minute to reset.";
+  if(/token count exceeds|exceeds the maximum|too large|request payload size/i.test(e))return "Your site has gotten very large for the AI to edit in one pass — usually from several big uploaded photos baked into the page. Try removing or replacing a couple of the largest images, then edit again. (Smaller photos also make your live site load faster.)";
   return e;
 }
 
@@ -6891,7 +6892,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r142';
+const BUILD_ID = '2026-06-10-r143';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -7330,6 +7331,27 @@ Rules:
   } catch(e) { return fail(e.message); }
 }
 
+// Swap large inline base64 images for tiny placeholders before sending HTML to the model,
+// then restore the originals in the response. Keeps image-heavy sites editable without
+// blowing past the model's input-token ceiling. (Tiny data URIs like SVG favicons are left alone.)
+function stripDataUris(html){
+  const map=[];
+  const out=(html||'').replace(/data:image\/[a-z0-9.+\-]+;base64,[A-Za-z0-9+\/=]+/gi, function(m){
+    if(m.length<=400) return m;
+    const tok='data:image/jpeg;base64,WSIMGREF'+map.length+'XEND';
+    map.push(m);
+    return tok;
+  });
+  return { html: out, map: map };
+}
+function restoreDataUris(html, map){
+  let out=html||'';
+  for(let i=0;i<map.length;i++){
+    out = out.split('data:image/jpeg;base64,WSIMGREF'+i+'XEND').join(map[i]);
+  }
+  return out;
+}
+
 async function doModify(request, env) {
   const keys = geminiKeys(env);
   if (!keys.length) return fail('GEMINI_API_KEY not set.');
@@ -7337,13 +7359,15 @@ async function doModify(request, env) {
   try { body = await request.json(); } catch { return fail('Invalid request'); }
   if (!body.html || !body.instruction) return fail('Missing html or instruction');
   try {
+    const stripped = stripDataUris(body.html);
+    const imgNote = stripped.map.length ? '\n\nIMPORTANT: Some image src values are shortened placeholders shaped like data:image/jpeg;base64,WSIMGREF<N>XEND. Keep every such src EXACTLY as written — never alter, complete, shorten, or remove them.' : '';
     const mbody = JSON.stringify({
-      contents: [{ parts: [{ text: MODIFY + '\n\nCurrent HTML:\n' + body.html + '\n\nInstruction: ' + body.instruction.trim() }] }],
+      contents: [{ parts: [{ text: MODIFY + imgNote + '\n\nCurrent HTML:\n' + stripped.html + '\n\nInstruction: ' + body.instruction.trim() }] }],
       generationConfig: { maxOutputTokens: 32768, temperature: 0.5, thinkingConfig: { thinkingBudget: 0 } }
     });
     const result = await callGemini(keys, mbody);
     if (result.error) return fail(result.error);
-    const cleaned = cleanHTML(result.data);
+    let cleaned = restoreDataUris(cleanHTML(result.data), stripped.map);
     // Safety check: if result is way shorter than input, Gemini truncated — reject it
     const minExpected = Math.min(body.html.length * 0.6, 5000);
     if (cleaned.length < minExpected) {
