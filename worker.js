@@ -146,7 +146,7 @@ TYPOGRAPHY IS THE #1 LEVER — be dramatic. Load TWO Google Fonts: a characterfu
 
 A HERO THAT STOPS THE SCROLL — make the hero feel alive with pure CSS (no images required): an animated gradient / aurora / mesh background, OR a few large blurred color "blobs" drifting slowly behind the content, OR a subtle grain/noise texture over a rich gradient. Bold headline, a punchy one-sentence subhead, and two CTAs (primary = solid with a gradient + soft glow; secondary = ghost/outline). Tall and full-bleed (min-height ~640-780px using px, never vh).
 
-MOTION = PREMIUM (tasteful, purposeful) — bring the page to life: staggered scroll-reveal entrances (fade + slide-up) on every major section; rich hover states on cards/buttons (lift + shadow + subtle scale, gradient shift, glow); a shimmer or animated gradient on the primary CTA; at least one slow-scrolling MARQUEE / ticker band (services, taglines, or stats) — built as a SINGLE horizontal line that genuinely scrolls: the wrapper has overflow:hidden, and the inner track uses display:flex; flex-wrap:nowrap; white-space:nowrap; width:max-content and is animated with transform:translateX. Duplicate the item set ONCE only for a seamless loop, and the duplicated items must NEVER wrap onto a second visible row (a non-scrolling marquee that shows its content twice stacked is a bug — fix the CSS so it scrolls on one line). Don't reuse the exact trust-bar stats verbatim in the marquee; and animated count-up numbers for any stats. Transitions 0.3-0.8s; honor prefers-reduced-motion.
+MOTION = PREMIUM (tasteful, purposeful) — bring the page to life: staggered scroll-reveal entrances (fade + slide-up) on every major section; rich hover states on cards/buttons (lift + shadow + subtle scale, gradient shift, glow); a shimmer or animated gradient on the primary CTA; and only if this site's CREATIVE DIRECTION calls for it, a slow-scrolling MARQUEE / ticker band (services, taglines, or stats) — built as a SINGLE horizontal line that genuinely scrolls: the wrapper has overflow:hidden, and the inner track uses display:flex; flex-wrap:nowrap; white-space:nowrap; width:max-content and is animated with transform:translateX. Duplicate the item set ONCE only for a seamless loop, and the duplicated items must NEVER wrap onto a second visible row (a non-scrolling marquee that shows its content twice stacked is a bug — fix the CSS so it scrolls on one line). Don't reuse the exact trust-bar stats verbatim in any marquee. Transitions 0.3-0.8s; honor prefers-reduced-motion.
 
 BREAK THE GRID — never just stack three identical centered cards. Vary the rhythm hard: asymmetric two-column splits (e.g. 5fr/7fr), a BENTO-style grid of different-sized cards for features or highlights, deliberately overlapping elements, oversized faded section numbers (01 / 02 / 03) or giant background words, and full-bleed dark or accent bands that alternate with lighter sections so the page builds dramatic contrast and momentum as you scroll.
 
@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r146">
-<script>window._wsBuild="2026-06-10-r146";console.log("%c[Websprout] build 2026-06-10-r146 (mobile call bar is now OFF by default on every site and owner-controlled via a toggle in Design settings; only appears on phones when switched on; also visitor-dismissible)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r151">
+<script>window._wsBuild="2026-06-10-r151";console.log("%c[Websprout] build 2026-06-10-r151 (Get-your-site menu now explains the deploy options: a first-time hint contrasting easy Publish vs Download/Deploy-to-your-own-hosting, plus a one-line description under every option)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1111,12 +1111,18 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <style>.gs-item{display:block;width:100%;text-align:left;background:none;border:none;color:#fff;padding:10px 12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}.gs-item:hover{background:rgba(45,122,58,.18)}.gs-sub{display:block;font-size:11px;color:rgba(255,255,255,.4);font-weight:400;margin-top:1px}.gs-head{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:rgba(255,255,255,.34);padding:10px 12px 4px}.gs-head:first-child{padding-top:4px}.s-sep{width:1px;height:20px;background:rgba(255,255,255,.1);margin:0 3px;flex-shrink:0;align-self:center}.s-menu{position:absolute;top:calc(100% + 6px);right:0;background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:6px;min-width:218px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:1000}.s-icon{padding:6px 9px}</style>
       <span style="position:relative;display:inline-block">
         <button class="s-btn" id="getSiteBtn" data-needs-site="1" style="background:#2d7a3a;color:#fff;border-color:#2d7a3a;font-weight:700" title="Publish, download or share your site">&#128640; Get your site &#9662;</button>
-        <div id="getSiteMenu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:12px;padding:6px;min-width:212px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:1000">
-          <button class="gs-item" data-act="publish">&#127760; Publish online<span class="gs-sub">Free name.websprout.app address</span></button>
-          <button class="gs-item" data-act="download">&#8595; Download code<span class="gs-sub">Get the full HTML file</span></button>
-          <button class="gs-item" data-act="copy">&#128203; Copy code</button>
-          <button class="gs-item" data-act="deploy">&#128640; Deploy to Netlify / Cloudflare</button>
-          <button class="gs-item" data-act="share">&#128279; Share preview link</button>
+        <div id="getSiteMenu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:12px;padding:6px;min-width:266px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:1000">
+          <div id="getSiteHint" style="display:none;background:rgba(45,122,58,.12);border:1px solid rgba(61,186,82,.28);border-radius:9px;padding:10px 11px;margin-bottom:6px;font-size:11.5px;line-height:1.55;color:rgba(234,242,232,.85)">
+            <div style="font-weight:700;color:#7fe39a;margin-bottom:5px">New here? Two ways to go live:</div>
+            <div style="margin-bottom:5px">&#127760; <b>Publish</b> &mdash; the easy way. An instant free link at <b>name.websprout.app</b>, no setup. Best for sharing fast.</div>
+            <div>&#8595; <b>Download</b> / &#128640; <b>Deploy</b> &mdash; put the site on your <b>own</b> hosting and custom domain. More control, a few extra steps.</div>
+            <div id="getSiteHintX" style="text-align:right;color:#7fe39a;font-weight:700;cursor:pointer;margin-top:8px">Got it &#10003;</div>
+          </div>
+          <button class="gs-item" data-act="publish">&#127760; Publish online<span class="gs-sub">Easiest &mdash; instant free link, no setup</span></button>
+          <button class="gs-item" data-act="download">&#8595; Download code<span class="gs-sub">Raw HTML to host anywhere yourself</span></button>
+          <button class="gs-item" data-act="copy">&#128203; Copy code<span class="gs-sub">Copy the HTML to your clipboard</span></button>
+          <button class="gs-item" data-act="deploy">&#128640; Deploy to Netlify / Cloudflare<span class="gs-sub">Host on your own free account &amp; domain</span></button>
+          <button class="gs-item" data-act="share">&#128279; Share preview link<span class="gs-sub">Private link to show someone first</span></button>
         </div>
       </span>
       <button class="s-btn s-purple" id="unlockBtn">&#10024; Go Pro &middot; $10/mo</button>
@@ -1629,7 +1635,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         </div>
         <div style="display:flex;gap:8px;margin-top:12px">
           <button class="d-step-back" id="nstep2backBtn">← Back</button>
-          <button class="d-step-next" id="nstep2next" id="step2nextBtn">Verify token →</button>
+          <button class="d-step-next" id="step2nextBtn">Verify token →</button>
         </div>
         <div class="d-error" id="tokenError" style="margin-top:8px"></div>
       </div>
@@ -1651,7 +1657,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
           <div class="d-result-sub" style="text-align:center;margin-top:8px">Copy the link and share it! Add a custom domain anytime in your Netlify dashboard for free.</div>
         </div>
         <div class="d-error" id="netlifyError"></div>
-        <button class="d-step-back" id="nstep1nextBtn" style="margin-top:10px">← Back</button>
+        <button class="d-step-back" id="nstep3backBtn" style="margin-top:10px">← Back</button>
       </div>
     </div>
 
@@ -1792,9 +1798,11 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
 (function(){
   var btn=document.getElementById('getSiteBtn'),menu=document.getElementById('getSiteMenu');
   if(btn&&menu){
-    btn.addEventListener('click',function(e){e.stopPropagation();menu.style.display=menu.style.display==='none'?'block':'none';});
+    btn.addEventListener('click',function(e){e.stopPropagation();var show=menu.style.display==='none';menu.style.display=show?'block':'none';if(show){var hint=document.getElementById('getSiteHint');if(hint){var seen='';try{seen=localStorage.getItem('ws_getsite_hint');}catch(_){}hint.style.display=seen?'none':'block';}}});
     document.addEventListener('click',function(){menu.style.display='none';});
     menu.addEventListener('click',function(e){e.stopPropagation();});
+    var gsx=document.getElementById('getSiteHintX');
+    if(gsx)gsx.addEventListener('click',function(e){e.stopPropagation();try{localStorage.setItem('ws_getsite_hint','1');}catch(_){}var h=document.getElementById('getSiteHint');if(h)h.style.display='none';});
     var map={publish:'publishBtn',download:'dlBtn',copy:'copyBtn',deploy:'deployBtn',share:'shareBtn'};
     var items=menu.querySelectorAll('.gs-item');
     for(var i=0;i<items.length;i++){items[i].addEventListener('click',function(){var t=document.getElementById(map[this.getAttribute('data-act')]);if(t)t.click();menu.style.display='none';});}
@@ -3056,14 +3064,14 @@ document.addEventListener('DOMContentLoaded',function(){
   window.validateToken=function(){
     var token=document.getElementById('netlifyToken').value.trim();
     var err=document.getElementById('tokenError');
-    var btn=document.getElementById('nstep2next');
+    var btn=document.getElementById('step2nextBtn');
     if(!token){err.textContent='Please paste your token first.';err.classList.add('on');return;}
     btn.disabled=true;btn.textContent='Checking...';
     err.classList.remove('on');
     fetch('https://api.netlify.com/api/v1/user',{headers:{'Authorization':'Bearer '+token}})
     .then(function(r){return r.json();})
     .then(function(d){
-      btn.disabled=false;btn.textContent='Verify token ->';
+      btn.disabled=false;btn.textContent='Verify token →';
       if(d.email||d.full_name){
         localStorage.setItem('ws_netlify_token',token);
         var saved=localStorage.getItem('ws_netlify_name');
@@ -3076,7 +3084,7 @@ document.addEventListener('DOMContentLoaded',function(){
       }
     })
     .catch(function(){
-      btn.disabled=false;btn.textContent='Verify token ->';
+      btn.disabled=false;btn.textContent='Verify token →';
       err.textContent='Could not verify - check your internet connection and try again.';
       err.classList.add('on');
     });
@@ -6918,7 +6926,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r146';
+const BUILD_ID = '2026-06-10-r151';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -7257,6 +7265,69 @@ async function doWritePost(request, env){
 // Free accounts can generate this many sites before Pro is required. Generation is the real
 // per-use cost (a metered Gemini call), so this both caps spend and creates the upgrade moment.
 const FREE_GEN_LIMIT = 10;
+function pickN(arr, n){
+  var copy = arr.slice(), out = [];
+  for (var i = 0; i < n && copy.length; i++) { out.push(copy.splice(Math.floor(Math.random()*copy.length), 1)[0]); }
+  return out;
+}
+function varietyBrief(){
+  var heroes = [
+    'AURORA HERO: a dark, rich animated gradient/aurora-mesh background with 2-3 large blurred color blobs drifting slowly. Build: absolutely-positioned blurred (filter:blur(60px)) radial blobs animated with @keyframes slowly translating/scaling behind the content; bold light headline on top.',
+    'SPLIT HERO: headline, subhead and CTAs on the left; on the right a framed visual (a stylized stat/quote card, a floating mini UI mockup, or an image slot in a tilted rounded frame). Build: a 2-column grid that stacks on mobile; the right frame uses rounded corners, a soft shadow and a slight rotate for a floating feel.',
+    'TYPEWRITER HERO: the headline ends in a word that types and retypes through 3 rotating phrases. Build: a trailing span; JS holds an array of phrases and types then deletes each character on a timer (type ~70ms, delete ~40ms, pause ~1.2s) with a blinking caret.',
+    'KINETIC GRADIENT HERO: a huge centered headline where 1-2 key words use an ANIMATED moving gradient text fill. Build: those words get background:linear-gradient(...); -webkit-background-clip:text; background-clip:text; color:transparent; with @keyframes animating background-position; minimal background otherwise.',
+    'EDITORIAL HERO: an oversized display headline, lots of whitespace, a thin rule, a small kicker label above, and an asymmetric magazine-like layout.',
+    'SPOTLIGHT HERO: a dark hero where a soft radial light follows the cursor; crisp bright headline. Build: a layer with background:radial-gradient(circle at var(--mx) var(--my), rgba(light,.18), transparent 40%); pointermove on the hero sets --mx/--my.',
+    'DUOTONE IMAGE HERO: a full-bleed image slot covered by a bold duotone overlay with a crisp contrasting headline and one strong CTA. Build: the image slot with an overlay using a two-color linear-gradient at ~0.7 opacity (or mix-blend-mode) for the duotone wash; headline above with guaranteed contrast.',
+    'GRID-MATRIX HERO: a techy hero with a faint animated dot/line grid or a slow scanning beam and a sharp centered headline (great for tech, trades, automotive, fitness). Build: a background layer using repeating-linear-gradient grid lines or a radial dot pattern at low opacity, optionally with a slow translate or a sweeping linear-gradient beam via @keyframes.',
+    'CARD-STACK HERO: headline and CTAs on one side; on the other a small stack of slightly rotated overlapping cards/photos that fan out or straighten on load. Build: 3 absolutely-positioned cards with small different rotate()/offsets that animate to a neat fan or upright on load via transition or @keyframes.'
+  ];
+  var features = [
+    'BEFORE/AFTER SLIDER: a draggable divider that wipes between two stacked images to compare results (great for trades, cleaning, beauty, fitness, dental, design). Build: a relative box of fixed px height with both images absolutely filling it; the TOP image lives in a wrapper with overflow:hidden whose width is a % updated on pointermove/touchmove from the cursor X; a vertical handle bar with a round grip sits at that width; start at 50%.',
+    'COUNT-UP STATS: key numbers count up from 0 when scrolled into view. Build: each number carries a data-target; an IntersectionObserver fires ONCE on enter, then requestAnimationFrame eases textContent from 0 to target over ~1.4s, preserving any suffix like + or %.',
+    'TESTIMONIAL CAROUSEL: one rotating testimonial that auto-advances with dots/arrows. Build: slides in a flex row inside an overflow:hidden frame; a JS index sets transform:translateX(-index*100%); setInterval(5000) advances; dots/arrows set index; clearInterval on mouseenter, restart on mouseleave.',
+    'FLIP CARDS: cards that flip to reveal detail on the back (hover desktop, tap mobile). Build: outer card has perspective:1000px; an inner div with transform-style:preserve-3d transitions to rotateY(180deg) on hover and on a .flipped class toggled by click; front and back absolutely stacked, back pre-rotated rotateY(180deg), both backface-visibility:hidden.',
+    'SPOTLIGHT CARDS: a card grid where a soft radial glow follows the cursor. Build: on pointermove over a card set CSS vars --mx/--my to the cursor offset in px; a ::before with background:radial-gradient(circle at var(--mx) var(--my), accent, transparent) whose opacity rises on hover.',
+    'TILT CARDS: cards that tilt in 3D toward the cursor and spring back. Build: on pointermove read cursor offset from the card center and apply transform:perspective(800px) rotateX(-y*6deg) rotateY(x*6deg); on pointerleave reset transform with a 0.3s transition.',
+    'MARQUEE STRIP: one slow horizontal scrolling band of services/taglines on a single line. Build: an overflow:hidden wrapper; an inner track with display:flex; flex-wrap:nowrap; width:max-content animated via @keyframes translateX(0 to -50%); duplicate the item set EXACTLY once for a seamless loop; it must never wrap to a second row.',
+    'FAQ ACCORDION: clicking a question smoothly opens its answer, one open at a time. Build: each answer panel has max-height:0; overflow:hidden; transition:max-height .35s; clicking the question sets panel.style.maxHeight to its scrollHeight+px and resets the others to 0; rotate a chevron/plus on the open item.',
+    'PRICING TOGGLE: a Monthly/Annual switch that updates prices. Build: a switch toggles an .annual class on the pricing wrapper; each price renders two spans (monthly + annual) and CSS shows only the active one; a sliding knob animates; show a save-X% tag on annual.',
+    'LIGHTBOX GALLERY: a photo grid that opens images large in a dark overlay. Build: thumbnails in a grid; clicking opens a position:fixed inset:0 dark overlay showing the large image with a close button and prev/next that change the shown index; clicking the backdrop or pressing Escape closes it.',
+    'PROGRESS / SKILL BARS: labeled bars or dials that fill to their value on scroll-in. Build: each bar fill starts at width:0 with a width transition; an IntersectionObserver sets the fill width to its data-value % on enter. Dials use conic-gradient(accent calc(value*1%), track 0) revealed the same way.',
+    'SCROLL PROGRESS BAR: a thin accent bar at the very top that fills as you scroll. Build: a fixed top bar; on scroll set its width = scrollY / (document.body.scrollHeight - innerHeight) * 100 + "%".',
+    'STICKY REVEAL: a section whose heading stays pinned while its points animate in. Build: a two-column section where the heading column is position:sticky; top:90px; the other column points each get a reveal class that an IntersectionObserver toggles to fade+slide-in as they pass.',
+    'MAGNETIC CTA: the primary button pulls toward the cursor, then snaps back. Build: on pointermove within the button plus a small padded zone, translate it by cursor-offset*0.3 in x/y; on pointerleave reset transform with a 0.3s ease.',
+    'TABBED SHOWCASE: category tabs that switch content panels. Build: tab buttons carry data-tab ids; clicking sets that button .active (clears siblings) and shows the matching panel while hiding the rest; an underline element animates its left/width to the active tab.',
+    'SPLIT-FLAP BOARD: a headline word or stat that flips through characters like a departure board before settling. Build: split the target text into per-character spans; on scroll-in run a per-span setInterval cycling random A-Z/0-9 about 14-18 times at ~45ms, then clearInterval locking the true character; style as monospace dark tiles with a faint center seam line.',
+    'PARALLAX DEPTH: background layers drift slower than the foreground on scroll for depth. Build: give bg layers data-speed (0.15-0.4); in a scroll handler wrapped in requestAnimationFrame set transform:translate3d(0, scrollY*speed, 0) on each while foreground stays at normal speed; wrap the effect in a prefers-reduced-motion:no-preference check.',
+    'HOVER-REVEAL GRID: a portfolio/team/gallery grid where hovering a tile slides up a detail overlay. Build: each tile is position:relative with the image and an overlay div at transform:translateY(100%);opacity:0; on hover the overlay goes translateY(0);opacity:1 with a .3s transition; toggle a .show class on tap for touch.',
+    'SCROLL-SNAP PANELS: a few full-bleed statement panels that snap into place on scroll. Build: a container with scroll-snap-type:y mandatory and overflow-y:auto where each panel has scroll-snap-align:start and a px min-height; one large centered on-brand sentence per panel.',
+    'IMAGE-FILL HEADLINE: an oversized headline whose letters are filled with a moving gradient or image. Build: a big headline with background:linear-gradient(...) (or url(image)); -webkit-background-clip:text; background-clip:text; color:transparent; animate background-position with @keyframes for slow movement; include a solid fallback color.',
+    'COUNTDOWN TIMER: a live ticking countdown to an event/launch/sale. Build: set a target Date; setInterval(1000) computes remaining days/hours/minutes/seconds and writes them into four labeled boxes; at zero clear the interval and show a final message. Only where the business has a real time element.',
+    'SECTION DOT NAV: a vertical dot rail that tracks and jumps between sections. Build: one fixed dot per section id; an IntersectionObserver adds .active to the dot of the section currently in view; clicking a dot calls scrollIntoView({behavior:"smooth"}) on its section.',
+    'PROCESS STEPPER: numbered steps along a line that light up one-by-one on scroll. Build: steps along a connecting line (a positioned ::before); an IntersectionObserver adds .active/.done to each step as it enters, coloring the number and filling the line up to it.',
+    'GLOW-BORDER CARDS: premium cards with a slowly rotating glowing border. Build: card is position:relative on an opaque background; a ::before slightly larger (inset:-2px) with background:conic-gradient(accent, transparent, accent2, transparent), filter:blur(6px), z-index:-1, animated by @keyframes rotating the gradient or its background-position.'
+  ];
+  var layouts = [
+    'Alternate the visual and text sides down the page in zig-zag rows instead of stacking identical centered blocks.',
+    'Use an asymmetric BENTO grid of mixed-size tiles for the features/services section.',
+    'Present the process / how-it-works as a vertical TIMELINE with connected steps.',
+    'Drop in a bold full-bleed colored statement band with one big sentence between two sections.',
+    'Use generous asymmetric whitespace and varied section heights so the page has rhythm instead of uniform centered blocks.',
+    'In one major section, keep a short heading or label column pinned (sticky) on one side while the matching content scrolls alongside it.',
+    'Let one section pull up over the previous with a rounded top edge and negative margin so sections interlock instead of sitting in flat stacked bands.'
+  ];
+  var h = heroes[Math.floor(Math.random()*heroes.length)];
+  var f = pickN(features, 2 + Math.floor(Math.random()*2));
+  var l = layouts[Math.floor(Math.random()*layouts.length)];
+  return '\n\n=== THIS SITE\'S CREATIVE DIRECTION (make THIS specific site distinct — never fall back to a generic template) ===\n'
+    + 'HERO TREATMENT (build this exact hero style): ' + h + '\n'
+    + 'SIGNATURE INTERACTIVE FEATURES — build ONLY these (skip one only if it truly cannot fit this business; do NOT silently default to a marquee):\n  - ' + f.join('\n  - ') + '\n'
+    + 'LAYOUT FLAVOR: ' + l + '\n'
+    + 'CRITICAL — make each chosen feature ACTUALLY FUNCTION: follow its "Build:" recipe exactly as the proven technique, and write ALL the CSS and JS it needs so it works on load (and on tap for touch). Test it mentally end-to-end. If you genuinely cannot make a feature fully work inline, build a SIMPLER but fully-working version of THAT SAME feature — never a different feature, and never a static placeholder, a dead control, or a fake that only looks like the feature. A feature that truly works beats an ambitious one that does not.\n'
+    + 'Keep everything self-contained inline HTML/CSS/JS that settles into a fully visible state. Choose these features INSTEAD of piling on extra effects, so the page stays tight (~380-520 lines), fast and complete. Two different businesses must never produce the same-looking page.\n';
+}
+
 async function doGenerate(request, env) {
   const _sess = await getSession(request, env);
   if (!_sess) return fail('Please sign in to generate a site.');
@@ -7293,7 +7364,7 @@ async function doGenerate(request, env) {
   }
   try {
     const body2 = JSON.stringify({
-      contents: [{ parts: [{ text: PROMPT + '\n\nUser request: ' + prompt + getNicheDirection(prompt) + '\n\nSTYLE DIRECTION: ' + getStyleDirection(prompt) + '\n\n' + DESIGN_AMBITION + '\n\nCRITICAL RULES:\n1. CONTRAST IS THE #1 PRIORITY: every text element must be instantly readable against the EXACT background behind it — dark text only on light backgrounds, white/near-white text only on dark backgrounds, never dark-on-dark or light-on-light. If the hero background is dark or uses a photo/image slot, the hero headline and subtext MUST be white/near-white. A dark headline on a dark hero is a failure.\n2. Do NOT use vh or viewport-height units for section/hero HEIGHTS — size heights with px or % (e.g. min-height:640px), required for correct rendering. You SHOULD use clamp() with vw for responsive FONT-SIZE so large headings shrink on small screens and never overflow (e.g. font-size:clamp(2rem,6vw,4.5rem)).\n3. Scroll-reveal and entrance animations are ENCOURAGED, but every element MUST animate from hidden TO fully visible — nothing stays hidden. Keep transitions under 0.8s.\n4. ALWAYS end with </body></html> — never leave HTML incomplete.\n5. COMPLETION IS MANDATORY: always finish the entire page through </body></html>. Keep the page TIGHT and FOCUSED — aim for roughly 380-520 lines total, favoring 4-6 strong sections over many and keeping each one concise. A shorter, complete, well-designed page always beats a long or truncated one. 6. NO horizontal overflow: set box-sizing:border-box globally, never let any element be wider than the viewport, and the page must NEVER scroll sideways; headings and long text must wrap (overflow-wrap:break-word) and must never use white-space:nowrap on multi-word text. 7. SPACING: the nav logo must never touch the menu links, and text must never touch the screen edges — use container padding/margins and clear gaps between elements. 8. WORKING INTERACTIVITY: every button and nav link must actually do something — nav links use href="#id" and scroll to a real section that has that id, and the primary CTA points to the contact, quote, or inventory section. Do NOT render any clickable-looking control that does nothing. If you include a hamburger/menu icon, it MUST be hidden on desktop (display:none above ~820px, shown only on mobile) AND wired with a few lines of JS to toggle a real mobile menu of the nav links — never an animated icon with no menu behind it.' }] }],
+      contents: [{ parts: [{ text: PROMPT + '\n\nUser request: ' + prompt + getNicheDirection(prompt) + '\n\nSTYLE DIRECTION: ' + getStyleDirection(prompt) + '\n\n' + DESIGN_AMBITION + varietyBrief() + '\n\nCRITICAL RULES:\n1. CONTRAST IS THE #1 PRIORITY: every text element must be instantly readable against the EXACT background behind it — dark text only on light backgrounds, white/near-white text only on dark backgrounds, never dark-on-dark or light-on-light. If the hero background is dark or uses a photo/image slot, the hero headline and subtext MUST be white/near-white. A dark headline on a dark hero is a failure.\n2. Do NOT use vh or viewport-height units for section/hero HEIGHTS — size heights with px or % (e.g. min-height:640px), required for correct rendering. You SHOULD use clamp() with vw for responsive FONT-SIZE so large headings shrink on small screens and never overflow (e.g. font-size:clamp(2rem,6vw,4.5rem)).\n3. Scroll-reveal and entrance animations are ENCOURAGED, but every element MUST animate from hidden TO fully visible — nothing stays hidden. Keep transitions under 0.8s.\n4. ALWAYS end with </body></html> — never leave HTML incomplete.\n5. COMPLETION IS MANDATORY: always finish the entire page through </body></html>. Keep the page TIGHT and FOCUSED — aim for roughly 380-520 lines total, favoring 4-6 strong sections over many and keeping each one concise. A shorter, complete, well-designed page always beats a long or truncated one. 6. NO horizontal overflow: set box-sizing:border-box globally, never let any element be wider than the viewport, and the page must NEVER scroll sideways; headings and long text must wrap (overflow-wrap:break-word) and must never use white-space:nowrap on multi-word text. 7. SPACING: the nav logo must never touch the menu links, and text must never touch the screen edges — use container padding/margins and clear gaps between elements. 8. WORKING INTERACTIVITY: every button and nav link must actually do something — nav links use href="#id" and scroll to a real section that has that id, and the primary CTA points to the contact, quote, or inventory section. Do NOT render any clickable-looking control that does nothing. If you include a hamburger/menu icon, it MUST be hidden on desktop (display:none above ~820px, shown only on mobile) AND wired with a few lines of JS to toggle a real mobile menu of the nav links — never an animated icon with no menu behind it.' }] }],
       generationConfig: { maxOutputTokens: 32768, temperature: 0.95, thinkingConfig: { thinkingBudget: 3072 } }
     });
     // Generation budget: give Pro a tight window so that if it stalls we can still fall back to the
