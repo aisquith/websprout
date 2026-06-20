@@ -30,7 +30,7 @@ OUTPUT: Raw HTML only, <!DOCTYPE html> to </html>. No markdown, no backticks, no
 ━━━ REQUIRED SECTIONS (include ALL of these) ━━━
 
 1. NAVIGATION — sticky flex nav (display:flex; align-items:center; justify-content:space-between; gap at least 1.5rem). Brand/logo on the left with CLEAR space from the 4-5 links — the logo must never touch or overlap the links. Exactly ONE CTA button on the right — never output two CTA buttons in the nav. Collapse the links into a hamburger menu below 820px. Wrap the brand/logo text in a tag carrying the attribute data-ws-field="brand".
-2. HERO — dramatic full-width section. Large RESPONSIVE headline using font-size:clamp(2rem,6vw,4.5rem) so it scales down on phones and NEVER overflows or gets clipped; weight 900; letter-spacing -2px; the headline MUST be allowed to wrap onto multiple lines (never white-space:nowrap). Subheadline. Two CTA buttons. Keep generous side padding so text never touches the screen edges. All hero text must strongly contrast with the hero background: if the hero background is dark or uses a photo/image slot, the headline and subtext are white/near-white (with a dark overlay over any photo) — never dark text on a dark hero.
+2. HERO — dramatic full-width section. Large RESPONSIVE headline using font-size:clamp(2rem,6vw,4.5rem) so it scales down on phones and NEVER overflows or gets clipped; weight 900; letter-spacing -2px; the headline MUST be allowed to wrap onto multiple lines (never white-space:nowrap). Subheadline. Two CTA buttons. Let the hero content float cleanly on the section background - never wrap the headline, subheadline or buttons in a visible card, panel or bordered box; they sit directly on the background. Keep generous side padding so text never touches the screen edges. All hero text must strongly contrast with the hero background: if the hero background is dark or uses a photo/image slot, the headline and subtext are white/near-white (with a dark overlay over any photo) — never dark text on a dark hero.
 3. TRUST/STATS BAR — a SINGLE horizontal strip with 3-4 real stats or trust signals specific to this business type, shown ONCE. Never repeat the same stat twice and never stack a second identical copy of the bar. On phones the items wrap cleanly into a column. If you make this a scrolling ticker, build it exactly per the MARQUEE rule below.
 4. SERVICES/FEATURES — 3-4 detailed cards. Each has an icon, bold title, 2-3 sentence description. Real content, not generic filler.
 5. ABOUT/STORY — two column layout. Left: compelling brand narrative. Right: 4 stats in a 2x2 grid with big bold numbers.
@@ -86,6 +86,7 @@ The site MUST have clearly visible motion — never a static page:
 - ON LOAD: the hero headline, subheadline and buttons animate in with a staggered fade + slide-up using CSS @keyframes (translateY(24px) to 0, opacity 0 to 1, about 0.6s, with increasing animation-delay per element). These play immediately on page load.
 - ON SCROLL: every major section and card reveals with a fade + slide-up as it enters the viewport. Implement it robustly: a .reveal class set to opacity:0; transform:translateY(28px); transition:opacity .7s ease, transform .7s ease, plus a .reveal.is-visible class set to opacity:1; transform:none — then an IntersectionObserver (threshold around 0.15) that adds is-visible to each .reveal as it scrolls into view. Stagger grouped cards with transition-delay. Put the .reveal class on sections, cards, and major blocks.
 - HOVER: cards lift (translateY(-6px)) with a larger shadow; buttons shift color or scale; nav links get a subtle underline-slide. Keep hover transitions 0.2-0.3s.
+- PREMIUM CTA BUTTONS: primary buttons feel tactile and floating - give them a soft drop shadow so they lift off the background, a gentle hover lift, and a springy press animation. Use transition:transform .18s cubic-bezier(.34,1.56,.64,1) and an :active rule that scales to about .96 with translateY(1px), so the button visibly depresses and springs back when tapped. Wrap this in @media(prefers-reduced-motion:reduce){ transition:none } too.
 - Mobile hamburger toggles the nav; anchor links smooth-scroll; FAQ accordion if included; form validation with a success state.
 Animations must ENHANCE and ALWAYS settle into a fully visible state — never leave anything permanently hidden. Keep entrance transitions under 0.8s.
 
@@ -179,8 +180,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r167">
-<script>window._wsBuild="2026-06-10-r167";console.log("%c[Websprout] build 2026-06-10-r167 (admin Builds now counts ALL generations including Pro and owner via a new per-account bcount counter, seeded from the historical free count so nothing is lost; the free-build limit is unchanged)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r168">
+<script>window._wsBuild="2026-06-10-r168";console.log("%c[Websprout] build 2026-06-10-r168 (premium polish: app CTA buttons now spring/depress on press; and the generator is told to keep hero content frameless (no box) and give CTAs a floating shadow + tactile press animation)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -238,8 +239,9 @@ nav{position:sticky;top:0;z-index:100;height:58px;background:rgba(6,13,5,.9);bac
 /* accessibility effects */
 html.ws-rm *,html.ws-rm *::before,html.ws-rm *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}
 html.ws-focus :focus{outline:2px solid #4ade80 !important;outline-offset:2px}
-.nav-cta{background:#2d7a3a;color:#fff;padding:8px 18px;border-radius:7px;font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.nav-cta{background:#2d7a3a;color:#fff;padding:8px 18px;border-radius:7px;font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:transform .2s cubic-bezier(.34,1.5,.64,1),background .15s,box-shadow .15s;white-space:nowrap}
 .nav-cta:hover{background:#3dba52;transform:translateY(-1px)}
+.nav-cta:active{transform:scale(.94)}
 
 /* ---- HERO ---- */
 .hero{padding:72px 5vw 60px;text-align:center;position:relative;overflow:hidden;background:#060d05}
@@ -305,8 +307,9 @@ textarea.dark-input{resize:vertical;min-height:76px;line-height:1.6}
 .s-row{display:flex;flex-direction:column;gap:2px}
 .s-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.6px}
 .s-val{font-size:13px;color:rgba(255,255,255,.7);font-weight:500}
-.gen-btn{background:linear-gradient(135deg,#4ade80 0%,#22c55e 48%,#16a34a 100%);color:#06210f;padding:12px 28px;border-radius:10px;font-size:15px;font-weight:800;border:none;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;transition:all .18s;box-shadow:0 6px 22px -4px rgba(34,197,94,.5)}
+.gen-btn{background:linear-gradient(135deg,#4ade80 0%,#22c55e 48%,#16a34a 100%);color:#06210f;padding:12px 28px;border-radius:10px;font-size:15px;font-weight:800;border:none;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;transition:transform .22s cubic-bezier(.34,1.55,.64,1),box-shadow .2s,filter .2s;box-shadow:0 6px 22px -4px rgba(34,197,94,.5)}
 .gen-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 30px -6px rgba(34,197,94,.7);filter:brightness(1.05)}
+.gen-btn:active:not(:disabled){transform:translateY(0) scale(.97);box-shadow:0 3px 12px -4px rgba(34,197,94,.45)}
 .gen-btn:disabled{opacity:.5;cursor:not-allowed}
 .loading{display:none;padding:32px 22px;text-align:center}
 .loading.on{display:block}
@@ -4963,6 +4966,7 @@ h1{font-family:'Cabinet Grotesk',sans-serif;font-size:2.5rem;font-weight:900;let
 p{color:rgba(255,255,255,.6);font-size:16px;line-height:1.6;margin-bottom:2rem}
 .btn{display:inline-block;background:#2d7a3a;color:#fff;padding:16px 36px;border-radius:100px;font-size:16px;font-weight:700;text-decoration:none;transition:all .2s}
 .btn:hover{background:#4aaa57;transform:translateY(-2px)}
+.btn:active{transform:translateY(0) scale(.97)}
 .sub{margin-top:1.5rem;font-size:13px;color:rgba(255,255,255,.3)}
 </style>
 </head>
@@ -7048,7 +7052,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r167';
+const BUILD_ID = '2026-06-10-r168';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
