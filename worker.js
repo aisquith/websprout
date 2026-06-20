@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r161">
-<script>window._wsBuild="2026-06-10-r161";console.log("%c[Websprout] build 2026-06-10-r161 (Coffee shop example now loads an instant preloaded sample site with real photos and full sections, shown with a Preloaded sample hint banner; other examples still build live for now)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r162">
+<script>window._wsBuild="2026-06-10-r162";console.log("%c[Websprout] build 2026-06-10-r162 (coffee sample: lighter hero photo with explicit background-size cover and a bounded hero height so the large background image no longer breaks the layout)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -5890,7 +5890,7 @@ const SAMPLE_COFFEE = `<!DOCTYPE html>
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Fern & Flour — Neighborhood Coffee & Bakery">
 <meta name="twitter:description" content="Small-batch espresso and pastries baked fresh every morning.">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"CafeOrCoffeeShop","name":"Fern & Flour","description":"Cozy neighborhood coffee shop and bakery serving small-batch espresso and pastries baked fresh daily.","servesCuisine":"Coffee, Bakery","priceRange":"$$","telephone":"[Your Phone]","email":"[your@email.com]","address":{"@type":"PostalAddress","streetAddress":"[Your Address]"},"openingHours":"[Your Hours]"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"CafeOrCoffeeShop","name":"Fern & Flour","description":"Cozy neighborhood coffee shop and bakery serving small-batch espresso and pastries baked fresh daily.","servesCuisine":"Coffee, Bakery","priceRange":"$","telephone":"[Your Phone]","email":"[your@email.com]","address":{"@type":"PostalAddress","streetAddress":"[Your Address]"},"openingHours":"[Your Hours]"}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -5918,8 +5918,8 @@ const SAMPLE_COFFEE = `<!DOCTYPE html>
   .nav-links a:hover{color:var(--ink)}
   @media(max-width:760px){.nav-links{display:none}}
 
-  .hero{position:relative;min-height:88vh;display:flex;align-items:center;color:#fff;overflow:hidden}
-  .hero-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1600&q=80') center/cover}
+  .hero{position:relative;min-height:500px;height:76vh;max-height:680px;display:flex;align-items:center;color:#fff;overflow:hidden}
+  .hero-bg{position:absolute;inset:0;background-image:url('https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1200&q=70');background-size:cover;background-position:center;background-repeat:no-repeat}
   .hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,rgba(20,13,8,.82),rgba(20,13,8,.42))}
   .hero .wrap{position:relative;z-index:2;padding-top:80px;padding-bottom:80px}
   .eyebrow{display:inline-block;text-transform:uppercase;letter-spacing:.18em;font-size:12.5px;font-weight:600;color:#f0c79a;margin-bottom:20px}
@@ -6080,9 +6080,9 @@ const SAMPLE_COFFEE = `<!DOCTYPE html>
       <p>Pull up a chair — this is the kind of morning we're after.</p>
     </div>
     <div class="g-grid">
-      <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=700&q=80" alt="A latte with leaf latte art in a ceramic cup">
-      <img src="https://images.unsplash.com/photo-1453614512568-c4024d13c247?auto=format&fit=crop&w=700&q=80" alt="A slow pour-over coffee being brewed">
-      <img src="https://images.unsplash.com/photo-1572231086568-6984943e6629?auto=format&fit=crop&w=700&q=80" alt="The warm interior of the coffee shop with hanging plants">
+      <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=640&q=70" alt="A latte with leaf latte art in a ceramic cup">
+      <img src="https://images.unsplash.com/photo-1453614512568-c4024d13c247?auto=format&fit=crop&w=640&q=70" alt="A slow pour-over coffee being brewed">
+      <img src="https://images.unsplash.com/photo-1572231086568-6984943e6629?auto=format&fit=crop&w=640&q=70" alt="The warm interior of the coffee shop with hanging plants">
     </div>
   </div>
 </section>
@@ -6090,7 +6090,7 @@ const SAMPLE_COFFEE = `<!DOCTYPE html>
 <section id="story">
   <div class="wrap">
     <div class="about">
-      <img src="https://images.unsplash.com/photo-1545418314-7ce0b9b53901?auto=format&fit=crop&w=900&q=80" alt="Barista pulling a shot on the espresso machine">
+      <img src="https://images.unsplash.com/photo-1545418314-7ce0b9b53901?auto=format&fit=crop&w=800&q=72" alt="Barista pulling a shot on the espresso machine">
       <div>
         <span class="eyebrow">Our story</span>
         <h2>Built on good beans and better neighbors</h2>
@@ -7329,7 +7329,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r161';
+const BUILD_ID = '2026-06-10-r162';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
