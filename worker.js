@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r165">
-<script>window._wsBuild="2026-06-10-r165";console.log("%c[Websprout] build 2026-06-10-r165 (fewer generation timeouts: trimmed the model thinking budget so output starts sooner, and gave Flash generation a few more seconds (91s/94s, still under the edge limit) before the took-too-long error)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r167">
+<script>window._wsBuild="2026-06-10-r167";console.log("%c[Websprout] build 2026-06-10-r167 (admin Builds now counts ALL generations including Pro and owner via a new per-account bcount counter, seeded from the historical free count so nothing is lost; the free-build limit is unchanged)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -825,7 +825,8 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
   #signInBtn.is-authed .auth-ava{display:inline-flex}
 }
 </style>
-<script>try{var _wsDE=document.documentElement;if(localStorage.getItem('ws_rm')==='1')_wsDE.classList.add('ws-rm');if(localStorage.getItem('ws_focus')==='1')_wsDE.classList.add('ws-focus');}catch(_e){}</script>
+<script>try{var _wsDE=document.documentElement;if(localStorage.getItem('ws_rm')==='1')_wsDE.classList.add('ws-rm');if(localStorage.getItem('ws_focus')==='1')_wsDE.classList.add('ws-focus');}catch(_e){}
+window.wsClearSiteState=function(){try{var _keep={ws_rm:1,ws_focus:1,ws_theme:1,ws_edhint:1};var _rm=[];for(var _i=0;_i<localStorage.length;_i++){var _k=localStorage.key(_i);if(_k&&_k.indexOf('ws')===0&&!_keep[_k])_rm.push(_k);}for(var _j=0;_j<_rm.length;_j++)localStorage.removeItem(_rm[_j]);}catch(_e2){}try{sessionStorage.clear();}catch(_e3){}};</script>
 </head>
 <body>
 
@@ -1976,6 +1977,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   var so=$('pfSignOut');
   if(so)so.addEventListener('click',function(){
     if(confirm('Sign out'+((window._wsUser&&window._wsUser.email)?(' of '+window._wsUser.email):'')+'?')){
+      try{if(window.wsClearSiteState)window.wsClearSiteState();}catch(e){}
       fetch('/auth/logout').then(function(){location.href='/';}).catch(function(){location.href='/';});
     }
   });
@@ -2025,6 +2027,13 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   }
   function setAuthUI(me){
     window._wsUser=me;
+    try{
+      if(me&&me.auth&&me.email){
+        var _own=localStorage.getItem('ws_owner');
+        if(_own&&_own!==me.email){if(window.wsClearSiteState)window.wsClearSiteState();location.reload();return;}
+        if(!_own&&localStorage.getItem('wsh'))localStorage.setItem('ws_owner',me.email);
+      }
+    }catch(e){}
     applyAuthBtn($('signInBtn'),me,'');
     applyAuthBtn($('acctBtn'),me,'\uD83D\uDC64 ');
     if(me&&me.pro){try{if(typeof unlocked!=='undefined')unlocked=true;if(typeof applyUnlock==='function')applyUnlock();}catch(e){}}
@@ -3772,7 +3781,7 @@ function doGenerate(){
       }
       var _sk=document.getElementById('skelWrap');if(_sk)_sk.classList.remove('show');var _st=document.getElementById('studio');if(_st)_st.classList.remove('on');document.body.style.overflow='';try{console.error('[Websprout] /generate failed:',r.d.error);}catch(e3){}toast('🌱 '+(r.d.error||'Please try again'),12000);return;
     }
-    gHTML=r.d.html;localStorage.setItem('wsh',gHTML);undoStack=[gHTML];redoStack=[];editCount=0;try{sessionStorage.setItem('ws_freshgen','1');}catch(_fg){}var ec=document.getElementById('editCounter');if(ec)ec.style.display='none';refreshHistoryBtns();document.querySelectorAll('.font-btn.sel').forEach(function(b){b.classList.remove('sel');});var sp=document.getElementById('secPick');if(sp)sp.classList.remove('on');openStudio(gHTML);setTimeout(populateLiveColors,1200);try{if(r.d.siteId){window._wsSite=r.d.siteId;window._wsKey=r.d.formKey;localStorage.setItem('ws_site',r.d.siteId);localStorage.setItem('ws_key',r.d.formKey||'');}if(r.d.inboxUrl){window._wsInbox=r.d.inboxUrl;localStorage.setItem('ws_inbox',r.d.inboxUrl);console.log('%c[Websprout] Form inbox for this site -> '+r.d.inboxUrl,'color:#2d7a3a;font-weight:700');setTimeout(function(){var tl=document.getElementById('toast');if(tl){tl.innerHTML='📬 Form inbox ready — <u style="cursor:pointer">click to open &amp; save the link</u>';tl.classList.add('on');tl.onclick=function(){window.open(r.d.inboxUrl,'_blank');};setTimeout(function(){tl.classList.remove('on');tl.onclick=null;},10000);}},2600);}}catch(e4){}
+    gHTML=r.d.html;localStorage.setItem('wsh',gHTML);try{if(window._wsUser&&window._wsUser.email)localStorage.setItem('ws_owner',window._wsUser.email);}catch(_o){}undoStack=[gHTML];redoStack=[];editCount=0;try{sessionStorage.setItem('ws_freshgen','1');}catch(_fg){}var ec=document.getElementById('editCounter');if(ec)ec.style.display='none';refreshHistoryBtns();document.querySelectorAll('.font-btn.sel').forEach(function(b){b.classList.remove('sel');});var sp=document.getElementById('secPick');if(sp)sp.classList.remove('on');openStudio(gHTML);setTimeout(populateLiveColors,1200);try{if(r.d.siteId){window._wsSite=r.d.siteId;window._wsKey=r.d.formKey;localStorage.setItem('ws_site',r.d.siteId);localStorage.setItem('ws_key',r.d.formKey||'');}if(r.d.inboxUrl){window._wsInbox=r.d.inboxUrl;localStorage.setItem('ws_inbox',r.d.inboxUrl);console.log('%c[Websprout] Form inbox for this site -> '+r.d.inboxUrl,'color:#2d7a3a;font-weight:700');setTimeout(function(){var tl=document.getElementById('toast');if(tl){tl.innerHTML='📬 Form inbox ready — <u style="cursor:pointer">click to open &amp; save the link</u>';tl.classList.add('on');tl.onclick=function(){window.open(r.d.inboxUrl,'_blank');};setTimeout(function(){tl.classList.remove('on');tl.onclick=null;},10000);}},2600);}}catch(e4){}
   })
   .catch(function(e){
     clearInterval(iv);clearTimeout(_to);ld.classList.remove('on');lb.style.display='none';
@@ -6975,11 +6984,16 @@ async function doAdminData(request, env){
   // generations per account
   const genMap={}; let genTotal=0;
   try{ let cur=undefined,g=0; do{ const r=await env.KV.list({ prefix:'gencount:', cursor:cur, limit:1000 }); for(const k of r.keys){ const em=k.name.slice(9); let n=0; try{ n=parseInt(await env.KV.get(k.name)||'0',10)||0; }catch(e){} genMap[em]=n; genTotal+=n; } cur=r.list_complete?null:r.cursor; g++; } while(cur&&g<15); }catch(e){}
+  // total builds across ALL plans; falls back to the historical free count for accounts not yet migrated
+  const bMap={};
+  try{ let cur=undefined,g=0; do{ const r=await env.KV.list({ prefix:'bcount:', cursor:cur, limit:1000 }); for(const k of r.keys){ const em=k.name.slice(7); let n=0; try{ n=parseInt(await env.KV.get(k.name)||'0',10)||0; }catch(e){} bMap[em]=n; } cur=r.list_complete?null:r.cursor; g++; } while(cur&&g<15); }catch(e){}
+  const buildMap={}; let buildTotal=0;
+  { const _u={}; for(const e in genMap)_u[e]=1; for(const e in bMap)_u[e]=1; for(const e in _u){ const v=(bMap[e]!==undefined)?bMap[e]:(genMap[e]||0); buildMap[e]=v; buildTotal+=v; } }
   // accounts
   const users=[]; let cursor=undefined, guard=0;
   do{
     const r = await env.KV.list({ prefix:'user:', cursor, limit:1000 });
-    for(const k of r.keys){ try{ const u=JSON.parse(await env.KV.get(k.name)||'{}'); const em=(u.email||k.name.slice(5)); const src=(u.plan==='pro')?(u.proSource||(u.stripeCustomer?'paid':'comp')):''; users.push({ email:em, name:u.name||'', plan:u.plan||'free', created:u.created||0, source:src, owner: em.toLowerCase()===SUPPORT_EMAIL.toLowerCase(), dev:!!u.dev, gens: genMap[em.toLowerCase()]||0 }); }catch(e){} }
+    for(const k of r.keys){ try{ const u=JSON.parse(await env.KV.get(k.name)||'{}'); const em=(u.email||k.name.slice(5)); const src=(u.plan==='pro')?(u.proSource||(u.stripeCustomer?'paid':'comp')):''; users.push({ email:em, name:u.name||'', plan:u.plan||'free', created:u.created||0, source:src, owner: em.toLowerCase()===SUPPORT_EMAIL.toLowerCase(), dev:!!u.dev, gens: buildMap[em.toLowerCase()]||0 }); }catch(e){} }
     cursor = r.list_complete ? null : r.cursor; guard++;
   } while(cursor && guard<10);
   // leads grouped by siteId
@@ -7004,7 +7018,7 @@ async function doAdminData(request, env){
   pub.sort((a,b)=>(b.updated||0)-(a.updated||0));
   const errors=[];
   try{ const r3=await env.KV.list({ prefix:'clienterr:', limit:1000 }); const names=r3.keys.map(function(k){return k.name;}).sort().reverse().slice(0,60); for(const nm of names){ try{ errors.push(JSON.parse(await env.KV.get(nm)||'{}')); }catch(e){} } }catch(e){}
-  return succeed({ totals:{ accounts:users.length, paid, comped, pro:paid+comped, free, conversion: users.length?Math.round(paid/users.length*1000)/10:0, mrr: paid*10, published:pub.length, generations:genTotal, leads:leadTotal, domains:domains.length, devs, signups7, errors:errors.length, invoices:invoices.length, invoiced:invTotal, feeBilled, feesCollected, feesCount, feesOk }, users, published:pub, errors, domains, invoices: invoices.slice(0,40) });
+  return succeed({ totals:{ accounts:users.length, paid, comped, pro:paid+comped, free, conversion: users.length?Math.round(paid/users.length*1000)/10:0, mrr: paid*10, published:pub.length, generations:buildTotal, leads:leadTotal, domains:domains.length, devs, signups7, errors:errors.length, invoices:invoices.length, invoiced:invTotal, feeBilled, feesCollected, feesCount, feesOk }, users, published:pub, errors, domains, invoices: invoices.slice(0,40) });
 }
 async function doAdminPage(request, env){
   const s = await getSession(request, env);
@@ -7034,7 +7048,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r165';
+const BUILD_ID = '2026-06-10-r167';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -7495,6 +7509,7 @@ async function doGenerate(request, env) {
     finalHtml = withForms(finalHtml, siteId);
     finalHtml = withReviews(finalHtml, siteId);
     const formKey = await siteKey(siteId, env);
+    if (env.KV && _email) { try { let _bcRaw = await env.KV.get('bcount:' + _email); if (_bcRaw === null) { _bcRaw = (await env.KV.get('gencount:' + _email)) || '0'; } await env.KV.put('bcount:' + _email, String((parseInt(_bcRaw, 10) || 0) + 1)); } catch (e) {} }
     if (!_isPaid && env.KV) { try { const _gc2 = parseInt((await env.KV.get('gencount:' + _email)) || '0', 10) || 0; await env.KV.put('gencount:' + _email, String(_gc2 + 1)); } catch (e) {} }
     return succeed({ html: finalHtml, siteId: siteId, formKey: formKey, inboxUrl: 'https://websprout.app/inbox?site=' + siteId + '&key=' + formKey });
   } catch(e) { return fail(e.message); }
