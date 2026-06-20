@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r160">
-<script>window._wsBuild="2026-06-10-r160";console.log("%c[Websprout] build 2026-06-10-r160 (mobile nav: the How it works / Pricing / My sites / Deploy guide / Support links now collapse into a single hamburger dropdown on phones instead of being unreachable; desktop unchanged)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r161">
+<script>window._wsBuild="2026-06-10-r161";console.log("%c[Websprout] build 2026-06-10-r161 (Coffee shop example now loads an instant preloaded sample site with real photos and full sections, shown with a Preloaded sample hint banner; other examples still build live for now)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -221,6 +221,13 @@ nav{position:sticky;top:0;z-index:100;height:58px;background:rgba(6,13,5,.9);bac
 .nav-burger{display:none;border:none;background:transparent;cursor:pointer;padding:6px;align-items:center;justify-content:center;border-radius:8px;line-height:0}
 .nav-burger:hover{background:rgba(255,255,255,.06)}
 .nav-burger svg{display:block}
+.sample-hint{position:fixed;left:50%;top:66px;transform:translateX(-50%);z-index:130;display:none;align-items:center;gap:9px;max-width:calc(100vw - 28px);background:#0b1709;color:#eafff0;border:1px solid rgba(74,222,128,.38);border-radius:12px;padding:10px 12px 10px 14px;font-size:13.5px;line-height:1.35;box-shadow:0 14px 36px rgba(0,0,0,.5)}
+.sample-hint.on{display:flex;animation:shIn .3s ease}
+@keyframes shIn{from{opacity:0;transform:translateX(-50%) translateY(-14px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.sample-hint b{color:#7ef0a6;font-weight:700}
+.sample-hint .sh-ic{font-size:16px;flex-shrink:0}
+.sample-hint .sh-x{background:none;border:none;color:rgba(255,255,255,.55);font-size:20px;line-height:1;cursor:pointer;padding:0 2px;margin-left:2px;flex-shrink:0}
+.sample-hint .sh-x:hover{color:#fff}
 .nav-cta{background:#2d7a3a;color:#fff;padding:8px 18px;border-radius:7px;font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
 .nav-cta:hover{background:#3dba52;transform:translateY(-1px)}
 
@@ -849,7 +856,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
   <div class="ex-wrap">
     <div class="ex-label">New here? Tap an example and watch it build &#8595;</div>
     <div class="ex-row">
-      <button class="ex-chip" data-ex="cozy neighborhood coffee shop and bakery" data-style="warm and friendly"><span class="ex-emoji">&#9749;</span>Coffee shop</button>
+      <button class="ex-chip" data-ex="cozy neighborhood coffee shop and bakery" data-style="warm and friendly" data-sample="coffee"><span class="ex-emoji">&#9749;</span>Coffee shop</button>
       <button class="ex-chip" data-ex="wedding and portrait photography studio" data-style="clean and professional"><span class="ex-emoji">&#128247;</span>Photographer</button>
       <button class="ex-chip" data-ex="personal training and fitness coaching business" data-style="bold and colorful"><span class="ex-emoji">&#128170;</span>Personal trainer</button>
       <button class="ex-chip" data-ex="modern dental clinic" data-style="clean and professional"><span class="ex-emoji">&#129463;</span>Dental clinic</button>
@@ -1067,6 +1074,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   </div>
 </footer>
 <div class="studio" id="studio">
+  <div id="sampleHint" class="sample-hint"><span class="sh-ic">&#128203;</span><span><b>Preloaded sample</b> &mdash; edit anything you like, or tap New to build your own.</span><button id="sampleHintX" class="sh-x" type="button" aria-label="Dismiss">&times;</button></div>
   <div class="s-header">
     <div class="logo-mark" style="width:24px;height:24px;font-size:12px">🌱</div>
     <div class="s-title" id="stitle">Your site</div>
@@ -2853,6 +2861,8 @@ document.addEventListener('DOMContentLoaded',function(){
   // One-click example starter prompts (zero-typing path for first-timers)
   document.querySelectorAll('.ex-chip').forEach(function(chip){
     chip.addEventListener('click',function(){
+      var sid=chip.dataset.sample||'';
+      if(sid){loadSample(sid);return;}
       selectedType=chip.dataset.ex||'';
       selectedStyle=chip.dataset.style||'';
       var cp=document.getElementById('customPrompt');if(cp)cp.value='';
@@ -2866,6 +2876,7 @@ document.addEventListener('DOMContentLoaded',function(){
   ci.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doChat();}});
   document.getElementById('csb').addEventListener('click',doChat);
   var _edx=document.getElementById('edHintX');if(_edx)_edx.addEventListener('click',dismissEdHint);
+  var _shx=document.getElementById('sampleHintX');if(_shx)_shx.addEventListener('click',hideSampleHint);
   document.querySelectorAll('.qe').forEach(function(btn){
     btn.addEventListener('click',function(){document.getElementById('ci').value=btn.dataset.msg;doChat();});
   });
@@ -3681,7 +3692,25 @@ function buildPrompt(){
   return pts.join('. ')||'Build a professional business website';
 }
 
+function showSampleHint(){var h=document.getElementById('sampleHint');if(h)h.classList.add('on');}
+function hideSampleHint(){var h=document.getElementById('sampleHint');if(h)h.classList.remove('on');window._wsIsSample=false;}
+function loadSample(sid){
+  try{if(window.toast)toast('Loading a preloaded sample\u2026');}catch(e){}
+  fetch('/sample?id='+encodeURIComponent(sid)).then(function(r){return r.ok?r.text():Promise.reject(0);}).then(function(html){
+    if(!html||html.length<200)throw 0;
+    gHTML=html;try{localStorage.setItem('wsh',gHTML);}catch(e){}
+    undoStack=[gHTML];redoStack=[];editCount=0;
+    try{sessionStorage.setItem('ws_freshgen','1');}catch(e){}
+    window._wsIsSample=true;
+    try{if(typeof refreshHistoryBtns==='function')refreshHistoryBtns();}catch(e){}
+    var ec=document.getElementById('editCounter');if(ec)ec.style.display='none';
+    openStudio(gHTML);
+    showSampleHint();
+    setTimeout(function(){try{if(typeof populateLiveColors==='function')populateLiveColors();}catch(e){}},1200);
+  }).catch(function(){try{if(window.toast)toast('Could not load the sample \u2014 try Build for free.');}catch(e){}});
+}
 function doGenerate(){
+  hideSampleHint();
   if(!window._wsUser||!window._wsUser.auth){
     try{var _cp=document.getElementById('customPrompt');if(_cp&&_cp.value.trim())localStorage.setItem('ws_pending_prompt',_cp.value);}catch(e){}
     toast('Please sign in first — it takes a few seconds and keeps all your sites in one place. \uD83C\uDF31',5500);
@@ -5589,6 +5618,12 @@ export default {
       if (request.method === 'POST') return doClientLog(request, env);
     }
     if (url.pathname === '/inbox') return new Response(INBOX_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    if (url.pathname === '/sample' && request.method === 'GET') {
+      const _smap = { coffee: SAMPLE_COFFEE };
+      const _sh = _smap[url.searchParams.get('id') || ''];
+      if (!_sh) return new Response('Not found', { status: 404 });
+      return new Response(_sh, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
     if (url.pathname === '/reviews' && request.method === 'GET') return doReviewsPage(request, env);
     if (url.pathname === '/api/reviews/manage') {
       if (request.method === 'OPTIONS') return new Response(null, { headers: formCors() });
@@ -5840,6 +5875,278 @@ function succeed(data) {
 function fail(msg) {
   return new Response(JSON.stringify({ error: msg }), { status: 400, headers: { 'Content-Type': 'application/json' } });
 }
+
+const SAMPLE_COFFEE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fern &amp; Flour — Neighborhood Coffee &amp; Bakery</title>
+<meta name="description" content="Fern & Flour is a cozy neighborhood coffee shop and bakery serving small-batch espresso, pour-overs, and pastries baked fresh every morning. Order online or visit us.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Fern & Flour">
+<meta property="og:title" content="Fern & Flour — Neighborhood Coffee & Bakery">
+<meta property="og:description" content="Small-batch espresso and pastries baked fresh every morning. Order online or stop by.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Fern & Flour — Neighborhood Coffee & Bakery">
+<meta name="twitter:description" content="Small-batch espresso and pastries baked fresh every morning.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"CafeOrCoffeeShop","name":"Fern & Flour","description":"Cozy neighborhood coffee shop and bakery serving small-batch espresso and pastries baked fresh daily.","servesCuisine":"Coffee, Bakery","priceRange":"$$","telephone":"[Your Phone]","email":"[your@email.com]","address":{"@type":"PostalAddress","streetAddress":"[Your Address]"},"openingHours":"[Your Hours]"}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--ink:#2b211a;--cream:#faf6ef;--card:#fffdf9;--accent:#b5743a;--accent-dk:#90561f;--deep:#1f150e;--muted:#6f5f50;--line:rgba(43,33,26,.1)}
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;color:var(--ink);background:var(--cream);line-height:1.6;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,.brand{font-family:'Fraunces',Georgia,serif}
+  a{color:inherit;text-decoration:none}
+  img{display:block;max-width:100%}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+  .btn{display:inline-block;background:var(--accent);color:#fff;font-weight:600;padding:13px 24px;border-radius:999px;font-size:15px;transition:transform .15s,background .15s;border:none;cursor:pointer}
+  .btn:hover{background:var(--accent-dk);transform:translateY(-2px)}
+  .btn.ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.5)}
+  .btn.ghost:hover{background:rgba(255,255,255,.12);border-color:#fff}
+  .btn.dark{background:var(--deep)}
+  .btn.dark:hover{background:#000}
+
+  nav{position:sticky;top:0;z-index:50;background:rgba(250,246,239,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;height:68px;gap:24px}
+  .brand{font-size:23px;font-weight:700;color:var(--deep);letter-spacing:-.5px;margin-right:auto;display:flex;align-items:center;gap:9px}
+  .brand .dot{width:11px;height:11px;border-radius:50%;background:var(--accent)}
+  .nav-links{display:flex;gap:28px;font-size:15px;font-weight:500;color:var(--muted)}
+  .nav-links a:hover{color:var(--ink)}
+  @media(max-width:760px){.nav-links{display:none}}
+
+  .hero{position:relative;min-height:88vh;display:flex;align-items:center;color:#fff;overflow:hidden}
+  .hero-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1600&q=80') center/cover}
+  .hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,rgba(20,13,8,.82),rgba(20,13,8,.42))}
+  .hero .wrap{position:relative;z-index:2;padding-top:80px;padding-bottom:80px}
+  .eyebrow{display:inline-block;text-transform:uppercase;letter-spacing:.18em;font-size:12.5px;font-weight:600;color:#f0c79a;margin-bottom:20px}
+  .hero h1{font-size:clamp(40px,7vw,72px);line-height:1.02;font-weight:700;letter-spacing:-1.5px;max-width:14ch}
+  .hero p{font-size:clamp(17px,2.3vw,21px);max-width:46ch;margin:22px 0 32px;color:rgba(255,255,255,.92)}
+  .hero-cta{display:flex;gap:14px;flex-wrap:wrap}
+  .hero-meta{margin-top:30px;font-size:14.5px;color:rgba(255,255,255,.8)}
+  .hero-meta b{color:#fff;font-weight:600}
+
+  section{padding:88px 0}
+  .sec-head{text-align:center;max-width:620px;margin:0 auto 52px}
+  .sec-head .eyebrow{color:var(--accent)}
+  .sec-head h2{font-size:clamp(30px,4.5vw,44px);font-weight:700;letter-spacing:-1px;color:var(--deep)}
+  .sec-head p{color:var(--muted);margin-top:14px;font-size:17px}
+
+  .values{background:var(--card)}
+  .val-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
+  .val{text-align:center;padding:8px}
+  .val .ic{width:54px;height:54px;border-radius:14px;background:rgba(181,116,58,.12);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 16px}
+  .val h3{font-size:20px;font-weight:600;color:var(--deep);margin-bottom:7px}
+  .val p{color:var(--muted);font-size:15px}
+  @media(max-width:760px){.val-grid{grid-template-columns:1fr;gap:24px}}
+
+  .menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px 56px;max-width:880px;margin:0 auto}
+  .menu-col h3{font-size:15px;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);margin:14px 0 18px;font-family:'Inter',sans-serif;font-weight:600}
+  .m-item{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:13px 0;border-bottom:1px dashed var(--line)}
+  .m-item .nm{font-weight:600;color:var(--ink);font-size:16.5px}
+  .m-item .ds{display:block;font-weight:400;color:var(--muted);font-size:13.5px}
+  .m-item .pr{font-family:'Fraunces',serif;font-weight:600;color:var(--accent-dk);white-space:nowrap;font-size:17px}
+  .menu-cta{text-align:center;margin-top:46px}
+  @media(max-width:760px){.menu-grid{grid-template-columns:1fr;gap:0 0}}
+
+  .gallery{background:var(--deep)}
+  .gallery .sec-head h2{color:#fff}
+  .gallery .sec-head .eyebrow{color:#f0c79a}
+  .gallery .sec-head p{color:rgba(255,255,255,.7)}
+  .g-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .g-grid img{width:100%;height:300px;object-fit:cover;border-radius:14px;transition:transform .35s}
+  .g-grid img:hover{transform:scale(1.03)}
+  @media(max-width:760px){.g-grid{grid-template-columns:1fr 1fr}.g-grid img{height:200px}}
+
+  .about{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+  .about img{width:100%;height:440px;object-fit:cover;border-radius:18px}
+  .about .eyebrow{color:var(--accent)}
+  .about h2{font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:-1px;color:var(--deep);margin-bottom:18px}
+  .about p{color:var(--muted);font-size:16.5px;margin-bottom:16px}
+  @media(max-width:820px){.about{grid-template-columns:1fr;gap:32px}.about img{height:320px;order:-1}}
+
+  .visit{background:var(--card)}
+  .visit-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;max-width:920px;margin:0 auto;align-items:center}
+  .visit h2{font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:-1px;color:var(--deep);margin-bottom:8px}
+  .visit .eyebrow{color:var(--accent)}
+  .hours-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);font-size:15.5px}
+  .hours-row span:first-child{color:var(--muted)}
+  .hours-row span:last-child{font-weight:600}
+  .visit-card{background:var(--cream);border:1px solid var(--line);border-radius:18px;padding:30px}
+  .visit-card .lbl{font-size:12.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);font-weight:600;margin-bottom:6px}
+  .visit-card .big{font-size:18px;font-weight:600;color:var(--deep);margin-bottom:22px}
+  @media(max-width:760px){.visit-grid{grid-template-columns:1fr;gap:32px}}
+
+  .cta-band{background:linear-gradient(120deg,var(--accent-dk),#6e3f15);color:#fff;text-align:center}
+  .cta-band h2{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:-1px;max-width:18ch;margin:0 auto 16px}
+  .cta-band p{font-size:18px;color:rgba(255,255,255,.88);max-width:44ch;margin:0 auto 30px}
+
+  footer{background:var(--deep);color:rgba(255,255,255,.62);padding:54px 0 40px;font-size:14.5px}
+  footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
+  footer .brand{color:#fff;font-size:20px}
+  footer a:hover{color:#fff}
+  .foot-links{display:flex;gap:22px}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a href="#top" class="brand"><span class="dot"></span>Fern &amp; Flour</a>
+    <div class="nav-links">
+      <a href="#menu">Menu</a>
+      <a href="#story">Our story</a>
+      <a href="#visit">Visit</a>
+    </div>
+    <a href="[Your Ordering Link]" target="_blank" rel="noopener" class="btn dark">Order online</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="hero-bg"></div>
+  <div class="wrap">
+    <span class="eyebrow">Neighborhood coffee &amp; bakery</span>
+    <h1>Good mornings start here.</h1>
+    <p>Small-batch espresso, slow pour-overs, and pastries baked fresh before the sun comes up — right around the corner.</p>
+    <div class="hero-cta">
+      <a href="[Your Ordering Link]" target="_blank" rel="noopener" class="btn">Order online</a>
+      <a href="#menu" class="btn ghost">See the menu</a>
+    </div>
+    <div class="hero-meta">Open daily &middot; <b>7am – 6pm</b> &middot; Corner of Maple &amp; 3rd</div>
+  </div>
+</header>
+
+<section class="values">
+  <div class="wrap">
+    <div class="val-grid">
+      <div class="val">
+        <div class="ic">&#9749;</div>
+        <h3>Small-batch roasts</h3>
+        <p>Beans roasted in-house every week and dialed in shot by shot.</p>
+      </div>
+      <div class="val">
+        <div class="ic">&#127838;</div>
+        <h3>Baked fresh daily</h3>
+        <p>Croissants, scones, and sourdough out of the oven each morning.</p>
+      </div>
+      <div class="val">
+        <div class="ic">&#127793;</div>
+        <h3>A cozy corner</h3>
+        <p>Comfy seats, free Wi-Fi, and a window made for slow afternoons.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="menu">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">The menu</span>
+      <h2>What's brewing</h2>
+      <p>A short, seasonal list we actually love. Prices shown are a sample.</p>
+    </div>
+    <div class="menu-grid">
+      <div class="menu-col">
+        <h3>Coffee &amp; espresso</h3>
+        <div class="m-item"><span class="nm">Espresso<span class="ds">Double shot, house blend</span></span><span class="pr">$3.50</span></div>
+        <div class="m-item"><span class="nm">Cortado<span class="ds">Equal parts espresso &amp; milk</span></span><span class="pr">$4.00</span></div>
+        <div class="m-item"><span class="nm">Flat white<span class="ds">Velvety microfoam</span></span><span class="pr">$4.75</span></div>
+        <div class="m-item"><span class="nm">Pour-over<span class="ds">Single origin, ask your barista</span></span><span class="pr">$5.00</span></div>
+        <div class="m-item"><span class="nm">Iced latte<span class="ds">Over slow-melt ice</span></span><span class="pr">$4.75</span></div>
+      </div>
+      <div class="menu-col">
+        <h3>From the bakery</h3>
+        <div class="m-item"><span class="nm">Butter croissant<span class="ds">Laminated, 27 layers</span></span><span class="pr">$3.75</span></div>
+        <div class="m-item"><span class="nm">Almond croissant<span class="ds">Frangipane, toasted almonds</span></span><span class="pr">$4.50</span></div>
+        <div class="m-item"><span class="nm">Morning bun<span class="ds">Cardamom &amp; orange sugar</span></span><span class="pr">$4.25</span></div>
+        <div class="m-item"><span class="nm">Sourdough loaf<span class="ds">48-hour cold ferment</span></span><span class="pr">$7.00</span></div>
+        <div class="m-item"><span class="nm">Seasonal scone<span class="ds">Ask what's in today</span></span><span class="pr">$3.50</span></div>
+      </div>
+    </div>
+    <div class="menu-cta">
+      <a href="[Your Ordering Link]" target="_blank" rel="noopener" class="btn">Order ahead for pickup</a>
+    </div>
+  </div>
+</section>
+
+<section class="gallery">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">In the shop</span>
+      <h2>A little taste</h2>
+      <p>Pull up a chair — this is the kind of morning we're after.</p>
+    </div>
+    <div class="g-grid">
+      <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=700&q=80" alt="A latte with leaf latte art in a ceramic cup">
+      <img src="https://images.unsplash.com/photo-1453614512568-c4024d13c247?auto=format&fit=crop&w=700&q=80" alt="A slow pour-over coffee being brewed">
+      <img src="https://images.unsplash.com/photo-1572231086568-6984943e6629?auto=format&fit=crop&w=700&q=80" alt="The warm interior of the coffee shop with hanging plants">
+    </div>
+  </div>
+</section>
+
+<section id="story">
+  <div class="wrap">
+    <div class="about">
+      <img src="https://images.unsplash.com/photo-1545418314-7ce0b9b53901?auto=format&fit=crop&w=900&q=80" alt="Barista pulling a shot on the espresso machine">
+      <div>
+        <span class="eyebrow">Our story</span>
+        <h2>Built on good beans and better neighbors</h2>
+        <p>Fern &amp; Flour started as a weekend baking habit that got a little out of hand. These days we roast our own beans, laminate our own croissants, and know most of our regulars by name (and by order).</p>
+        <p>Everything is made in small batches, the slow way — because the best part of a coffee shop isn't the rush, it's the regulars who linger.</p>
+        <a href="#visit" class="btn dark" style="margin-top:8px">Come find us</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="visit" id="visit">
+  <div class="wrap">
+    <div class="visit-grid">
+      <div>
+        <span class="eyebrow">Hours &amp; location</span>
+        <h2>Stop by &amp; say hi</h2>
+        <div class="hours-row"><span>Monday – Friday</span><span>7:00am – 6:00pm</span></div>
+        <div class="hours-row"><span>Saturday</span><span>8:00am – 5:00pm</span></div>
+        <div class="hours-row"><span>Sunday</span><span>8:00am – 3:00pm</span></div>
+      </div>
+      <div class="visit-card">
+        <div class="lbl">Find us</div>
+        <div class="big">[Your Address]</div>
+        <div class="lbl">Call ahead</div>
+        <div class="big"><a href="tel:[Your Phone]">[Your Phone]</a></div>
+        <a href="https://maps.google.com/?q=[Your Address]" target="_blank" rel="noopener" class="btn" style="width:100%;text-align:center">Get directions</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-band">
+  <div class="wrap">
+    <h2>The kettle's on.</h2>
+    <p>Order ahead and skip the line, or just walk in — there's always a fresh pot and a warm croissant waiting.</p>
+    <a href="[Your Ordering Link]" target="_blank" rel="noopener" class="btn dark">Order online</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="brand" style="color:#fff">Fern &amp; Flour</div>
+    <div class="foot-links">
+      <a href="#menu">Menu</a>
+      <a href="#story">Our story</a>
+      <a href="#visit">Visit</a>
+      <a href="[Your Ordering Link]" target="_blank" rel="noopener">Order</a>
+    </div>
+    <div>&copy; Fern &amp; Flour. Made with Websprout.</div>
+  </div>
+</footer>
+
+</body>
+</html>
+`;
 
 const INBOX_PAGE = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Dashboard · Websprout</title>
@@ -7022,7 +7329,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r160';
+const BUILD_ID = '2026-06-10-r161';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
