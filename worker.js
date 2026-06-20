@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r163">
-<script>window._wsBuild="2026-06-10-r163";console.log("%c[Websprout] build 2026-06-10-r163 (removed the Tap an example chips section entirely, along with all preloaded-sample code, route, and styles; homepage now leads straight into describe-your-business)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r164">
+<script>window._wsBuild="2026-06-10-r164";console.log("%c[Websprout] build 2026-06-10-r164 (account modal now has a Settings area: working accessibility toggles for reduce-motion and always-on focus outlines (saved per device), plus an honest passwordless sign-in/security note with a Google 2FA link)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -221,6 +221,23 @@ nav{position:sticky;top:0;z-index:100;height:58px;background:rgba(6,13,5,.9);bac
 .nav-burger{display:none;border:none;background:transparent;cursor:pointer;padding:6px;align-items:center;justify-content:center;border-radius:8px;line-height:0}
 .nav-burger:hover{background:rgba(255,255,255,.06)}
 .nav-burger svg{display:block}
+/* account settings */
+.set-sec{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08)}
+.set-h{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);font-weight:700;margin-bottom:10px}
+.set-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 0;cursor:pointer;user-select:none}
+.set-row .set-lbl{display:flex;flex-direction:column;gap:2px;min-width:0}
+.set-row .set-lbl b{font-size:14px;color:#eaf2e8;font-weight:600}
+.set-row .set-lbl em{font-size:12px;color:rgba(255,255,255,.42);font-style:normal;line-height:1.4}
+.set-tog{position:relative;width:40px;height:23px;border-radius:999px;background:rgba(255,255,255,.14);flex-shrink:0;transition:background .18s}
+.set-tog::after{content:'';position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;transition:left .18s}
+.set-tog.on{background:#2d9e4a}
+.set-tog.on::after{left:20px}
+.set-note{font-size:12.5px;color:rgba(255,255,255,.5);line-height:1.55;margin-bottom:10px}
+.set-link{display:inline-block;font-size:13px;color:#7fe39a;text-decoration:none;font-weight:600}
+.set-link:hover{text-decoration:underline}
+/* accessibility effects */
+html.ws-rm *,html.ws-rm *::before,html.ws-rm *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}
+html.ws-focus :focus{outline:2px solid #4ade80 !important;outline-offset:2px}
 .nav-cta{background:#2d7a3a;color:#fff;padding:8px 18px;border-radius:7px;font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
 .nav-cta:hover{background:#3dba52;transform:translateY(-1px)}
 
@@ -808,6 +825,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
   #signInBtn.is-authed .auth-ava{display:inline-flex}
 }
 </style>
+<script>try{var _wsDE=document.documentElement;if(localStorage.getItem('ws_rm')==='1')_wsDE.classList.add('ws-rm');if(localStorage.getItem('ws_focus')==='1')_wsDE.classList.add('ws-focus');}catch(_e){}</script>
 </head>
 <body>
 
@@ -1901,6 +1919,16 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <span id="pfPlanBadge" style="font-size:11px;font-weight:800;letter-spacing:.5px;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);flex-shrink:0">FREE</span>
       </div>
       <div id="pfActions" style="margin-bottom:16px"></div>
+      <div class="set-sec">
+        <div class="set-h">Accessibility</div>
+        <div class="set-row" id="rowMotion"><span class="set-lbl"><b>Reduce motion</b><em>Turn off animations and transitions</em></span><span class="set-tog" id="togMotion"></span></div>
+        <div class="set-row" id="rowFocus"><span class="set-lbl"><b>Always show focus outlines</b><em>Clear keyboard focus rings</em></span><span class="set-tog" id="togFocus"></span></div>
+      </div>
+      <div class="set-sec">
+        <div class="set-h">Sign-in &amp; security</div>
+        <div class="set-note">Websprout uses passwordless sign-in &mdash; your Google account or a one-time email link &mdash; so there&rsquo;s no password to set or change.</div>
+        <a class="set-link" href="https://myaccount.google.com/security" target="_blank" rel="noopener">If you use Google, manage 2-step verification there &#8594;</a>
+      </div>
       <button id="pfMySites" style="width:100%;margin-bottom:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#eaf2e8;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">&#128194; My sites<span id="pfSitesCount" style="font-size:12px;color:rgba(255,255,255,.4);font-weight:500"></span></button>
       <button id="pfSignOut" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.8);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Sign out</button>
     </div>
@@ -1951,6 +1979,18 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       fetch('/auth/logout').then(function(){location.href='/';}).catch(function(){location.href='/';});
     }
   });
+  function setTog(id,key,cls){
+    var el=$(id);if(!el)return;
+    var on=localStorage.getItem(key)==='1';
+    el.classList.toggle('on',on);
+    document.documentElement.classList.toggle(cls,on);
+    var row=$('row'+id.slice(3));
+    function flip(){on=!on;try{localStorage.setItem(key,on?'1':'0');}catch(e){}el.classList.toggle('on',on);document.documentElement.classList.toggle(cls,on);}
+    el.addEventListener('click',flip);
+    if(row)row.addEventListener('click',function(e){if(e.target!==el)flip();});
+  }
+  setTog('togMotion','ws_rm','ws-rm');
+  setTog('togFocus','ws_focus','ws-focus');
 })();
 </script>
 <script>
@@ -6994,7 +7034,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r163';
+const BUILD_ID = '2026-06-10-r164';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
