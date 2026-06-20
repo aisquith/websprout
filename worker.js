@@ -161,7 +161,7 @@ COPY CRAFT — the hero headline states a concrete, bold promise for THIS exact 
 
 BANNED CLICHÉS (instant fail) — avoid the default "AI website" look entirely: a centered hero followed by three identical centered cards; Inter/Roboto/Open Sans as the HEADLINE font; a generic blue-to-purple gradient when the brand is not tech; emoji used as feature icons; "Welcome to [Business]" or "Your trusted partner" headlines; a plain white page with evenly-spaced grey cards and one flat accent; timid undersized headlines. If a draft looks like a free template, commit harder to the concept and the typography.
 
-SIGNATURE MOVES — keep the page feeling premium with these, most of which are pure CSS so they cost little. ALWAYS include: (1) an animated hero background — CSS gradient/aurora/mesh or a few slowly drifting blurred color blobs, NEVER a flat fill; (2) at least one headline word with a gradient text-fill or a bold colored highlight; (3) staggered scroll-reveal (fade + slide-up) on major sections, in your own CSS, every element ending fully visible; (4) rich hover states on cards and buttons (lift + shadow + slight scale or glow); (5) a transparent sticky nav that floats over the hero (the hero background fills behind it, no bar or strip at the top) and gains a blur + subtle background only once you scroll. Add a marquee/ticker, animated count-up stats, or a bento/asymmetric layout ONLY where one fits naturally — do not cram all of them in. A tight, fast, polished page with a strong on-brand palette beats piling on every effect; pick the right concept and commit, but keep it lean.
+SIGNATURE MOVES — keep the page feeling premium with these, most of which are pure CSS so they cost little. ALWAYS include: (1) an animated hero background — CSS gradient/aurora/mesh or a few slowly drifting blurred color blobs, NEVER a flat fill; (2) a striking headline treatment matched to the design personality - an accent or gradient highlight word for expressive or editorial styles, or a bold single-color weight-contrast headline for minimal, geometric, Swiss or brutalist styles; (3) staggered scroll-reveal (fade + slide-up) on major sections, in your own CSS, every element ending fully visible; (4) rich hover states on cards and buttons (lift + shadow + slight scale or glow); (5) a transparent sticky nav that floats over the hero (the hero background fills behind it, no bar or strip at the top) and gains a blur + subtle background only once you scroll. Add a marquee/ticker, animated count-up stats, or a bento/asymmetric layout ONLY where one fits naturally — do not cram all of them in. A tight, fast, polished page with a strong on-brand palette beats piling on every effect; pick the right concept and commit, but keep it lean.
 
 GUARDRAILS — bold but never broken: readability wins every time (text must stay strongly contrasted against its exact background), NEVER cause horizontal scroll, and ALWAYS finish the entire page through the closing body and html tags. If you are running long, simplify a section rather than truncate — a complete, daring, readable page always beats an elaborate broken one.`;
 
@@ -180,8 +180,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r172">
-<script>window._wsBuild="2026-06-10-r172";console.log("%c[Websprout] build 2026-06-10-r172 (generated sites now match the app: prompt aligned to a transparent floating nav over the hero - hero fills behind it (no dark strip), high-contrast text, background fades in on scroll; removed the contradictory solid-bar instruction)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r175">
+<script>window._wsBuild="2026-06-10-r175";console.log("%c[Websprout] build 2026-06-10-r175 (design personality now fits the business theme: detects the kind of business and only picks personalities that suit it - law=editorial/minimal/geometric, gym=bold/geometric, food=editorial/warm/luxe/minimal, etc - while an explicit vibe chip still overrides, and unknown businesses get a safe premium spread)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -849,7 +849,7 @@ window.wsClearSiteState=function(){try{var _keep={ws_rm:1,ws_focus:1,ws_theme:1,
     <li><a href="#" id="supportLink">Support</a></li>
   </ul>
   <button class="nav-burger" id="navBurger" aria-label="Open menu" aria-expanded="false"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></button>
-  <button class="nav-cta" id="signInBtn" style="background:transparent;border:1px solid rgba(255,255,255,.18);color:#fff;margin-right:8px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Sign in</button>
+  <button class="nav-cta" id="signInBtn" style="background:transparent;border:1px solid rgba(255,255,255,.18);color:#fff;margin-right:8px;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Sign in</button>
   <button class="nav-cta" id="navCta">Build for free &#8594;</button>
 </nav>
 
@@ -7055,7 +7055,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r172';
+const BUILD_ID = '2026-06-10-r175';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -7399,7 +7399,7 @@ function pickN(arr, n){
   for (var i = 0; i < n && copy.length; i++) { out.push(copy.splice(Math.floor(Math.random()*copy.length), 1)[0]); }
   return out;
 }
-function varietyBrief(){
+function varietyBrief(prompt){
   var heroes = [
     'AURORA HERO: a dark, rich animated gradient/aurora-mesh background with 2-3 large blurred color blobs drifting slowly. Build: absolutely-positioned blurred (filter:blur(60px)) radial blobs animated with @keyframes slowly translating/scaling behind the content; bold light headline on top.',
     'SPLIT HERO: headline, subhead and CTAs on the left; on the right a framed visual (a stylized stat/quote card, a floating mini UI mockup, or an image slot in a tilted rounded frame). Build: a 2-column grid that stacks on mobile; the right frame uses rounded corners, a soft shadow and a slight rotate for a floating feel.',
@@ -7449,7 +7449,52 @@ function varietyBrief(){
   var h = heroes[Math.floor(Math.random()*heroes.length)];
   var f = pickN(features, 1 + Math.floor(Math.random()*2));
   var l = layouts[Math.floor(Math.random()*layouts.length)];
+  var personalities = [
+    'EDITORIAL SERIF: high-contrast serif display headlines (Playfair Display, Fraunces, Cormorant feel) paired with a clean sans body. Refined, magazine-like, generous whitespace. Simple buttons with little or no corner radius. Elegant and timeless.',
+    'MODERN GEOMETRIC: a crisp geometric/grotesk sans for everything (Inter, Space Grotesk, Satoshi feel). Build hierarchy with weight and size contrast, not a colored word - keep headlines a single solid color. Rounded-rectangle buttons (8-12px radius). Clean, sharp, confident, product-like.',
+    'BOLD CONDENSED: heavy condensed/compressed display headlines, often UPPERCASE (Anton, Oswald, Archivo Black feel) over a clean sans body. Punchy and athletic - big type, tight leading, strong blocks, chunky squared buttons. High-impact and energetic.',
+    'WARM ROUNDED: a friendly rounded sans (Poppins, Quicksand, Nunito feel). Large corner radii everywhere, full pill buttons, soft shadows, generous padding. Approachable, human, welcoming.',
+    'MINIMAL SWISS: a restrained neutral sans, lots of negative space, a tighter type scale, thin hairline rules and dividers. Near-monochrome - the accent color appears only as a single sparing highlight. Square or minimal buttons. Quiet, precise, expensive-feeling.',
+    'BRUTALIST RAW: heavy grotesk type, hard edges and NO rounded corners, thick visible borders and outlines, oversized headlines near the edges, an exposed raw grid, a tight high-contrast palette. Confident and design-forward.',
+    'LUXE DARK: an elegant dark base (deep charcoal or ink) with refined serif or high-contrast sans headlines, a jewel-tone or metallic accent, subtle glows and fine detailing, generous spacing. High-end, premium, boutique.'
+  ];
+  var pp = (prompt || '').toLowerCase();
+  function ofp(a){ return a[Math.floor(Math.random()*a.length)]; }
+  var ED=personalities[0], GEO=personalities[1], BOLD=personalities[2], WARM=personalities[3], MIN=personalities[4], BRUT=personalities[5], LUXE=personalities[6];
+  var per;
+  // 1) An explicit vibe chip is a deliberate choice - honor it.
+  if (pp.indexOf('modern and minimal')>-1) per = ofp([MIN, GEO]);
+  else if (pp.indexOf('bold and colorful')>-1) per = ofp([BOLD, BRUT, WARM]);
+  else if (pp.indexOf('warm and friendly')>-1) per = ofp([WARM, ED]);
+  else if (pp.indexOf('dark and premium')>-1) per = ofp([LUXE, ED, MIN]);
+  else if (pp.indexOf('clean and professional')>-1) per = ofp([GEO, MIN, ED]);
+  else if (pp.indexOf('fun and playful')>-1) per = ofp([WARM, BOLD, BRUT]);
+  // 2) No chip - fit the personality to the KIND of business (theme fit).
+  else if (pp.match(/wedding|bridal|florist|\bflowers\b|event planner/)) per = ofp([ED, WARM, LUXE]);
+  else if (pp.match(/jewel|\bluxury\b|boutique|couture|perfume|fine watch/)) per = ofp([LUXE, ED, MIN]);
+  else if (pp.match(/coffee|cafe|bakery|restaurant|\bfood\b|bistro|brewery|pizza|sushi|burger|dining|\bchef\b|catering|\bbar\b|eatery|grill|taco|ramen|patisserie/)) per = ofp([ED, WARM, LUXE, MIN]);
+  else if (pp.match(/yoga|pilates|wellness|\bspa\b|meditation|mindful|massage|holistic|retreat|therapy|counsel/)) per = ofp([WARM, MIN, ED]);
+  else if (pp.match(/\bgym\b|fitness|workout|crossfit|trainer|bootcamp|athletic|martial|boxing|cycling/)) per = ofp([BOLD, GEO]);
+  else if (pp.match(/saas|software|\bapp\b|platform|dashboard|analytics|\bcrm\b|\bapi\b|developer|\btech\b|startup|\bai\b|\bcloud\b|\bdata\b|cyber|fintech|automation/)) per = ofp([GEO, MIN, LUXE]);
+  else if (pp.match(/portfolio|photograph|\bartist\b|illustrat|creative studio|design studio|architect|filmmaker|\bgallery\b|fashion|\bmodel\b/)) per = ofp([BRUT, ED, MIN, BOLD]);
+  else if (pp.match(/\blaw\b|legal|attorney|lawyer|accountant|accounting|finance|financial|insurance|consult|advisor|notary|\bbank\b/)) per = ofp([ED, MIN, GEO]);
+  else if (pp.match(/real estate|realtor|property|mortgage|\bbroker\b|realty/)) per = ofp([ED, GEO, LUXE]);
+  else if (pp.match(/construction|contractor|plumb|electric|roofing|\bhvac\b|landscap|\bauto\b|mechanic|\btrades\b|welding|excavat|\bmoving\b|junk removal|handyman|pest|paving|concrete/)) per = ofp([BOLD, GEO]);
+  else if (pp.match(/beauty|salon|cosmetic|makeup|\bnail\b|\bhair\b|skincare|aesthetic|\blash\b|barber|\bbrow\b/)) per = ofp([ED, LUXE, WARM]);
+  else if (pp.match(/\bkids?\b|child|daycare|preschool|nursery|\btoy\b|birthday|\bparty\b|playground|tutor|\bschool\b|\bcamp\b/)) per = ofp([WARM, BOLD]);
+  else if (pp.match(/\bmusic\b|\bband\b|\bdj\b|nightclub|festival|concert|record label|podcast|\bclub\b/)) per = ofp([BOLD, BRUT, LUXE]);
+  else if (pp.match(/nonprofit|charity|community|church|ministry|volunteer|foundation|\bdonate\b|outreach/)) per = ofp([WARM, ED, GEO]);
+  // 3) No chip and no recognizable category, but a style word was typed - lean on it.
+  else if (pp.match(/minimal|understated|stripped/)) per = ofp([MIN, GEO]);
+  else if (pp.match(/\bbold\b|colorful|vibrant|energetic/)) per = ofp([BOLD, WARM]);
+  else if (pp.match(/\bwarm\b|friendly|cozy|inviting/)) per = ofp([WARM, ED]);
+  else if (pp.match(/premium|\bluxe\b|elegant|sophisticat|upscale/)) per = ofp([LUXE, ED, MIN]);
+  else if (pp.match(/professional|corporate|formal/)) per = ofp([GEO, MIN, ED]);
+  else if (pp.match(/playful|\bfun\b|quirky|funky/)) per = ofp([WARM, BOLD]);
+  // 4) Truly unknown - safe premium spread (no brutalist on a random business).
+  else per = ofp([ED, GEO, BOLD, WARM, MIN, LUXE]);
   return '\n\n=== THIS SITE\'S CREATIVE DIRECTION (make THIS specific site distinct — never fall back to a generic template) ===\n'
+    + 'DESIGN PERSONALITY (commit to this fully - it drives the TYPOGRAPHY, the corner and shape language, the button style and the overall mood, and is the main thing that makes this site look different from other Websprout sites; where it conflicts with the style direction above, the personality wins on form, type and shape while the style direction wins on the COLOR palette): ' + per + '\n'
     + 'HERO TREATMENT (build this exact hero style): ' + h + '\n'
     + 'HERO CONTENT IS FRAMELESS (critical): the headline, subheadline and CTA buttons sit DIRECTLY on the hero background and float cleanly. NEVER place the hero text inside a card, panel, glass/frosted box, bordered container or filled content box. Correct = a big headline straight on the gradient or photo with the buttons right below it. Wrong = the words grouped inside a translucent rounded card floating in the middle of the hero. (A side visual in a split or card-stack hero MAY be framed - just never box the words themselves.)\n'
     + 'SIGNATURE INTERACTIVE FEATURES — build ONLY these (skip one only if it truly cannot fit this business; do NOT silently default to a marquee):\n  - ' + f.join('\n  - ') + '\n'
@@ -7494,7 +7539,7 @@ async function doGenerate(request, env) {
   }
   try {
     const body2 = JSON.stringify({
-      contents: [{ parts: [{ text: PROMPT + '\n\nUser request: ' + prompt + getNicheDirection(prompt) + '\n\nSTYLE DIRECTION: ' + getStyleDirection(prompt) + '\n\n' + DESIGN_AMBITION + varietyBrief() + '\n\nCRITICAL RULES:\n1. CONTRAST IS THE #1 PRIORITY: every text element must be instantly readable against the EXACT background behind it — dark text only on light backgrounds, white/near-white text only on dark backgrounds, never dark-on-dark or light-on-light. If the hero background is dark or uses a photo/image slot, the hero headline and subtext MUST be white/near-white. A dark headline on a dark hero is a failure.\n2. Do NOT use vh or viewport-height units for section/hero HEIGHTS — size heights with px or % (e.g. min-height:640px), required for correct rendering. You SHOULD use clamp() with vw for responsive FONT-SIZE so large headings shrink on small screens and never overflow (e.g. font-size:clamp(2rem,6vw,4.5rem)).\n3. Scroll-reveal and entrance animations are ENCOURAGED, but every element MUST animate from hidden TO fully visible — nothing stays hidden. Keep transitions under 0.8s.\n4. ALWAYS end with </body></html> — never leave HTML incomplete.\n5. COMPLETION IS MANDATORY: always finish the entire page through </body></html>. Keep the page TIGHT and FOCUSED — aim for roughly 380-520 lines total, favoring 4-6 strong sections over many and keeping each one concise. A shorter, complete, well-designed page always beats a long or truncated one. 6. NO horizontal overflow: set box-sizing:border-box globally, never let any element be wider than the viewport, and the page must NEVER scroll sideways; headings and long text must wrap (overflow-wrap:break-word) and must never use white-space:nowrap on multi-word text. 7. SPACING: the nav logo must never touch the menu links, and text must never touch the screen edges — use container padding/margins and clear gaps between elements. 8. WORKING INTERACTIVITY: every button and nav link must actually do something — nav links use href="#id" and scroll to a real section that has that id, and the primary CTA points to the contact, quote, or inventory section. Do NOT render any clickable-looking control that does nothing. If you include a hamburger/menu icon, it MUST be hidden on desktop (display:none above ~820px, shown only on mobile) AND wired with a few lines of JS to toggle a real mobile menu of the nav links — never an animated icon with no menu behind it.' }] }],
+      contents: [{ parts: [{ text: PROMPT + '\n\nUser request: ' + prompt + getNicheDirection(prompt) + '\n\nSTYLE DIRECTION: ' + getStyleDirection(prompt) + '\n\n' + DESIGN_AMBITION + varietyBrief(prompt) + '\n\nCRITICAL RULES:\n1. CONTRAST IS THE #1 PRIORITY: every text element must be instantly readable against the EXACT background behind it — dark text only on light backgrounds, white/near-white text only on dark backgrounds, never dark-on-dark or light-on-light. If the hero background is dark or uses a photo/image slot, the hero headline and subtext MUST be white/near-white. A dark headline on a dark hero is a failure.\n2. Do NOT use vh or viewport-height units for section/hero HEIGHTS — size heights with px or % (e.g. min-height:640px), required for correct rendering. You SHOULD use clamp() with vw for responsive FONT-SIZE so large headings shrink on small screens and never overflow (e.g. font-size:clamp(2rem,6vw,4.5rem)).\n3. Scroll-reveal and entrance animations are ENCOURAGED, but every element MUST animate from hidden TO fully visible — nothing stays hidden. Keep transitions under 0.8s.\n4. ALWAYS end with </body></html> — never leave HTML incomplete.\n5. COMPLETION IS MANDATORY: always finish the entire page through </body></html>. Keep the page TIGHT and FOCUSED — aim for roughly 380-520 lines total, favoring 4-6 strong sections over many and keeping each one concise. A shorter, complete, well-designed page always beats a long or truncated one. 6. NO horizontal overflow: set box-sizing:border-box globally, never let any element be wider than the viewport, and the page must NEVER scroll sideways; headings and long text must wrap (overflow-wrap:break-word) and must never use white-space:nowrap on multi-word text. 7. SPACING: the nav logo must never touch the menu links, and text must never touch the screen edges — use container padding/margins and clear gaps between elements. 8. WORKING INTERACTIVITY: every button and nav link must actually do something — nav links use href="#id" and scroll to a real section that has that id, and the primary CTA points to the contact, quote, or inventory section. Do NOT render any clickable-looking control that does nothing. If you include a hamburger/menu icon, it MUST be hidden on desktop (display:none above ~820px, shown only on mobile) AND wired with a few lines of JS to toggle a real mobile menu of the nav links — never an animated icon with no menu behind it.' }] }],
       generationConfig: { maxOutputTokens: 32768, temperature: 0.95, thinkingConfig: { thinkingBudget: 1536 } }
     });
     // Generation budget: give Pro a tight window so that if it stalls we can still fall back to the
