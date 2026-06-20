@@ -180,8 +180,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r175">
-<script>window._wsBuild="2026-06-10-r175";console.log("%c[Websprout] build 2026-06-10-r175 (design personality now fits the business theme: detects the kind of business and only picks personalities that suit it - law=editorial/minimal/geometric, gym=bold/geometric, food=editorial/warm/luxe/minimal, etc - while an explicit vibe chip still overrides, and unknown businesses get a safe premium spread)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r186">
+<script>window._wsBuild="2026-06-10-r186";console.log("%c[Websprout] build 2026-06-10-r186 — real store checkout (2% take, subscription-gated)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1124,6 +1124,8 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <button class="s-btn s-ghost" id="shareBtn" data-needs-site="1">&#128279; Share</button>
       <button class="s-btn" id="publishBtn" data-needs-site="1">&#127760; Publish</button>
       <button class="s-btn s-ghost" id="dlBtn" data-needs-site="1">&#8595; Download</button>
+      <button class="s-btn s-ghost" id="multiBtn" data-needs-site="1" title="Build a full multi-page site (About, Menu, Contact...)">&#43; Add pages</button>
+      <button class="s-btn s-ghost" id="prodBtn" data-needs-site="1" title="Manage your shop products">&#128722; Products</button>
       <button class="s-btn s-ghost" id="copyBtn" data-needs-site="1" title="Copy full HTML to clipboard">&#128203; Copy code</button>
       <button class="s-btn s-ghost" id="deployBtn" data-needs-site="1">&#128640; Deploy</button>
       </span>
@@ -1271,7 +1273,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     goBtn.addEventListener('click',function(){
       var s=slugIn.value;if(s.length<3)return;
       goBtn.textContent='Publishing...';goBtn.disabled=true;
-      fetch('/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html:curHtml(),slug:s,siteId:site(),key:key()})}).then(function(r){return r.json();}).then(function(j){
+      fetch('/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html:curHtml(),slug:s,siteId:site(),key:key(),pages:(window._wsPages&&window._wsPages.length>1)?(window.wsSyncPages&&window.wsSyncPages(),window._wsPages.map(function(p){return{path:p.path,html:p.html};})):undefined})}).then(function(r){return r.json();}).then(function(j){
         goBtn.textContent='Publish live \u2192';goBtn.disabled=false;
         if(j.error){avail.innerHTML='<span style="color:#f87171">'+j.error+'</span>';return;}
         try{localStorage.setItem('ws_slug_'+site(),j.slug);}catch(e){}
@@ -1282,7 +1284,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     $('pubOpen').addEventListener('click',function(){window.open(window._wsLive||$('pubUrl').textContent,'_blank');});
     $('pubUpdate').addEventListener('click',function(){
       var btn=this,orig=btn.innerHTML;btn.textContent='Re-publishing...';
-      fetch('/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html:curHtml(),slug:window._wsSlug,siteId:site(),key:key()})}).then(function(r){return r.json();}).then(function(j){btn.innerHTML=orig;if(window.toast)toast(j.error?j.error:'\u2713 Updated — your live site now shows your latest edits.');}).catch(function(){btn.innerHTML=orig;if(window.toast)toast('Could not update — please try again');});
+      fetch('/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html:curHtml(),slug:window._wsSlug,siteId:site(),key:key(),pages:(window._wsPages&&window._wsPages.length>1)?(window.wsSyncPages&&window.wsSyncPages(),window._wsPages.map(function(p){return{path:p.path,html:p.html};})):undefined})}).then(function(r){return r.json();}).then(function(j){btn.innerHTML=orig;if(window.toast)toast(j.error?j.error:'\u2713 Updated — your live site now shows your latest edits.');}).catch(function(){btn.innerHTML=orig;if(window.toast)toast('Could not update — please try again');});
     });
     var unpubBtn=$('pubUnpub');
     if(unpubBtn)unpubBtn.addEventListener('click',function(){
@@ -2531,7 +2533,7 @@ function autoSyncLive(){
       var html=(typeof gHTML==='string'&&gHTML)||localStorage.getItem('wsh')||'';
       if(!html)return;
       var k=window._wsKey||localStorage.getItem('ws_key')||'';
-      fetch('/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html:html,slug:slug,siteId:sid,key:k})}).then(function(r){return r.json();}).then(function(j){
+      fetch('/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html:html,slug:slug,siteId:sid,key:k,pages:(window._wsPages&&window._wsPages.length>1)?(window.wsSyncPages&&window.wsSyncPages(),window._wsPages.map(function(p){return{path:p.path,html:p.html};})):undefined})}).then(function(r){return r.json();}).then(function(j){
         if(j&&!j.error){var n=Date.now();if(n-_wsSyncToastAt>7000){_wsSyncToastAt=n;if(window.toast)toast('\u2713 Live site updated',1600);}}
         else{var n2=Date.now();if(n2-_wsSyncErrAt>20000){_wsSyncErrAt=n2;if(window.toast)toast('Could not update your live site \u2014 use Update in the publish panel',2800);}}
       }).catch(function(){var n3=Date.now();if(n3-_wsSyncErrAt>20000){_wsSyncErrAt=n3;if(window.toast)toast('Could not update your live site \u2014 use Update in the publish panel',2800);}});
@@ -3274,6 +3276,9 @@ document.addEventListener('DOMContentLoaded',function(){
   document.getElementById('dlBtn').addEventListener('click',function(){
     if(!unlocked){reverifyPro('dlBtn','🔒 Go Pro ($10/mo) to download');return;}
     if(!gHTML)return;
+    if(!window._wsDlOk){ if(window.wsDownloadGate){ window.wsDownloadGate(); return; } }
+    window._wsDlOk=false;
+    if(window._wsPages&&window._wsPages.length>1&&window.wsDownloadSite){ if(window.wsDownloadSite()){ return; } }
     var a=document.createElement('a');
     a.href=URL.createObjectURL(new Blob([gHTML],{type:'text/html'}));
     a.download=siteFilename()+'.html';a.click();
@@ -3787,7 +3792,7 @@ function doGenerate(){
       }
       var _sk=document.getElementById('skelWrap');if(_sk)_sk.classList.remove('show');var _st=document.getElementById('studio');if(_st)_st.classList.remove('on');document.body.style.overflow='';try{console.error('[Websprout] /generate failed:',r.d.error);}catch(e3){}toast('🌱 '+(r.d.error||'Please try again'),12000);return;
     }
-    gHTML=r.d.html;localStorage.setItem('wsh',gHTML);try{if(window._wsUser&&window._wsUser.email)localStorage.setItem('ws_owner',window._wsUser.email);}catch(_o){}undoStack=[gHTML];redoStack=[];editCount=0;try{sessionStorage.setItem('ws_freshgen','1');}catch(_fg){}var ec=document.getElementById('editCounter');if(ec)ec.style.display='none';refreshHistoryBtns();document.querySelectorAll('.font-btn.sel').forEach(function(b){b.classList.remove('sel');});var sp=document.getElementById('secPick');if(sp)sp.classList.remove('on');openStudio(gHTML);setTimeout(populateLiveColors,1200);try{if(r.d.siteId){window._wsSite=r.d.siteId;window._wsKey=r.d.formKey;localStorage.setItem('ws_site',r.d.siteId);localStorage.setItem('ws_key',r.d.formKey||'');}if(r.d.inboxUrl){window._wsInbox=r.d.inboxUrl;localStorage.setItem('ws_inbox',r.d.inboxUrl);console.log('%c[Websprout] Form inbox for this site -> '+r.d.inboxUrl,'color:#2d7a3a;font-weight:700');setTimeout(function(){var tl=document.getElementById('toast');if(tl){tl.innerHTML='📬 Form inbox ready — <u style="cursor:pointer">click to open &amp; save the link</u>';tl.classList.add('on');tl.onclick=function(){window.open(r.d.inboxUrl,'_blank');};setTimeout(function(){tl.classList.remove('on');tl.onclick=null;},10000);}},2600);}}catch(e4){}
+    gHTML=r.d.html;window._wsPrompt=(typeof prompt==="string"?prompt:(window._wsPrompt||""));localStorage.setItem('wsh',gHTML);try{if(window._wsUser&&window._wsUser.email)localStorage.setItem('ws_owner',window._wsUser.email);}catch(_o){}undoStack=[gHTML];redoStack=[];editCount=0;try{sessionStorage.setItem('ws_freshgen','1');}catch(_fg){}var ec=document.getElementById('editCounter');if(ec)ec.style.display='none';refreshHistoryBtns();document.querySelectorAll('.font-btn.sel').forEach(function(b){b.classList.remove('sel');});var sp=document.getElementById('secPick');if(sp)sp.classList.remove('on');openStudio(gHTML);setTimeout(populateLiveColors,1200);try{if(r.d.siteId){window._wsSite=r.d.siteId;window._wsKey=r.d.formKey;localStorage.setItem('ws_site',r.d.siteId);localStorage.setItem('ws_key',r.d.formKey||'');}if(r.d.inboxUrl){window._wsInbox=r.d.inboxUrl;localStorage.setItem('ws_inbox',r.d.inboxUrl);console.log('%c[Websprout] Form inbox for this site -> '+r.d.inboxUrl,'color:#2d7a3a;font-weight:700');setTimeout(function(){var tl=document.getElementById('toast');if(tl){tl.innerHTML='📬 Form inbox ready — <u style="cursor:pointer">click to open &amp; save the link</u>';tl.classList.add('on');tl.onclick=function(){window.open(r.d.inboxUrl,'_blank');};setTimeout(function(){tl.classList.remove('on');tl.onclick=null;},10000);}},2600);}}catch(e4){}
   })
   .catch(function(e){
     clearInterval(iv);clearTimeout(_to);ld.classList.remove('on');lb.style.display='none';
@@ -4949,6 +4954,164 @@ function injectImageIntoSite(dataUrl,action){
 
 ;
 </script>
+<script>
+(function(){
+  function $(id){return document.getElementById(id);}
+  function tt(m){ if(window.toast) window.toast(m); }
+  function homeHtml(){ return (typeof window.gHTML==="string"&&window.gHTML)||localStorage.getItem("wsh")||""; }
+  function curDoc(){ return (typeof window.gHTML==="string"&&window.gHTML)||localStorage.getItem("wsh")||""; }
+  function persist(){ try{ if(window._wsPages&&window._wsPages.length>1){ localStorage.setItem("ws_pages", JSON.stringify({ site:(window._wsSite||localStorage.getItem("ws_site")||""), pages:window._wsPages, cur:(window._wsCurPage||0) })); } }catch(e){} }
+  function saveCur(){ try{ if(window._wsPages&&window._wsPages.length){ var i=window._wsCurPage||0; var h=curDoc(); if(h&&window._wsPages[i]) window._wsPages[i].html=h; persist(); } }catch(e){} }
+  window.wsSyncPages=saveCur;
+  function loadPage(i){ var pages=window._wsPages||[]; if(!pages[i]) return; window._wsCurPage=i; var h=pages[i].html; window.gHTML=h; try{ localStorage.setItem("wsh",h); }catch(e){} if(window.undoStack){ window.undoStack=[h]; window.redoStack=[]; } if(window.setPreview) window.setPreview(h); renderTabs(i); }
+  function restorePages(){ try{ var raw=localStorage.getItem("ws_pages"); if(!raw) return; var o=JSON.parse(raw); var sid=window._wsSite||localStorage.getItem("ws_site")||""; if(o&&o.pages&&o.pages.length>1&&o.site&&o.site===sid){ window._wsPages=o.pages; window._wsCurPage=o.cur||0; if(window._wsPages[0]){ var hc=curDoc(); if(hc) window._wsPages[0].html=hc; } renderTabs(window._wsCurPage); } }catch(e){} }
+  (function(){ var st=document.createElement("style"); st.textContent=".ws-pagetabs{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 10px;background:rgba(6,13,5,.55);border-bottom:1px solid rgba(255,255,255,.06)}.ws-pagetabs .lbl{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-right:2px}.ws-ptab{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}.ws-ptab.on{background:rgba(45,122,58,.25);border-color:#2d7a3a;color:#7fe39a}"; document.head.appendChild(st); })();
+  function renderTabs(active){
+    var pages=window._wsPages||[];
+    var wrap=$("previewWrap"); var bar=$("wsPageTabs");
+    if(pages.length<2){ if(bar&&bar.parentNode) bar.parentNode.removeChild(bar); return; }
+    if(!wrap) return;
+    if(!bar){ bar=document.createElement("div"); bar.id="wsPageTabs"; bar.className="ws-pagetabs"; wrap.insertBefore(bar, wrap.firstChild); }
+    bar.innerHTML="";
+    var lab=document.createElement("span"); lab.className="lbl"; lab.textContent="Pages"; bar.appendChild(lab);
+    pages.forEach(function(p,i){
+      var b=document.createElement("button");
+      b.className="ws-ptab"+(i===active?" on":"");
+      b.textContent=p.title||(p.path||"Home");
+      b.onclick=function(){ saveCur(); loadPage(i); };
+      bar.appendChild(b);
+    });
+  }
+  window.wsRenderPageTabs=renderTabs;
+  function wsCrc32(bytes){ var c,table=wsCrc32.t; if(!table){ table=[]; for(var n=0;n<256;n++){ c=n; for(var k=0;k<8;k++){ c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1); } table[n]=c>>>0; } wsCrc32.t=table; } var crc=0xFFFFFFFF; for(var i=0;i<bytes.length;i++){ crc=(crc>>>8)^table[(crc^bytes[i])&0xFF]; } return (crc^0xFFFFFFFF)>>>0; }
+  function wsZip(files){ var parts=[],central=[],offset=0; function u16(n){ return [n&0xFF,(n>>>8)&0xFF]; } function u32(n){ n=n>>>0; return [n&0xFF,(n>>>8)&0xFF,(n>>>16)&0xFF,(n>>>24)&0xFF]; } var enc=new TextEncoder(); files.forEach(function(fl){ var nameBytes=enc.encode(fl.name); var crc=wsCrc32(fl.bytes); var sz=fl.bytes.length; var local=[].concat([0x50,0x4b,0x03,0x04],u16(20),u16(0),u16(0),u16(0),u16(33),u32(crc),u32(sz),u32(sz),u16(nameBytes.length),u16(0)); parts.push(new Uint8Array(local)); parts.push(nameBytes); parts.push(fl.bytes); var cen=[].concat([0x50,0x4b,0x01,0x02],u16(20),u16(20),u16(0),u16(0),u16(0),u16(33),u32(crc),u32(sz),u32(sz),u16(nameBytes.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset)); central.push(new Uint8Array(cen)); central.push(nameBytes); offset+=local.length+nameBytes.length+sz; }); var cstart=offset,clen=0; central.forEach(function(a){clen+=a.length;}); var end=[].concat([0x50,0x4b,0x05,0x06],u16(0),u16(0),u16(files.length),u16(files.length),u32(clen),u32(cstart),u16(0)); var all=parts.concat(central); all.push(new Uint8Array(end)); var total=0; all.forEach(function(a){total+=a.length;}); var out=new Uint8Array(total),pos=0; all.forEach(function(a){out.set(a,pos);pos+=a.length;}); return out; }
+  function wsRewriteLinks(html,paths){ var out=html; out=out.split('href="/"').join('href="index.html"'); out=out.split("href='/'").join("href='index.html'"); paths.forEach(function(p){ if(!p) return; out=out.split('href="/'+p+'"').join('href="'+p+'.html"'); out=out.split("href='/"+p+"'").join("href='"+p+".html'"); }); return out; }
+  function wsDownloadSite(){ try{ saveCur(); }catch(e){} var pages=window._wsPages||[]; if(pages.length<2) return false; var paths=pages.map(function(p){return p.path;}); var enc=new TextEncoder(); var files=pages.map(function(p){ var nm=p.path?(p.path.split("/").join("_")+".html"):"index.html"; return { name:nm, bytes:enc.encode(wsRewriteLinks(p.html||"",paths)) }; }); var zipped=wsZip(files); var blob=new Blob([zipped],{type:"application/zip"}); var a=document.createElement("a"); a.href=URL.createObjectURL(blob); var t=(homeHtml().split("<title>")[1]||"website"); t=t.split("</title>")[0].split("|")[0].split(" - ")[0].trim()||"website"; a.download=t.split(" ").join("-").toLowerCase()+".zip"; a.click(); if(window.toast) window.toast("Downloaded your full site as a .zip"); return true; }
+  window.wsDownloadSite=wsDownloadSite;
+  function buildFullSite(){
+    var home=homeHtml();
+    if(!home||home.length<50){ tt("Generate your site first"); return; }
+    var siteId=window._wsSite||localStorage.getItem("ws_site")||"";
+    var btn=$("multiBtn"); if(btn) btn.disabled=true;
+    tt("Planning your pages...");
+    fetch("/plan-pages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:(window._wsPrompt||"")})})
+    .then(function(r){return r.json();})
+    .then(function(j){
+      if(j&&j.error==="PRO_REQUIRED"){ if(btn) btn.disabled=false; tt("Multi-page sites are a Pro feature - upgrade to add pages"); var ub=$("unlockBtn"); if(ub) ub.click(); return; }
+      var plan=(j&&j.pages)||[];
+      if(plan.length<2){ tt("Could not plan pages for this site"); if(btn) btn.disabled=false; return; }
+      var navPages=plan.map(function(p){return {path:p.path,title:p.title};});
+      var pages=[{path:"",title:(plan[0].title||"Home"),html:home}];
+      var rest=plan.slice(1); var i=0;
+      function step(){
+        if(i>=rest.length){
+          window._wsPages=pages; window._wsCurPage=0; renderTabs(0); persist();
+          if(btn){ btn.disabled=false; btn.textContent="Pages ("+pages.length+")"; }
+          tt("Built "+pages.length+" pages - use the tabs above the preview, then Publish");
+          return;
+        }
+        var pg=rest[i];
+        tt("Building "+(pg.title||"page")+" ("+(i+2)+"/"+plan.length+")...");
+        fetch("/generate-page",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({home:home,page:pg,pages:navPages,siteId:siteId})})
+        .then(function(r){return r.json();})
+        .then(function(res){ if(res&&res.html) pages.push({path:pg.path,title:pg.title,html:res.html}); i++; step(); })
+        .catch(function(){ i++; step(); });
+      }
+      step();
+    })
+    .catch(function(){ tt("Could not plan pages"); if(btn) btn.disabled=false; });
+  }
+  window.wsBuildFullSite=buildFullSite;
+  function wire(){ var b=$("multiBtn"); if(b&&!b._wsWired){ b._wsWired=true; b.addEventListener("click", buildFullSite); } try{ restorePages(); }catch(e){} }
+  if(document.readyState!=="loading") wire(); else document.addEventListener("DOMContentLoaded", wire);
+})();
+</script>
+<script>
+(function(){
+  function $(id){return document.getElementById(id);}
+  function tt(m){ if(window.toast) window.toast(m); }
+  function sid(){ return window._wsSite||localStorage.getItem("ws_site")||""; }
+  function skey(){ return window._wsKey||localStorage.getItem("ws_key")||""; }
+  var NL=String.fromCharCode(10);
+  var modal=null;
+  function buildModal(){
+    if(modal) return modal;
+    modal=document.createElement("div"); modal.id="wsProdModal";
+    modal.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px";
+    var box=document.createElement("div");
+    box.style.cssText="background:#0f1a0d;border:1px solid rgba(255,255,255,.12);border-radius:16px;max-width:560px;width:100%;padding:22px;color:#fff;font-family:inherit;box-shadow:0 30px 80px rgba(0,0,0,.5)";
+    box.innerHTML="<div style='font-size:18px;font-weight:800;margin-bottom:4px'>Your products</div><div style='font-size:13px;color:rgba(255,255,255,.55);margin-bottom:14px;line-height:1.6'>One product per line: <b>Name | Price | Image URL | Description</b>. They appear on your Shop page automatically.</div>";
+    var ta=document.createElement("textarea"); ta.id="wsProdTa"; ta.rows=10;
+    ta.placeholder="Lavender Candle | $24 | https://site.com/candle.jpg | Hand-poured soy wax";
+    ta.style.cssText="width:100%;box-sizing:border-box;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#fff;padding:12px;font-family:inherit;font-size:13px;line-height:1.7;resize:vertical";
+    box.appendChild(ta);
+    var row=document.createElement("div"); row.style.cssText="display:flex;gap:10px;margin-top:16px;justify-content:flex-end";
+    var cancel=document.createElement("button"); cancel.textContent="Close";
+    cancel.style.cssText="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:10px;padding:10px 18px;font-weight:600;cursor:pointer;font-family:inherit";
+    cancel.onclick=function(){ modal.style.display="none"; };
+    var save=document.createElement("button"); save.textContent="Save products";
+    save.style.cssText="background:#2d7a3a;border:none;color:#fff;border-radius:10px;padding:10px 18px;font-weight:700;cursor:pointer;font-family:inherit";
+    save.onclick=doSave;
+    row.appendChild(cancel); row.appendChild(save); box.appendChild(row);
+    modal.appendChild(box);
+    modal.onclick=function(e){ if(e.target===modal) modal.style.display="none"; };
+    document.body.appendChild(modal);
+    return modal;
+  }
+  function toLines(products){ return (products||[]).map(function(p){ return [p.name||"",p.price||"",p.img||"",p.desc||""].join(" | "); }).join(NL); }
+  function parseLines(text){ var out=[]; (text||"").split(NL).forEach(function(ln){ if(!ln.replace(/ /g,"").length) return; var parts=ln.split("|"); var name=(parts[0]||"").trim(); if(!name) return; out.push({ name:name, price:(parts[1]||"").trim(), img:(parts[2]||"").trim(), desc:(parts[3]||"").trim() }); }); return out; }
+  function doSave(){
+    var ta=$("wsProdTa"); if(!ta) return;
+    var products=parseLines(ta.value); var s=sid(), k=skey();
+    if(!s){ tt("Publish or save your site first"); return; }
+    tt("Saving products...");
+    fetch("/products",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({siteId:s,key:k,products:products})})
+    .then(function(r){return r.json();})
+    .then(function(j){
+      if(j&&j.error==="PRO_REQUIRED"){ tt("The store is a Pro feature - upgrade to add products"); var ub=$("unlockBtn"); if(ub) ub.click(); return; }
+      if(j&&j.error){ tt(j.error); return; }
+      tt("Saved "+((j&&j.products&&j.products.length)||0)+" products - live on your Shop page");
+      if(modal) modal.style.display="none";
+    })
+    .catch(function(){ tt("Could not save products"); });
+  }
+  function openProducts(){
+    buildModal();
+    var s=sid(), k=skey(); var ta=$("wsProdTa"); if(ta) ta.value="";
+    if(s){ fetch("/products?siteId="+encodeURIComponent(s)+"&key="+encodeURIComponent(k)).then(function(r){return r.json();}).then(function(j){ var ta2=$("wsProdTa"); if(ta2&&j&&j.products) ta2.value=toLines(j.products); }).catch(function(){}); }
+    modal.style.display="flex";
+  }
+  window.wsOpenProducts=openProducts;
+  function wire(){ var b=$("prodBtn"); if(b&&!b._wsPW){ b._wsPW=true; b.addEventListener("click", openProducts); } }
+  if(document.readyState!=="loading") wire(); else document.addEventListener("DOMContentLoaded", wire);
+})();
+</script>
+<script>
+(function(){
+  function $(id){return document.getElementById(id);}
+  var m=null;
+  function build(){
+    if(m) return m;
+    m=document.createElement("div"); m.id="wsDlWarn";
+    m.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;z-index:10000;padding:16px";
+    var box=document.createElement("div");
+    box.style.cssText="background:#0f1a0d;border:1px solid rgba(255,255,255,.12);border-radius:16px;max-width:520px;width:100%;padding:24px;color:#fff;font-family:inherit;box-shadow:0 30px 80px rgba(0,0,0,.5)";
+    box.innerHTML="<div style='font-size:19px;font-weight:800;margin-bottom:10px'>Before you download</div><div style='font-size:14px;color:rgba(255,255,255,.72);line-height:1.65'><p style='margin:0 0 10px'>Your download is your <b>site code</b> - the pages, design and content. It is yours to host anywhere.</p><p style='margin:0 0 10px'>It does <b>not</b> include the Websprout store checkout. Buy buttons work by calling Websprout servers, which need an <b>active subscription</b>.</p><p style='margin:0 0 10px'>If you cancel your plan, checkout stops working - even on a self-hosted copy - and your shop page becomes a <b>catalog</b> (Buy links to your contact section) until you subscribe again.</p><p style='margin:0'>Everything else works on its own.</p></div>";
+    var row=document.createElement("div"); row.style.cssText="display:flex;gap:10px;margin-top:18px;justify-content:flex-end";
+    var cancel=document.createElement("button"); cancel.textContent="Cancel";
+    cancel.style.cssText="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:10px;padding:10px 18px;font-weight:600;cursor:pointer;font-family:inherit";
+    cancel.onclick=function(){ m.style.display="none"; };
+    var go=document.createElement("button"); go.textContent="Download my code";
+    go.style.cssText="background:#2d7a3a;border:none;color:#fff;border-radius:10px;padding:10px 18px;font-weight:700;cursor:pointer;font-family:inherit";
+    go.onclick=function(){ m.style.display="none"; window._wsDlOk=true; var d=$("dlBtn"); if(d) d.click(); };
+    row.appendChild(cancel); row.appendChild(go); box.appendChild(row); m.appendChild(box);
+    m.onclick=function(e){ if(e.target===m) m.style.display="none"; };
+    document.body.appendChild(m); return m;
+  }
+  function gate(){ build(); m.style.display="flex"; }
+  window.wsDownloadGate=gate;
+})();
+</script>
 </body>
 </html>`;
 
@@ -5010,19 +5173,50 @@ a{color:#2d7a3a}
 <div class="wrap">
 <a href="/" class="back">← Back to Websprout</a>
 <h1>Terms of Service</h1>
-<p class="meta">Last updated: May 2026</p>
-<h2>1. Service</h2>
-<p>Websprout provides an AI-powered website generation service. Generating and previewing sites is free. A Pro subscription ($10/month) unlocks downloading the HTML/CSS source code and deploying your sites.</p>
-<h2>2. Payment</h2>
-<p>Pro is a recurring subscription billed at $10/month via Stripe until you cancel. You can cancel anytime, which stops future charges; access continues through the end of the current billing period. We do not store your payment information. Charges already billed are non-refundable.</p>
-<h2>3. Ownership</h2>
-<p>Any source code you download while subscribed is yours to use for any purpose, personal or commercial.</p>
-<h2>4. Limitations</h2>
-<p>Websprout generates websites using AI. We do not guarantee any specific outcome, design quality, or fitness for a particular purpose. The generated code is provided as-is.</p>
-<h2>5. Prohibited Use</h2>
-<p>You may not use Websprout to generate websites that promote illegal activity, hate speech, or violate any applicable laws.</p>
-<h2>6. Contact</h2>
-<p>For questions: <a href="mailto:support@websprout.app">support@websprout.app</a></p>
+<p class="meta">Last updated: June 2026</p>
+
+<p>These Terms of Service ("Terms") govern your use of Websprout (the "Service"), operated by Websprout ("we", "us"). By creating an account, building a site, or using any feature, you agree to these Terms. If you do not agree, do not use the Service.</p>
+
+<h2>1. What Websprout is</h2>
+<p>Websprout is an AI-powered website builder. You can describe a business and generate, preview, edit, and publish a website. Building and previewing are free. A paid (Pro) subscription unlocks removing the Websprout badge, connecting a custom domain, downloading your site's source code, and store features. Some capabilities &mdash; including live product management and payment checkout &mdash; are hosted online services that run on our servers, not files you download (see Sections 4, 5 and 6).</p>
+
+<h2>2. Accounts</h2>
+<p>You are responsible for all activity under your account and for keeping your sign-in access secure. You must provide accurate information and be old enough to form a binding contract where you live. You may not impersonate others or build sites you are not authorized to create.</p>
+
+<h2>3. Subscriptions and payment</h2>
+<p>Paid plans are billed in advance through Stripe at the price shown at checkout and renew automatically until cancelled. You can cancel anytime; cancellation stops future charges, and paid features remain available through the end of the current billing period. Fees are non-refundable except where required by law. We may change pricing with reasonable notice, applied to future billing periods.</p>
+
+<h2>4. Your content and ownership of downloaded code</h2>
+<p>You own the content you provide and the website source code you download while you have an active paid subscription. Downloaded code is the static files of your site (the HTML, CSS, JavaScript and layout we generated for you) and is yours to host and use for any lawful purpose, personal or commercial.</p>
+<p>Downloaded code does <strong>not</strong> include Websprout's hosted services. In particular, the live product catalog, the payment checkout, lead-capture form processing, and similar server-side features are provided by us as an ongoing online service and are not part of the files you download.</p>
+
+<h2>5. Store, products and the checkout service</h2>
+<p>Store features let you list products and accept payments. Payment checkout is a hosted service: when a visitor clicks a buy button, a request is made to Websprout's servers, which create the payment session. This service is available only while you maintain an active, paid subscription. If your subscription lapses or is cancelled, the checkout service stops working &mdash; including on any self-hosted or downloaded copy of your site &mdash; and buy buttons will no longer process payments. A downloaded store page works as a product catalog; to take payments you must use the active hosted checkout.</p>
+<p>You may not copy, reverse-engineer, reproduce, or build a substitute for the Websprout checkout or other hosted services in order to avoid subscription fees, applicable transaction fees, or these Terms. You are solely responsible for the products you sell, their descriptions and prices, fulfilment, refunds, taxes, and compliance with all laws that apply to your sales. Payments are processed by Stripe and are subject to Stripe's terms; we are not the seller of your goods and are not a party to transactions between you and your customers.</p>
+
+<h2>6. Fees on sales</h2>
+<p>Where we charge a per-sale or transaction fee for use of the checkout service, the applicable fee is disclosed to you before you enable payments and is deducted automatically. Payment-processor fees charged by Stripe are separate and set by Stripe.</p>
+
+<h2>7. Acceptable use</h2>
+<p>You may not use Websprout to create or distribute content that is illegal, infringes others' rights, promotes hate or violence, facilitates fraud, distributes malware, or violates any applicable law. We may suspend or remove sites, or terminate accounts, that violate these Terms.</p>
+
+<h2>8. Service availability and "as is"</h2>
+<p>The Service, including AI-generated output, is provided "as is" and "as available", without warranties of any kind, express or implied, including fitness for a particular purpose, accuracy, or uninterrupted availability. AI output may contain errors; you are responsible for reviewing your site before you publish or sell.</p>
+
+<h2>9. Limitation of liability</h2>
+<p>To the maximum extent permitted by law, Websprout will not be liable for any indirect, incidental, special, or consequential damages, or for lost profits, revenue, data, or goodwill, arising from your use of the Service. Our total liability for any claim relating to the Service will not exceed the amount you paid us in the three months before the claim.</p>
+
+<h2>10. Termination</h2>
+<p>You may stop using the Service and cancel at any time. We may suspend or terminate access for violations of these Terms or to comply with law. Provisions that by their nature should survive termination (including ownership, fees owed, disclaimers, and limitation of liability) will survive.</p>
+
+<h2>11. Changes to these Terms</h2>
+<p>We may update these Terms from time to time. Material changes are reflected by updating the date above; continued use after changes take effect constitutes acceptance.</p>
+
+<h2>12. Governing law</h2>
+<p>These Terms are governed by the laws of the State of Georgia, United States, without regard to conflict-of-law rules, and you submit to the exclusive jurisdiction of the state and federal courts located in Georgia, except where mandatory consumer-protection law grants you rights where you live.</p>
+
+<h2>13. Contact</h2>
+<p>Questions about these Terms: <a href="mailto:support@websprout.app">support@websprout.app</a></p>
 </div>
 </body>
 </html>`;
@@ -5577,19 +5771,23 @@ export default {
     const url = new URL(request.url);
     const _host = url.hostname.toLowerCase();
     const _appHosts = ['websprout.app','www.websprout.app'];
+    if (url.pathname === '/checkout' && request.method === 'GET') return doCheckout(request, env);
     if (request.method === 'GET' && _appHosts.indexOf(_host) === -1 && _host.indexOf('.workers.dev') === -1 && _host.indexOf('localhost') === -1 && !url.pathname.startsWith('/api/')) {
       if (_host.endsWith('.websprout.app')) {
         const _sub = _host.slice(0, _host.length - '.websprout.app'.length);
         if (_sub && _sub.indexOf('.') === -1) {
-          const _r = await servePublished(_sub, env);
+          const _r = await servePublished(_sub, env, url.pathname);
           return _r || new Response(PUB_404, { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
         }
       } else if (env.KV) {
         const _mapped = await env.KV.get('domain:' + _host);
-        if (_mapped) { const _r = await servePublished(_mapped, env); if (_r) return _r; }
+        if (_mapped) { const _r = await servePublished(_mapped, env, url.pathname); if (_r) return _r; }
       }
     }
     if (url.pathname === '/generate' && request.method === 'POST') return doGenerate(request, env);
+    if (url.pathname === '/generate-page' && request.method === 'POST') return doGeneratePage(request, env);
+    if (url.pathname === '/plan-pages' && request.method === 'POST') return doPlanPages(request, env);
+    if (url.pathname === '/products') return doProducts(request, env);
     if (url.pathname === '/genimage' && request.method === 'POST') return doGenImage(request, env);
     if (url.pathname === '/api/post' && request.method === 'POST') return doWritePost(request, env);
     if (url.pathname === '/api/invoice' && request.method === 'POST') return doInvoice(request, env);
@@ -5648,7 +5846,7 @@ export default {
     if (url.pathname === '/api/hit' && request.method === 'POST') return doHit(request, env);
     if (url.pathname === '/api/hit' && request.method === 'OPTIONS') return new Response(null, { headers: formCors() });
     if (url.pathname === '/api/views' && request.method === 'GET') return doViews(request, env);
-    if (url.pathname.startsWith('/s/')) { const _sl = slugify(url.pathname.slice(3).split('/')[0]); const _r = await servePublished(_sl, env); return _r || new Response(PUB_404, { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } }); }
+    if (url.pathname.startsWith('/s/')) { const _parts = url.pathname.slice(3).split('/'); const _sl = slugify(_parts[0]); const _pg = _parts.slice(1).join('/'); const _r = await servePublished(_sl, env, _pg); return _r || new Response(PUB_404, { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } }); }
     if (url.pathname === '/api/domain-check' && request.method === 'GET') return doDomainCheck(request, env);
     if (url.pathname === '/api/connect-domain' && request.method === 'POST') return doConnectDomain(request, env);
     if (url.pathname === '/api/inbox' && request.method === 'GET') return doInboxData(request, env);
@@ -6622,10 +6820,49 @@ function withBadge(html){
   const i = html.lastIndexOf('</body>');
   return i > -1 ? html.slice(0,i) + b + html.slice(i) : html + b;
 }
-async function servePublished(slug, env){
+function normalizePagePath(p){
+  if (!p) return '';
+  p = String(p).toLowerCase().trim();
+  while (p.charAt(0) === '/') p = p.slice(1);
+  while (p.length && p.charAt(p.length-1) === '/') p = p.slice(0, -1);
+  return p;
+}
+function pubPage404(){
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Page not found</title><style>body{font-family:-apple-system,Segoe UI,Arial,sans-serif;background:#060d05;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}.b{max-width:420px;padding:24px}.m{font-size:40px;margin-bottom:10px}a{color:#4ade80;font-weight:700;text-decoration:none}</style></head><body><div class="b"><div class="m">&#127793;</div><h1 style="font-size:22px;margin:0 0 8px">Page not found</h1><p style="color:rgba(255,255,255,.6);line-height:1.6">This page does not exist on this site. <br><a href="/">Back to home</a>.</p></div></body></html>';
+}
+// Multi-page aware. A legacy single-page site (no pubpages index) serves its home for ANY path - unchanged behavior.
+// A multi-page site (pubpages index present) resolves pub:slug:path and 404s on unknown pages.
+async function servePublished(slug, env, path){
   if (!env || !env.KV) return null;
-  const html = await env.KV.get('pub:' + slug);
-  if (!html) return null;
+  const home = await env.KV.get('pub:' + slug);
+  if (!home) return null;
+  let html = home;
+  const pg = normalizePagePath(path);
+  if (pg) {
+    let pages = null;
+    try { const idx = await env.KV.get('pubpages:' + slug); if (idx) { const a = JSON.parse(idx); if (Array.isArray(a)) pages = a; } } catch(e){}
+    if (pages) {
+      if (pages.indexOf(pg) > -1) { html = (await env.KV.get('pub:' + slug + ':' + pg)) || home; }
+      else { return new Response(pubPage404(), { status: 404, headers: { 'Content-Type':'text/html; charset=utf-8' } }); }
+    }
+  }
+  if (html.indexOf('<!--WS_PRODUCTS-->') > -1) {
+    try {
+      let _sid = ''; const _m0 = await env.KV.get('pubmeta:' + slug); if (_m0) { try { _sid = (JSON.parse(_m0).siteId) || ''; } catch(e){} }
+      let _prods = []; if (_sid) { const _pr = await env.KV.get('products:' + _sid); if (_pr) { try { _prods = JSON.parse(_pr); } catch(e){} } }
+      let _ckEnabled = false;
+      if (_sid) {
+        try {
+          const _own = ((await env.KV.get('notify:' + _sid)) || '').toLowerCase();
+          if (_own) {
+            if (_own === SUPPORT_EMAIL.toLowerCase()) _ckEnabled = true;
+            else { const _u = JSON.parse((await env.KV.get('user:' + _own)) || 'null'); if (_u && _u.plan === 'pro' && _u.stripeConnect && _u.stripeConnectReady) _ckEnabled = true; }
+          }
+        } catch(e){}
+      }
+      html = html.split('<!--WS_PRODUCTS-->').join(renderProductGrid(_prods, _sid, _ckEnabled));
+    } catch(e){}
+  }
   let nobadge = false; try { const m = await env.KV.get('pubmeta:' + slug); if (m) nobadge = !!JSON.parse(m).nobadge; } catch(e){}
   return new Response(nobadge ? html : withBadge(html), { headers: { 'Content-Type':'text/html; charset=utf-8', 'X-Robots-Tag':'all' } });
 }
@@ -6643,12 +6880,14 @@ async function doPublish(request, env){
     if (existing){ try { if (JSON.parse(existing).siteId !== b.siteId) return fail('That name is already taken — try another'); } catch(e){} }
     if (b.html.length > 4*1024*1024) return fail('Site is too large to publish');
     let _pro = false; try { const _s = await getSession(request, env); if (_s) { const _u = JSON.parse(await env.KV.get('user:' + _s.email) || '{}'); _pro = !!(_u && _u.plan === 'pro'); } } catch(e){}
+    try { const _ps2 = await getSession(request, env); const _po = !!(_ps2 && ((_ps2.email||'').toLowerCase()===SUPPORT_EMAIL.toLowerCase())); if (!_pro && !_po) b.pages = null; } catch(e){}
     // Capture leads through Websprout's own backend: point every form at our endpoint AND inject a
     // tiny handler that submits via fetch + shows an inline thank-you (no third party, no raw JSON page).
-    let pubHtml = b.html;
-    try {
+    const prep = (html) => {
+     let pubHtml = html;
+     try {
       const formAction = 'https://websprout.app/api/form/' + b.siteId;
-      pubHtml = b.html.replace(/<form\b([^>]*)>/gi, function(m, attrs){
+      pubHtml = html.replace(/<form\b([^>]*)>/gi, function(m, attrs){
         let a = attrs;
         if (/\saction\s*=/i.test(a)) a = a.replace(/\saction\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/i, ' action="' + formAction + '"');
         else a = ' action="' + formAction + '"' + a;
@@ -6659,13 +6898,28 @@ async function doPublish(request, env){
       const errJS = "<scr"+"ipt>window.addEventListener('error',function(ev){try{fetch('https://websprout.app/api/clientlog',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({msg:(ev&&ev.message)||'error',src:(ev&&ev.filename)||'',line:(ev&&ev.lineno)||0,where:'published',url:location.href}),keepalive:true}).catch(function(){});}catch(e){}});</scr"+"ipt>";
       pubHtml = pubHtml.replace(/href="\[Pay Link:[^\]]*\]"/g, 'href="#"');
       if (pubHtml.indexOf('</body>') > -1) pubHtml = pubHtml.replace('</body>', formJS + errJS + '</body>'); else pubHtml = pubHtml + formJS + errJS;
-    } catch(e){ pubHtml = b.html; }
+    } catch(e){ pubHtml = html; } return pubHtml; };
     // Default the lead-notification email to the owner's account email (only if not already set)
     try { const _s2 = await getSession(request, env); if (_s2 && _s2.email) { const _cur = await env.KV.get('notify:' + b.siteId); if (!_cur) await env.KV.put('notify:' + b.siteId, _s2.email); } } catch(e){}
-    await env.KV.put('pub:' + slug, pubHtml);
-    await env.KV.put('pubmeta:' + slug, JSON.stringify({ siteId: b.siteId, updated: Date.now(), nobadge: _pro }));
+    // Multi-page if b.pages provided, else single home page (backward compatible).
+    var _pages = (Array.isArray(b.pages) && b.pages.length) ? b.pages.slice() : [{ path:'', html: b.html }];
+    if (!_pages.some(function(p){ return normalizePagePath(p.path)===''; })) _pages.unshift({ path:'', html: b.html });
+    var _paths = [];
+    for (var _i=0; _i<_pages.length; _i++){
+      var _pg = _pages[_i]; var _pp = normalizePagePath(_pg.path); var _h = (_pg.html||'');
+      if (!_h) continue;
+      if (_h.length > 4*1024*1024) return fail('A page is too large to publish');
+      await env.KV.put(_pp ? ('pub:' + slug + ':' + _pp) : ('pub:' + slug), prep(_h));
+      if (_paths.indexOf(_pp)===-1) _paths.push(_pp);
+    }
+    // Drop sub-pages from a previous publish that are no longer present.
+    try { var _oldIdx = await env.KV.get('pubpages:' + slug); if (_oldIdx){ var _old = JSON.parse(_oldIdx); if (Array.isArray(_old)){ for (var _j=0;_j<_old.length;_j++){ var _op=_old[_j]; if (_op && _paths.indexOf(_op)===-1) { try { await env.KV.delete('pub:' + slug + ':' + _op); } catch(e){} } } } } } catch(e){}
+    // Multi-page sites get an index; single-page sites have none (preserves legacy serving).
+    if (_paths.length > 1) await env.KV.put('pubpages:' + slug, JSON.stringify(_paths));
+    else { try { await env.KV.delete('pubpages:' + slug); } catch(e){} }
+    await env.KV.put('pubmeta:' + slug, JSON.stringify({ siteId: b.siteId, updated: Date.now(), nobadge: _pro, pages: _paths }));
     try { await env.KV.put('slugof:' + b.siteId, slug); } catch(e){}
-    return succeed({ ok:true, slug: slug, url: 'https://' + slug + '.websprout.app', pathUrl: 'https://websprout.app/s/' + slug, nobadge: _pro });
+    return succeed({ ok:true, slug: slug, url: 'https://' + slug + '.websprout.app', pathUrl: 'https://websprout.app/s/' + slug, nobadge: _pro, pages: _paths });
   } catch(e){ return fail(e.message); }
 }
 
@@ -6677,6 +6931,8 @@ async function doUnpublish(request, env){
     if (b.key !== (await siteKey(b.siteId, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
     const m = await env.KV.get('pubmeta:' + b.slug);
     if (m){ try { if (JSON.parse(m).siteId !== b.siteId) return fail('Not your site'); } catch(e){} }
+    try { var _idx = await env.KV.get('pubpages:' + b.slug); if (_idx){ var _arr = JSON.parse(_idx); if (Array.isArray(_arr)){ for (var _k=0;_k<_arr.length;_k++){ var _p=_arr[_k]; if (_p) { try { await env.KV.delete('pub:' + b.slug + ':' + _p); } catch(e){} } } } } } catch(e){}
+    try { await env.KV.delete('pubpages:' + b.slug); } catch(e){}
     await env.KV.delete('pub:' + b.slug); await env.KV.delete('pubmeta:' + b.slug); try { await env.KV.delete('slugof:' + b.siteId); } catch(e){}
     return succeed({ ok:true });
   } catch(e){ return fail(e.message); }
@@ -7055,7 +7311,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r175';
+const BUILD_ID = '2026-06-10-r186';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -7501,6 +7757,212 @@ function varietyBrief(prompt){
     + 'LAYOUT FLAVOR: ' + l + '\n'
     + 'CRITICAL — make each chosen feature ACTUALLY FUNCTION: follow its "Build:" recipe exactly as the proven technique, and write ALL the CSS and JS it needs so it works on load (and on tap for touch). Test it mentally end-to-end. If you genuinely cannot make a feature fully work inline, build a SIMPLER but fully-working version of THAT SAME feature — never a different feature, and never a static placeholder, a dead control, or a fake that only looks like the feature. A feature that truly works beats an ambitious one that does not.\n'
     + 'Keep everything self-contained inline HTML/CSS/JS that settles into a fully visible state. Choose these features INSTEAD of piling on extra effects, so the page stays tight (~380-520 lines), fast and complete. Two different businesses must never produce the same-looking page.\n';
+}
+
+// ===== M1: multi-page generation engine =====================================
+// Template-by-type page plan (home always first). Returns [{path,title,role}].
+function planPages(prompt, type){
+  var p = (prompt||'').toLowerCase();
+  if (type==='store' || /\b(shop|store|sell|selling|product|products|ecommerce|e-commerce|merch|boutique|online store|catalog|checkout|buy online)\b/.test(p)) {
+    return [
+      {path:'', title:'Home', role:'the landing page - the hook, what you sell, a few featured products or categories, and a clear path to the Shop page'},
+      {path:'shop', title:'Shop', role:'a shop page: a heading, a short intro line, and a products section. Place the EXACT html comment <!--WS_PRODUCTS--> on its own line where the product grid belongs - do NOT invent fake products, the owner real products are injected at that comment. Add a Buy/Inquire call to action that links to the contact section.'},
+      {path:'about', title:'About', role:'the story, values and people behind the business, building trust'},
+      {path:'contact', title:'Contact', role:'a contact section with a working contact form, plus hours, location and contact details'}
+    ];
+  }
+  if (/\b(restaurant|cafe|coffee|bakery|bistro|brewery|diner|eatery|food|menu|catering|pizzeria|grill|sushi|ramen|taco)\b/.test(p)) {
+    return [
+      {path:'', title:'Home', role:'the landing page - atmosphere, signature dishes, hours, and a reservation or order call to action'},
+      {path:'menu', title:'Menu', role:'a full menu organized in sections (such as starters, mains, drinks) with item names, descriptions and prices'},
+      {path:'about', title:'About', role:'the story of the place, the chef or owners, and what makes it special'},
+      {path:'contact', title:'Contact', role:'hours, location with directions, phone, and a working reservation or contact form'}
+    ];
+  }
+  if (/\b(portfolio|photographer|photography|designer|artist|illustrator|creative|architect|filmmaker|videographer|studio)\b/.test(p)) {
+    return [
+      {path:'', title:'Home', role:'a striking landing page introducing the creative and their best work at a glance'},
+      {path:'work', title:'Work', role:'a portfolio gallery or grid of projects or pieces, each with a short caption or detail'},
+      {path:'about', title:'About', role:'bio, approach, skills or services, and credibility'},
+      {path:'contact', title:'Contact', role:'a working contact form and ways to reach the creative for commissions or bookings'}
+    ];
+  }
+  return [
+    {path:'', title:'Home', role:'the landing page - hero, what the business does, key benefits, social proof and a primary call to action'},
+    {path:'about', title:'About', role:'the story, mission and team behind the business'},
+    {path:'services', title:'Services', role:'a clear breakdown of the services or offerings as cards or sections, each with a short description'},
+    {path:'contact', title:'Contact', role:'a working contact form plus hours, location and contact details'}
+  ];
+}
+
+// Nav-link instruction shared by home and each page so cross-page nav is consistent.
+function pageNavBrief(pages, currentPath){
+  var links = pages.map(function(pg){ return (pg.path===''?'/':'/'+pg.path)+' ('+pg.title+')'; }).join(', ');
+  var cur=''; for (var i=0;i<pages.length;i++){ if(pages[i].path===(currentPath||'')){ cur=pages[i].title; break; } }
+  return 'PAGES & NAV: this site has these pages and the nav bar MUST link to all of them with these EXACT hrefs: ' + links + '. Use real anchor hrefs (e.g. href="/about", href="/" for home) for cross-page links, NOT in-page #anchors. Mark the current page (' + (cur||'Home') + ') as the active nav item. The mobile menu must contain the same links.';
+}
+
+var PAGE_GEN_PROMPT = 'You are building ONE additional page of an existing multi-page website. You are given the complete HTML of the site home page as your design reference. Build the requested page so it clearly belongs to the SAME website.\n\nNON-NEGOTIABLE CONSISTENCY RULES:\n- Reuse the EXACT same <head>: the same fonts and Google Fonts links, the same full CSS style block (so colors, typography, spacing and components match precisely), and the same meta and viewport tags.\n- Reuse the EXACT same top nav bar and the same footer markup and styling as the home page, so they are identical across pages (only the active nav item changes).\n- Match the same color system, button shapes, corner radii, shadows and overall design personality. The new page must be visually indistinguishable in style from the home page.\n- Build BRAND-NEW main content between the nav and the footer that fits THIS page purpose. Do not copy the home page body content.\n- Output ONE complete standalone HTML document (from <!DOCTYPE html> through </html>) with everything inline, because it is served on its own URL.';
+
+var PAGE_GEN_RULES = 'CRITICAL RULES (same standards as the rest of the site):\n1. CONTRAST: every text element must be readable against its exact background - white or near-white text on dark, dark text on light, never dark-on-dark or light-on-light.\n2. Do NOT use vh or viewport-height units for section heights - use px or %. You MAY use clamp() with vw for responsive font-size.\n3. Entrance and scroll-reveal animations must always animate from hidden TO fully visible - nothing stays hidden. Keep transitions under 0.8s.\n4. NO horizontal overflow: set box-sizing:border-box globally, never let anything be wider than the viewport, and wrap long text. Never use white-space:nowrap on multi-word text.\n5. Every button and link must do something real. Cross-page nav uses real hrefs like href="/about". In-page links may use #ids that exist on THIS page. The primary call to action points to the contact or shop page.\n6. If you include a hamburger or mobile menu, hide it on desktop and wire it with a few lines of JS to toggle a real menu of the page links.\n7. Keep the page tight and focused - roughly 250-450 lines. ALWAYS finish through </body></html>. A shorter complete page beats a long or truncated one.';
+
+function priceToCents(v){
+  if (v == null) return 0;
+  var str = String(v).replace(/[^0-9.]/g, '');
+  if (!str) return 0;
+  var n = parseFloat(str);
+  if (!isFinite(n) || n <= 0) return 0;
+  return Math.round(n * 100);
+}
+async function doCheckout(request, env){
+  var url = new URL(request.url);
+  var siteId = (url.searchParams.get('site') || '').trim();
+  var pIdx = parseInt(url.searchParams.get('p') || '-1', 10);
+  function back(slug){ return slug ? ('https://' + slug + '.websprout.app/') : 'https://websprout.app/'; }
+  function errPage(msg, slug){
+    var b = back(slug);
+    var h = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Checkout</title>'
+      + '<div style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:460px;margin:80px auto;padding:0 22px;text-align:center;color:#1a1a1a">'
+      + '<div style="font-size:2rem;margin-bottom:8px">\ud83d\uded2</div>'
+      + '<h2 style="margin:0 0 10px;font-size:1.3rem">Checkout unavailable</h2>'
+      + '<p style="opacity:.65;line-height:1.6">' + msg + '</p>'
+      + '<p style="margin-top:24px"><a href="' + b + '" style="color:#2e7d32;font-weight:600;text-decoration:none">Back to the shop</a></p></div>';
+    return new Response(h, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+  }
+  if (!env.KV) return errPage('Storage is not configured.', '');
+  if (!siteId || pIdx < 0) return errPage('This product link is incomplete.', '');
+  var sk = (env.STRIPE_SECRET_KEY || '').trim();
+  if (!sk) return errPage('Payments are not configured yet.', '');
+  var slug = ''; try { slug = (await env.KV.get('slugof:' + siteId)) || ''; } catch(e){}
+  var products = []; try { var raw = await env.KV.get('products:' + siteId); if (raw) products = JSON.parse(raw); } catch(e){}
+  if (!Array.isArray(products) || pIdx >= products.length) return errPage('That product is no longer available.', slug);
+  var product = products[pIdx];
+  if (!product || !product.name) return errPage('That product is no longer available.', slug);
+  var owner = ''; try { owner = ((await env.KV.get('notify:' + siteId)) || '').toLowerCase(); } catch(e){}
+  if (!owner) return errPage('This store is not set up to take payments yet.', slug);
+  var u = null; try { u = JSON.parse(await env.KV.get('user:' + owner) || 'null'); } catch(e){}
+  var isPlatformOwner = owner === SUPPORT_EMAIL.toLowerCase();
+  var isPro = isPlatformOwner || (u && u.plan === 'pro');
+  if (!isPro) return errPage('This store is not currently accepting online payments.', slug);
+  var stripeAccount = '';
+  if (!isPlatformOwner) {
+    if (!(u && u.stripeConnect && u.stripeConnectReady)) return errPage('This store has not finished connecting its payment account.', slug);
+    stripeAccount = u.stripeConnect;
+  }
+  var amount = priceToCents(product.price);
+  if (!amount || amount < 50) return errPage('This product is not priced for online checkout.', slug);
+  var appFee = 0;
+  if (stripeAccount) { appFee = Math.round(amount * 0.02); if (appFee > amount - 1) appFee = amount - 1; if (appFee < 0) appFee = 0; }
+  var currency = 'usd';
+  var origin = slug ? ('https://' + slug + '.websprout.app') : 'https://websprout.app';
+  var successUrl = origin + '/?ws_paid=1';
+  var cancelUrl = origin + '/';
+  var enc = encodeURIComponent;
+  var sHeaders = { 'Authorization': 'Bearer ' + sk, 'Content-Type': 'application/x-www-form-urlencoded' };
+  if (stripeAccount) sHeaders['Stripe-Account'] = stripeAccount;
+  var bodyStr = 'mode=payment'
+    + '&success_url=' + enc(successUrl)
+    + '&cancel_url=' + enc(cancelUrl)
+    + '&line_items[0][quantity]=1'
+    + '&line_items[0][price_data][currency]=' + enc(currency)
+    + '&line_items[0][price_data][unit_amount]=' + amount
+    + '&line_items[0][price_data][product_data][name]=' + enc(String(product.name).slice(0, 120));
+  if (product.desc) bodyStr += '&line_items[0][price_data][product_data][description]=' + enc(String(product.desc).slice(0, 200));
+  if (appFee > 0) bodyStr += '&payment_intent_data[application_fee_amount]=' + appFee;
+  try {
+    var r = await fetch('https://api.stripe.com/v1/checkout/sessions', { method: 'POST', headers: sHeaders, body: bodyStr });
+    var j = await r.json();
+    if (!r.ok || j.error || !j.url) return errPage('We could not start checkout. Please try again in a moment.', slug);
+    return new Response(null, { status: 302, headers: { 'Location': j.url } });
+  } catch(e) { return errPage('We could not start checkout. Please try again in a moment.', slug); }
+}
+function renderProductGrid(products, siteId, checkoutEnabled){
+  if (!Array.isArray(products) || !products.length) return '<div style="text-align:center;opacity:.6;padding:40px 0;font-size:1rem">Products coming soon.</div>';
+  var esc = function(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+  var cards = products.map(function(p, i){
+    var img = p.img ? ('<div class="wsp-img" style="background-image:url(' + esc(p.img) + ')"></div>') : '<div class="wsp-img wsp-noimg"></div>';
+    var price = p.price ? ('<div class="wsp-price">' + esc(p.price) + '</div>') : '';
+    var desc = p.desc ? ('<div class="wsp-desc">' + esc(p.desc) + '</div>') : '';
+    return '<div class="wsp-card">' + img + '<div class="wsp-body"><div class="wsp-name">' + esc(p.name||'Product') + '</div>' + price + desc + '<a class="wsp-buy" href="' + ((checkoutEnabled && siteId) ? ('/checkout?site=' + encodeURIComponent(siteId) + '&p=' + i) : '#contact') + '">' + ((checkoutEnabled && siteId) ? 'Buy' : 'Inquire') + '</a></div></div>';
+  }).join('');
+  var css = '<style>.wsp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:22px;max-width:1100px;margin:0 auto;padding:8px 0}.wsp-card{border:1px solid rgba(128,128,128,.18);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;background:rgba(128,128,128,.04)}.wsp-img{aspect-ratio:4/3;background-size:cover;background-position:center}.wsp-noimg{background:linear-gradient(135deg,rgba(128,128,128,.12),rgba(128,128,128,.05))}.wsp-body{padding:16px;display:flex;flex-direction:column;gap:6px}.wsp-name{font-weight:700;font-size:1.05rem}.wsp-price{font-weight:700;opacity:.85}.wsp-desc{font-size:.9rem;opacity:.7;line-height:1.5}.wsp-buy{margin-top:8px;display:inline-block;text-align:center;padding:10px 16px;border:1px solid currentColor;border-radius:10px;text-decoration:none;color:inherit;font-weight:600}.wsp-buy:hover{opacity:.8}</style>';
+  return css + '<div class="wsp-grid">' + cards + '</div>';
+}
+async function doProducts(request, env){
+  try {
+    if (!env.KV) return fail('Storage not configured');
+    const url = new URL(request.url);
+    if (request.method === 'GET') {
+      const siteId = url.searchParams.get('siteId') || '';
+      const key = url.searchParams.get('key') || '';
+      if (!siteId || key !== (await siteKey(siteId, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
+      let products = [];
+      try { const raw = await env.KV.get('products:' + siteId); if (raw) products = JSON.parse(raw); } catch(e){}
+      return succeed({ ok:true, products: products });
+    }
+    const b = await request.json();
+    if (!b.siteId || !b.key) return fail('Missing data');
+    if (b.key !== (await siteKey(b.siteId, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
+    let _pro = false;
+    try { const _s = await getSession(request, env); if (_s){ const _u = JSON.parse((await env.KV.get('user:'+(_s.email||'').toLowerCase()))||'{}'); _pro = !!(_u && _u.plan==='pro') || ((_s.email||'').toLowerCase()===SUPPORT_EMAIL.toLowerCase()); } } catch(e){}
+    if (!_pro) return fail('PRO_REQUIRED');
+    let products = Array.isArray(b.products) ? b.products.slice(0,200) : [];
+    products = products.map(function(p){ return { name:String(p.name||'').slice(0,140), price:String(p.price||'').slice(0,40), img:String(p.img||'').slice(0,600), desc:String(p.desc||'').slice(0,500) }; }).filter(function(p){ return p.name; });
+    await env.KV.put('products:' + b.siteId, JSON.stringify(products));
+    return succeed({ ok:true, products: products });
+  } catch(e){ return fail(e.message); }
+}
+async function doPlanPages(request, env){
+  const _s = await getSession(request, env);
+  let _pro = false;
+  try { if (_s){ const _u = JSON.parse((env.KV && await env.KV.get('user:'+(_s.email||'').toLowerCase())) || '{}'); _pro = !!(_u && _u.plan==='pro') || ((_s.email||'').toLowerCase()===SUPPORT_EMAIL.toLowerCase()); } } catch(e){}
+  if (!_pro) return fail('PRO_REQUIRED');
+  let body; try { body = await request.json(); } catch { return fail('Invalid request'); }
+  return succeed({ pages: planPages((body.prompt||''), (body.type||'')) });
+}
+
+// Generate a single non-home page using the finished home HTML as the design reference.
+async function doGeneratePage(request, env){
+  const _sess = await getSession(request, env);
+  if (!_sess) return fail('Please sign in to generate pages.');
+  const keys = geminiKeys(env);
+  if (!keys.length) return fail('GEMINI_API_KEY not set in Cloudflare environment variables.');
+  let _pro = false;
+  try { const _u = JSON.parse((env.KV && await env.KV.get('user:'+(_sess.email||'').toLowerCase())) || '{}'); _pro = !!(_u && _u.plan==='pro') || ((_sess.email||'').toLowerCase()===SUPPORT_EMAIL.toLowerCase()); } catch(e){}
+  if (!_pro) return fail('PRO_REQUIRED');
+  let body; try { body = await request.json(); } catch { return fail('Invalid request'); }
+  const home = (body.home || '').toString();
+  const page = body.page || {};
+  const pages = Array.isArray(body.pages) && body.pages.length ? body.pages : [{path:'',title:'Home'}, {path:(page.path||''),title:(page.title||'Page')}];
+  const siteId = (body.siteId || '').toString() || ('ws' + Math.random().toString(36).slice(2,9));
+  if (!home) return fail('Missing home page reference');
+  if (!page || typeof page.title !== 'string') return fail('Missing page spec');
+  const ref = stripDataUris(home);
+  const navBrief = pageNavBrief(pages, page.path||'');
+  const promptText = PAGE_GEN_PROMPT
+    + '\n\n=== THE EXISTING HOME PAGE (your design reference - match it exactly) ===\n' + ref.html
+    + '\n\n=== THE PAGE TO BUILD ===\nPage title: ' + page.title + '\nPage path: /' + (page.path||'') + '\nWhat this page is for: ' + (page.role || page.title)
+    + '\n\n' + navBrief
+    + '\n\n' + PAGE_GEN_RULES;
+  try {
+    const gbody = JSON.stringify({
+      contents: [{ parts: [{ text: promptText }] }],
+      generationConfig: { maxOutputTokens: 32768, temperature: 0.9, thinkingConfig: { thinkingBudget: 1024 } }
+    });
+    let result = await callGemini(keys, gbody, 'gemini-2.5-flash', 91000, 94000);
+    if (result.error) return fail(result.error);
+    let html = cleanHTML(result.data);
+    html = restoreDataUris(html, ref.map);
+    let finalHtml = html.includes('</html>') ? html : html + '\n</body>\n</html>';
+    finalHtml = sanitizeGenerated(finalHtml);
+    finalHtml = ensureMobile(finalHtml);
+    finalHtml = tidyGenerated(finalHtml);
+    finalHtml = ensureFavicon(finalHtml);
+    finalHtml = withReveal(finalHtml);
+    finalHtml = withFix(finalHtml);
+    finalHtml = withForms(finalHtml, siteId);
+    return succeed({ html: finalHtml, path: page.path||'', title: page.title });
+  } catch(e){ return fail(e.message); }
 }
 
 async function doGenerate(request, env) {
