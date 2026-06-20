@@ -29,7 +29,7 @@ OUTPUT: Raw HTML only, <!DOCTYPE html> to </html>. No markdown, no backticks, no
 
 ━━━ REQUIRED SECTIONS (include ALL of these) ━━━
 
-1. NAVIGATION — sticky flex nav (display:flex; align-items:center; justify-content:space-between; gap at least 1.5rem). Brand/logo on the left with CLEAR space from the 4-5 links — the logo must never touch or overlap the links. Exactly ONE CTA button on the right — never output two CTA buttons in the nav. Collapse the links into a hamburger menu below 820px. Wrap the brand/logo text in a tag carrying the attribute data-ws-field="brand".
+1. NAVIGATION — output exactly ONE sticky flex nav bar (display:flex; align-items:center; justify-content:space-between; gap at least 1.5rem). Brand/logo on the left with CLEAR space from the 4-5 links — the logo must never touch or overlap the links. Exactly ONE CTA button on the right. RESPONSIVE RULES (critical, the #1 cause of broken navs): above 820px show the inline links + the single CTA and KEEP THE HAMBURGER BUTTON HIDDEN (display:none). The collapsible mobile menu element MUST be display:none by default and may ONLY become visible inside a @media (max-width:820px) block when it is toggled open — it must NEVER render above 820px. Two stacked rows of links, two visible CTA buttons, or any duplicated nav at the same screen width is a BUG: never produce it. Put the show/hide entirely in CSS media queries, not just JS, so the desktop view is correct before any script runs. Wrap the brand/logo text in a tag carrying the attribute data-ws-field="brand".
 2. HERO — dramatic full-width section. Large RESPONSIVE headline using font-size:clamp(2rem,6vw,4.5rem) so it scales down on phones and NEVER overflows or gets clipped; weight 900; letter-spacing -2px; the headline MUST be allowed to wrap onto multiple lines (never white-space:nowrap). Subheadline. Two CTA buttons. Let the hero content float cleanly on the section background - never wrap the headline, subheadline or buttons in a visible card, panel or bordered box; they sit directly on the background. Keep generous side padding so text never touches the screen edges. All hero text must strongly contrast with the hero background: if the hero background is dark or uses a photo/image slot, the headline and subtext are white/near-white (with a dark overlay over any photo) — never dark text on a dark hero.
 3. TRUST/STATS BAR — a SINGLE horizontal strip with 3-4 real stats or trust signals specific to this business type, shown ONCE. Never repeat the same stat twice and never stack a second identical copy of the bar. On phones the items wrap cleanly into a column. If you make this a scrolling ticker, build it exactly per the MARQUEE rule below.
 4. SERVICES/FEATURES — 3-4 detailed cards. Each has an icon, bold title, 2-3 sentence description. Real content, not generic filler.
@@ -180,8 +180,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r186">
-<script>window._wsBuild="2026-06-10-r186";console.log("%c[Websprout] build 2026-06-10-r186 — real store checkout (2% take, subscription-gated)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r187">
+<script>window._wsBuild="2026-06-10-r187";console.log("%c[Websprout] build 2026-06-10-r187 — nav: hide mobile menu on desktop (no duplicate nav)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -7311,7 +7311,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r186';
+const BUILD_ID = '2026-06-10-r187';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
