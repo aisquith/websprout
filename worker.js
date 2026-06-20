@@ -180,8 +180,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r170">
-<script>window._wsBuild="2026-06-10-r170";console.log("%c[Websprout] build 2026-06-10-r170 (transparent floating nav: logo and links sit straight on the page with no bar at the top; a faint blurred background fades in only once you scroll so it stays readable over the light sections)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r171">
+<script>window._wsBuild="2026-06-10-r171";console.log("%c[Websprout] build 2026-06-10-r171 (real fix for the nav band: the transparent nav was revealing the flat dark body above the hero; the hero now extends up under the nav so its gradient fills behind it - genuinely transparent now, content unmoved)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -245,7 +245,7 @@ html.ws-focus :focus{outline:2px solid #4ade80 !important;outline-offset:2px}
 .nav-cta:active{transform:scale(.92)}
 
 /* ---- HERO ---- */
-.hero{padding:72px 5vw 60px;text-align:center;position:relative;overflow:hidden;background:#060d05}
+.hero{padding:130px 5vw 60px;text-align:center;position:relative;overflow:hidden;background:#060d05;margin-top:-58px}
 .hero::before{content:'';position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:700px;height:500px;background:radial-gradient(ellipse,rgba(45,122,58,.18) 0%,transparent 70%);pointer-events:none}
 .hero-pill{display:inline-flex;align-items:center;gap:7px;background:rgba(45,122,58,.12);color:#4ade80;border:1px solid rgba(45,122,58,.3);border-radius:100px;padding:5px 14px 5px 8px;font-size:12px;font-weight:600;margin-bottom:28px}
 .hero-pill-dot{width:20px;height:20px;background:#2d7a3a;border-radius:100px;display:flex;align-items:center;justify-content:center;font-size:10px}
@@ -7055,7 +7055,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r170';
+const BUILD_ID = '2026-06-10-r171';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
