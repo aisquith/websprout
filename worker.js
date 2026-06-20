@@ -180,8 +180,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r168">
-<script>window._wsBuild="2026-06-10-r168";console.log("%c[Websprout] build 2026-06-10-r168 (premium polish: app CTA buttons now spring/depress on press; and the generator is told to keep hero content frameless (no box) and give CTAs a floating shadow + tactile press animation)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r169">
+<script>window._wsBuild="2026-06-10-r169";console.log("%c[Websprout] build 2026-06-10-r169 (forceful frameless-hero rule with right/wrong examples placed in the per-generation creative direction so Gemini stops boxing hero text; app button press made more pronounced)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -241,7 +241,7 @@ html.ws-rm *,html.ws-rm *::before,html.ws-rm *::after{animation:none !important;
 html.ws-focus :focus{outline:2px solid #4ade80 !important;outline-offset:2px}
 .nav-cta{background:#2d7a3a;color:#fff;padding:8px 18px;border-radius:7px;font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:transform .2s cubic-bezier(.34,1.5,.64,1),background .15s,box-shadow .15s;white-space:nowrap}
 .nav-cta:hover{background:#3dba52;transform:translateY(-1px)}
-.nav-cta:active{transform:scale(.94)}
+.nav-cta:active{transform:scale(.92)}
 
 /* ---- HERO ---- */
 .hero{padding:72px 5vw 60px;text-align:center;position:relative;overflow:hidden;background:#060d05}
@@ -309,7 +309,7 @@ textarea.dark-input{resize:vertical;min-height:76px;line-height:1.6}
 .s-val{font-size:13px;color:rgba(255,255,255,.7);font-weight:500}
 .gen-btn{background:linear-gradient(135deg,#4ade80 0%,#22c55e 48%,#16a34a 100%);color:#06210f;padding:12px 28px;border-radius:10px;font-size:15px;font-weight:800;border:none;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;transition:transform .22s cubic-bezier(.34,1.55,.64,1),box-shadow .2s,filter .2s;box-shadow:0 6px 22px -4px rgba(34,197,94,.5)}
 .gen-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 30px -6px rgba(34,197,94,.7);filter:brightness(1.05)}
-.gen-btn:active:not(:disabled){transform:translateY(0) scale(.97);box-shadow:0 3px 12px -4px rgba(34,197,94,.45)}
+.gen-btn:active:not(:disabled){transform:translateY(1px) scale(.95);box-shadow:0 2px 10px -4px rgba(34,197,94,.45)}
 .gen-btn:disabled{opacity:.5;cursor:not-allowed}
 .loading{display:none;padding:32px 22px;text-align:center}
 .loading.on{display:block}
@@ -7052,7 +7052,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r168';
+const BUILD_ID = '2026-06-10-r169';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -7448,6 +7448,7 @@ function varietyBrief(){
   var l = layouts[Math.floor(Math.random()*layouts.length)];
   return '\n\n=== THIS SITE\'S CREATIVE DIRECTION (make THIS specific site distinct — never fall back to a generic template) ===\n'
     + 'HERO TREATMENT (build this exact hero style): ' + h + '\n'
+    + 'HERO CONTENT IS FRAMELESS (critical): the headline, subheadline and CTA buttons sit DIRECTLY on the hero background and float cleanly. NEVER place the hero text inside a card, panel, glass/frosted box, bordered container or filled content box. Correct = a big headline straight on the gradient or photo with the buttons right below it. Wrong = the words grouped inside a translucent rounded card floating in the middle of the hero. (A side visual in a split or card-stack hero MAY be framed - just never box the words themselves.)\n'
     + 'SIGNATURE INTERACTIVE FEATURES — build ONLY these (skip one only if it truly cannot fit this business; do NOT silently default to a marquee):\n  - ' + f.join('\n  - ') + '\n'
     + 'LAYOUT FLAVOR: ' + l + '\n'
     + 'CRITICAL — make each chosen feature ACTUALLY FUNCTION: follow its "Build:" recipe exactly as the proven technique, and write ALL the CSS and JS it needs so it works on load (and on tap for touch). Test it mentally end-to-end. If you genuinely cannot make a feature fully work inline, build a SIMPLER but fully-working version of THAT SAME feature — never a different feature, and never a static placeholder, a dead control, or a fake that only looks like the feature. A feature that truly works beats an ambitious one that does not.\n'
