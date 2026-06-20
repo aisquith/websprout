@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r164">
-<script>window._wsBuild="2026-06-10-r164";console.log("%c[Websprout] build 2026-06-10-r164 (account modal now has a Settings area: working accessibility toggles for reduce-motion and always-on focus outlines (saved per device), plus an honest passwordless sign-in/security note with a Google 2FA link)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r165">
+<script>window._wsBuild="2026-06-10-r165";console.log("%c[Websprout] build 2026-06-10-r165 (fewer generation timeouts: trimmed the model thinking budget so output starts sooner, and gave Flash generation a few more seconds (91s/94s, still under the edge limit) before the took-too-long error)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -7034,7 +7034,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r164';
+const BUILD_ID = '2026-06-10-r165';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -7473,11 +7473,11 @@ async function doGenerate(request, env) {
   try {
     const body2 = JSON.stringify({
       contents: [{ parts: [{ text: PROMPT + '\n\nUser request: ' + prompt + getNicheDirection(prompt) + '\n\nSTYLE DIRECTION: ' + getStyleDirection(prompt) + '\n\n' + DESIGN_AMBITION + varietyBrief() + '\n\nCRITICAL RULES:\n1. CONTRAST IS THE #1 PRIORITY: every text element must be instantly readable against the EXACT background behind it — dark text only on light backgrounds, white/near-white text only on dark backgrounds, never dark-on-dark or light-on-light. If the hero background is dark or uses a photo/image slot, the hero headline and subtext MUST be white/near-white. A dark headline on a dark hero is a failure.\n2. Do NOT use vh or viewport-height units for section/hero HEIGHTS — size heights with px or % (e.g. min-height:640px), required for correct rendering. You SHOULD use clamp() with vw for responsive FONT-SIZE so large headings shrink on small screens and never overflow (e.g. font-size:clamp(2rem,6vw,4.5rem)).\n3. Scroll-reveal and entrance animations are ENCOURAGED, but every element MUST animate from hidden TO fully visible — nothing stays hidden. Keep transitions under 0.8s.\n4. ALWAYS end with </body></html> — never leave HTML incomplete.\n5. COMPLETION IS MANDATORY: always finish the entire page through </body></html>. Keep the page TIGHT and FOCUSED — aim for roughly 380-520 lines total, favoring 4-6 strong sections over many and keeping each one concise. A shorter, complete, well-designed page always beats a long or truncated one. 6. NO horizontal overflow: set box-sizing:border-box globally, never let any element be wider than the viewport, and the page must NEVER scroll sideways; headings and long text must wrap (overflow-wrap:break-word) and must never use white-space:nowrap on multi-word text. 7. SPACING: the nav logo must never touch the menu links, and text must never touch the screen edges — use container padding/margins and clear gaps between elements. 8. WORKING INTERACTIVITY: every button and nav link must actually do something — nav links use href="#id" and scroll to a real section that has that id, and the primary CTA points to the contact, quote, or inventory section. Do NOT render any clickable-looking control that does nothing. If you include a hamburger/menu icon, it MUST be hidden on desktop (display:none above ~820px, shown only on mobile) AND wired with a few lines of JS to toggle a real mobile menu of the nav links — never an animated icon with no menu behind it.' }] }],
-      generationConfig: { maxOutputTokens: 32768, temperature: 0.95, thinkingConfig: { thinkingBudget: 3072 } }
+      generationConfig: { maxOutputTokens: 32768, temperature: 0.95, thinkingConfig: { thinkingBudget: 1536 } }
     });
     // Generation budget: give Pro a tight window so that if it stalls we can still fall back to the
     // faster, more reliable Flash model and return a site instead of a Cloudflare 524 timeout.
-    let result = await callGemini(keys, body2, genModel, genModel === 'gemini-2.5-pro' ? 82000 : 86000, genModel === 'gemini-2.5-pro' ? 84000 : 90000);
+    let result = await callGemini(keys, body2, genModel, genModel === 'gemini-2.5-pro' ? 82000 : 91000, genModel === 'gemini-2.5-pro' ? 84000 : 94000);
     if (result.error && genModel === 'gemini-2.5-pro') {
       try { console.warn('[Websprout] Pro generation failed (' + result.error + ') — falling back to Flash'); } catch (e) {}
       result = await callGemini(keys, body2, 'gemini-2.5-flash', 10000, 11000);
