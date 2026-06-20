@@ -58,7 +58,7 @@ OUTPUT: Raw HTML only, <!DOCTYPE html> to </html>. No markdown, no backticks, no
 10. FOOTER — dark background. 3 columns: brand+tagline, links, contact. Copyright line.
 
 ━━━ DESIGN ━━━
-Pick ONE strong accent color that fits the brand. Build a full color system around it. Typography should be dramatic — big size contrast between headlines and body. Generous spacing. Cards with hover effects. Sticky nav with blur background.
+Pick ONE strong accent color that fits the brand. Build a full color system around it. Typography should be dramatic — big size contrast between headlines and body. Generous spacing. Cards with hover effects. Sticky nav that floats transparently over the hero - NO solid bar or strip at the top. The hero background MUST extend up behind the nav so nothing dark shows above it; keep the nav text high-contrast against the hero; fade in a subtle blur/background only once the user scrolls past the hero.
 
 ━━━ CONTRAST & READABILITY (CRITICAL — the #1 rule, never violate) ━━━
 Every piece of text MUST be instantly readable against the EXACT color or image directly behind it (WCAG AA, 4.5:1 or better). Unreadable text is the most common failure — do not make it.
@@ -161,7 +161,7 @@ COPY CRAFT — the hero headline states a concrete, bold promise for THIS exact 
 
 BANNED CLICHÉS (instant fail) — avoid the default "AI website" look entirely: a centered hero followed by three identical centered cards; Inter/Roboto/Open Sans as the HEADLINE font; a generic blue-to-purple gradient when the brand is not tech; emoji used as feature icons; "Welcome to [Business]" or "Your trusted partner" headlines; a plain white page with evenly-spaced grey cards and one flat accent; timid undersized headlines. If a draft looks like a free template, commit harder to the concept and the typography.
 
-SIGNATURE MOVES — keep the page feeling premium with these, most of which are pure CSS so they cost little. ALWAYS include: (1) an animated hero background — CSS gradient/aurora/mesh or a few slowly drifting blurred color blobs, NEVER a flat fill; (2) at least one headline word with a gradient text-fill or a bold colored highlight; (3) staggered scroll-reveal (fade + slide-up) on major sections, in your own CSS, every element ending fully visible; (4) rich hover states on cards and buttons (lift + shadow + slight scale or glow); (5) a sticky nav that gains blur + shadow on scroll. Add a marquee/ticker, animated count-up stats, or a bento/asymmetric layout ONLY where one fits naturally — do not cram all of them in. A tight, fast, polished page with a strong on-brand palette beats piling on every effect; pick the right concept and commit, but keep it lean.
+SIGNATURE MOVES — keep the page feeling premium with these, most of which are pure CSS so they cost little. ALWAYS include: (1) an animated hero background — CSS gradient/aurora/mesh or a few slowly drifting blurred color blobs, NEVER a flat fill; (2) at least one headline word with a gradient text-fill or a bold colored highlight; (3) staggered scroll-reveal (fade + slide-up) on major sections, in your own CSS, every element ending fully visible; (4) rich hover states on cards and buttons (lift + shadow + slight scale or glow); (5) a transparent sticky nav that floats over the hero (the hero background fills behind it, no bar or strip at the top) and gains a blur + subtle background only once you scroll. Add a marquee/ticker, animated count-up stats, or a bento/asymmetric layout ONLY where one fits naturally — do not cram all of them in. A tight, fast, polished page with a strong on-brand palette beats piling on every effect; pick the right concept and commit, but keep it lean.
 
 GUARDRAILS — bold but never broken: readability wins every time (text must stay strongly contrasted against its exact background), NEVER cause horizontal scroll, and ALWAYS finish the entire page through the closing body and html tags. If you are running long, simplify a section rather than truncate — a complete, daring, readable page always beats an elaborate broken one.`;
 
@@ -180,8 +180,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r171">
-<script>window._wsBuild="2026-06-10-r171";console.log("%c[Websprout] build 2026-06-10-r171 (real fix for the nav band: the transparent nav was revealing the flat dark body above the hero; the hero now extends up under the nav so its gradient fills behind it - genuinely transparent now, content unmoved)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r172">
+<script>window._wsBuild="2026-06-10-r172";console.log("%c[Websprout] build 2026-06-10-r172 (generated sites now match the app: prompt aligned to a transparent floating nav over the hero - hero fills behind it (no dark strip), high-contrast text, background fades in on scroll; removed the contradictory solid-bar instruction)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -7055,7 +7055,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r171';
+const BUILD_ID = '2026-06-10-r172';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
