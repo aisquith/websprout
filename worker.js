@@ -180,8 +180,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r169">
-<script>window._wsBuild="2026-06-10-r169";console.log("%c[Websprout] build 2026-06-10-r169 (forceful frameless-hero rule with right/wrong examples placed in the per-generation creative direction so Gemini stops boxing hero text; app button press made more pronounced)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r170">
+<script>window._wsBuild="2026-06-10-r170";console.log("%c[Websprout] build 2026-06-10-r170 (transparent floating nav: logo and links sit straight on the page with no bar at the top; a faint blurred background fades in only once you scroll so it stays readable over the light sections)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -210,7 +210,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-
 .hero h1,.section-title,.nav-logo,.stat-n,.price-amt,.how-step-num{font-family:'Sora',-apple-system,BlinkMacSystemFont,sans-serif}
 
 /* ---- NAV ---- */
-nav{position:sticky;top:0;z-index:100;height:58px;background:rgba(6,13,5,.9);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;padding:0 5vw;gap:20px}
+nav{position:sticky;top:0;z-index:100;height:58px;background:transparent;border-bottom:1px solid transparent;display:flex;align-items:center;padding:0 5vw;gap:20px;transition:background .25s ease,backdrop-filter .25s ease,border-color .25s ease}
+nav.scrolled{background:rgba(6,13,5,.9);backdrop-filter:blur(16px);border-bottom-color:rgba(255,255,255,.07)}
 .nav-logo{font-size:18px;font-weight:800;color:#fff;text-decoration:none;display:flex;align-items:center;gap:9px;letter-spacing:-.6px;margin-right:auto}
 .lw{white-space:nowrap}
 .nav-logo-mark{width:30px;height:30px;background:linear-gradient(145deg,#3ea04e,#22692e);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 4px 14px rgba(45,122,58,.4)}
@@ -2817,6 +2818,8 @@ function showPanel(n){
 document.addEventListener('DOMContentLoaded',function(){
   // Wrap in try-catch to catch silent errors
   try{
+  // Transparent nav that gains a background once you scroll (keeps it readable over light sections)
+  (function(){var nav=document.querySelector('nav');if(nav){var os=function(){if(window.scrollY>16)nav.classList.add('scrolled');else nav.classList.remove('scrolled');};os();window.addEventListener('scroll',os,{passive:true});}})();
   // Mobile nav dropdown toggle
   (function(){
     var burger=document.getElementById('navBurger');
@@ -7052,7 +7055,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r169';
+const BUILD_ID = '2026-06-10-r170';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
