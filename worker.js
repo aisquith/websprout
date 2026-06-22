@@ -180,8 +180,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r200">
-<script>window._wsBuild="2026-06-10-r200";console.log("%c[Websprout] build 2026-06-10-r200 — page tabs now a clean top row, not a stray left column","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r201">
+<script>window._wsBuild="2026-06-10-r201";console.log("%c[Websprout] build 2026-06-10-r201 — multi-page build shows live progress + recovers from a stuck page","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4993,7 +4993,7 @@ function injectImageIntoSite(dataUrl,action){
       if(plan.length<2){ tt("Could not plan pages for this site"); if(btn) btn.disabled=false; return; }
       var navPages=plan.map(function(p){return {path:p.path,title:p.title};});
       var pages=[{path:"",title:(plan[0].title||"Home"),html:home}];
-      var rest=plan.slice(1); var i=0;
+      var rest=plan.slice(1); var i=0; var tries=0;
       function step(){
         if(i>=rest.length){
           try{ pages[0].html=wsLinkHomeNav(pages[0].html, navPages); }catch(_e){} window._wsPages=pages; window._wsCurPage=0; renderTabs(0); persist();
@@ -5002,11 +5002,19 @@ function injectImageIntoSite(dataUrl,action){
           return;
         }
         var pg=rest[i];
-        tt("Building "+(pg.title||"page")+" ("+(i+2)+"/"+plan.length+")...");
-        fetch("/generate-page",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({home:home,page:pg,pages:navPages,siteId:siteId})})
+        var t0=Date.now();
+        function hb(){ tt("Building "+(pg.title||"page")+" ("+(i+2)+"/"+plan.length+")... "+Math.round((Date.now()-t0)/1000)+"s"); }
+        hb(); var beat=setInterval(hb,3000);
+        var ctrl=(typeof AbortController!=="undefined")?new AbortController():null;
+        var to=setTimeout(function(){ if(ctrl){ try{ctrl.abort();}catch(_a){} } },105000);
+        function fin(){ clearInterval(beat); clearTimeout(to); }
+        function advance(ok){ fin(); if(ok){ i++; tries=0; } else if(tries<1){ tries++; } else { pages.push({path:pg.path,title:pg.title,html:home}); i++; tries=0; } step(); }
+        var opts={method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({home:home,page:pg,pages:navPages,siteId:siteId})};
+        if(ctrl) opts.signal=ctrl.signal;
+        fetch("/generate-page",opts)
         .then(function(r){return r.json();})
-        .then(function(res){ if(res&&res.html) pages.push({path:pg.path,title:pg.title,html:res.html}); i++; step(); })
-        .catch(function(){ i++; step(); });
+        .then(function(res){ if(res&&res.html){ pages.push({path:pg.path,title:pg.title,html:res.html}); advance(true); } else { advance(false); } })
+        .catch(function(){ advance(false); });
       }
       step();
     })
@@ -7351,7 +7359,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r200';
+const BUILD_ID = '2026-06-10-r201';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
