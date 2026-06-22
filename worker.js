@@ -180,8 +180,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r198">
-<script>window._wsBuild="2026-06-10-r198";console.log("%c[Websprout] build 2026-06-10-r198 — Add pages + Products now reachable in Manage menu","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r199">
+<script>window._wsBuild="2026-06-10-r199";console.log("%c[Websprout] build 2026-06-10-r199 — Add pages + Products menu items now fire their actions","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1094,13 +1094,13 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
           <button class="gs-item" data-tool="yourInfoBtn">&#128221; Your info<span class="gs-sub">Name, phone, email &amp; hours — everywhere</span></button>
           <button class="gs-item" data-tool="sectionsBtn">&#9783; Manage sections<span class="gs-sub">Add, remove or reorder</span></button>
           <button class="gs-item" data-tool="seoBtn">&#128269; SEO &amp; sharing<span class="gs-sub">Title, description, social preview</span></button>
-          <button class="gs-item" data-tool="multiBtn">&#43; Add pages<span class="gs-sub">Turn this into a multi-page site (About, Shop, Contact...)</span></button>
+          <button class="gs-item" onclick="if(window.wsBuildFullSite){window.wsBuildFullSite();}else{var b=document.getElementById('multiBtn');if(b)b.click();}">&#43; Add pages<span class="gs-sub">Turn this into a multi-page site (About, Shop, Contact...)</span></button>
           <div class="gs-head">Grow your business</div>
           <button class="gs-item" data-tool="leadsBtn">&#128236; Leads<span class="gs-sub">See who contacted you</span></button>
           <button class="gs-item" data-tool="statsBtn">&#128202; Analytics<span class="gs-sub">Your views, leads &amp; reviews</span></button>
           <button class="gs-item" data-tool="postBtn">&#9997; Marketing copy<span class="gs-sub">AI posts, emails &amp; promos</span></button>
           <button class="gs-item" data-tool="payBtn">&#128179; Product payments<span class="gs-sub">Add your own pay links to buttons</span></button>
-          <button class="gs-item" data-tool="prodBtn">&#128722; Products &amp; cart<span class="gs-sub">Build a shop with a cart &amp; checkout</span></button>
+          <button class="gs-item" onclick="if(window.wsOpenProducts){window.wsOpenProducts();}else{var b=document.getElementById('prodBtn');if(b)b.click();}">&#128722; Products &amp; cart<span class="gs-sub">Build a shop with a cart &amp; checkout</span></button>
           <button class="gs-item" id="invoiceMenuItem" data-tool="invoiceBtn" style="display:none">&#129534; Send an invoice<span class="gs-sub">Get paid with a Stripe link</span></button>
           <div class="gs-head">Start fresh</div>
           <button class="gs-item" data-tool="regenBtn">&#8635; Regenerate the design<span class="gs-sub">Keep your words, new look</span></button>
@@ -7351,7 +7351,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r198';
+const BUILD_ID = '2026-06-10-r199';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
