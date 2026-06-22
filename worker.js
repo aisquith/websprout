@@ -29,7 +29,7 @@ OUTPUT: Raw HTML only, <!DOCTYPE html> to </html>. No markdown, no backticks, no
 
 ━━━ REQUIRED SECTIONS (include ALL of these) ━━━
 
-1. NAVIGATION — output exactly ONE sticky flex nav bar (display:flex; align-items:center; justify-content:space-between; gap at least 1.5rem). Brand/logo on the left with CLEAR space from the 4-5 links — the logo must never touch or overlap the links. Exactly ONE CTA button on the right. RESPONSIVE RULES (critical, the #1 cause of broken navs): above 820px show the inline links + the single CTA and KEEP THE HAMBURGER BUTTON HIDDEN (display:none). The collapsible mobile menu element MUST be display:none by default and may ONLY become visible inside a @media (max-width:820px) block when it is toggled open — it must NEVER render above 820px. Two stacked rows of links, two visible CTA buttons, or any duplicated nav at the same screen width is a BUG: never produce it. Put the show/hide entirely in CSS media queries, not just JS, so the desktop view is correct before any script runs. Wrap the brand/logo text in a tag carrying the attribute data-ws-field="brand".
+1. NAVIGATION — output exactly ONE sticky flex nav bar (display:flex; align-items:center; justify-content:space-between; gap at least 1.5rem). Brand/logo on the left with CLEAR space from the 4-5 links — the logo must never touch or overlap the links. Exactly ONE CTA button on the right. RESPONSIVE RULES (critical, the #1 cause of broken navs): above 820px show the inline links + the single CTA and KEEP THE HAMBURGER BUTTON HIDDEN (display:none). The collapsible mobile menu element MUST be display:none by default and may ONLY become visible inside a @media (max-width:820px) block when it is toggled open — it must NEVER render above 820px. Two stacked rows of links, two visible CTA buttons, or any duplicated nav at the same screen width is a BUG: never produce it. Put the show/hide entirely in CSS media queries, not just JS, so the desktop view is correct before any script runs. Wrap the brand/logo text in a tag carrying the attribute data-ws-field="brand". CONTRAST — the nav must be readable the instant the page loads: the nav link text AND the nav CTA button must each clearly contrast with whatever sits directly behind or within them. If the nav floats over a light or pale hero, the links and the button label are dark (#111); over a dark hero they are white/near-white. A nav button must NEVER have its label the same colour as its own fill — white text on a white/pale button, or dark text on a dark button, is invisible and is a critical failure. A solid white (or pale) nav button needs dark text; a dark/accent button needs white text. Re-check every nav link and the nav button before finishing.
 2. HERO — dramatic full-width section. Large RESPONSIVE headline using font-size:clamp(2rem,6vw,4.5rem) so it scales down on phones and NEVER overflows or gets clipped; weight 900; letter-spacing -2px; the headline MUST be allowed to wrap onto multiple lines (never white-space:nowrap). Subheadline. Two CTA buttons. Let the hero content float cleanly on the section background - never wrap the headline, subheadline or buttons in a visible card, panel or bordered box; they sit directly on the background. Keep generous side padding so text never touches the screen edges. All hero text must strongly contrast with the hero background: if the hero background is dark or uses a photo/image slot, the headline and subtext are white/near-white (with a dark overlay over any photo) — never dark text on a dark hero.
 3. TRUST/STATS BAR — a SINGLE horizontal strip with 3-4 real stats or trust signals specific to this business type, shown ONCE. Never repeat the same stat twice and never stack a second identical copy of the bar. On phones the items wrap cleanly into a column. If you make this a scrolling ticker, build it exactly per the MARQUEE rule below.
 4. SERVICES/FEATURES — 3-4 detailed cards. Each has an icon, bold title, 2-3 sentence description. Real content, not generic filler.
@@ -180,8 +180,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r196">
-<script>window._wsBuild="2026-06-10-r196";console.log("%c[Websprout] build 2026-06-10-r196 — Pro generates on gemini-2.5-pro (longer timeout, Flash fallback)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r198">
+<script>window._wsBuild="2026-06-10-r198";console.log("%c[Websprout] build 2026-06-10-r198 — Add pages + Products now reachable in Manage menu","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1094,11 +1094,13 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
           <button class="gs-item" data-tool="yourInfoBtn">&#128221; Your info<span class="gs-sub">Name, phone, email &amp; hours — everywhere</span></button>
           <button class="gs-item" data-tool="sectionsBtn">&#9783; Manage sections<span class="gs-sub">Add, remove or reorder</span></button>
           <button class="gs-item" data-tool="seoBtn">&#128269; SEO &amp; sharing<span class="gs-sub">Title, description, social preview</span></button>
+          <button class="gs-item" data-tool="multiBtn">&#43; Add pages<span class="gs-sub">Turn this into a multi-page site (About, Shop, Contact...)</span></button>
           <div class="gs-head">Grow your business</div>
           <button class="gs-item" data-tool="leadsBtn">&#128236; Leads<span class="gs-sub">See who contacted you</span></button>
           <button class="gs-item" data-tool="statsBtn">&#128202; Analytics<span class="gs-sub">Your views, leads &amp; reviews</span></button>
           <button class="gs-item" data-tool="postBtn">&#9997; Marketing copy<span class="gs-sub">AI posts, emails &amp; promos</span></button>
           <button class="gs-item" data-tool="payBtn">&#128179; Product payments<span class="gs-sub">Add your own pay links to buttons</span></button>
+          <button class="gs-item" data-tool="prodBtn">&#128722; Products &amp; cart<span class="gs-sub">Build a shop with a cart &amp; checkout</span></button>
           <button class="gs-item" id="invoiceMenuItem" data-tool="invoiceBtn" style="display:none">&#129534; Send an invoice<span class="gs-sub">Get paid with a Stripe link</span></button>
           <div class="gs-head">Start fresh</div>
           <button class="gs-item" data-tool="regenBtn">&#8635; Regenerate the design<span class="gs-sub">Keep your words, new look</span></button>
@@ -7349,7 +7351,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r196';
+const BUILD_ID = '2026-06-10-r198';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
