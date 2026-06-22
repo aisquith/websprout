@@ -180,8 +180,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r199">
-<script>window._wsBuild="2026-06-10-r199";console.log("%c[Websprout] build 2026-06-10-r199 — Add pages + Products menu items now fire their actions","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r200">
+<script>window._wsBuild="2026-06-10-r200";console.log("%c[Websprout] build 2026-06-10-r200 — page tabs now a clean top row, not a stray left column","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -488,7 +488,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .s-purple{background:linear-gradient(135deg,#6d28d9,#7c3aed);color:#fff}
 .s-purple:hover{box-shadow:0 4px 16px rgba(109,40,217,.4)}
 .s-body{display:flex;flex:1;overflow:hidden}
-.preview-frame-wrap{flex:1;position:relative;display:flex;justify-content:center;background:#fff;overflow-y:auto;overflow-x:auto;transition:background .3s}
+.preview-frame-wrap{flex:1;position:relative;display:flex;flex-wrap:wrap;justify-content:center;background:#fff;overflow-y:auto;overflow-x:auto;transition:background .3s}
 .preview-frame-wrap.tablet,.preview-frame-wrap.mobile{background:#1a1a1a;padding:20px}
 .preview-frame-wrap.tablet iframe{width:768px!important;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);flex-shrink:0}
 .preview-frame-wrap.mobile iframe{width:390px!important;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.5);flex-shrink:0}
@@ -4955,7 +4955,7 @@ function injectImageIntoSite(dataUrl,action){
   window.wsSyncPages=saveCur;
   function loadPage(i){ var pages=window._wsPages||[]; if(!pages[i]) return; window._wsCurPage=i; var h=pages[i].html; window.gHTML=h; try{ localStorage.setItem("wsh",h); }catch(e){} if(window.undoStack){ window.undoStack=[h]; window.redoStack=[]; } if(window.setPreview) window.setPreview(h); renderTabs(i); }
   function restorePages(){ try{ var raw=localStorage.getItem("ws_pages"); if(!raw) return; var o=JSON.parse(raw); var sid=window._wsSite||localStorage.getItem("ws_site")||""; if(o&&o.pages&&o.pages.length>1&&o.site&&o.site===sid){ window._wsPages=o.pages; window._wsCurPage=o.cur||0; if(window._wsPages[0]){ var hc=curDoc(); if(hc) window._wsPages[0].html=hc; } renderTabs(window._wsCurPage); } }catch(e){} }
-  (function(){ var st=document.createElement("style"); st.textContent=".ws-pagetabs{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 10px;background:rgba(6,13,5,.55);border-bottom:1px solid rgba(255,255,255,.06)}.ws-pagetabs .lbl{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-right:2px}.ws-ptab{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}.ws-ptab.on{background:rgba(45,122,58,.25);border-color:#2d7a3a;color:#7fe39a}"; document.head.appendChild(st); })();
+  (function(){ var st=document.createElement("style"); st.textContent=".ws-pagetabs{flex:0 0 100%;box-sizing:border-box;position:sticky;top:0;z-index:6;display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;align-items:center;padding:8px 10px;background:rgba(6,13,5,.92);border-bottom:1px solid rgba(255,255,255,.06)}.ws-pagetabs .lbl{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-right:2px}.ws-ptab{flex:0 0 auto;white-space:nowrap;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}.ws-ptab.on{background:rgba(45,122,58,.25);border-color:#2d7a3a;color:#7fe39a}"; document.head.appendChild(st); })();
   function renderTabs(active){
     var pages=window._wsPages||[];
     var wrap=$("previewWrap"); var bar=$("wsPageTabs");
@@ -7351,7 +7351,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r199';
+const BUILD_ID = '2026-06-10-r200';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
