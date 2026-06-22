@@ -180,8 +180,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r204">
-<script>window._wsBuild="2026-06-10-r204";console.log("%c[Websprout] build 2026-06-10-r204 — renaming a nav link now syncs tabs + every pages nav","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r206">
+<script>window._wsBuild="2026-06-10-r206";console.log("%c[Websprout] build 2026-06-10-r206 — clicking any nav link now switches pages (matches by name)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2497,7 +2497,7 @@ function autoSetDevice(){
   }catch(e){}
 })();
 
-function toast(m,d){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on');},d||4000);}
+function toast(m,d){var t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('on');if(t._wsTo)clearTimeout(t._wsTo);t._wsTo=setTimeout(function(){t.classList.remove('on');t._wsTo=null;},d||4000);}
 
 // Derive a clean download filename from the site's <title>
 function siteFilename(){
@@ -2748,12 +2748,12 @@ function setPreview(html){
       // all resolve to websprout.app inside an srcdoc iframe and would load the whole app in the preview.
       // For genuine in-page hash links, scroll to the target manually instead of letting it navigate.
       'e.preventDefault();'+
-      'if(h.charAt(0)===\\"/\\"){try{var _pp=window.parent;if(_pp&&_pp._wsPages&&_pp._wsPages.length>1){_pp.wsGoToPath(h.slice(1));return;}}catch(_pe){}}'+
       // External links (DoorDash, Toast, booking pages, socials) go to a DIFFERENT origin — open them in a
       // new tab so they visibly work; they never cause the srcdoc recursion. Same-origin/relative/# links
       // would resolve to websprout.app and load the app, so we keep them in-page: scroll to the matching
       // section, or fall back to the contact form so the button always does something.
       'if((h.indexOf(\"http://\")===0||h.indexOf(\"https://\")===0)&&h.indexOf(\"websprout.app\")===-1){try{window.open(h,\"_blank\",\"noopener\");}catch(err){}return;}'+
+      'try{if(window.parent.wsNavClick&&window.parent.wsNavClick(h,(a.textContent||\"\"))){return;}}catch(_pe){}'+
       'try{var t=(h.length>1&&h.charAt(0)===\"#\")?document.getElementById(h.slice(1)):null;if(!t)t=document.querySelector(\"form\");if(t&&t.scrollIntoView)t.scrollIntoView({behavior:\"smooth\"});}catch(err){}'+
     '},true);'+
     // Never let a form submission navigate the preview away (it was loading the whole app inside the preview)
@@ -4974,6 +4974,18 @@ function injectImageIntoSite(dataUrl,action){
     });
   }
   window.wsRenderPageTabs=renderTabs;
+  window.wsNavClick=function(href, text){
+    try{
+      var pages=window._wsPages||[]; if(pages.length<2) return false;
+      var idx=-1;
+      if(href && href.charAt(0)==="/"){ var p=wsNormPath(href.slice(1)); for(var k=0;k<pages.length;k++){ if((pages[k].path||"")===p){ idx=k; break; } } }
+      if(idx<0 && text){ var t=(text||"").replace(/[ ]+/g," ").trim().toLowerCase(); for(var m=0;m<pages.length;m++){ if((pages[m].title||"").toLowerCase()===t){ idx=m; break; } } }
+      if(idx<0) return false;
+      if(idx===(window._wsCurPage||0)) return true;
+      saveCur(); loadPage(idx);
+      return true;
+    }catch(e){ return false; }
+  };
   window.wsGoToPath=function(path){
     try{
       var pages=window._wsPages||[]; if(pages.length<2) return;
@@ -7460,7 +7472,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r204';
+const BUILD_ID = '2026-06-10-r206';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
