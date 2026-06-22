@@ -74,7 +74,7 @@ Every piece of text MUST be instantly readable against the EXACT color or image 
 ━━━ IMAGE SLOTS ━━━
 HERO IS NEVER AN EMPTY IMAGE SLOT: the hero MUST have a rich, finished, DESIGNED background — a bold gradient or layered color treatment in the brand palette, optionally with subtle texture, shapes or a soft mesh — so it looks striking and complete the instant the page loads. Do NOT put a ws-img-slot in the hero or leave a "click to add photo" box as the hero; the owner can swap in a real hero photo later from the editor.
 For genuine CONTENT photo areas (about, gallery, team, products) where photos naturally belong, use this exact format (users click to upload real photos):
-Large area: <div class="ws-img-slot" data-slot="feature" data-label="Feature photo" style="width:100%;height:460px;background:linear-gradient(135deg,#2b2620,#3a322a);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;border-radius:8px"><div style="font-size:40px;opacity:0.35">&#128247;</div><div style="color:rgba(255,255,255,0.4);font-size:13px;font-weight:600">Click to add photo</div></div>
+Large area: <div class="ws-img-slot" data-slot="feature" data-label="Feature photo" style="width:100%;height:460px;background:linear-gradient(135deg,#2b2620,#3a322a);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;border-radius:8px"><div style="font-size:40px;opacity:0.35">&#128247;</div><div style="color:rgba(255,255,255,.72);font-size:13px;font-weight:600">Click to add photo</div></div>
 Content: <div class="ws-img-slot" data-slot="about" data-label="About photo" style="width:100%;height:300px;background:#f0f0f0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;border-radius:12px;border:2px dashed #ccc"><div style="font-size:36px;opacity:0.3">&#128247;</div><div style="color:#bbb;font-size:13px;font-weight:600">Click to add photo</div></div>
 If you create any image-like placeholder area, it MUST use this format. Never create a styled box that looks like an image area without ws-img-slot class and data-slot attribute.
 
@@ -91,7 +91,7 @@ The site MUST have clearly visible motion — never a static page:
 Animations must ENHANCE and ALWAYS settle into a fully visible state — never leave anything permanently hidden. Keep entrance transitions under 0.8s.
 
 ━━━ SEO & DISCOVERY ━━━
-The site MUST be search- and share-ready. Set <html lang="en">. In <head>, in order: <meta charset="utf-8">; a responsive viewport meta; the brand <title> (about 50–60 chars: brand name + what the business does); and a <meta name="description"> of 140–160 chars written specifically for THIS business (benefit-led, naming the business type, and the location only if the user gave one). Add Open Graph tags (og:type=website, og:title, og:description, og:site_name = brand name) and Twitter tags (twitter:card=summary_large_image, twitter:title, twitter:description), reusing the title and description. Add ONE <script type="application/ld+json"> describing the business with the most fitting schema.org @type — a specific LocalBusiness subtype when one fits (Restaurant, Plumber, Dentist, Bakery, Electrician, Store, ProfessionalService, etc.), otherwise LocalBusiness, or Organization only if truly none apply — including name (the brand), description, url, telephone "[Your Phone]", email "[your@email.com]", an address object containing "[Your Address]", and openingHours "[Your Hours]". Keep those four contact values as the EXACT placeholder tokens so the owner's one-click contact fill updates the structured data too. Every <img> MUST have a descriptive, business-specific alt attribute — never empty, never just "image". Do NOT add a canonical or og:url tag (the final domain is unknown at build time).
+The site MUST be search- and share-ready. Set <html lang="en">. In <head>, in order: <meta charset="utf-8">; a responsive viewport meta; the brand <title> (about 50–60 chars: brand name + what the business does); and a <meta name="description"> of 140–160 chars written specifically for THIS business (benefit-led, naming the business type, and the location only if the user gave one). Add Open Graph tags (og:type=website, og:title, og:description, og:site_name = brand name) and Twitter tags (twitter:card=summary_large_image, twitter:title, twitter:description), reusing the title and description. Add ONE <script type="application/ld+json"> describing the business with the most fitting schema.org @type — a specific LocalBusiness subtype when one fits (Restaurant, Plumber, Dentist, Bakery, Electrician, Store, ProfessionalService, etc.), otherwise LocalBusiness, or Organization only if truly none apply — including name (the brand), description, url, telephone "[Your Phone]", email "[your@email.com]", an address object containing "[Your Address]", and openingHours "[Your Hours]". Keep those four contact values as the EXACT placeholder tokens so the owner's one-click contact fill updates the structured data too. Every <img> MUST have a descriptive, business-specific alt attribute — never empty, never just "image". Do NOT add a canonical or og:url tag (the final domain is unknown at build time). ACCESSIBILITY (WCAG 2.1 AA) — build it accessible from the start: structure the page with semantic landmarks (a <header> holding the <nav>, ONE <main> wrapping the primary content, and a <footer>); use exactly one <h1> (the hero headline) with correctly ordered <h2>/<h3> below it — never skip heading levels or fake a heading with a styled <div>. Every interactive control is a real <button> or <a> with a clear text label; an icon-only control gets an aria-label. Every form field has a <label> linked by for/id (or an aria-label) — placeholder text is NOT a label. All text meets 4.5:1 contrast against its actual background; never use faint low-opacity text that is hard to read. Decorative images use alt=""; informative images keep a descriptive alt. Do not set outline:none on focusable elements unless you provide a clearly visible :focus-visible style. Never rely on color alone to convey meaning (add text, icons, or underlines).
 
 ━━━ LOCAL BUSINESS ESSENTIALS ━━━
 For any business that serves customers at a place or by appointment, include a clear, visible "Visit us" / "Hours & location" block (its own section, or part of the contact band) showing the address as "[Your Address]" and hours as "[Your Hours]", plus a directions link that opens a map: <a href="https://maps.google.com/?q=[Your Address]" target="_blank" rel="noopener">Get directions</a> (keep the [Your Address] token in the href so it works the moment the owner fills it in). Do NOT embed a live map iframe — the address is a placeholder at build time, so the directions link is the right call.
@@ -113,7 +113,7 @@ IMAGE SECTIONS — critical rule:
 If the user asks to add a photo section, gallery, image area, team photos, or anything involving images, you MUST use this exact format for every image placeholder. This is required — users click these boxes to upload their own photos:
 
 For dark-background image areas:
-<div class="ws-img-slot" data-slot="UNIQUE_ID" data-label="Descriptive label" style="width:100%;height:320px;background:linear-gradient(135deg,#2b2620,#3a322a);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;border-radius:12px"><div style="font-size:36px;opacity:0.35">&#128247;</div><div style="color:rgba(255,255,255,0.45);font-size:13px;font-weight:600">Click to add photo</div></div>
+<div class="ws-img-slot" data-slot="UNIQUE_ID" data-label="Descriptive label" style="width:100%;height:320px;background:linear-gradient(135deg,#2b2620,#3a322a);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;border-radius:12px"><div style="font-size:36px;opacity:0.35">&#128247;</div><div style="color:rgba(255,255,255,.72);font-size:13px;font-weight:600">Click to add photo</div></div>
 
 For light-background image areas:
 <div class="ws-img-slot" data-slot="UNIQUE_ID" data-label="Descriptive label" style="width:100%;height:280px;background:#f0f0f0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;border-radius:12px;border:2px dashed #ccc"><div style="font-size:36px;opacity:0.3">&#128247;</div><div style="color:#bbb;font-size:13px;font-weight:600">Click to add photo</div></div>
@@ -180,8 +180,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r206">
-<script>window._wsBuild="2026-06-10-r206";console.log("%c[Websprout] build 2026-06-10-r206 — clicking any nav link now switches pages (matches by name)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r208">
+<script>window._wsBuild="2026-06-10-r208";console.log("%c[Websprout] build 2026-06-10-r208 — a11y: input labels, skip link, main landmark, accessible generated sites","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -204,6 +204,9 @@ const PAGE = `<!DOCTYPE html>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232d7a3a'/><text y='.9em' font-size='75' x='12'>&#127807;</text></svg>">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"Websprout","url":"https://websprout.app/","description":"AI website builder that generates a complete, professional website from a short description in about 90 seconds.","applicationCategory":"DesignApplication","operatingSystem":"Web browser","browserRequirements":"Requires JavaScript","offers":{"@type":"Offer","price":"10.00","priceCurrency":"USD","description":"$10/month Pro subscription. Building and publishing your site live is free; Pro removes the Websprout badge, connects your own domain, and lets you download the source code. Cancel anytime."},"featureList":["AI website generation in seconds","Live preview before paying","Conversational AI editing","Download full HTML source code","Free one-click deploy to Netlify or Cloudflare Pages"]},{"@type":"Organization","name":"Websprout","url":"https://websprout.app/","logo":"https://websprout.app/og.svg","sameAs":[]},{"@type":"WebSite","name":"Websprout","url":"https://websprout.app/"},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do I need to pay for hosting?","acceptedAnswer":{"@type":"Answer","text":"No. Both Netlify and Cloudflare Pages have permanently free tiers that are more than enough for most websites. Netlify gives you 100GB of bandwidth per month free, and Cloudflare Pages offers unlimited bandwidth."}},{"@type":"Question","name":"Can I update my site after deploying?","acceptedAnswer":{"@type":"Answer","text":"Yes. Use the chat in Websprout to make changes, re-download your site, and re-deploy. On Netlify you can drag and drop a new file onto your existing site to update it, and on Cloudflare Pages you upload a new version through the dashboard."}},{"@type":"Question","name":"How do I connect a custom domain?","acceptedAnswer":{"@type":"Answer","text":"Both platforms make this easy and free. On Netlify, go to Site Settings, Domain Management, Add custom domain, then follow the DNS instructions from your registrar. On Cloudflare Pages, use Custom Domains, Add a domain."}},{"@type":"Question","name":"Is my site secure with HTTPS?","acceptedAnswer":{"@type":"Answer","text":"Yes, automatically. Both Netlify and Cloudflare Pages issue free SSL certificates the moment your site is deployed, so your site always serves over HTTPS with no extra configuration."}},{"@type":"Question","name":"How much does Websprout cost?","acceptedAnswer":{"@type":"Answer","text":"Building and publishing your website live is completely free, with a small Websprout badge. Go Pro for $10 per month to remove the badge, connect your own custom domain, and download the source code. You can cancel anytime."}},{"@type":"Question","name":"How long does it take to build a website?","acceptedAnswer":{"@type":"Answer","text":"About 90 seconds. You describe your business, and the AI generates a complete, professional website that you can preview live and then edit with chat."}}]}]}</script>
 <style>
+*:focus-visible{outline:3px solid #3dba52 !important;outline-offset:2px !important;}
+.ws-skip{position:absolute;left:-9999px;top:0;z-index:100000;background:#0f1a0d;color:#fff;padding:10px 16px;border-radius:0 0 8px 0;text-decoration:none;font-weight:600}.ws-skip:focus{left:0}
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;background:#060d05;color:#fff}
@@ -211,30 +214,30 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-
 
 /* ---- NAV ---- */
 nav{position:sticky;top:0;z-index:100;height:58px;background:transparent;border-bottom:1px solid transparent;display:flex;align-items:center;padding:0 5vw;gap:20px;transition:background .25s ease,backdrop-filter .25s ease,border-color .25s ease}
-nav.scrolled{background:rgba(6,13,5,.9);backdrop-filter:blur(16px);border-bottom-color:rgba(255,255,255,.07)}
+nav.scrolled{background:rgba(6,13,5,.9);backdrop-filter:blur(16px);border-bottom-color:rgba(255,255,255,.72)}
 .nav-logo{font-size:18px;font-weight:800;color:#fff;text-decoration:none;display:flex;align-items:center;gap:9px;letter-spacing:-.6px;margin-right:auto}
 .lw{white-space:nowrap}
 .nav-logo-mark{width:30px;height:30px;background:linear-gradient(145deg,#3ea04e,#22692e);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 4px 14px rgba(45,122,58,.4)}
 .nav-logo-mark svg{display:block}
 .nav-logo em{font-style:normal;color:#4ade80}
 .nav-links{display:flex;gap:24px;list-style:none}
-.nav-links a{font-size:14px;color:rgba(255,255,255,.5);text-decoration:none;font-weight:500;transition:color .15s}
+.nav-links a{font-size:14px;color:rgba(255,255,255,.72);text-decoration:none;font-weight:500;transition:color .15s}
 .nav-links a:hover{color:#fff}
 .nav-burger{display:none;border:none;background:transparent;cursor:pointer;padding:6px;align-items:center;justify-content:center;border-radius:8px;line-height:0}
 .nav-burger:hover{background:rgba(255,255,255,.06)}
 .nav-burger svg{display:block}
 /* account settings */
 .set-sec{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08)}
-.set-h{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);font-weight:700;margin-bottom:10px}
+.set-h{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.72);font-weight:700;margin-bottom:10px}
 .set-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 0;cursor:pointer;user-select:none}
 .set-row .set-lbl{display:flex;flex-direction:column;gap:2px;min-width:0}
 .set-row .set-lbl b{font-size:14px;color:#eaf2e8;font-weight:600}
-.set-row .set-lbl em{font-size:12px;color:rgba(255,255,255,.42);font-style:normal;line-height:1.4}
+.set-row .set-lbl em{font-size:12px;color:rgba(255,255,255,.72);font-style:normal;line-height:1.4}
 .set-tog{position:relative;width:40px;height:23px;border-radius:999px;background:rgba(255,255,255,.14);flex-shrink:0;transition:background .18s}
 .set-tog::after{content:'';position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;transition:left .18s}
 .set-tog.on{background:#2d9e4a}
 .set-tog.on::after{left:20px}
-.set-note{font-size:12.5px;color:rgba(255,255,255,.5);line-height:1.55;margin-bottom:10px}
+.set-note{font-size:12.5px;color:rgba(255,255,255,.72);line-height:1.55;margin-bottom:10px}
 .set-link{display:inline-block;font-size:13px;color:#7fe39a;text-decoration:none;font-weight:600}
 .set-link:hover{text-decoration:underline}
 /* accessibility effects */
@@ -251,21 +254,21 @@ html.ws-focus :focus{outline:2px solid #4ade80 !important;outline-offset:2px}
 .hero-pill-dot{width:20px;height:20px;background:#2d7a3a;border-radius:100px;display:flex;align-items:center;justify-content:center;font-size:10px}
 .hero h1{font-size:clamp(2.8rem,5.5vw,4.6rem);font-weight:800;line-height:1.05;letter-spacing:-2px;color:#fff;margin-bottom:18px}
 .hero h1 em{font-style:normal;color:#4ade80}
-.hero-sub{font-size:18px;color:rgba(255,255,255,.5);max-width:480px;margin:0 auto 40px;line-height:1.7}
+.hero-sub{font-size:18px;color:rgba(255,255,255,.72);max-width:480px;margin:0 auto 40px;line-height:1.7}
 .hero-stats{display:flex;gap:0;justify-content:center;margin-bottom:48px;border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;max-width:520px;margin-left:auto;margin-right:auto;margin-top:0}
 .hero-stat{flex:1;padding:16px 20px;text-align:center;border-right:1px solid rgba(255,255,255,.08)}
 .hero-stat:last-child{border-right:none}
 .stat-n{font-size:22px;font-weight:800;letter-spacing:-1px;background:linear-gradient(120deg,#eafff1,#4ade80);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
-.stat-l{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;font-weight:500}
+.stat-l{font-size:11px;color:rgba(255,255,255,.72);margin-top:2px;font-weight:500}
 
 /* ---- BUILDER CARD (in hero) ---- */
 .builder-wrap{max-width:760px;margin:0 auto}
-.builder-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px}
+.builder-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.72);text-transform:uppercase;letter-spacing:2px;margin-bottom:14px}
 .builder-card{background:#0f1a0d;border:1px solid rgba(45,122,58,.2);border-radius:20px;overflow:hidden;box-shadow:0 0 0 1px rgba(45,122,58,.08),0 32px 80px rgba(0,0,0,.5);max-height:560px;overflow-y:auto}
 
 /* ---- STEP TABS ---- */
 .step-tabs{display:none;background:#080f07;border-bottom:1px solid rgba(255,255,255,.06)}
-.step-tab{flex:1;padding:13px 8px;text-align:center;font-size:12px;font-weight:600;color:rgba(255,255,255,.25);border:none;background:transparent;cursor:default;position:relative;transition:color .2s;border-right:1px solid rgba(255,255,255,.05);font-family:inherit}
+.step-tab{flex:1;padding:13px 8px;text-align:center;font-size:12px;font-weight:600;color:rgba(255,255,255,.72);border:none;background:transparent;cursor:default;position:relative;transition:color .2s;border-right:1px solid rgba(255,255,255,.05);font-family:inherit}
 .step-tab:last-child{border-right:none}
 .step-tab.active{color:#4ade80;background:rgba(255,255,255,.02)}
 .step-tab.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:#2d7a3a}
@@ -273,11 +276,11 @@ html.ws-focus :focus{outline:2px solid #4ade80 !important;outline-offset:2px}
 .step-n{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:currentColor;color:#080f07;font-size:9px;font-weight:900;margin-right:5px}
 .panel{display:none;padding:20px 22px}
 .panel.active{display:block}
-.panel-q{font-size:14px;color:rgba(255,255,255,.5);margin-bottom:4px;font-weight:600}
+.panel-q{font-size:14px;color:rgba(255,255,255,.72);margin-bottom:4px;font-weight:600}
 
 /* ---- TYPE GRID ---- */
 .type-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:16px}
-.type-btn{background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.07);border-radius:10px;padding:12px 6px 10px;cursor:pointer;text-align:center;font-family:inherit;transition:all .15s;color:rgba(255,255,255,.45)}
+.type-btn{background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.07);border-radius:10px;padding:12px 6px 10px;cursor:pointer;text-align:center;font-family:inherit;transition:all .15s;color:rgba(255,255,255,.72)}
 .type-btn:hover{border-color:rgba(61,186,82,.4);background:rgba(45,122,58,.1);color:rgba(255,255,255,.85)}
 .type-btn.sel{border-color:#3dba52;background:rgba(45,122,58,.18);color:#fff;box-shadow:0 0 0 3px rgba(61,186,82,.12)}
 .type-icon{font-size:20px;display:block;margin-bottom:4px}
@@ -285,28 +288,28 @@ html.ws-focus :focus{outline:2px solid #4ade80 !important;outline-offset:2px}
 #customWrap{display:none;margin-bottom:16px}
 .dark-input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:9px 12px;color:#e8f5e4;font-family:inherit;font-size:14px;outline:none;transition:border .15s}
 .dark-input:focus{border-color:rgba(45,122,58,.5)}
-.dark-input::placeholder{color:rgba(255,255,255,.18)}
+.dark-input::placeholder{color:rgba(255,255,255,.72)}
 textarea.dark-input{resize:vertical;min-height:76px;line-height:1.6}
 .describe-box{min-height:124px;font-size:15px;line-height:1.65;padding:14px 16px}
 .describe-vibe{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0 2px}
-.describe-vibe-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.6px}
+.describe-vibe-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.72);text-transform:uppercase;letter-spacing:.6px}
 .panel-foot{display:flex;justify-content:space-between;align-items:center;padding-top:16px;border-top:1px solid rgba(255,255,255,.06);margin-top:12px}
-.p-hint{font-size:12px;color:rgba(255,255,255,.18)}
+.p-hint{font-size:12px;color:rgba(255,255,255,.72)}
 .btn-next{background:#2d7a3a;color:#fff;padding:8px 20px;border-radius:7px;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .15s;opacity:.35;pointer-events:none}
 .btn-next.on{opacity:1;pointer-events:all}
 .btn-next.on:hover{background:#3dba52}
-.btn-back{background:rgba(255,255,255,.05);color:rgba(255,255,255,.35);padding:8px 16px;border-radius:7px;font-size:13px;border:1px solid rgba(255,255,255,.08);cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-back{background:rgba(255,255,255,.05);color:rgba(255,255,255,.72);padding:8px 16px;border-radius:7px;font-size:13px;border:1px solid rgba(255,255,255,.08);cursor:pointer;font-family:inherit;transition:all .15s}
 .btn-back:hover{color:rgba(255,255,255,.7);background:rgba(255,255,255,.08)}
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
 .detail-grid .span2{grid-column:1/-1}
-.field-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.field-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.72);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
 .vibe-row{display:flex;flex-wrap:wrap;gap:6px}
-.vibe-chip{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.4);border-radius:100px;padding:5px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.vibe-chip{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.72);border-radius:100px;padding:5px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
 .vibe-chip:hover{border-color:rgba(45,122,58,.4);color:rgba(255,255,255,.75)}
 .vibe-chip.sel{background:rgba(45,122,58,.15);border-color:#2d7a3a;color:#4ade80}
 .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:14px;margin-bottom:18px}
 .s-row{display:flex;flex-direction:column;gap:2px}
-.s-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.6px}
+.s-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.72);text-transform:uppercase;letter-spacing:.6px}
 .s-val{font-size:13px;color:rgba(255,255,255,.7);font-weight:500}
 .gen-btn{background:linear-gradient(135deg,#4ade80 0%,#22c55e 48%,#16a34a 100%);color:#06210f;padding:12px 28px;border-radius:10px;font-size:15px;font-weight:800;border:none;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;transition:transform .22s cubic-bezier(.34,1.55,.64,1),box-shadow .2s,filter .2s;box-shadow:0 6px 22px -4px rgba(34,197,94,.5)}
 .gen-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 30px -6px rgba(34,197,94,.7);filter:brightness(1.05)}
@@ -316,7 +319,7 @@ textarea.dark-input{resize:vertical;min-height:76px;line-height:1.6}
 .loading.on{display:block}
 .load-icon{font-size:28px;animation:spin 1.8s ease-in-out infinite;display:inline-block}
 @keyframes spin{0%{transform:rotate(-10deg) scale(1)}50%{transform:rotate(10deg) scale(1.15)}100%{transform:rotate(-10deg) scale(1)}}
-.load-txt{font-size:13px;color:rgba(255,255,255,.35);margin-top:8px}
+.load-txt{font-size:13px;color:rgba(255,255,255,.72);margin-top:8px}
 .load-bar{height:2px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin:12px 22px 0}
 .load-fill{height:100%;background:#2d7a3a;animation:sweep 2s ease-in-out infinite}
 @keyframes sweep{0%{width:0%;margin-left:0}50%{width:55%;margin-left:20%}100%{width:0%;margin-left:100%}}
@@ -347,7 +350,7 @@ textarea.dark-input{resize:vertical;min-height:76px;line-height:1.6}
 
 /* ---- TRUST BAR ---- */
 .trust-bar{background:#060d05;border-top:1px solid rgba(255,255,255,.06);padding:28px 5vw;display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap}
-.trust-item{display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,.35);font-weight:500}
+.trust-item{display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,.72);font-weight:500}
 .trust-icon{font-size:16px}
 
 /* ---- HOW IT WORKS ---- */
@@ -375,10 +378,10 @@ textarea.dark-input{resize:vertical;min-height:76px;line-height:1.6}
 .cmp-head{font-size:14px;font-weight:700;color:#fff;margin-bottom:16px;display:flex;align-items:center;gap:8px}
 .cmp-badge{background:#2d7a3a;color:#fff;font-size:10px;font-weight:700;padding:2px 9px;border-radius:100px}
 .cmp-list{list-style:none;display:flex;flex-direction:column;gap:10px}
-.cmp-item{font-size:13px;color:rgba(255,255,255,.55);display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.cmp-item{font-size:13px;color:rgba(255,255,255,.72);display:flex;align-items:flex-start;gap:8px;line-height:1.5}
 .cmp-item::before{content:'v';color:#4ade80;font-weight:900;font-size:11px;flex-shrink:0;margin-top:2px}
-.cmp-item.no{color:rgba(255,255,255,.2)}
-.cmp-item.no::before{content:'x';color:rgba(255,255,255,.15)}
+.cmp-item.no{color:rgba(255,255,255,.72)}
+.cmp-item.no::before{content:'x';color:rgba(255,255,255,.72)}
 
 /* ---- PRICING ---- */
 .pricing{background:#fff;padding:88px 5vw}
@@ -400,7 +403,7 @@ textarea.dark-input{resize:vertical;min-height:76px;line-height:1.6}
 .cta-band{background:linear-gradient(135deg,#0a1f0a 0%,#1a4025 40%,#2d7a3a 100%);padding:88px 5vw;text-align:center;position:relative;overflow:hidden}
 .cta-band::before{content:'';position:absolute;top:-150px;left:50%;transform:translateX(-50%);width:600px;height:400px;background:radial-gradient(ellipse,rgba(61,186,82,.2) 0%,transparent 70%);pointer-events:none}
 .cta-band h2{font-size:clamp(2rem,4vw,3.2rem);font-weight:900;color:#fff;letter-spacing:-2px;margin-bottom:12px;position:relative}
-.cta-band p{font-size:18px;color:rgba(255,255,255,.65);margin-bottom:32px;position:relative}
+.cta-band p{font-size:18px;color:rgba(255,255,255,.72);margin-bottom:32px;position:relative}
 .btn-white{background:#fff;color:#1a4025;padding:15px 36px;border-radius:10px;font-size:15px;font-weight:800;border:none;cursor:pointer;font-family:inherit;transition:all .2s;position:relative;letter-spacing:-.2px}
 .btn-white:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,.2)}
 
@@ -409,8 +412,8 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .foot-logo{font-size:15px;font-weight:800;color:#fff;text-decoration:none;display:flex;align-items:center;gap:7px}
 .foot-logo em{font-style:normal;color:#4ade80}
 .foot-links{display:flex;gap:20px;flex-wrap:wrap}
-.foot-links a{font-size:13px;color:rgba(255,255,255,.22);text-decoration:none;transition:color .15s}
-.foot-links a:hover{color:rgba(255,255,255,.6)}
+.foot-links a{font-size:13px;color:rgba(255,255,255,.72);text-decoration:none;transition:color .15s}
+.foot-links a:hover{color:rgba(255,255,255,.72)}
 
 /* ---- TOAST ---- */
 .toast{position:fixed;bottom:24px;right:24px;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#e8f5e4;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,.35);z-index:99999;transform:translateY(80px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none;max-width:320px}
@@ -425,7 +428,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 @keyframes skel-bob{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.12) rotate(3deg)}}
 .skel-logo-text{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px}
 .skel-logo-text em{font-style:normal;color:#4ade80}
-.skel-msg{font-size:14px;color:rgba(255,255,255,.45);font-weight:500;margin-bottom:28px;min-height:20px;text-align:center;transition:opacity .3s}
+.skel-msg{font-size:14px;color:rgba(255,255,255,.72);font-weight:500;margin-bottom:28px;min-height:20px;text-align:center;transition:opacity .3s}
 .skel-progress-track{width:100%;height:3px;background:rgba(255,255,255,.06);border-radius:100px;margin-bottom:36px;overflow:hidden}
 .skel-progress-fill{height:100%;background:linear-gradient(90deg,#2d7a3a,#4ade80);border-radius:100px;width:0%;transition:width .9s cubic-bezier(.2,.8,.2,1)}
 @keyframes skel-prog{0%{width:0%}30%{width:35%}60%{width:62%}85%{width:82%}100%{width:92%}}
@@ -462,12 +465,12 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .live-dot{width:7px;height:7px;background:#4ade80;border-radius:50%;animation:pulse 2s infinite;flex-shrink:0}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
 .device-btns{display:flex;gap:2px;background:rgba(255,255,255,.06);border-radius:8px;padding:3px;flex-shrink:0}
-.dev-btn{background:transparent;border:none;color:rgba(255,255,255,.35);width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.dev-btn{background:transparent;border:none;color:rgba(255,255,255,.72);width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .dev-btn:hover{color:rgba(255,255,255,.7)}.dev-btn.active{background:rgba(255,255,255,.12);color:#fff}
-.edit-counter{font-size:11px;color:rgba(255,255,255,.3);font-weight:600;padding:4px 8px;background:rgba(255,255,255,.05);border-radius:6px;white-space:nowrap}
+.edit-counter{font-size:11px;color:rgba(255,255,255,.72);font-weight:600;padding:4px 8px;background:rgba(255,255,255,.05);border-radius:6px;white-space:nowrap}
 .s-actions{display:flex;gap:6px;flex-shrink:0;margin-left:auto}
 .s-btn{border:none;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
-.s-ghost{background:rgba(255,255,255,.06);color:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.09)}
+.s-ghost{background:rgba(255,255,255,.06);color:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.09)}
 .s-ghost:hover{background:rgba(255,255,255,.11);color:#fff}
 .s-manage{background:rgba(61,186,82,.16);color:#5fe08a;border:1px solid rgba(61,186,82,.5);font-weight:700}
 .s-manage:hover{background:rgba(61,186,82,.26);color:#8af0ab;border-color:rgba(61,186,82,.72);box-shadow:0 2px 14px rgba(61,186,82,.3)}
@@ -484,7 +487,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .deploy-cta-banner-text span{color:#4ade80}
 .deploy-cta-banner-btn{background:#00c7b7;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s}
 .deploy-cta-banner-btn:hover{background:#00a89c;transform:translateY(-1px)}
-.deploy-cta-dismiss{background:none;border:none;color:rgba(255,255,255,.3);font-size:16px;cursor:pointer;padding:0 4px}
+.deploy-cta-dismiss{background:none;border:none;color:rgba(255,255,255,.72);font-size:16px;cursor:pointer;padding:0 4px}
 .s-purple{background:linear-gradient(135deg,#6d28d9,#7c3aed);color:#fff}
 .s-purple:hover{box-shadow:0 4px 16px rgba(109,40,217,.4)}
 .s-body{display:flex;flex:1;overflow:hidden}
@@ -492,10 +495,10 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .preview-frame-wrap.tablet,.preview-frame-wrap.mobile{background:#1a1a1a;padding:20px}
 .preview-frame-wrap.tablet iframe{width:768px!important;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);flex-shrink:0}
 .preview-frame-wrap.mobile iframe{width:390px!important;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.5);flex-shrink:0}
-.preview-label{position:absolute;bottom:12px;left:12px;background:rgba(0,0,0,.45);color:rgba(255,255,255,.5);font-size:11px;padding:4px 10px;border-radius:6px;pointer-events:none;z-index:10}
+.preview-label{position:absolute;bottom:12px;left:12px;background:rgba(0,0,0,.45);color:rgba(255,255,255,.72);font-size:11px;padding:4px 10px;border-radius:6px;pointer-events:none;z-index:10}
 .lock-badge{position:absolute;bottom:16px;right:16px;background:#0f0a2e;border:1px solid rgba(109,40,217,.3);border-radius:14px;padding:16px;max-width:240px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:10}
 .lock-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px}
-.lock-sub{font-size:11px;color:rgba(255,255,255,.35);margin-bottom:10px;line-height:1.5}
+.lock-sub{font-size:11px;color:rgba(255,255,255,.72);margin-bottom:10px;line-height:1.5}
 .lock-email{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:7px;padding:7px 11px;color:#fff;font-size:12px;outline:none;margin-bottom:8px;font-family:inherit}
 .fs-overlay{display:none;position:fixed;inset:0;z-index:99997;background:#fff;flex-direction:column}
 .fs-overlay.on{display:flex}
@@ -503,7 +506,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .fs-bar{height:44px;background:#0f1a0d;display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0}
 .fs-close{background:#2d7a3a;color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
 .fs-close:hover{background:#3dba52}
-.fs-title{font-size:13px;color:rgba(255,255,255,.5);flex:1}
+.fs-title{font-size:13px;color:rgba(255,255,255,.72);flex:1}
 .drop-overlay{position:absolute;inset:0;background:rgba(45,122,58,.15);border:3px dashed #2d7a3a;border-radius:4px;z-index:20;display:none;align-items:center;justify-content:center;pointer-events:none}
 .drop-overlay.show{display:flex}
 .drop-overlay-txt{background:#0f1a0d;color:#4ade80;font-size:16px;font-weight:700;padding:16px 32px;border-radius:12px}
@@ -511,16 +514,16 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 /* ---- BIZ INFO PANEL ---- */
 .biz-panel{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05)}
 .biz-panel-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:0}
-.biz-panel-title{font-size:10px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:5px}
-.biz-panel-toggle{font-size:10px;color:rgba(255,255,255,.2);transition:transform .2s}
+.biz-panel-title{font-size:10px;font-weight:700;color:rgba(255,255,255,.72);text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:5px}
+.biz-panel-toggle{font-size:10px;color:rgba(255,255,255,.72);transition:transform .2s}
 .biz-panel-toggle.open{transform:rotate(180deg)}
 .biz-fields{display:none;flex-direction:column;gap:7px;margin-top:10px}
 .biz-fields.open{display:flex}
 .biz-field{display:flex;flex-direction:column;gap:3px}
-.biz-field label{font-size:10px;color:rgba(255,255,255,.3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.biz-field label{font-size:10px;color:rgba(255,255,255,.72);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 .biz-input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:7px;padding:7px 10px;color:#e8f5e4;font-family:inherit;font-size:12px;outline:none;transition:border .15s;width:100%}
 .biz-input:focus{border-color:rgba(45,122,58,.5)}
-.biz-input::placeholder{color:rgba(255,255,255,.18)}
+.biz-input::placeholder{color:rgba(255,255,255,.72)}
 .biz-apply{width:100%;background:rgba(45,122,58,.2);border:1px solid rgba(45,122,58,.35);color:#4ade80;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;margin-top:4px}
 .biz-apply:hover{background:rgba(45,122,58,.35)}
 
@@ -528,14 +531,14 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .chat{width:332px;flex-shrink:0;display:flex;flex-direction:column;background:#0a1208;border-left:1px solid rgba(255,255,255,.06)}
 .chat-head{padding:14px 15px 12px;border-bottom:1px solid rgba(255,255,255,.06);background:linear-gradient(180deg,rgba(45,122,58,.1),transparent)}
 .chat-head-title{font-size:13px;font-weight:700;color:#eafbe6;letter-spacing:.2px;display:flex;align-items:center;gap:6px}
-.chat-head-sub{font-size:11px;color:rgba(255,255,255,.42);margin-top:3px;line-height:1.4}
+.chat-head-sub{font-size:11px;color:rgba(255,255,255,.72);margin-top:3px;line-height:1.4}
 .chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:0}
 .chat-msgs::-webkit-scrollbar{width:3px}
 .chat-msgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
 .msg{max-width:92%}
 .msg-ai{align-self:flex-start}.msg-me{align-self:flex-end}
 .msg-name{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px}
-.msg-ai .msg-name{color:#4ade80}.msg-me .msg-name{color:rgba(255,255,255,.28);text-align:right}
+.msg-ai .msg-name{color:#4ade80}.msg-me .msg-name{color:rgba(255,255,255,.72);text-align:right}
 .msg-body{padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.55}
 .msg-ai .msg-body{background:rgba(255,255,255,.06);color:rgba(255,255,255,.78);border-radius:4px 12px 12px 12px}
 .msg-me .msg-body{background:#2d7a3a;color:#fff;border-radius:12px 4px 12px 12px}
@@ -546,16 +549,16 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 @keyframes tdot{0%,60%,100%{transform:translateY(0);opacity:.3}30%{transform:translateY(-4px);opacity:1}}
 .img-library{border-top:1px solid rgba(255,255,255,.05);padding:10px 12px}
 .img-lib-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:1px 0;cursor:pointer;font-family:inherit}
-.img-lib-caret{font-size:10px;color:rgba(255,255,255,.35);transition:transform .18s}
+.img-lib-caret{font-size:10px;color:rgba(255,255,255,.72);transition:transform .18s}
 .img-library:not(.collapsed) .img-lib-caret{transform:rotate(180deg)}
 .img-library.collapsed .img-lib-body{display:none}
 .img-lib-body{margin-top:9px}
 .img-lib-actions{display:flex;justify-content:flex-end;margin-bottom:8px}
 .img-lib-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.img-lib-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:1px}
-.img-upload-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
+.img-lib-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.72);text-transform:uppercase;letter-spacing:1px}
+.img-upload-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.72);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
 .img-upload-btn:hover{background:rgba(255,255,255,.12);color:#fff}
-.img-dropzone{border:1.5px dashed rgba(255,255,255,.12);border-radius:10px;padding:14px;text-align:center;font-size:12px;color:rgba(255,255,255,.25);cursor:pointer;transition:all .2s;display:none}
+.img-dropzone{border:1.5px dashed rgba(255,255,255,.12);border-radius:10px;padding:14px;text-align:center;font-size:12px;color:rgba(255,255,255,.72);cursor:pointer;transition:all .2s;display:none}
 .img-dropzone.empty{display:block}.img-dropzone.drag{border-color:#2d7a3a;background:rgba(45,122,58,.1);color:#4ade80}
 .img-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px}
 .img-thumb{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;cursor:pointer;border:1.5px solid transparent;transition:all .15s}
@@ -572,50 +575,50 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .palette-section{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.05)}
 .design-drawer .live-color-panel,.design-drawer .font-section,.design-drawer .palette-section{border-bottom:none}
 .dd-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;cursor:pointer;font-family:inherit;padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.05)}
-.dd-caret{font-size:10px;color:rgba(255,255,255,.35);transition:transform .18s}
+.dd-caret{font-size:10px;color:rgba(255,255,255,.72);transition:transform .18s}
 .design-drawer:not(.collapsed) .dd-caret{transform:rotate(180deg)}
 .design-drawer:not(.collapsed){border-bottom:1px solid rgba(255,255,255,.05)}
 .design-drawer.collapsed .dd-body{display:none}
 .style-section{padding:10px 12px;border-top:1px solid rgba(255,255,255,.05)}
 .ds-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
-.ds-label{font-size:11px;color:rgba(255,255,255,.5);flex-shrink:0}
+.ds-label{font-size:11px;color:rgba(255,255,255,.72);flex-shrink:0}
 .ds-seg{display:flex;background:rgba(255,255,255,.05);border-radius:7px;padding:2px;gap:2px}
-.ds-seg button{background:none;border:none;color:rgba(255,255,255,.55);font-size:11px;font-family:inherit;padding:4px 9px;border-radius:5px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.ds-seg button{background:none;border:none;color:rgba(255,255,255,.72);font-size:11px;font-family:inherit;padding:4px 9px;border-radius:5px;cursor:pointer;transition:all .15s;white-space:nowrap}
 .ds-seg button:hover{color:#fff}
 .ds-seg button.on{background:#2d7a3a;color:#fff;font-weight:600}
-.palette-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.palette-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.72);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
 .palette-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
 .pal{width:100%;aspect-ratio:1;border-radius:7px;border:2px solid transparent;cursor:pointer;transition:all .15s;position:relative}
-.pal:hover{transform:scale(1.18);border-color:rgba(255,255,255,.4);z-index:1}
+.pal:hover{transform:scale(1.18);border-color:rgba(255,255,255,.72);z-index:1}
 .font-section{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.05)}
 .font-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-top:8px}
-.font-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.6);border-radius:8px;padding:8px 10px;cursor:pointer;font-family:inherit;transition:all .15s;text-align:left}
+.font-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.72);border-radius:8px;padding:8px 10px;cursor:pointer;font-family:inherit;transition:all .15s;text-align:left}
 .font-btn:hover{background:rgba(45,122,58,.15);border-color:rgba(45,122,58,.4);color:#4ade80}
 .font-btn-name{font-size:13px;font-weight:600;display:block}
-.font-btn-sample{font-size:10px;color:rgba(255,255,255,.3);display:block;margin-top:1px}
+.font-btn-sample{font-size:10px;color:rgba(255,255,255,.72);display:block;margin-top:1px}
 .quick-edits{padding:12px 14px 4px;display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.012)}
-.qe{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.5);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.qe{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.72);border-radius:100px;padding:4px 11px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
 .qe:hover{background:rgba(45,122,58,.15);border-color:rgba(45,122,58,.4);color:#4ade80}
 .font-btn.sel{background:rgba(45,122,58,.18);border-color:#2d7a3a;color:#4ade80}
 .font-btn.sel .font-btn-sample{color:rgba(74,222,128,.6)}
 .sec-pick{display:none;flex-wrap:wrap;gap:6px;width:100%;padding:8px 0 2px}
 .sec-pick.on{display:flex}
-.sec-pick .qe{color:rgba(255,255,255,.6)}
+.sec-pick .qe{color:rgba(255,255,255,.72)}
 .qe.on{background:rgba(45,122,58,.2);border-color:#2d7a3a;color:#4ade80}
-.qe-label{flex-basis:100%;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.3);margin-bottom:1px}
+.qe-label{flex-basis:100%;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.72);margin-bottom:1px}
 .chat-input{padding:8px 14px 14px;background:rgba(255,255,255,.012)}
 .chat-row{display:flex;gap:7px;align-items:flex-end;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:13px;padding:6px 6px 6px 13px;transition:border-color .15s,box-shadow .15s}
 .chat-row:focus-within{border-color:rgba(74,222,128,.5);box-shadow:0 0 0 3px rgba(45,122,58,.16)}
 .chat-ta{flex:1;background:transparent;border:none;border-radius:0;padding:6px 0;color:#eafbe6;font-family:inherit;font-size:14px;line-height:1.5;resize:none;outline:none;min-height:34px;max-height:120px}
-.chat-ta::placeholder{color:rgba(255,255,255,.3)}
+.chat-ta::placeholder{color:rgba(255,255,255,.72)}
 .chat-send{width:38px;height:38px;background:#2d7a3a;border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,transform .1s}
 .chat-send:hover:not(:disabled){background:#3dba52}
 .chat-send:active:not(:disabled){transform:scale(.93)}
 .chat-send:disabled{opacity:.35;cursor:not-allowed}
-.chat-hint{font-size:10px;color:rgba(255,255,255,.22);margin-top:7px;text-align:center}
+.chat-hint{font-size:10px;color:rgba(255,255,255,.72);margin-top:7px;text-align:center}
 .ed-hint{display:flex;align-items:flex-start;gap:8px;margin:10px 14px 2px;padding:10px 12px;background:rgba(61,186,82,.12);border:1px solid rgba(61,186,82,.3);border-radius:11px;font-size:12px;line-height:1.5;color:rgba(234,242,232,.85)}
 .ed-hint-txt{flex:1}.ed-hint-txt b{color:#7fe39a;font-weight:700}
-.ed-hint-x{background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;line-height:1;cursor:pointer;padding:0 2px;font-family:inherit;flex-shrink:0}
+.ed-hint-x{background:none;border:none;color:rgba(255,255,255,.72);font-size:18px;line-height:1;cursor:pointer;padding:0 2px;font-family:inherit;flex-shrink:0}
 .ed-hint-x:hover{color:#fff}
 
 /* ---- SEO MODAL ---- */
@@ -624,18 +627,18 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .seo-box{background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:20px;width:100%;max-width:500px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.4)}
 .seo-header{padding:20px 24px 16px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between}
 .seo-header h3{font-size:16px;font-weight:700;color:#fff}
-.seo-close{background:none;border:none;color:rgba(255,255,255,.4);font-size:20px;cursor:pointer;line-height:1}
+.seo-close{background:none;border:none;color:rgba(255,255,255,.72);font-size:20px;cursor:pointer;line-height:1}
 .seo-body{padding:20px 24px}
 .seo-field{margin-bottom:16px}
-.seo-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;display:flex;justify-content:space-between}
-.seo-label span{color:rgba(255,255,255,.2);font-weight:400;text-transform:none;letter-spacing:0}
+.seo-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.72);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;display:flex;justify-content:space-between}
+.seo-label span{color:rgba(255,255,255,.72);font-weight:400;text-transform:none;letter-spacing:0}
 .seo-input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:9px 12px;color:#e8f5e4;font-family:inherit;font-size:13px;outline:none;transition:border .15s}
 .seo-input:focus{border-color:rgba(45,122,58,.5)}
-.seo-input::placeholder{color:rgba(255,255,255,.2)}
+.seo-input::placeholder{color:rgba(255,255,255,.72)}
 .seo-preview{background:#1a2e19;border-radius:8px;padding:12px;margin-top:16px;font-size:12px}
 .seo-preview-title{color:#4285f4;font-size:14px;font-weight:500;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .seo-preview-url{color:#3c8b3c;font-size:11px;margin-bottom:4px}
-.seo-preview-desc{color:rgba(255,255,255,.5);line-height:1.5}
+.seo-preview-desc{color:rgba(255,255,255,.72);line-height:1.5}
 .seo-footer{padding:16px 24px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:8px;justify-content:flex-end}
 .seo-save{background:#2d7a3a;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
 .seo-save:hover{background:#3dba52}
@@ -645,16 +648,16 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .share-modal.on{display:flex}
 .share-box{background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:20px;width:100%;max-width:460px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.4);padding:28px}
 .share-box h3{font-size:18px;font-weight:800;color:#fff;margin-bottom:6px}
-.share-box p{font-size:14px;color:rgba(255,255,255,.4);margin-bottom:20px}
+.share-box p{font-size:14px;color:rgba(255,255,255,.72);margin-bottom:20px}
 .share-url-wrap{display:flex;gap:8px}
 .share-url{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 12px;color:#4ade80;font-size:12px;font-family:monospace;outline:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .share-copy{background:#2d7a3a;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
 .share-copy:hover{background:#3dba52}
-.share-note{font-size:12px;color:rgba(255,255,255,.25);margin-top:12px}
-.share-close-btn{display:block;margin-top:16px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);border:none;border-radius:8px;padding:8px;font-size:13px;cursor:pointer;font-family:inherit;width:100%}
+.share-note{font-size:12px;color:rgba(255,255,255,.72);margin-top:12px}
+.share-close-btn{display:block;margin-top:16px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.72);border:none;border-radius:8px;padding:8px;font-size:13px;cursor:pointer;font-family:inherit;width:100%}
 
 /* ---- EDIT MODE ---- */
-.edit-mode-btn{background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.09)}
+.edit-mode-btn{background:rgba(255,255,255,.06);color:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.09)}
 .edit-mode-btn.on{background:rgba(61,186,82,.2);color:#3dba52;border-color:rgba(61,186,82,.4)}
 .edit-indicator{position:fixed;top:58px;left:50%;transform:translateX(-50%);background:#0f1a0d;border:1px solid rgba(61,186,82,.4);color:#4ade80;font-size:12px;font-weight:600;padding:6px 16px;border-radius:100px;z-index:99998;pointer-events:none;display:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.3)}
 .edit-indicator.on{display:block}
@@ -663,7 +666,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .live-color-panel{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05)}
 .live-color-grid{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .live-color-swatch{width:32px;height:32px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .15s;position:relative;overflow:hidden;flex-shrink:0}
-.live-color-swatch:hover{transform:scale(1.15);border-color:rgba(255,255,255,.5);z-index:1}
+.live-color-swatch:hover{transform:scale(1.15);border-color:rgba(255,255,255,.72);z-index:1}
 .color-input-hidden{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 
 /* ---- SECTION MANAGER MODAL ---- */
@@ -672,18 +675,18 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .sec-box{background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:20px;width:100%;max-width:460px;max-height:80%;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.4)}
 .sec-header{padding:18px 22px 14px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .sec-header h3{font-size:15px;font-weight:700;color:#fff}
-.sec-header-sub{font-size:12px;color:rgba(255,255,255,.3);margin-top:2px}
-.sec-close-x{background:none;border:none;color:rgba(255,255,255,.3);font-size:20px;cursor:pointer;line-height:1}
+.sec-header-sub{font-size:12px;color:rgba(255,255,255,.72);margin-top:2px}
+.sec-close-x{background:none;border:none;color:rgba(255,255,255,.72);font-size:20px;cursor:pointer;line-height:1}
 .sec-list{flex:1;overflow-y:auto;padding:10px 12px}
 .sec-list::-webkit-scrollbar{width:3px}
 .sec-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
 .sec-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.06);margin-bottom:6px;background:rgba(255,255,255,.02);transition:background .15s}
 .sec-item:hover{background:rgba(255,255,255,.04)}
 .sec-name{flex:1;font-size:13px;font-weight:600;color:rgba(255,255,255,.7)}
-.sec-tag{font-size:10px;color:rgba(255,255,255,.2);background:rgba(255,255,255,.05);padding:2px 7px;border-radius:4px;font-family:monospace}
-.sec-btn{background:rgba(255,255,255,.06);border:none;color:rgba(255,255,255,.4);border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.sec-tag{font-size:10px;color:rgba(255,255,255,.72);background:rgba(255,255,255,.05);padding:2px 7px;border-radius:4px;font-family:monospace}
+.sec-btn{background:rgba(255,255,255,.06);border:none;color:rgba(255,255,255,.72);border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
 .sec-btn:hover{background:rgba(255,255,255,.12);color:#fff}
-.sec-btn.eye-off{color:rgba(255,255,255,.15)}
+.sec-btn.eye-off{color:rgba(255,255,255,.72)}
 .sec-item.hidden-sec .sec-name{opacity:.35;text-decoration:line-through}
 .sec-footer{padding:12px 16px;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0}
 .sec-refresh{width:100%;background:rgba(45,122,58,.15);border:1px solid rgba(45,122,58,.3);color:#4ade80;border-radius:8px;padding:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
@@ -695,22 +698,22 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .slot-box{background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:20px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.5)}
 .slot-header{padding:20px 24px 16px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between}
 .slot-header h3{font-size:16px;font-weight:700;color:#fff;letter-spacing:-.3px}
-.slot-header-sub{font-size:12px;color:rgba(255,255,255,.3);margin-top:2px}
-.slot-close-x{background:none;border:none;color:rgba(255,255,255,.35);font-size:20px;cursor:pointer;line-height:1;padding:0}
+.slot-header-sub{font-size:12px;color:rgba(255,255,255,.72);margin-top:2px}
+.slot-close-x{background:none;border:none;color:rgba(255,255,255,.72);font-size:20px;cursor:pointer;line-height:1;padding:0}
 .slot-body{padding:20px 24px}
 .slot-drop{border:2px dashed rgba(45,122,58,.4);border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:rgba(45,122,58,.04);margin-bottom:14px}
 .slot-drop:hover,.slot-drop.drag{border-color:#3dba52;background:rgba(45,122,58,.12)}
 .slot-drop-icon{font-size:36px;display:block;margin-bottom:10px}
-.slot-drop-text{font-size:14px;font-weight:600;color:rgba(255,255,255,.6);margin-bottom:4px}
-.slot-drop-sub{font-size:12px;color:rgba(255,255,255,.25)}
+.slot-drop-text{font-size:14px;font-weight:600;color:rgba(255,255,255,.72);margin-bottom:4px}
+.slot-drop-sub{font-size:12px;color:rgba(255,255,255,.72)}
 .slot-divider{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .slot-divider::before,.slot-divider::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.07)}
-.slot-divider span{font-size:11px;color:rgba(255,255,255,.2);font-weight:600}
+.slot-divider span{font-size:11px;color:rgba(255,255,255,.72);font-weight:600}
 .slot-lib-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:14px}
 .slot-lib-thumb{aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all .15s}
 .slot-lib-thumb:hover{border-color:#3dba52;transform:scale(1.05)}
 .slot-lib-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.slot-lib-empty{font-size:12px;color:rgba(255,255,255,.25);text-align:center;padding:8px 0}
+.slot-lib-empty{font-size:12px;color:rgba(255,255,255,.72);text-align:center;padding:8px 0}
 .slot-ai{margin-bottom:14px}
 .slot-ai-row{display:flex;gap:8px}
 .slot-ai-row input{flex:1;background:#0f1a0d;border:1px solid rgba(45,122,58,.32);color:#eaf2e8;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none}
@@ -788,7 +791,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 
 /* ---- RESPONSIVE ---- */
 .s-mobtabs{display:none;gap:6px;padding:8px 10px;background:#0a1208;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
-.s-mobtab{flex:1;background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
+.s-mobtab{flex:1;background:rgba(255,255,255,.05);color:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
 .s-mobtab.active{background:rgba(45,122,58,.2);color:#4ade80;border-color:rgba(45,122,58,.4)}
 .auth-ava{display:none;width:30px;height:30px;border-radius:50%;background:#2d7a3a;color:#fff;align-items:center;justify-content:center;font-weight:700;font-size:13px;line-height:1}
 .auth-ava-guest{display:none;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.12);align-items:center;justify-content:center;line-height:0}
@@ -837,6 +840,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 window.wsClearSiteState=function(){try{var _keep={ws_rm:1,ws_focus:1,ws_theme:1,ws_edhint:1};var _rm=[];for(var _i=0;_i<localStorage.length;_i++){var _k=localStorage.key(_i);if(_k&&_k.indexOf('ws')===0&&!_keep[_k])_rm.push(_k);}for(var _j=0;_j<_rm.length;_j++)localStorage.removeItem(_rm[_j]);}catch(_e2){}try{sessionStorage.clear();}catch(_e3){}};</script>
 </head>
 <body>
+<a class="ws-skip" href="#wsMain">Skip to main content</a>
 
 <div class="toast" id="toast"></div>
 
@@ -857,6 +861,7 @@ window.wsClearSiteState=function(){try{var _keep={ws_rm:1,ws_focus:1,ws_theme:1,
   <button class="nav-cta" id="navCta">Build for free &#8594;</button>
 </nav>
 
+<main id="wsMain" tabindex="-1">
 <div class="hero" id="hero">
   <div class="hero-pill">
     <div class="hero-pill-dot">&#127807;</div>
@@ -917,15 +922,15 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       </div>
 
       <div class="panel" id="panel2">
-        <div class="panel-q">Tell us a bit more <span style="color:rgba(255,255,255,.25);font-weight:400">(all optional)</span></div>
+        <div class="panel-q">Tell us a bit more <span style="color:rgba(255,255,255,.72);font-weight:400">(all optional)</span></div>
         <div class="detail-grid">
           <div>
             <div class="field-lbl">Business name</div>
-            <input id="bizName" class="dark-input" type="text" placeholder="Leave blank - AI will create one">
+            <input id="bizName" aria-label="Business name" class="dark-input" type="text" placeholder="Leave blank - AI will create one">
           </div>
           <div>
             <div class="field-lbl">Specific requests</div>
-            <input id="bizExtra" class="dark-input" type="text" placeholder="Dark theme, add pricing...">
+            <input id="bizExtra" aria-label="Style or extra details" class="dark-input" type="text" placeholder="Dark theme, add pricing...">
           </div>
         </div>
         <div class="panel-foot">
@@ -1005,7 +1010,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         </ul>
       </div>
       <div class="cmp-card">
-        <div class="cmp-head" style="color:rgba(255,255,255,.4)">Other builders</div>
+        <div class="cmp-head" style="color:rgba(255,255,255,.72)">Other builders</div>
         <ul class="cmp-list">
           <li class="cmp-item no">$15-40 per month, forever</li>
           <li class="cmp-item no">Locked into their platform</li>
@@ -1061,13 +1066,14 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   <button class="btn-white" id="ctaBtn">Plant my website free &#127807;</button>
 </div>
 
+</main>
 <footer>
   <a href="/" class="foot-logo">
     <div class="nav-logo-mark" style="width:26px;height:26px"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true"><path d="M12 21V12" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/><path d="M12 14.5C10.4 9.8 6.2 7.6 3 8.2C3.4 13 7.6 15.5 12 14.5Z" fill="#fff"/><path d="M12 13C13.5 8.2 17.8 6 21 6.6C20.6 11.4 16.4 13.9 12 13Z" fill="#fff"/></svg></div>
     <span class="lw">Web<em>sprout</em></span>
   </a>
   <div class="foot-links">
-    <span style="color:rgba(255,255,255,.18);font-size:13px">&#169; 2026 Websprout</span>
+    <span style="color:rgba(255,255,255,.72);font-size:13px">&#169; 2026 Websprout</span>
     <a href="/terms" target="_blank">Terms</a>
     <a href="/privacy" target="_blank">Privacy</a>
     <a href="/deploy-guide" target="_blank">Deploy guide</a>
@@ -1080,9 +1086,9 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     <div class="s-title" id="stitle">Your site</div>
     <div class="live-dot"></div>
     <div class="device-btns">
-      <button class="dev-btn active" id="devDesktop" title="Desktop"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>
-      <button class="dev-btn" id="devTablet" title="Tablet"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg></button>
-      <button class="dev-btn" id="devMobile" title="Mobile"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="7" y="2" width="10" height="20" rx="2"/><circle cx="12" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg></button>
+      <button class="dev-btn active" id="devDesktop" aria-label="Desktop preview" title="Desktop"><svg aria-hidden="true" focusable="false" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>
+      <button class="dev-btn" id="devTablet" aria-label="Tablet preview" title="Tablet"><svg aria-hidden="true" focusable="false" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg></button>
+      <button class="dev-btn" id="devMobile" aria-label="Mobile preview" title="Mobile"><svg aria-hidden="true" focusable="false" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="7" y="2" width="10" height="20" rx="2"/><circle cx="12" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg></button>
     </div>
     <div class="s-actions">
       <span class="edit-counter" id="editCounter"></span>
@@ -1124,7 +1130,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <button class="s-btn s-ghost" id="redoBtn" disabled>&#8618; Redo</button>
       <button class="s-btn s-ghost" id="fullscreenBtn" data-needs-site="1" title="Full screen preview">&#9974; Preview</button>
       <span class="s-sep"></span>
-      <button class="s-btn s-ghost s-icon" id="mySitesBtn" title="Your saved sites">&#128194;</button>
+      <button class="s-btn s-ghost s-icon" id="mySitesBtn" aria-label="Your saved sites" title="Your saved sites">&#128194;</button>
       <button class="s-btn s-ghost" id="acctBtn" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="Your account">&#128100; Sign in</button>
       <span id="outActions" style="display:none">
       <button class="s-btn s-ghost" id="shareBtn" data-needs-site="1">&#128279; Share</button>
@@ -1135,8 +1141,8 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <button class="s-btn s-ghost" id="copyBtn" data-needs-site="1" title="Copy full HTML to clipboard">&#128203; Copy code</button>
       <button class="s-btn s-ghost" id="deployBtn" data-needs-site="1">&#128640; Deploy</button>
       </span>
-      <style>.gs-item{display:block;width:100%;text-align:left;background:none;border:none;color:#fff;padding:10px 12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}.gs-item:hover{background:rgba(45,122,58,.18)}.gs-sub{display:block;font-size:11px;color:rgba(255,255,255,.4);font-weight:400;margin-top:1px}.gs-head{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:rgba(255,255,255,.34);padding:10px 12px 4px}.gs-head:first-child{padding-top:4px}.s-sep{width:1px;height:20px;background:rgba(255,255,255,.1);margin:0 3px;flex-shrink:0;align-self:center}.s-menu{position:absolute;top:calc(100% + 6px);right:0;background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:6px;min-width:218px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:1000}.s-icon{padding:6px 9px}</style>
-      <span id="saveStatus" style="font-size:12px;color:rgba(255,255,255,.55);font-weight:600;margin-right:6px;opacity:0;transition:opacity .3s;white-space:nowrap" title="Your work autosaves as you edit">Saved</span>
+      <style>.gs-item{display:block;width:100%;text-align:left;background:none;border:none;color:#fff;padding:10px 12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}.gs-item:hover{background:rgba(45,122,58,.18)}.gs-sub{display:block;font-size:11px;color:rgba(255,255,255,.72);font-weight:400;margin-top:1px}.gs-head{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:rgba(255,255,255,.72);padding:10px 12px 4px}.gs-head:first-child{padding-top:4px}.s-sep{width:1px;height:20px;background:rgba(255,255,255,.1);margin:0 3px;flex-shrink:0;align-self:center}.s-menu{position:absolute;top:calc(100% + 6px);right:0;background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:6px;min-width:218px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:1000}.s-icon{padding:6px 9px}</style>
+      <span id="saveStatus" style="font-size:12px;color:rgba(255,255,255,.72);font-weight:600;margin-right:6px;opacity:0;transition:opacity .3s;white-space:nowrap" title="Your work autosaves as you edit">Saved</span>
       <span style="position:relative;display:inline-block">
         <button class="s-btn" id="getSiteBtn" data-needs-site="1" style="background:#2d7a3a;color:#fff;border-color:#2d7a3a;font-weight:700" title="Publish, download or share your site">&#128640; Get your site &#9662;</button>
         <div id="getSiteMenu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:12px;padding:6px;min-width:266px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:1000">
@@ -1161,20 +1167,20 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     <div style="font-size:20px">&#128640;</div>
     <div class="deploy-cta-banner-text"><span>Site unlocked!</span> Publish it live and grab your shareable link in seconds.</div>
     <button class="deploy-cta-banner-btn" id="deployCtaBtn">Publish now &#8594;</button>
-    <button class="deploy-cta-dismiss" id="deployCtaDismiss">&#10005;</button>
+    <button class="deploy-cta-dismiss" id="deployCtaDismiss" aria-label="Dismiss">&#10005;</button>
   </div>
   <div class="pub-modal" id="pubModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:18px">
     <div style="background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:18px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.6)">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.07)">
         <div style="font-size:17px;font-weight:800;color:#fff">&#127760; Publish your site</div>
-        <button id="pubClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;line-height:1">&times;</button>
+        <button id="pubClose" style="background:none;border:none;color:rgba(255,255,255,.72);font-size:22px;cursor:pointer;line-height:1">&times;</button>
       </div>
       <div style="padding:22px">
         <div id="pubStep1">
-          <label style="display:block;font-size:13px;font-weight:600;color:rgba(255,255,255,.6);margin-bottom:8px">Choose your free web address</label>
+          <label style="display:block;font-size:13px;font-weight:600;color:rgba(255,255,255,.72);margin-bottom:8px">Choose your free web address</label>
           <div style="display:flex;align-items:center;background:#060d05;border:1px solid rgba(45,122,58,.3);border-radius:10px;overflow:hidden">
-            <input id="pubSlug" type="text" placeholder="your-business" autocomplete="off" style="flex:1;background:none;border:none;color:#fff;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;min-width:0">
-            <span style="color:rgba(255,255,255,.4);padding:0 14px;font-size:14px;white-space:nowrap">.websprout.app</span>
+            <input id="pubSlug" aria-label="Site address" type="text" placeholder="your-business" autocomplete="off" style="flex:1;background:none;border:none;color:#fff;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;min-width:0">
+            <span style="color:rgba(255,255,255,.72);padding:0 14px;font-size:14px;white-space:nowrap">.websprout.app</span>
           </div>
           <div id="pubAvail" style="font-size:13px;margin-top:8px;min-height:18px"></div>
           <button id="pubGo" style="width:100%;margin-top:14px;background:#2d7a3a;color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Publish live &#8594;</button>
@@ -1192,24 +1198,24 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
           <a id="pubReviews" href="#" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:11px;font-size:13px;font-weight:600;text-decoration:none;font-family:inherit;box-sizing:border-box">&#11088; Manage reviews</a>
           <div id="pubBadgeNudge" style="display:none;background:linear-gradient(180deg,rgba(45,122,58,.14),rgba(45,122,58,.04));border:1px solid rgba(74,222,128,.22);border-radius:12px;padding:14px 16px;margin-top:14px">
             <div style="font-size:13.5px;color:#fff;font-weight:700;margin-bottom:3px">&#127793; Your site is live &mdash; with a small Websprout badge</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:11px">Go Pro to remove the badge, connect your own domain, and download the code.</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.72);line-height:1.5;margin-bottom:11px">Go Pro to remove the badge, connect your own domain, and download the code.</div>
             <button id="pubBadgeGoPro" class="s-btn s-purple" style="width:100%;padding:10px;border-radius:9px;font-size:13.5px;font-weight:700;cursor:pointer">&#10024; Go Pro &mdash; remove the badge</button>
           </div>
           <div id="pubDomainLocked" style="display:none;border-top:1px solid rgba(255,255,255,.07);margin-top:18px;padding-top:18px">
             <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px">&#128274; Use your own domain</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:10px">Connecting a custom domain is a Pro feature.</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.72);margin-bottom:10px">Connecting a custom domain is a Pro feature.</div>
             <button id="pubDomGoPro" style="width:100%;background:rgba(109,40,217,.18);color:#c4b5fd;border:1px solid rgba(109,40,217,.4);border-radius:9px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Go Pro to use your domain</button>
           </div>
           <div id="pubDomainPro" style="border-top:1px solid rgba(255,255,255,.07);margin-top:18px;padding-top:18px">
             <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px">Use your own domain</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:10px">Find one, buy it on GoDaddy, then point it here.</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.72);margin-bottom:10px">Find one, buy it on GoDaddy, then point it here.</div>
             <div style="display:flex;gap:8px">
-              <input id="domInput" type="text" placeholder="yourbusiness.com" autocomplete="off" style="flex:1;background:#060d05;border:1px solid rgba(45,122,58,.3);border-radius:9px;color:#fff;padding:10px 12px;font-size:14px;outline:none;font-family:inherit;min-width:0">
+              <input id="domInput" aria-label="Custom domain" type="text" placeholder="yourbusiness.com" autocomplete="off" style="flex:1;background:#060d05;border:1px solid rgba(45,122,58,.3);border-radius:9px;color:#fff;padding:10px 12px;font-size:14px;outline:none;font-family:inherit;min-width:0">
               <button id="domCheck" style="background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Check</button>
             </div>
             <div id="domResult" style="font-size:13px;margin-top:10px;line-height:1.5"></div>
           </div>
-          <div style="text-align:center;margin-top:16px"><button id="pubUnpub" style="background:none;border:none;color:rgba(255,255,255,.32);font-size:12px;cursor:pointer;font-family:inherit">Take this site offline</button></div>
+          <div style="text-align:center;margin-top:16px"><button id="pubUnpub" style="background:none;border:none;color:rgba(255,255,255,.72);font-size:12px;cursor:pointer;font-family:inherit">Take this site offline</button></div>
         </div>
       </div>
     </div>
@@ -1263,15 +1269,15 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     function checkSlug(){
       var s=pslug(slugIn.value);
       if(s!==slugIn.value)slugIn.value=s;
-      if(s.length<3){avail.innerHTML='<span style="color:rgba(255,255,255,.4)">At least 3 characters</span>';goBtn.disabled=true;return;}
-      avail.innerHTML='<span style="color:rgba(255,255,255,.4)">Checking...</span>';
+      if(s.length<3){avail.innerHTML='<span style="color:rgba(255,255,255,.72)">At least 3 characters</span>';goBtn.disabled=true;return;}
+      avail.innerHTML='<span style="color:rgba(255,255,255,.72)">Checking...</span>';
       fetch('/slug-check?slug='+encodeURIComponent(s)+'&siteId='+encodeURIComponent(site())).then(function(r){return r.json();}).then(function(j){
         if(j.available){avail.innerHTML='<span style="color:#4ade80">&#10003; '+s+'.websprout.app is yours</span>';goBtn.disabled=false;}
         else{
           goBtn.disabled=true;
           var ideas=[s+'-co',s+'-online',s+'-'+Math.random().toString(36).slice(2,4)];
           var chips='';for(var ci=0;ci<ideas.length;ci++){chips+='<button class="slug-sug" data-s="'+ideas[ci]+'" style="background:rgba(45,122,58,.16);border:1px solid rgba(45,122,58,.32);color:#4ade80;border-radius:6px;padding:3px 9px;font-size:12px;cursor:pointer;font-family:inherit;margin:0 4px 0 0">'+ideas[ci]+'</button>';}
-          avail.innerHTML='<span style="color:#f87171">'+(j.reason==='reserved'?'That name is reserved':'That name is taken')+'</span> <span style="color:rgba(255,255,255,.4)">— try one of these:</span><div style="margin-top:6px">'+chips+'</div>';
+          avail.innerHTML='<span style="color:#f87171">'+(j.reason==='reserved'?'That name is reserved':'That name is taken')+'</span> <span style="color:rgba(255,255,255,.72)">— try one of these:</span><div style="margin-top:6px">'+chips+'</div>';
           var sgs=avail.querySelectorAll('.slug-sug');for(var sk=0;sk<sgs.length;sk++){sgs[sk].addEventListener('click',function(){slugIn.value=this.getAttribute('data-s');checkSlug();});}
         }
       }).catch(function(){avail.innerHTML='';goBtn.disabled=false;});
@@ -1304,13 +1310,13 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     });
     $('domCheck').addEventListener('click',function(){
       var d=$('domInput').value.trim();var res=$('domResult');if(!d)return;
-      res.innerHTML='<span style="color:rgba(255,255,255,.4)">Checking...</span>';
+      res.innerHTML='<span style="color:rgba(255,255,255,.72)">Checking...</span>';
       fetch('/api/domain-check?domain='+encodeURIComponent(d)).then(function(r){return r.json();}).then(function(j){
         var buy='<a href="'+(j.buyUrl||'https://www.godaddy.com')+'" target="_blank" style="color:#4ade80;font-weight:700;text-decoration:none">Buy on GoDaddy &#8594;</a>';
         var status='';
         if(j.available===true)status='<span style="color:#4ade80">&#10003; '+j.domain+' is available'+(j.price?(' (about $'+j.price.toFixed(2)+'/yr)'):'')+'</span><br>';
         else if(j.available===false)status='<span style="color:#f87171">'+j.domain+' is taken</span><br>';
-        res.innerHTML=status+buy+'<div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:8px">After buying, add a CNAME record pointing to <b style="color:#fff">'+(window._wsSlug||'your-site')+'.websprout.app</b> to connect it.</div>';
+        res.innerHTML=status+buy+'<div style="font-size:12px;color:rgba(255,255,255,.72);margin-top:8px">After buying, add a CNAME record pointing to <b style="color:#fff">'+(window._wsSlug||'your-site')+'.websprout.app</b> to connect it.</div>';
       }).catch(function(){res.innerHTML='<a href="https://www.godaddy.com/domainsearch/find?domainToCheck='+encodeURIComponent(d)+'" target="_blank" style="color:#4ade80;font-weight:700">Search on GoDaddy &#8594;</a>';});
     });
   })();
@@ -1396,7 +1402,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <div class="lock-badge" id="lkbadge">
         <div class="lock-title">🔒 Love what you see?</div>
         <div class="lock-sub">Go Pro to remove the Websprout badge, use your own domain, and download the code. Cancel anytime.</div>
-        <input type="email" id="emailCapture" class="lock-email" placeholder="your@email.com">
+        <input type="email" id="emailCapture" aria-label="Email address" class="lock-email" placeholder="your@email.com">
         <button class="s-btn s-purple" style="width:100%;padding:10px;border-radius:8px;font-size:13px" id="lockPayBtn">Go Pro — $10/mo</button>
       </div>
     </div>
@@ -1460,9 +1466,9 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
           <button class="img-action-btn" data-action="hero">🖼 Use as hero background</button>
           <button class="img-action-btn" data-action="about">👤 Use in about section</button>
           <button class="img-action-btn" data-action="section">📌 Add as section image</button>
-          <button class="img-action-btn" data-action="cancel" style="color:rgba(255,255,255,.3)">✕ Cancel</button>
+          <button class="img-action-btn" data-action="cancel" style="color:rgba(255,255,255,.72)">✕ Cancel</button>
         </div>
-        <input type="file" id="imgFileInput" accept="image/*" multiple>
+        <input type="file" id="imgFileInput" aria-label="Upload an image" accept="image/*" multiple>
         </div>
       </div>
 
@@ -1475,38 +1481,38 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <div class="biz-fields" id="bizFields">
           <div class="biz-field">
             <label>Business name</label>
-            <input class="biz-input" id="bizInfoName" placeholder="Acme Co.">
+            <input class="biz-input" id="bizInfoName" aria-label="Business name" placeholder="Acme Co.">
           </div>
           <div class="biz-field">
             <label>Email address</label>
-            <input class="biz-input" id="bizInfoEmail" type="email" placeholder="hello@yourbusiness.com">
+            <input class="biz-input" id="bizInfoEmail" aria-label="Business email" type="email" placeholder="hello@yourbusiness.com">
           </div>
           <div class="biz-field">
             <label>Phone number</label>
-            <input class="biz-input" id="bizInfoPhone" placeholder="(555) 123-4567">
+            <input class="biz-input" id="bizInfoPhone" aria-label="Business phone" placeholder="(555) 123-4567">
           </div>
           <div class="biz-field">
             <label>Address</label>
-            <input class="biz-input" id="bizInfoAddress" placeholder="123 Main St, City, ST">
+            <input class="biz-input" id="bizInfoAddress" aria-label="Business address" placeholder="123 Main St, City, ST">
           </div>
           <div class="biz-field">
             <label>Booking link (Calendly, Cal.com, Square…)</label>
-            <input class="biz-input" id="bizInfoBooking" placeholder="https://calendly.com/yourname">
-            <span style="font-size:10px;color:rgba(255,255,255,.2);margin-top:2px;line-height:1.4">Paste your scheduler link — your "Book now" buttons will open it so visitors pick a real time slot</span>
+            <input class="biz-input" id="bizInfoBooking" aria-label="Booking link" placeholder="https://calendly.com/yourname">
+            <span style="font-size:10px;color:rgba(255,255,255,.72);margin-top:2px;line-height:1.4">Paste your scheduler link — your "Book now" buttons will open it so visitors pick a real time slot</span>
           </div>
           <div class="biz-field">
             <label>Online ordering link (Toast, Square, DoorDash&hellip;)</label>
-            <input class="biz-input" id="bizInfoOrdering" placeholder="https://order.toasttab.com/...">
-            <span style="font-size:10px;color:rgba(255,255,255,.2);margin-top:2px;line-height:1.4">For food businesses — your "Order online" buttons open this. Leave blank and they jump to your menu instead.</span>
+            <input class="biz-input" id="bizInfoOrdering" aria-label="Online ordering link" placeholder="https://order.toasttab.com/...">
+            <span style="font-size:10px;color:rgba(255,255,255,.72);margin-top:2px;line-height:1.4">For food businesses — your "Order online" buttons open this. Leave blank and they jump to your menu instead.</span>
           </div>
           <div class="biz-field">
             <label>Business hours</label>
-            <input class="biz-input" id="bizInfoHours" placeholder="Mon–Fri 9–5, Sat 10–2">
+            <input class="biz-input" id="bizInfoHours" aria-label="Business hours" placeholder="Mon–Fri 9–5, Sat 10–2">
           </div>
           <div class="biz-field">
             <label>Form submissions go to</label>
-            <input class="biz-input" id="bizInfoForm" type="email" placeholder="you@email.com">
-            <span style="font-size:10px;color:rgba(255,255,255,.2);margin-top:2px;line-height:1.4">Every contact-form submission on your published site is emailed here instantly and saved to your leads inbox. Leave blank to use your account email.</span>
+            <input class="biz-input" id="bizInfoForm" aria-label="Contact form email" type="email" placeholder="you@email.com">
+            <span style="font-size:10px;color:rgba(255,255,255,.72);margin-top:2px;line-height:1.4">Every contact-form submission on your published site is emailed here instantly and saved to your leads inbox. Leave blank to use your account email.</span>
           </div>
           <button class="biz-apply" id="bizApplyBtn">&#10003; Apply to site</button>
         </div>
@@ -1523,7 +1529,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <div class="live-color-panel">
         <div class="palette-label">&#127912; Site colors</div>
         <div class="live-color-grid" id="liveColorPanel">
-          <div style="font-size:11px;color:rgba(255,255,255,.2)">Generate a site first</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.72)">Generate a site first</div>
         </div>
       </div>
 
@@ -1608,7 +1614,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       </div>
       <div class="chat-input">
         <div class="chat-row">
-          <textarea class="chat-ta" id="ci" placeholder="Describe a change — e.g. “make it blue” or “add a pricing section”" rows="1"></textarea>
+          <textarea class="chat-ta" id="ci" aria-label="Describe a change" placeholder="Describe a change — e.g. “make it blue” or “add a pricing section”" rows="1"></textarea>
           <button class="chat-send" id="csb"><svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>
         </div>
         <div class="chat-hint">Press Enter to send · Shift+Enter for a new line</div>
@@ -1658,7 +1664,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <a href="https://app.netlify.com/user/applications#personal-access-tokens" target="_blank" class="d-btn d-btn-n" style="display:block;text-align:center;text-decoration:none;margin-bottom:16px">Open Netlify → Personal access tokens</a>
         <div class="d-input-row">
           <div class="d-label">Paste your token here</div>
-          <input class="d-input" id="netlifyToken" type="password" placeholder="netlify_pat_xxxxxxxx...">
+          <input class="d-input" id="netlifyToken" aria-label="Netlify access token" type="password" placeholder="netlify_pat_xxxxxxxx...">
           <div style="font-size:11px;color:#888;margin-top:4px">🔒 Saved on your device only. We never see or store it.</div>
         </div>
         <div style="display:flex;gap:8px;margin-top:12px">
@@ -1675,7 +1681,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <div class="d-step-desc">Choose a name for your site URL, then hit deploy. You'll be live in ~10 seconds.</div>
         <div class="d-input-row">
           <div class="d-label">Site name <span style="font-weight:400;color:#888">(optional)</span></div>
-          <input class="d-input" id="netlifySiteName" type="text" placeholder="my-coffee-shop">
+          <input class="d-input" id="netlifySiteName" aria-label="Netlify site name" type="text" placeholder="my-coffee-shop">
           <div style="font-size:11px;color:#888;margin-top:4px">Your site will be at: <span id="sitePreviewUrl" style="color:#00c7b7">yoursite.netlify.app</span></div>
         </div>
         <button class="d-btn d-btn-n" id="netlifyDeployBtn" style="margin-top:12px">🚀 Deploy my site live!</button>
@@ -1727,12 +1733,12 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <h3 id="slotModalTitle">Add photo</h3>
         <div class="slot-header-sub">This will replace the placeholder in your site</div>
       </div>
-      <button class="slot-close-x" id="slotModalClose">&#10005;</button>
+      <button class="slot-close-x" id="slotModalClose" aria-label="Close">&#10005;</button>
     </div>
     <div class="slot-body">
       <div class="slot-ai">
         <div class="slot-ai-row">
-          <input type="text" id="slotAiPrompt" placeholder="Describe an image to generate with AI&hellip;" autocomplete="off">
+          <input type="text" id="slotAiPrompt" aria-label="Describe an image to generate" placeholder="Describe an image to generate with AI&hellip;" autocomplete="off">
           <button id="slotAiBtn">&#10024; Generate</button>
         </div>
         <div class="slot-ai-msg" id="slotAiMsg"></div>
@@ -1748,7 +1754,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <div class="slot-lib-empty" style="grid-column:1/-1">No photos uploaded yet</div>
       </div>
       <button class="slot-upload-btn" id="slotUploadBtn">&#128247; Choose from device</button>
-      <input type="file" id="slotFileInput" accept="image/*" style="display:none">
+      <input type="file" id="slotFileInput" aria-label="Upload an image" accept="image/*" style="display:none">
     </div>
   </div>
 </div>
@@ -1768,10 +1774,10 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <h3>&#9783; Section Manager</h3>
         <div class="sec-header-sub">Show/hide and reorder sections on your site</div>
       </div>
-      <button class="sec-close-x" id="secClose">&#10005;</button>
+      <button class="sec-close-x" id="secClose" aria-label="Close">&#10005;</button>
     </div>
     <div class="sec-list" id="secList">
-      <div style="font-size:13px;color:rgba(255,255,255,.3);text-align:center;padding:20px">Generate a site to manage its sections</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.72);text-align:center;padding:20px">Generate a site to manage its sections</div>
     </div>
     <div class="sec-footer">
       <button class="sec-refresh" id="secRefresh">&#8635; Refresh sections</button>
@@ -1789,11 +1795,11 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     <div class="seo-body">
       <div class="seo-field">
         <div class="seo-label">Page Title <span>Appears in browser tab and Google</span></div>
-        <input class="seo-input" id="seoTitle" type="text" placeholder="My Business — Home" maxlength="60">
+        <input class="seo-input" id="seoTitle" aria-label="Page title" type="text" placeholder="My Business — Home" maxlength="60">
       </div>
       <div class="seo-field">
         <div class="seo-label">Meta Description <span>Shown in Google search results</span></div>
-        <textarea class="seo-input" id="seoDesc" rows="3" placeholder="A short description of your site (150-160 chars)" maxlength="160"></textarea>
+        <textarea class="seo-input" id="seoDesc" aria-label="Meta description" rows="3" placeholder="A short description of your site (150-160 chars)" maxlength="160"></textarea>
       </div>
       <div class="seo-preview">
         <div class="seo-preview-title" id="seoPrevTitle">Your Page Title</div>
@@ -1814,7 +1820,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     <h3>🔗 Share your preview</h3>
     <p>Anyone with this link can view your site preview for 7 days — no account needed.</p>
     <div class="share-url-wrap">
-      <input class="share-url" id="shareUrlInput" readonly value="Generating link...">
+      <input class="share-url" id="shareUrlInput" aria-label="Share link" readonly value="Generating link...">
       <button class="share-copy" id="shareCopyBtn">Copy</button>
     </div>
     <div class="share-note">Link expires in 7 days. They can view but not edit your site.</div>
@@ -1849,13 +1855,13 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   <div style="background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:18px;max-width:440px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.6)">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.07)">
       <div style="font-size:17px;font-weight:800;color:#fff">&#128172; Contact support</div>
-      <button id="supportClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;line-height:1">&times;</button>
+      <button id="supportClose" style="background:none;border:none;color:rgba(255,255,255,.72);font-size:22px;cursor:pointer;line-height:1">&times;</button>
     </div>
     <div style="padding:22px">
-      <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:16px;line-height:1.5">Have a question or hit a snag? Send us a message and we&rsquo;ll get back to you by email.</div>
-      <input id="supName" type="text" placeholder="Your name (optional)" style="width:100%;background:#060d05;border:1px solid rgba(45,122,58,.3);border-radius:10px;color:#fff;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;margin-bottom:10px">
-      <input id="supEmail" type="email" placeholder="Your email (so we can reply)" autocomplete="email" style="width:100%;background:#060d05;border:1px solid rgba(45,122,58,.3);border-radius:10px;color:#fff;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;margin-bottom:10px">
-      <textarea id="supMsg" rows="4" placeholder="How can we help?" style="width:100%;background:#060d05;border:1px solid rgba(45,122,58,.3);border-radius:10px;color:#fff;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;resize:vertical;margin-bottom:10px"></textarea>
+      <div style="font-size:13px;color:rgba(255,255,255,.72);margin-bottom:16px;line-height:1.5">Have a question or hit a snag? Send us a message and we&rsquo;ll get back to you by email.</div>
+      <input id="supName" aria-label="Your name" type="text" placeholder="Your name (optional)" style="width:100%;background:#060d05;border:1px solid rgba(45,122,58,.3);border-radius:10px;color:#fff;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;margin-bottom:10px">
+      <input id="supEmail" aria-label="Your email" type="email" placeholder="Your email (so we can reply)" autocomplete="email" style="width:100%;background:#060d05;border:1px solid rgba(45,122,58,.3);border-radius:10px;color:#fff;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;margin-bottom:10px">
+      <textarea id="supMsg" aria-label="Your message" rows="4" placeholder="How can we help?" style="width:100%;background:#060d05;border:1px solid rgba(45,122,58,.3);border-radius:10px;color:#fff;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;resize:vertical;margin-bottom:10px"></textarea>
       <button id="supSend" style="width:100%;background:#2d7a3a;color:#fff;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Send message</button>
       <div id="supMsgOut" style="font-size:13px;min-height:18px;margin-top:10px;text-align:center"></div>
     </div>
@@ -1901,16 +1907,16 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   <div style="background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:18px;max-width:400px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.6)">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.07)">
       <div style="font-size:17px;font-weight:800;color:#fff">Sign in to Websprout</div>
-      <button id="authClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;line-height:1">&times;</button>
+      <button id="authClose" style="background:none;border:none;color:rgba(255,255,255,.72);font-size:22px;cursor:pointer;line-height:1">&times;</button>
     </div>
     <div style="padding:22px">
-      <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:16px;line-height:1.5">Sign in to save your sites to your account and open them from any device.</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.72);margin-bottom:16px;line-height:1.5">Sign in to save your sites to your account and open them from any device.</div>
       <a href="/auth/google" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1a1a1a;border-radius:10px;padding:12px;font-size:15px;font-weight:600;text-decoration:none">
         <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.6 2.4 30.2 0 24 0 14.6 0 6.4 5.4 2.5 13.3l7.9 6.1C12.3 13.2 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7c4.3-3.9 6.2-9.6 7.2-17.4z"/><path fill="#FBBC05" d="M10.4 28.6c-.5-1.5-.8-3-.8-4.6s.3-3.1.8-4.6l-7.9-6.1C.9 16.5 0 20.1 0 24s.9 7.5 2.5 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.5-2 15.3-5.5l-7.3-5.7c-2 1.4-4.7 2.3-8 2.3-6.3 0-11.7-3.7-13.6-9.1l-7.9 6.1C6.4 42.6 14.6 48 24 48z"/></svg>
         Continue with Google
       </a>
-      <div style="display:flex;align-items:center;gap:10px;margin:18px 0;color:rgba(255,255,255,.3);font-size:12px"><div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div>or<div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div></div>
-      <input id="authEmail" type="email" placeholder="you@email.com" autocomplete="email" style="width:100%;background:#060d05;border:1px solid rgba(45,122,58,.3);border-radius:10px;color:#fff;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:10px;margin:18px 0;color:rgba(255,255,255,.72);font-size:12px"><div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div>or<div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div></div>
+      <input id="authEmail" aria-label="Email address" type="email" placeholder="you@email.com" autocomplete="email" style="width:100%;background:#060d05;border:1px solid rgba(45,122,58,.3);border-radius:10px;color:#fff;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;margin-bottom:10px">
       <button id="authEmailBtn" style="width:100%;background:#2d7a3a;color:#fff;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Email me a sign-in link</button>
       <div id="authMsg" style="font-size:13px;min-height:18px;margin-top:10px;text-align:center"></div>
     </div>
@@ -1920,16 +1926,16 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   <div style="background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:18px;max-width:420px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.07)">
       <div style="font-size:17px;font-weight:800;color:#fff">Your account</div>
-      <button id="profileClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;line-height:1">&times;</button>
+      <button id="profileClose" style="background:none;border:none;color:rgba(255,255,255,.72);font-size:22px;cursor:pointer;line-height:1">&times;</button>
     </div>
     <div style="padding:22px">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
         <div id="pfAvatar" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2d9e4a,#1c6e32);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:800;flex-shrink:0">Y</div>
         <div style="min-width:0;flex:1">
           <div id="pfName" style="font-size:17px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">You</div>
-          <div id="pfEmail" style="font-size:13px;color:rgba(255,255,255,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+          <div id="pfEmail" style="font-size:13px;color:rgba(255,255,255,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
         </div>
-        <span id="pfPlanBadge" style="font-size:11px;font-weight:800;letter-spacing:.5px;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);flex-shrink:0">FREE</span>
+        <span id="pfPlanBadge" style="font-size:11px;font-weight:800;letter-spacing:.5px;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.72);flex-shrink:0">FREE</span>
       </div>
       <div id="pfActions" style="margin-bottom:16px"></div>
       <div class="set-sec">
@@ -1942,7 +1948,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <div class="set-note">Websprout uses passwordless sign-in &mdash; your Google account or a one-time email link &mdash; so there&rsquo;s no password to set or change.</div>
         <a class="set-link" href="https://myaccount.google.com/security" target="_blank" rel="noopener">If you use Google, manage 2-step verification there &#8594;</a>
       </div>
-      <button id="pfMySites" style="width:100%;margin-bottom:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#eaf2e8;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">&#128194; My sites<span id="pfSitesCount" style="font-size:12px;color:rgba(255,255,255,.4);font-weight:500"></span></button>
+      <button id="pfMySites" style="width:100%;margin-bottom:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#eaf2e8;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">&#128194; My sites<span id="pfSitesCount" style="font-size:12px;color:rgba(255,255,255,.72);font-weight:500"></span></button>
       <button id="pfSignOut" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.8);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Sign out</button>
     </div>
   </div>
@@ -1975,7 +1981,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       if(pro){
         act.innerHTML='<div style="background:rgba(45,158,74,.12);border:1px solid rgba(45,158,74,.3);border-radius:12px;padding:14px 16px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.55">\u2713 <b style="color:#7fe39a">Pro is active.</b> You can download, deploy, and edit across all of your sites. Cancel anytime.</div>';
       }else{
-        act.innerHTML='<button id="pfGoPro" style="width:100%;background:linear-gradient(135deg,#2d9e4a,#1c6e32);color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(45,158,74,.35)">\u2726 Go Pro \u2014 $10/mo</button><div style="font-size:12px;color:rgba(255,255,255,.4);text-align:center;margin-top:9px;line-height:1.5">Unlock downloads, deploys, and editing across all of your sites.</div>';
+        act.innerHTML='<button id="pfGoPro" style="width:100%;background:linear-gradient(135deg,#2d9e4a,#1c6e32);color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(45,158,74,.35)">\u2726 Go Pro \u2014 $10/mo</button><div style="font-size:12px;color:rgba(255,255,255,.72);text-align:center;margin-top:9px;line-height:1.5">Unlock downloads, deploys, and editing across all of your sites.</div>';
         var gp=$('pfGoPro');if(gp)gp.addEventListener('click',goPro);
       }
       if(me&&me.owner){act.innerHTML+='<a href="/admin" style="display:block;text-align:center;margin-top:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#cfe;border-radius:10px;padding:11px;font-size:14px;font-weight:600;text-decoration:none">\uD83D\uDCCA Admin dashboard</a>';}
@@ -2058,20 +2064,20 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   <div style="background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:18px;max-width:460px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.6)">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.07)">
       <div style="font-size:17px;font-weight:800;color:#fff">&#128221; Your business info</div>
-      <button id="yiClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;line-height:1">&times;</button>
+      <button id="yiClose" style="background:none;border:none;color:rgba(255,255,255,.72);font-size:22px;cursor:pointer;line-height:1">&times;</button>
     </div>
     <div style="padding:20px 22px">
-      <div style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:14px;line-height:1.5">Fill these in and we'll place them across your whole site at once — replacing the placeholder name, phone, email, address and hours everywhere they appear.</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.72);margin-bottom:14px;line-height:1.5">Fill these in and we'll place them across your whole site at once — replacing the placeholder name, phone, email, address and hours everywhere they appear.</div>
       <label class="yi-l">Business name</label>
-      <input id="yiBrand" class="yi-i" type="text" placeholder="e.g. Coastal Marine Detailing" autocomplete="off">
+      <input id="yiBrand" aria-label="Business name" class="yi-i" type="text" placeholder="e.g. Coastal Marine Detailing" autocomplete="off">
       <label class="yi-l">Phone</label>
-      <input id="yiPhone" class="yi-i" type="text" placeholder="(555) 123-4567" autocomplete="off">
+      <input id="yiPhone" aria-label="Phone" class="yi-i" type="text" placeholder="(555) 123-4567" autocomplete="off">
       <label class="yi-l">Email</label>
-      <input id="yiEmail" class="yi-i" type="text" placeholder="hello@yourbusiness.com" autocomplete="off">
+      <input id="yiEmail" aria-label="Email" class="yi-i" type="text" placeholder="hello@yourbusiness.com" autocomplete="off">
       <label class="yi-l">Address</label>
-      <input id="yiAddr" class="yi-i" type="text" placeholder="123 Harbor Way, Your City" autocomplete="off">
+      <input id="yiAddr" aria-label="Address" class="yi-i" type="text" placeholder="123 Harbor Way, Your City" autocomplete="off">
       <label class="yi-l">Hours</label>
-      <input id="yiHours" class="yi-i" type="text" placeholder="Mon-Fri 9am-5pm" autocomplete="off">
+      <input id="yiHours" aria-label="Hours" class="yi-i" type="text" placeholder="Mon-Fri 9am-5pm" autocomplete="off">
       <div id="yiMsg" style="font-size:12px;min-height:16px;margin-top:10px"></div>
       <div style="display:flex;gap:8px;margin-top:6px">
         <button id="yiCancel" style="flex:1;background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button>
@@ -2080,7 +2086,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     </div>
   </div>
 </div>
-<style>.yi-l{display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,.6);margin:12px 0 5px}.yi-i{width:100%;background:#060d05;border:1px solid rgba(45,122,58,.3);border-radius:9px;color:#fff;padding:11px 13px;font-size:14px;outline:none;font-family:inherit}.yi-i:focus{border-color:rgba(45,122,58,.7)}</style>
+<style>.yi-l{display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,.72);margin:12px 0 5px}.yi-i{width:100%;background:#060d05;border:1px solid rgba(45,122,58,.3);border-radius:9px;color:#fff;padding:11px 13px;font-size:14px;outline:none;font-family:inherit}.yi-i:focus{border-color:rgba(45,122,58,.7)}</style>
 <script>
 (function(){
   function $(id){return document.getElementById(id);}
@@ -2118,7 +2124,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       var before=h;h=replaceAll(h,ov,nv);if(h!==before)changed++;
       s[f]=nv;
     }
-    if(!changed){$('yiMsg').innerHTML='<span style="color:rgba(255,255,255,.5)">Nothing matched — those spots may already be filled. Use Edit text to change values that are already set.</span>';return;}
+    if(!changed){$('yiMsg').innerHTML='<span style="color:rgba(255,255,255,.72)">Nothing matched — those spots may already be filled. Use Edit text to change values that are already set.</span>';return;}
     setStored(s);window.gHTML=h;try{localStorage.setItem('wsh',h);}catch(e){}
     if(window.pushUndo)window.pushUndo(h);
     if(window.setPreview){window.setPreview(h);}else{sessionStorage.setItem('ws_studio','1');location.reload();return;}
@@ -2131,8 +2137,8 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
 <div id="payModal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:18px">
   <div style="background:#0c160a;border:1px solid rgba(45,122,58,.3);border-radius:16px;max-width:560px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.07)">
-      <div><div style="font-size:17px;font-weight:800;color:#fff">&#128179; Product payments</div><div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px">Paste your own checkout link for each product &mdash; money goes straight to you</div></div>
-      <button id="payClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;line-height:1">&#10005;</button>
+      <div><div style="font-size:17px;font-weight:800;color:#fff">&#128179; Product payments</div><div style="font-size:12px;color:rgba(255,255,255,.72);margin-top:2px">Paste your own checkout link for each product &mdash; money goes straight to you</div></div>
+      <button id="payClose" aria-label="Close" style="background:none;border:none;color:rgba(255,255,255,.72);font-size:20px;cursor:pointer;line-height:1">&#10005;</button>
     </div>
     <div style="padding:14px 18px;overflow-y:auto">
       <div id="payList"></div>
@@ -2155,27 +2161,27 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
 <div id="invoiceModal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:18px">
   <div style="background:#0c160a;border:1px solid rgba(45,122,58,.3);border-radius:16px;max-width:520px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.07)">
-      <div><div style="font-size:17px;font-weight:800;color:#fff">&#129534; Send an invoice</div><div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px">Create a Stripe payment link and email it to your client</div></div>
-      <button id="invClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;line-height:1">&#10005;</button>
+      <div><div style="font-size:17px;font-weight:800;color:#fff">&#129534; Send an invoice</div><div style="font-size:12px;color:rgba(255,255,255,.72);margin-top:2px">Create a Stripe payment link and email it to your client</div></div>
+      <button id="invClose" aria-label="Close" style="background:none;border:none;color:rgba(255,255,255,.72);font-size:20px;cursor:pointer;line-height:1">&#10005;</button>
     </div>
     <div style="padding:14px 18px;overflow-y:auto">
       <div id="invConnect" style="display:none;text-align:center;padding:8px 4px 4px">
         <div style="font-size:13px;color:rgba(234,242,232,.7);line-height:1.6;margin-bottom:14px">To send invoices, connect your own Stripe account. Your clients pay <b>you</b> directly &mdash; Websprout never touches the money.</div>
         <a id="invConnectBtn" href="/connect/start" style="display:inline-block;background:linear-gradient(135deg,#635bff,#4b45c6);color:#fff;border-radius:9px;padding:12px 22px;font-size:14px;font-weight:700;text-decoration:none;font-family:inherit">Connect Stripe</a>
-        <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:10px">Takes about a minute &mdash; you can come right back here after.</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.72);margin-top:10px">Takes about a minute &mdash; you can come right back here after.</div>
       </div>
       <div id="invForm">
-      <label style="font-size:12px;color:rgba(255,255,255,.5);display:block;margin-bottom:5px">Amount (USD)</label>
-      <input id="invAmount" type="number" min="0.50" step="0.01" placeholder="150.00" style="width:100%;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;margin-bottom:12px">
-      <label style="font-size:12px;color:rgba(255,255,255,.5);display:block;margin-bottom:5px">What&#39;s it for?</label>
-      <input id="invDesc" type="text" placeholder="e.g. Logo design \u2014 final payment" style="width:100%;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;margin-bottom:12px">
-      <label style="font-size:12px;color:rgba(255,255,255,.5);display:block;margin-bottom:5px">Client email (optional \u2014 we&#39;ll email them the link)</label>
-      <input id="invEmail" type="email" placeholder="client@example.com" style="width:100%;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;margin-bottom:14px">
+      <label style="font-size:12px;color:rgba(255,255,255,.72);display:block;margin-bottom:5px">Amount (USD)</label>
+      <input id="invAmount" aria-label="Invoice amount" type="number" min="0.50" step="0.01" placeholder="150.00" style="width:100%;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;margin-bottom:12px">
+      <label style="font-size:12px;color:rgba(255,255,255,.72);display:block;margin-bottom:5px">What&#39;s it for?</label>
+      <input id="invDesc" aria-label="Invoice description" type="text" placeholder="e.g. Logo design \u2014 final payment" style="width:100%;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;margin-bottom:12px">
+      <label style="font-size:12px;color:rgba(255,255,255,.72);display:block;margin-bottom:5px">Client email (optional \u2014 we&#39;ll email them the link)</label>
+      <input id="invEmail" aria-label="Customer email" type="email" placeholder="client@example.com" style="width:100%;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;margin-bottom:14px">
       <div id="invFeeNote" style="display:none;font-size:11.5px;color:rgba(234,242,232,.45);margin-bottom:12px;line-height:1.5"></div>
       <button id="invGen" style="width:100%;background:linear-gradient(135deg,#3dba52,#2d7a3a);color:#fff;border:none;border-radius:9px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Create payment link</button>
       <div id="invResultWrap" style="display:none;margin-top:14px">
-        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:5px">Payment link</div>
-        <div style="display:flex;gap:7px"><input id="invResult" readonly style="flex:1;min-width:0;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#7dd88f;border-radius:9px;padding:10px 12px;font-size:13px;font-family:inherit"><button id="invCopy" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Copy</button></div>
+        <div style="font-size:12px;color:rgba(255,255,255,.72);margin-bottom:5px">Payment link</div>
+        <div style="display:flex;gap:7px"><input id="invResult" aria-label="Invoice link" readonly style="flex:1;min-width:0;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#7dd88f;border-radius:9px;padding:10px 12px;font-size:13px;font-family:inherit"><button id="invCopy" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Copy</button></div>
       </div>
       </div>
       <div id="invMsg" style="font-size:12px;color:rgba(234,242,232,.5);margin-top:10px;min-height:14px"></div>
@@ -2185,11 +2191,11 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
 <div id="postModal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:18px">
   <div style="background:#0c160a;border:1px solid rgba(45,122,58,.3);border-radius:16px;max-width:600px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.07)">
-      <div><div style="font-size:17px;font-weight:800;color:#fff">&#9997; Marketing copy</div><div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px">AI-written posts, emails &amp; promos from your site</div></div>
-      <button id="postClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;line-height:1">&#10005;</button>
+      <div><div style="font-size:17px;font-weight:800;color:#fff">&#9997; Marketing copy</div><div style="font-size:12px;color:rgba(255,255,255,.72);margin-top:2px">AI-written posts, emails &amp; promos from your site</div></div>
+      <button id="postClose" style="background:none;border:none;color:rgba(255,255,255,.72);font-size:20px;cursor:pointer;line-height:1">&#10005;</button>
     </div>
     <div style="padding:14px 18px;overflow-y:auto">
-      <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:7px">What do you need?</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.72);margin-bottom:7px">What do you need?</div>
       <div id="postKinds" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px">
         <button class="post-kind active" data-kind="social">Social post</button>
         <button class="post-kind" data-kind="promo">Promo</button>
@@ -2197,10 +2203,10 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <button class="post-kind" data-kind="blog">Blog post</button>
         <button class="post-kind" data-kind="sms">Text blast</button>
       </div>
-      <input id="postTopic" type="text" placeholder="Optional: what's it about? (e.g. weekend special, new hours)" style="width:100%;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;margin-bottom:12px">
+      <input id="postTopic" aria-label="Post topic" type="text" placeholder="Optional: what's it about? (e.g. weekend special, new hours)" style="width:100%;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:9px;padding:11px 13px;font-size:14px;font-family:inherit;outline:none;margin-bottom:12px">
       <button id="postGen" style="width:100%;background:linear-gradient(135deg,#3dba52,#2d7a3a);color:#fff;border:none;border-radius:9px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">&#10024; Write it</button>
       <div id="postResultWrap" style="display:none;margin-top:14px">
-        <textarea id="postResult" style="width:100%;min-height:170px;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:9px;padding:12px 13px;font-size:14px;line-height:1.5;font-family:inherit;resize:vertical"></textarea>
+        <textarea id="postResult" aria-label="Generated post" style="width:100%;min-height:170px;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:9px;padding:12px 13px;font-size:14px;line-height:1.5;font-family:inherit;resize:vertical"></textarea>
         <button id="postCopy" style="margin-top:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">&#128203; Copy</button>
       </div>
       <div id="postMsg" style="font-size:12px;color:rgba(234,242,232,.5);margin-top:10px;min-height:14px"></div>
@@ -2210,23 +2216,23 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
 <div id="leadsModal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:18px">
   <div style="background:#0c160a;border:1px solid rgba(45,122,58,.3);border-radius:16px;max-width:620px;width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.07)">
-      <div><div style="font-size:17px;font-weight:800;color:#fff">&#128236; Leads</div><div id="leadsSub" style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px">Contact-form submissions from your site</div></div>
-      <button id="leadsClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;line-height:1">&#10005;</button>
+      <div><div style="font-size:17px;font-weight:800;color:#fff">&#128236; Leads</div><div id="leadsSub" style="font-size:12px;color:rgba(255,255,255,.72);margin-top:2px">Contact-form submissions from your site</div></div>
+      <button id="leadsClose" style="background:none;border:none;color:rgba(255,255,255,.72);font-size:20px;cursor:pointer;line-height:1">&#10005;</button>
     </div>
     <div style="padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.06)">
-      <label style="font-size:12px;color:rgba(255,255,255,.5);display:block;margin-bottom:6px">Email me when a new lead arrives</label>
+      <label style="font-size:12px;color:rgba(255,255,255,.72);display:block;margin-bottom:6px">Email me when a new lead arrives</label>
       <div style="display:flex;gap:8px">
-        <input id="leadsNotify" type="email" placeholder="you@email.com" style="flex:1;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;outline:none">
+        <input id="leadsNotify" aria-label="Notification email" type="email" placeholder="you@email.com" style="flex:1;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;outline:none">
         <button id="leadsNotifySave" style="background:rgba(45,158,74,.18);border:1px solid rgba(45,158,74,.4);color:#7fe39a;border-radius:8px;padding:0 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Save</button>
       </div>
     </div>
     <div id="leadsStats" style="padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:none">
       <div style="display:flex;gap:10px;margin-bottom:12px">
-        <div style="flex:1;background:#0f1a0d;border:1px solid rgba(45,122,58,.25);border-radius:10px;padding:10px 12px"><div id="stViews" style="font-size:22px;font-weight:800;color:#fff;line-height:1">0</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:3px">Total views</div></div>
-        <div style="flex:1;background:#0f1a0d;border:1px solid rgba(45,122,58,.25);border-radius:10px;padding:10px 12px"><div id="stWeek" style="font-size:22px;font-weight:800;color:#fff;line-height:1">0</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:3px">This week</div></div>
-        <div style="flex:1;background:#0f1a0d;border:1px solid rgba(45,122,58,.25);border-radius:10px;padding:10px 12px"><div id="stLeads" style="font-size:22px;font-weight:800;color:#7fe39a;line-height:1">0</div><div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:3px">Leads</div></div>
+        <div style="flex:1;background:#0f1a0d;border:1px solid rgba(45,122,58,.25);border-radius:10px;padding:10px 12px"><div id="stViews" style="font-size:22px;font-weight:800;color:#fff;line-height:1">0</div><div style="font-size:11px;color:rgba(255,255,255,.72);margin-top:3px">Total views</div></div>
+        <div style="flex:1;background:#0f1a0d;border:1px solid rgba(45,122,58,.25);border-radius:10px;padding:10px 12px"><div id="stWeek" style="font-size:22px;font-weight:800;color:#fff;line-height:1">0</div><div style="font-size:11px;color:rgba(255,255,255,.72);margin-top:3px">This week</div></div>
+        <div style="flex:1;background:#0f1a0d;border:1px solid rgba(45,122,58,.25);border-radius:10px;padding:10px 12px"><div id="stLeads" style="font-size:22px;font-weight:800;color:#7fe39a;line-height:1">0</div><div style="font-size:11px;color:rgba(255,255,255,.72);margin-top:3px">Leads</div></div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><div style="font-size:11px;color:rgba(255,255,255,.45)">Last 7 days</div><div id="stToday" style="font-size:11px;color:rgba(255,255,255,.45)"></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><div style="font-size:11px;color:rgba(255,255,255,.72)">Last 7 days</div><div id="stToday" style="font-size:11px;color:rgba(255,255,255,.72)"></div></div>
       <div id="stSpark" style="display:flex;align-items:flex-end;gap:5px"></div>
     </div>
     <div id="leadsList" style="padding:14px 18px 20px;overflow-y:auto;flex:1"></div>
@@ -2236,7 +2242,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   <div style="background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:18px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.6)">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.07)">
       <div style="font-size:17px;font-weight:800;color:#fff">&#128194; My sites</div>
-      <button id="msClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;line-height:1">&times;</button>
+      <button id="msClose" style="background:none;border:none;color:rgba(255,255,255,.72);font-size:22px;cursor:pointer;line-height:1">&times;</button>
     </div>
     <div id="msList" style="padding:14px 18px 22px"></div>
   </div>
@@ -2245,7 +2251,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   <div style="background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:18px;max-width:480px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.6)">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.07)">
       <div style="font-size:17px;font-weight:800;color:#fff">&#128202; Site analytics</div>
-      <button id="statsClose" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:22px;cursor:pointer;line-height:1">&times;</button>
+      <button id="statsClose" style="background:none;border:none;color:rgba(255,255,255,.72);font-size:22px;cursor:pointer;line-height:1">&times;</button>
     </div>
     <div id="statsBody" style="padding:18px 20px 22px"></div>
   </div>
@@ -2258,31 +2264,31 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   var modal=document.getElementById('statsModal'), body=document.getElementById('statsBody');
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function dow(ymd){ try{ var y=+ymd.slice(0,4),m=+ymd.slice(4,6)-1,d=+ymd.slice(6,8); return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(y,m,d).getDay()]; }catch(e){return '';} }
-  function statCard(num,label,accent){ return '<div style="flex:1;min-width:0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 10px;text-align:center"><div style="font-size:26px;font-weight:800;color:'+(accent||'#fff')+';line-height:1">'+num+'</div><div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:5px">'+label+'</div></div>'; }
+  function statCard(num,label,accent){ return '<div style="flex:1;min-width:0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 10px;text-align:center"><div style="font-size:26px;font-weight:800;color:'+(accent||'#fff')+';line-height:1">'+num+'</div><div style="font-size:11px;color:rgba(255,255,255,.72);margin-top:5px">'+label+'</div></div>'; }
   function chart(days){
     if(!days||!days.length) return '';
     var max=1; for(var i=0;i<days.length;i++){ if((days[i].c||0)>max)max=days[i].c; }
     var bars='',labels='';
     for(var j=0;j<days.length;j++){
       var c=days[j].c||0; var h=Math.round((c/max)*60); if(c>0&&h<4)h=4;
-      bars+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%"><div style="font-size:10px;color:rgba(255,255,255,.5);margin-bottom:3px;height:12px">'+(c||'')+'</div><div style="width:62%;height:'+h+'px;background:linear-gradient(180deg,#5fe08a,#2d7a3a);border-radius:4px 4px 2px 2px"></div></div>';
-      labels+='<div style="flex:1;text-align:center;font-size:9px;color:rgba(255,255,255,.4)">'+dow(days[j].d)+'</div>';
+      bars+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%"><div style="font-size:10px;color:rgba(255,255,255,.72);margin-bottom:3px;height:12px">'+(c||'')+'</div><div style="width:62%;height:'+h+'px;background:linear-gradient(180deg,#5fe08a,#2d7a3a);border-radius:4px 4px 2px 2px"></div></div>';
+      labels+='<div style="flex:1;text-align:center;font-size:9px;color:rgba(255,255,255,.72)">'+dow(days[j].d)+'</div>';
     }
-    return '<div style="margin-top:18px"><div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.6);margin-bottom:12px">Views \u2014 last 7 days</div><div style="display:flex;align-items:flex-end;gap:6px;height:84px">'+bars+'</div><div style="display:flex;gap:6px;margin-top:6px">'+labels+'</div></div>';
+    return '<div style="margin-top:18px"><div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.72);margin-bottom:12px">Views \u2014 last 7 days</div><div style="display:flex;align-items:flex-end;gap:6px;height:84px">'+bars+'</div><div style="display:flex;gap:6px;margin-top:6px">'+labels+'</div></div>';
   }
   function open(){
     if(!modal)return;
     var sid=sSite(), k=sKey();
-    body.innerHTML='<div style="text-align:center;color:rgba(255,255,255,.45);padding:40px 10px">Loading your numbers\u2026</div>';
+    body.innerHTML='<div style="text-align:center;color:rgba(255,255,255,.72);padding:40px 10px">Loading your numbers\u2026</div>';
     modal.style.display='flex';
-    if(!sid){ body.innerHTML='<div style="text-align:center;color:rgba(255,255,255,.5);padding:40px 10px;line-height:1.6">Create or open a site first to see its analytics.</div>'; return; }
+    if(!sid){ body.innerHTML='<div style="text-align:center;color:rgba(255,255,255,.72);padding:40px 10px;line-height:1.6">Create or open a site first to see its analytics.</div>'; return; }
     var slug=lsGet('ws_slug_'+sid)||'';
     var stats={total:0,week:0,today:0,leads:0,days:[],reviews:0,pending:0,live:!!slug,slug:slug};
     var done=0, need=2;
     function paint(){
       var liveLine = stats.live
         ? '<div style="display:inline-flex;align-items:center;gap:7px;background:rgba(61,186,82,.14);border:1px solid rgba(61,186,82,.4);border-radius:8px;padding:6px 12px;font-size:12px;color:#7fe39a;font-weight:600">\u25CF Live at '+esc(stats.slug)+'.websprout.app</div>'
-        : '<div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:6px 12px;font-size:12px;color:rgba(255,255,255,.55);font-weight:600">Not published yet</div>';
+        : '<div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:6px 12px;font-size:12px;color:rgba(255,255,255,.72);font-weight:600">Not published yet</div>';
       var revLabel = stats.pending>0 ? ('Reviews <span style="color:#f5a623">('+stats.pending+' to approve)</span>') : 'Reviews';
       var h = liveLine
         + '<div style="display:flex;gap:8px;margin-top:16px">' + statCard(stats.total,'Total views','#fff') + statCard(stats.week,'This week','#5fe08a') + '</div>'
@@ -2292,7 +2298,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         + '<a href="/inbox?site='+encodeURIComponent(sid)+'&key='+encodeURIComponent(k)+'" target="_blank" rel="noopener" style="flex:1;text-align:center;background:rgba(255,255,255,.05);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:10px;font-size:12px;font-weight:600;text-decoration:none">View leads \u2192</a>'
         + '<a href="/reviews?site='+encodeURIComponent(sid)+'" target="_blank" rel="noopener" style="flex:1;text-align:center;background:rgba(255,255,255,.05);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:10px;font-size:12px;font-weight:600;text-decoration:none">Manage reviews \u2192</a>'
         + '</div>';
-      if(!stats.total && !stats.leads){ h += '<div style="text-align:center;color:rgba(255,255,255,.4);font-size:12px;margin-top:16px;line-height:1.6">'+(stats.live?'No visits yet. Share your link to start getting traffic!':'Publish your site to start tracking views.')+'</div>'; }
+      if(!stats.total && !stats.leads){ h += '<div style="text-align:center;color:rgba(255,255,255,.72);font-size:12px;margin-top:16px;line-height:1.6">'+(stats.live?'No visits yet. Share your link to start getting traffic!':'Publish your site to start tracking views.')+'</div>'; }
       body.innerHTML=h;
     }
     function tick(){ done++; if(done>=need) paint(); }
@@ -2371,15 +2377,15 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   function fmt(ts){try{return new Date(ts).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});}catch(e){return '';}}
   function render(){
     var p=getProjects();
-    if(!p.length){listEl.innerHTML='<div style="text-align:center;color:rgba(255,255,255,.45);padding:40px 10px;line-height:1.6">No saved sites yet.<br>Sites you create are saved here automatically so you can come back and edit them.</div>';return;}
+    if(!p.length){listEl.innerHTML='<div style="text-align:center;color:rgba(255,255,255,.72);padding:40px 10px;line-height:1.6">No saved sites yet.<br>Sites you create are saved here automatically so you can come back and edit them.</div>';return;}
     var h='';
     for(var i=0;i<p.length;i++){var it=p[i];
       var _live=false;try{_live=!!localStorage.getItem('ws_slug_'+it.siteId);}catch(e){}
-      var _badge=_live?'<span id="msb_'+esc(it.siteId)+'" style="flex-shrink:0;font-size:10px;font-weight:800;color:#4ade80;background:rgba(61,186,82,.16);border:1px solid rgba(61,186,82,.42);border-radius:5px;padding:1px 7px;letter-spacing:.4px">\u25CF LIVE</span>':'<span id="msb_'+esc(it.siteId)+'" style="flex-shrink:0;font-size:10px;font-weight:700;color:rgba(255,255,255,.5);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:5px;padding:1px 7px">In progress</span>';
+      var _badge=_live?'<span id="msb_'+esc(it.siteId)+'" style="flex-shrink:0;font-size:10px;font-weight:800;color:#4ade80;background:rgba(61,186,82,.16);border:1px solid rgba(61,186,82,.42);border-radius:5px;padding:1px 7px;letter-spacing:.4px">\u25CF LIVE</span>':'<span id="msb_'+esc(it.siteId)+'" style="flex-shrink:0;font-size:10px;font-weight:700;color:rgba(255,255,255,.72);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:5px;padding:1px 7px">In progress</span>';
       h+='<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid rgba(255,255,255,.07);border-radius:12px;margin-bottom:10px">'
-       +'<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:7px;min-width:0"><span style="color:#fff;font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(it.name)+'</span>'+_badge+'</div><div style="color:rgba(255,255,255,.4);font-size:12px">Saved '+fmt(it.ts)+' <span id="msv_'+esc(it.siteId)+'" style="color:rgba(255,255,255,.55)"></span></div></div>'
+       +'<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:7px;min-width:0"><span style="color:#fff;font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(it.name)+'</span>'+_badge+'</div><div style="color:rgba(255,255,255,.72);font-size:12px">Saved '+fmt(it.ts)+' <span id="msv_'+esc(it.siteId)+'" style="color:rgba(255,255,255,.72)"></span></div></div>'
        +'<button class="ms-edit" data-sid="'+esc(it.siteId)+'" style="background:#2d7a3a;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Edit</button>'
-       +'<button class="ms-del" data-sid="'+esc(it.siteId)+'" title="Remove from list" style="background:none;border:none;color:rgba(255,255,255,.35);font-size:18px;cursor:pointer;line-height:1">&times;</button>'
+       +'<button class="ms-del" data-sid="'+esc(it.siteId)+'" title="Remove from list" style="background:none;border:none;color:rgba(255,255,255,.72);font-size:18px;cursor:pointer;line-height:1">&times;</button>'
        +'</div>';
     }
     listEl.innerHTML=h;
@@ -2404,7 +2410,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       if(j&&typeof j.live==='boolean'){
         try{ if(j.live&&j.slug){localStorage.setItem('ws_slug_'+it.siteId,j.slug);}else{localStorage.removeItem('ws_slug_'+it.siteId);} }catch(e){}
         var bg=document.getElementById('msb_'+it.siteId);
-        if(bg){ if(j.live){bg.style.cssText='flex-shrink:0;font-size:10px;font-weight:800;color:#4ade80;background:rgba(61,186,82,.16);border:1px solid rgba(61,186,82,.42);border-radius:5px;padding:1px 7px;letter-spacing:.4px';bg.textContent='\u25CF LIVE';} else {bg.style.cssText='flex-shrink:0;font-size:10px;font-weight:700;color:rgba(255,255,255,.5);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:5px;padding:1px 7px';bg.textContent='In progress';} }
+        if(bg){ if(j.live){bg.style.cssText='flex-shrink:0;font-size:10px;font-weight:800;color:#4ade80;background:rgba(61,186,82,.16);border:1px solid rgba(61,186,82,.42);border-radius:5px;padding:1px 7px;letter-spacing:.4px';bg.textContent='\u25CF LIVE';} else {bg.style.cssText='flex-shrink:0;font-size:10px;font-weight:700;color:rgba(255,255,255,.72);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:5px;padding:1px 7px';bg.textContent='In progress';} }
       }
     }).catch(function(){});})(p[v]);}
   }
@@ -3409,7 +3415,7 @@ document.addEventListener('DOMContentLoaded',function(){
       var c=ds[di].c||0,pct=Math.round((c/mx)*100);if(c>0&&pct<8)pct=8;
       var dd=ds[di].d||'',dn='';
       try{dn=lbl[new Date(dd.slice(0,4)+'-'+dd.slice(4,6)+'-'+dd.slice(6,8)+'T00:00').getDay()];}catch(e){}
-      sh+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:100%;display:flex;align-items:flex-end;justify-content:center;height:36px"><div title="'+c+' views" style="width:70%;height:'+pct+'%;min-height:2px;background:linear-gradient(180deg,#3dba52,#2d7a3a);border-radius:3px 3px 0 0"></div></div><div style="font-size:9px;color:rgba(255,255,255,.35)">'+(dn||'')+'</div></div>';
+      sh+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:100%;display:flex;align-items:flex-end;justify-content:center;height:36px"><div title="'+c+' views" style="width:70%;height:'+pct+'%;min-height:2px;background:linear-gradient(180deg,#3dba52,#2d7a3a);border-radius:3px 3px 0 0"></div></div><div style="font-size:9px;color:rgba(255,255,255,.72)">'+(dn||'')+'</div></div>';
     }
     sp.innerHTML=sh;
   }
@@ -3420,18 +3426,18 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!modal)return;
     modal.style.display='flex';
     var _sw0=document.getElementById('leadsStats');if(_sw0)_sw0.style.display='none';
-    if(!sid||!k){if(list)list.innerHTML='<div style="color:rgba(255,255,255,.4);text-align:center;padding:32px 14px;line-height:1.6">Generate or open a site first \\u2014 your leads will appear here.</div>';return;}
-    if(list)list.innerHTML='<div style="color:rgba(255,255,255,.4);text-align:center;padding:30px 0">Loading\\u2026</div>';
+    if(!sid||!k){if(list)list.innerHTML='<div style="color:rgba(255,255,255,.72);text-align:center;padding:32px 14px;line-height:1.6">Generate or open a site first \\u2014 your leads will appear here.</div>';return;}
+    if(list)list.innerHTML='<div style="color:rgba(255,255,255,.72);text-align:center;padding:30px 0">Loading\\u2026</div>';
     fetch('/api/inbox?site='+encodeURIComponent(sid)+'&key='+encodeURIComponent(k)).then(function(r){return r.json();}).then(function(j){
       if(j.error){if(list)list.innerHTML='<div style="color:#fca5a5;text-align:center;padding:30px 0">'+_leadEsc(j.error)+'</div>';return;}
       var ni=document.getElementById('leadsNotify');if(ni&&j.notify)ni.value=j.notify;
       var sub=document.getElementById('leadsSub');if(sub)sub.textContent=(j.count||0)+' lead'+(j.count===1?'':'s')+' \\u00b7 '+(j.total||0)+' page views';
       _leadStats(j);
       var subs=j.submissions||[];
-      if(!subs.length){if(list)list.innerHTML='<div style="color:rgba(255,255,255,.4);text-align:center;padding:34px 14px;line-height:1.6">No leads yet.<br><span style="font-size:13px">Publish your site and share the link \\u2014 every contact-form submission shows up here.</span></div>';return;}
+      if(!subs.length){if(list)list.innerHTML='<div style="color:rgba(255,255,255,.72);text-align:center;padding:34px 14px;line-height:1.6">No leads yet.<br><span style="font-size:13px">Publish your site and share the link \\u2014 every contact-form submission shows up here.</span></div>';return;}
       var html='';
-      for(var i=0;i<subs.length;i++){var s=subs[i],f=s.fields||{};var when=new Date(s.ts||0).toLocaleString();var rows='';for(var key in f){rows+='<div style="display:flex;gap:10px;margin-top:4px"><span style="color:rgba(255,255,255,.4);min-width:88px;font-size:12px;flex-shrink:0">'+_leadEsc(key)+'</span><span style="color:#eaf2e8;font-size:13px;word-break:break-word">'+_leadEsc(f[key])+'</span></div>';}
-        html+='<div style="background:#0f1a0d;border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:12px 14px;margin-bottom:10px"><div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:5px">'+_leadEsc(when)+'</div>'+rows+'</div>';}
+      for(var i=0;i<subs.length;i++){var s=subs[i],f=s.fields||{};var when=new Date(s.ts||0).toLocaleString();var rows='';for(var key in f){rows+='<div style="display:flex;gap:10px;margin-top:4px"><span style="color:rgba(255,255,255,.72);min-width:88px;font-size:12px;flex-shrink:0">'+_leadEsc(key)+'</span><span style="color:#eaf2e8;font-size:13px;word-break:break-word">'+_leadEsc(f[key])+'</span></div>';}
+        html+='<div style="background:#0f1a0d;border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:12px 14px;margin-bottom:10px"><div style="font-size:11px;color:rgba(255,255,255,.72);margin-bottom:5px">'+_leadEsc(when)+'</div>'+rows+'</div>';}
       if(list)list.innerHTML=html;
     }).catch(function(){if(list)list.innerHTML='<div style="color:#fca5a5;text-align:center;padding:30px 0">Could not load leads. Try again.</div>';});
   };
@@ -3526,7 +3532,7 @@ document.addEventListener('DOMContentLoaded',function(){
   function _renderPayList(){
     var list=document.getElementById('payList');if(!list)return;
     var items=_scanPayItems();
-    if(!items.length){list.innerHTML='<div style="color:rgba(255,255,255,.45);text-align:center;padding:24px 10px;line-height:1.6;font-size:13px">No product buttons found yet.<br>Ask the editor for a product or pricing section with \\u201cBuy\\u201d buttons, then come back to add your links.</div>';return;}
+    if(!items.length){list.innerHTML='<div style="color:rgba(255,255,255,.72);text-align:center;padding:24px 10px;line-height:1.6;font-size:13px">No product buttons found yet.<br>Ask the editor for a product or pricing section with \\u201cBuy\\u201d buttons, then come back to add your links.</div>';return;}
     var h='';
     for(var i=0;i<items.length;i++){
       h+='<div class="pay-row" data-name="'+_payEsc(items[i].name)+'" style="margin-bottom:11px"><label style="font-size:13px;color:#eaf2e8;font-weight:600;display:block;margin-bottom:5px">'+_payEsc(items[i].name)+'</label><input type="url" value="'+_payEsc(items[i].url)+'" placeholder="https://buy.stripe.com/\\u2026 (Stripe, PayPal, Square\\u2026)" style="width:100%;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#eaf2e8;border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;outline:none"></div>';
@@ -4202,7 +4208,7 @@ function populateLiveColors(){
   if(!panel)return;
   var colors=extractSiteColors();
   if(colors.length===0){
-    panel.innerHTML='<div style="font-size:11px;color:rgba(255,255,255,.2)">Generate a site first</div>';
+    panel.innerHTML='<div style="font-size:11px;color:rgba(255,255,255,.72)">Generate a site first</div>';
     return;
   }
   panel.innerHTML=colors.map(function(col){
@@ -4266,7 +4272,7 @@ function renderSectionList(){
   var list=document.getElementById('secList');
   if(!list)return;
   if(parsedSections.length===0){
-    list.innerHTML='<div style="font-size:13px;color:rgba(255,255,255,.3);text-align:center;padding:20px">No sections detected</div>';
+    list.innerHTML='<div style="font-size:13px;color:rgba(255,255,255,.72);text-align:center;padding:20px">No sections detected</div>';
     return;
   }
   list.innerHTML=parsedSections.map(function(sec,i){
@@ -4956,7 +4962,7 @@ function injectImageIntoSite(dataUrl,action){
   window.wsSyncPages=saveCur;
   function loadPage(i){ var pages=window._wsPages||[]; if(!pages[i]) return; window._wsCurPage=i; var h=pages[i].html; window.gHTML=h; try{ localStorage.setItem("wsh",h); }catch(e){} if(window.undoStack){ window.undoStack=[h]; window.redoStack=[]; } if(window.setPreview) window.setPreview(h); renderTabs(i); }
   function restorePages(){ try{ var raw=localStorage.getItem("ws_pages"); if(!raw) return; var o=JSON.parse(raw); var sid=window._wsSite||localStorage.getItem("ws_site")||""; if(o&&o.pages&&o.pages.length>1&&o.site&&o.site===sid){ window._wsPages=o.pages; window._wsCurPage=o.cur||0; if(window._wsPages[0]){ var hc=curDoc(); if(hc) window._wsPages[0].html=hc; } renderTabs(window._wsCurPage); } }catch(e){} }
-  (function(){ var st=document.createElement("style"); st.textContent=".ws-pagetabs{flex:0 0 100%;box-sizing:border-box;position:sticky;top:0;z-index:6;display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;align-items:center;padding:8px 10px;background:rgba(6,13,5,.92);border-bottom:1px solid rgba(255,255,255,.06)}.ws-pagetabs .lbl{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-right:2px}.ws-ptab{flex:0 0 auto;white-space:nowrap;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}.ws-ptab.on{background:rgba(45,122,58,.25);border-color:#2d7a3a;color:#7fe39a}"; document.head.appendChild(st); })();
+  (function(){ var st=document.createElement("style"); st.textContent=".ws-pagetabs{flex:0 0 100%;box-sizing:border-box;position:sticky;top:0;z-index:6;display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;align-items:center;padding:8px 10px;background:rgba(6,13,5,.92);border-bottom:1px solid rgba(255,255,255,.06)}.ws-pagetabs .lbl{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.72);margin-right:2px}.ws-ptab{flex:0 0 auto;white-space:nowrap;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.72);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}.ws-ptab.on{background:rgba(45,122,58,.25);border-color:#2d7a3a;color:#7fe39a}"; document.head.appendChild(st); })();
   function renderTabs(active){
     var pages=window._wsPages||[];
     var wrap=$("previewWrap"); var bar=$("wsPageTabs");
@@ -5182,7 +5188,7 @@ function injectImageIntoSite(dataUrl,action){
     modal.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px";
     var box=document.createElement("div");
     box.style.cssText="background:#0f1a0d;border:1px solid rgba(255,255,255,.12);border-radius:16px;max-width:560px;width:100%;padding:22px;color:#fff;font-family:inherit;box-shadow:0 30px 80px rgba(0,0,0,.5)";
-    box.innerHTML="<div style='font-size:18px;font-weight:800;margin-bottom:4px'>Your products</div><div style='font-size:13px;color:rgba(255,255,255,.55);margin-bottom:14px;line-height:1.6'>One product per line: <b>Name | Price | Image URL | Description</b>. They appear on your Shop page automatically.</div>";
+    box.innerHTML="<div style='font-size:18px;font-weight:800;margin-bottom:4px'>Your products</div><div style='font-size:13px;color:rgba(255,255,255,.72);margin-bottom:14px;line-height:1.6'>One product per line: <b>Name | Price | Image URL | Description</b>. They appear on your Shop page automatically.</div>";
     var ta=document.createElement("textarea"); ta.id="wsProdTa"; ta.rows=10;
     ta.placeholder="Lavender Candle | $24 | https://site.com/candle.jpg | Hand-poured soy wax";
     ta.style.cssText="width:100%;box-sizing:border-box;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#fff;padding:12px;font-family:inherit;font-size:13px;line-height:1.7;resize:vertical";
@@ -5271,11 +5277,11 @@ body{background:#0f1a0d;color:#fff;font-family:-apple-system,BlinkMacSystemFont,
 .icon{font-size:72px;margin-bottom:1.5rem;animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
 @keyframes pop{0%{transform:scale(0)}100%{transform:scale(1)}}
 h1{font-family:'Cabinet Grotesk',sans-serif;font-size:2.5rem;font-weight:900;letter-spacing:-1.5px;margin-bottom:1rem;color:#fff}
-p{color:rgba(255,255,255,.6);font-size:16px;line-height:1.6;margin-bottom:2rem}
+p{color:rgba(255,255,255,.72);font-size:16px;line-height:1.6;margin-bottom:2rem}
 .btn{display:inline-block;background:#2d7a3a;color:#fff;padding:16px 36px;border-radius:100px;font-size:16px;font-weight:700;text-decoration:none;transition:all .2s}
 .btn:hover{background:#4aaa57;transform:translateY(-2px)}
 .btn:active{transform:translateY(0) scale(.97)}
-.sub{margin-top:1.5rem;font-size:13px;color:rgba(255,255,255,.3)}
+.sub{margin-top:1.5rem;font-size:13px;color:rgba(255,255,255,.72)}
 </style>
 </head>
 <body>
@@ -6287,15 +6293,15 @@ input:focus{outline:none;border-color:#2d7a3a}
   <div id="gate" class="gate" style="display:none">
     <h2>Open your dashboard</h2>
     <p>Enter your site ID and key. You received these when your site was generated.</p>
-    <label>Site ID</label><input id="g_site" type="text" placeholder="ws123abc">
-    <label>Key</label><input id="g_key" type="text" placeholder="your key">
+    <label>Site ID</label><input id="g_site" aria-label="Site ID" type="text" placeholder="ws123abc">
+    <label>Key</label><input id="g_key" aria-label="API key" type="text" placeholder="your key">
     <div style="margin-top:16px"><button class="btn" onclick="openGate()">Open dashboard</button></div>
   </div>
   <div id="app" style="display:none">
     <div class="stats" id="stats"></div>
     <div class="chartcard"><h3>Visitors &middot; last 7 days</h3><div class="bars" id="chartbars"></div></div>
     <div class="notify">
-      <div class="f"><label>Email me the moment a new lead comes in</label><input id="notify" type="email" placeholder="you@example.com"></div>
+      <div class="f"><label>Email me the moment a new lead comes in</label><input id="notify" aria-label="Notification email" type="email" placeholder="you@example.com"></div>
       <button class="btn" onclick="saveNotify()">Save</button>
     </div>
     <div id="nmsg" class="msg"></div>
@@ -6846,7 +6852,7 @@ h2{font-size:14px;font-weight:700;margin:24px 0 10px;display:flex;align-items:ce
 .rtext{font-size:14.5px;line-height:1.6;opacity:.92;margin:9px 0}
 .rmeta{font-size:12.5px;color:rgba(234,242,232,.5);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .rname{font-weight:700;color:#eaf2e8;opacity:1}
-.src{font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.6)}
+.src{font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72)}
 .src.owner{background:rgba(45,122,58,.2);color:#7fe39a}
 .acts{margin-top:12px;display:flex;gap:8px}
 .btn{font-family:inherit;font-size:13px;font-weight:700;padding:8px 16px;border-radius:9px;border:none;cursor:pointer}
@@ -6866,8 +6872,8 @@ a{color:#4ade80;text-decoration:none}
     <div style="font-weight:700;margin-bottom:12px;font-size:15px">Add a review</div>
     <div style="font-size:12px;color:rgba(234,242,232,.5);margin-bottom:10px">Add a real review you collected elsewhere, or a placeholder to get started. These appear on your site right away.</div>
     <div class="pickr" id="addStars"></div>
-    <input id="addName" placeholder="Name (e.g. Sarah M.)" maxlength="80">
-    <textarea id="addText" rows="3" placeholder="What did they say?" maxlength="1500"></textarea>
+    <input id="addName" aria-label="Reviewer name" placeholder="Name (e.g. Sarah M.)" maxlength="80">
+    <textarea id="addText" aria-label="Review text" rows="3" placeholder="What did they say?" maxlength="1500"></textarea>
     <button class="btn ok" id="addBtn">Add review</button>
   </div>
   <h2>Pending approval <span class="pill" id="pendCount" style="display:none">0</span></h2>
@@ -6972,7 +6978,7 @@ function withForms(html, siteId){
 const RESERVED_SLUGS = ['www','app','api','inbox','preview','admin','mail','blog','help','support','status','cdn','assets','static','dashboard','login','signup','sign-up','docs','about','terms','privacy','deploy','render','generate','stats','track','chat','modify','publish','unpublish','s','og','robots','sitemap','success'];
 function slugify(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40); }
 
-const PUB_404 = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Site not found</title><style>body{font-family:-apple-system,Segoe UI,Arial,sans-serif;background:#060d05;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}.b{max-width:420px;padding:24px}.m{font-size:40px;margin-bottom:10px}a{color:#4ade80;font-weight:700;text-decoration:none}</style></head><body><div class="b"><div class="m">🌱</div><h1 style="font-size:22px;margin:0 0 8px">This site isn\'t published yet</h1><p style="color:rgba(255,255,255,.6);line-height:1.6">There\'s no live site at this address. <br>Build your own in seconds at <a href="https://websprout.app">websprout.app</a>.</p></div></body></html>';
+const PUB_404 = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Site not found</title><style>body{font-family:-apple-system,Segoe UI,Arial,sans-serif;background:#060d05;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}.b{max-width:420px;padding:24px}.m{font-size:40px;margin-bottom:10px}a{color:#4ade80;font-weight:700;text-decoration:none}</style></head><body><div class="b"><div class="m">🌱</div><h1 style="font-size:22px;margin:0 0 8px">This site isn\'t published yet</h1><p style="color:rgba(255,255,255,.72);line-height:1.6">There\'s no live site at this address. <br>Build your own in seconds at <a href="https://websprout.app">websprout.app</a>.</p></div></body></html>';
 
 function withBadge(html){
   if (!html || html.indexOf('ws-badge') > -1) return html;
@@ -6988,7 +6994,7 @@ function normalizePagePath(p){
   return p;
 }
 function pubPage404(){
-  return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Page not found</title><style>body{font-family:-apple-system,Segoe UI,Arial,sans-serif;background:#060d05;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}.b{max-width:420px;padding:24px}.m{font-size:40px;margin-bottom:10px}a{color:#4ade80;font-weight:700;text-decoration:none}</style></head><body><div class="b"><div class="m">&#127793;</div><h1 style="font-size:22px;margin:0 0 8px">Page not found</h1><p style="color:rgba(255,255,255,.6);line-height:1.6">This page does not exist on this site. <br><a href="/">Back to home</a>.</p></div></body></html>';
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Page not found</title><style>body{font-family:-apple-system,Segoe UI,Arial,sans-serif;background:#060d05;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}.b{max-width:420px;padding:24px}.m{font-size:40px;margin-bottom:10px}a{color:#4ade80;font-weight:700;text-decoration:none}</style></head><body><div class="b"><div class="m">&#127793;</div><h1 style="font-size:22px;margin:0 0 8px">Page not found</h1><p style="color:rgba(255,255,255,.72);line-height:1.6">This page does not exist on this site. <br><a href="/">Back to home</a>.</p></div></body></html>';
 }
 // Multi-page aware. A legacy single-page site (no pubpages index) serves its home for ANY path - unchanged behavior.
 // A multi-page site (pubpages index present) resolves pub:slug:path and 404s on unknown pages.
@@ -7319,7 +7325,7 @@ td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05);vertical-alig
 tr:hover td{background:rgba(45,122,58,.06)}
 .badge{display:inline-block;font-size:10px;font-weight:800;padding:3px 9px;border-radius:999px;letter-spacing:.4px}
 .badge.pro{background:linear-gradient(135deg,#f5c542,#2d9e4a);color:#06120a}
-.badge.free{background:rgba(255,255,255,.1);color:rgba(255,255,255,.6)}
+.badge.free{background:rgba(255,255,255,.1);color:rgba(255,255,255,.72)}
 .badge.comp{background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff}
 .badge.owner{background:#1f2937;color:#cbd5e1;border:1px solid #475569}
 .badge.dev{background:rgba(92,200,255,.16);color:#5cc8ff;border:1px solid rgba(92,200,255,.4);margin-left:5px}
@@ -7472,7 +7478,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r206';
+const BUILD_ID = '2026-06-10-r208';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
