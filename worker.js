@@ -180,8 +180,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r202">
-<script>window._wsBuild="2026-06-10-r202";console.log("%c[Websprout] build 2026-06-10-r202 — clicking in-site nav links now switches pages in the preview","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r204">
+<script>window._wsBuild="2026-06-10-r204";console.log("%c[Websprout] build 2026-06-10-r204 — renaming a nav link now syncs tabs + every pages nav","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4952,7 +4952,7 @@ function injectImageIntoSite(dataUrl,action){
   function homeHtml(){ return (typeof window.gHTML==="string"&&window.gHTML)||localStorage.getItem("wsh")||""; }
   function curDoc(){ return (typeof window.gHTML==="string"&&window.gHTML)||localStorage.getItem("wsh")||""; }
   function persist(){ try{ if(window._wsPages&&window._wsPages.length>1){ localStorage.setItem("ws_pages", JSON.stringify({ site:(window._wsSite||localStorage.getItem("ws_site")||""), pages:window._wsPages, cur:(window._wsCurPage||0) })); } }catch(e){} }
-  function saveCur(){ try{ if(window._wsPages&&window._wsPages.length){ var i=window._wsCurPage||0; var h=curDoc(); if(h&&window._wsPages[i]) window._wsPages[i].html=h; persist(); } }catch(e){} }
+  function saveCur(){ try{ if(window._wsPages&&window._wsPages.length){ var i=window._wsCurPage||0; var h=curDoc(); if(h&&window._wsPages[i]) window._wsPages[i].html=h; try{wsSyncNames();}catch(_s){} persist(); } }catch(e){} }
   window.wsSyncPages=saveCur;
   function loadPage(i){ var pages=window._wsPages||[]; if(!pages[i]) return; window._wsCurPage=i; var h=pages[i].html; window.gHTML=h; try{ localStorage.setItem("wsh",h); }catch(e){} if(window.undoStack){ window.undoStack=[h]; window.redoStack=[]; } if(window.setPreview) window.setPreview(h); renderTabs(i); }
   function restorePages(){ try{ var raw=localStorage.getItem("ws_pages"); if(!raw) return; var o=JSON.parse(raw); var sid=window._wsSite||localStorage.getItem("ws_site")||""; if(o&&o.pages&&o.pages.length>1&&o.site&&o.site===sid){ window._wsPages=o.pages; window._wsCurPage=o.cur||0; if(window._wsPages[0]){ var hc=curDoc(); if(hc) window._wsPages[0].html=hc; } renderTabs(window._wsCurPage); } }catch(e){} }
@@ -4996,6 +4996,86 @@ function injectImageIntoSite(dataUrl,action){
   function wsRewriteLinks(html,paths){ var out=html; out=out.split('href="/"').join('href="index.html"'); out=out.split("href='/'").join("href='index.html'"); paths.forEach(function(p){ if(!p) return; out=out.split('href="/'+p+'"').join('href="'+p+'.html"'); out=out.split("href='/"+p+"'").join("href='"+p+".html'"); }); return out; }
   function wsDownloadSite(){ try{ saveCur(); }catch(e){} var pages=window._wsPages||[]; if(pages.length<2) return false; var paths=pages.map(function(p){return p.path;}); var enc=new TextEncoder(); var files=pages.map(function(p){ var nm=p.path?(p.path.split("/").join("_")+".html"):"index.html"; return { name:nm, bytes:enc.encode(wsRewriteLinks(p.html||"",paths)) }; }); var zipped=wsZip(files); var blob=new Blob([zipped],{type:"application/zip"}); var a=document.createElement("a"); a.href=URL.createObjectURL(blob); var t=(homeHtml().split("<title>")[1]||"website"); t=t.split("</title>")[0].split("|")[0].split(" - ")[0].trim()||"website"; a.download=t.split(" ").join("-").toLowerCase()+".zip"; a.click(); if(window.toast) window.toast("Downloaded your full site as a .zip"); return true; }
   window.wsDownloadSite=wsDownloadSite;
+  function wsNormPath(path){
+    path=(path||"");
+    var hh=path.indexOf("#"); if(hh>-1) path=path.slice(0,hh);
+    var qq=path.indexOf("?"); if(qq>-1) path=path.slice(0,qq);
+    if(path.length && path.charAt(path.length-1)==="/") path=path.slice(0,-1);
+    if(path==="index"||path==="index.html") path="";
+    if(path.length>5 && path.slice(-5)===".html") path=path.slice(0,-5);
+    return path;
+  }
+  function wsApplyNames(html, nameByPath){
+    try{
+      var doc=new DOMParser().parseFromString(html,"text/html");
+      var nav=doc.querySelector("nav")||doc.querySelector("header");
+      if(!nav) return null;
+      var links=nav.getElementsByTagName("a"); var changed=false;
+      for(var i=0;i<links.length;i++){
+        var a=links[i]; if(a.children && a.children.length) continue;
+        var href=(a.getAttribute("href")||"");
+        if(!href||href.charAt(0)!=="/") continue;
+        var p=wsNormPath(href.slice(1));
+        if(!nameByPath.hasOwnProperty(p)) continue;
+        var want=nameByPath[p];
+        var cur=(a.textContent||"").replace(/[ ]+/g," ").trim();
+        if(cur!==want){ a.textContent=want; changed=true; }
+      }
+      if(!changed) return null;
+      return "<!DOCTYPE html>"+doc.documentElement.outerHTML;
+    }catch(e){ return null; }
+  }
+  function wsSyncNames(){
+    try{
+      var pages=window._wsPages||[]; if(pages.length<2) return false;
+      var cur=window._wsCurPage||0;
+      var src=pages[cur] && pages[cur].html; if(!src) return false;
+      var sdoc=new DOMParser().parseFromString(src,"text/html");
+      var snav=sdoc.querySelector("nav")||sdoc.querySelector("header");
+      if(!snav) return false;
+      var nameByPath={}; var sl=snav.getElementsByTagName("a");
+      for(var i=0;i<sl.length;i++){
+        var a=sl[i]; if(a.children && a.children.length) continue;
+        var href=(a.getAttribute("href")||"");
+        if(!href||href.charAt(0)!=="/") continue;
+        var p=wsNormPath(href.slice(1));
+        var t=(a.textContent||"").replace(/[ ]+/g," ").trim();
+        if(t) nameByPath[p]=t;
+      }
+      var changed=false;
+      for(var k=1;k<pages.length;k++){ var pp=pages[k].path||""; if(nameByPath.hasOwnProperty(pp) && pages[k].title!==nameByPath[pp]){ pages[k].title=nameByPath[pp]; changed=true; } }
+      for(var m=0;m<pages.length;m++){ var nh=wsApplyNames(pages[m].html, nameByPath); if(nh){ pages[m].html=nh; changed=true; } }
+      if(changed){ try{ renderTabs(window._wsCurPage||0); }catch(_r){} }
+      return changed;
+    }catch(e){ return false; }
+  }
+  function navPlanFromHome(html){
+    try{
+      var doc=new DOMParser().parseFromString(html,"text/html");
+      var nav=doc.querySelector("nav")||doc.querySelector("header");
+      if(!nav) return null;
+      function slug(t){ return (t||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+/,"").replace(/-+$/,""); }
+      var links=nav.getElementsByTagName("a"); var seen={}, out=[];
+      for(var i=0;i<links.length;i++){
+        var a=links[i];
+        var cls=(a.getAttribute("class")||"").toLowerCase();
+        if(cls.indexOf("logo")>-1||cls.indexOf("brand")>-1||cls.indexOf("btn")>-1||cls.indexOf("button")>-1||cls.indexOf("cta")>-1) continue;
+        if(a.getElementsByTagName("img").length) continue;
+        var href=(a.getAttribute("href")||"");
+        if(href.indexOf("http")===0 && href.indexOf("websprout")===-1) continue;
+        if(href.indexOf("mailto:")===0||href.indexOf("tel:")===0) continue;
+        var txt=(a.textContent||"").replace(/[ ]+/g," ").trim();
+        if(!txt||txt.length>22) continue;
+        var sl=slug(txt);
+        if(!sl||sl==="home"||sl==="index") continue;
+        var dup=false; for(var ss in seen){ if(seen.hasOwnProperty(ss)&&(sl===ss||sl.indexOf(ss+"-")===0||ss.indexOf(sl+"-")===0)){ dup=true; break; } }
+        if(dup) continue;
+        seen[sl]=1; out.push({path:sl,title:txt,role:txt});
+        if(out.length>=7) break;
+      }
+      return out;
+    }catch(e){ return null; }
+  }
   function buildFullSite(){
     var home=homeHtml();
     if(!home||home.length<50){ tt("Generate your site first"); return; }
@@ -5007,10 +5087,14 @@ function injectImageIntoSite(dataUrl,action){
     .then(function(j){
       if(j&&j.error==="PRO_REQUIRED"){ if(btn) btn.disabled=false; tt("Multi-page sites are a Pro feature - upgrade to add pages"); var ub=$("unlockBtn"); if(ub) ub.click(); return; }
       var plan=(j&&j.pages)||[];
-      if(plan.length<2){ tt("Could not plan pages for this site"); if(btn) btn.disabled=false; return; }
-      var navPages=plan.map(function(p){return {path:p.path,title:p.title};});
-      var pages=[{path:"",title:(plan[0].title||"Home"),html:home}];
-      var rest=plan.slice(1); var i=0; var tries=0;
+      var navPlan=navPlanFromHome(home);
+      var rest;
+      if(navPlan && navPlan.length>=2){ rest=navPlan; }
+      else { if(plan.length<2){ tt("Could not plan pages for this site"); if(btn) btn.disabled=false; return; } rest=plan.slice(1); }
+      var homeTitle=(plan[0]&&plan[0].title)||"Home";
+      var navPages=[{path:"",title:homeTitle}].concat(rest.map(function(p){return {path:p.path,title:p.title};}));
+      var pages=[{path:"",title:homeTitle,html:home}];
+      var total=navPages.length; var i=0; var tries=0;
       function step(){
         if(i>=rest.length){
           try{ pages[0].html=wsLinkHomeNav(pages[0].html, navPages); }catch(_e){} window._wsPages=pages; window._wsCurPage=0; renderTabs(0); persist();
@@ -5020,7 +5104,7 @@ function injectImageIntoSite(dataUrl,action){
         }
         var pg=rest[i];
         var t0=Date.now();
-        function hb(){ tt("Building "+(pg.title||"page")+" ("+(i+2)+"/"+plan.length+")... "+Math.round((Date.now()-t0)/1000)+"s"); }
+        function hb(){ tt("Building "+(pg.title||"page")+" ("+(i+2)+"/"+total+")... "+Math.round((Date.now()-t0)/1000)+"s"); }
         hb(); var beat=setInterval(hb,3000);
         var ctrl=(typeof AbortController!=="undefined")?new AbortController():null;
         var to=setTimeout(function(){ if(ctrl){ try{ctrl.abort();}catch(_a){} } },105000);
@@ -7376,7 +7460,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r202';
+const BUILD_ID = '2026-06-10-r204';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
