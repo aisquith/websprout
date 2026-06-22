@@ -180,8 +180,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r201">
-<script>window._wsBuild="2026-06-10-r201";console.log("%c[Websprout] build 2026-06-10-r201 — multi-page build shows live progress + recovers from a stuck page","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r202">
+<script>window._wsBuild="2026-06-10-r202";console.log("%c[Websprout] build 2026-06-10-r202 — clicking in-site nav links now switches pages in the preview","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2748,6 +2748,7 @@ function setPreview(html){
       // all resolve to websprout.app inside an srcdoc iframe and would load the whole app in the preview.
       // For genuine in-page hash links, scroll to the target manually instead of letting it navigate.
       'e.preventDefault();'+
+      'if(h.charAt(0)===\\"/\\"){try{var _pp=window.parent;if(_pp&&_pp._wsPages&&_pp._wsPages.length>1){_pp.wsGoToPath(h.slice(1));return;}}catch(_pe){}}'+
       // External links (DoorDash, Toast, booking pages, socials) go to a DIFFERENT origin — open them in a
       // new tab so they visibly work; they never cause the srcdoc recursion. Same-origin/relative/# links
       // would resolve to websprout.app and load the app, so we keep them in-page: scroll to the matching
@@ -4973,6 +4974,22 @@ function injectImageIntoSite(dataUrl,action){
     });
   }
   window.wsRenderPageTabs=renderTabs;
+  window.wsGoToPath=function(path){
+    try{
+      var pages=window._wsPages||[]; if(pages.length<2) return;
+      path=(path||"");
+      var hh=path.indexOf("#"); if(hh>-1) path=path.slice(0,hh);
+      var qq=path.indexOf("?"); if(qq>-1) path=path.slice(0,qq);
+      if(path.length && path.charAt(path.length-1)==="/") path=path.slice(0,-1);
+      if(path==="index"||path==="index.html") path="";
+      if(path.length>5 && path.slice(-5)===".html") path=path.slice(0,-5);
+      var idx=-1;
+      for(var k=0;k<pages.length;k++){ if((pages[k].path||"")===path){ idx=k; break; } }
+      if(idx<0){ var t2=path.toLowerCase().split("-").join(" "); for(var m=0;m<pages.length;m++){ if((pages[m].title||"").toLowerCase()===t2){ idx=m; break; } } }
+      if(idx<0 || idx===(window._wsCurPage||0)) return;
+      saveCur(); loadPage(idx);
+    }catch(e){}
+  };
   window.wsRestorePages=function(pgs){try{if(!pgs||pgs.length<2)return;window._wsPages=pgs.map(function(p){return{path:p.path||"",title:p.title||(p.path?p.path:"Home"),html:p.html||""};});window._wsCurPage=0;renderTabs(0);persist();}catch(e){}};
   function wsCrc32(bytes){ var c,table=wsCrc32.t; if(!table){ table=[]; for(var n=0;n<256;n++){ c=n; for(var k=0;k<8;k++){ c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1); } table[n]=c>>>0; } wsCrc32.t=table; } var crc=0xFFFFFFFF; for(var i=0;i<bytes.length;i++){ crc=(crc>>>8)^table[(crc^bytes[i])&0xFF]; } return (crc^0xFFFFFFFF)>>>0; }
   function wsZip(files){ var parts=[],central=[],offset=0; function u16(n){ return [n&0xFF,(n>>>8)&0xFF]; } function u32(n){ n=n>>>0; return [n&0xFF,(n>>>8)&0xFF,(n>>>16)&0xFF,(n>>>24)&0xFF]; } var enc=new TextEncoder(); files.forEach(function(fl){ var nameBytes=enc.encode(fl.name); var crc=wsCrc32(fl.bytes); var sz=fl.bytes.length; var local=[].concat([0x50,0x4b,0x03,0x04],u16(20),u16(0),u16(0),u16(0),u16(33),u32(crc),u32(sz),u32(sz),u16(nameBytes.length),u16(0)); parts.push(new Uint8Array(local)); parts.push(nameBytes); parts.push(fl.bytes); var cen=[].concat([0x50,0x4b,0x01,0x02],u16(20),u16(20),u16(0),u16(0),u16(0),u16(33),u32(crc),u32(sz),u32(sz),u16(nameBytes.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset)); central.push(new Uint8Array(cen)); central.push(nameBytes); offset+=local.length+nameBytes.length+sz; }); var cstart=offset,clen=0; central.forEach(function(a){clen+=a.length;}); var end=[].concat([0x50,0x4b,0x05,0x06],u16(0),u16(0),u16(files.length),u16(files.length),u32(clen),u32(cstart),u16(0)); var all=parts.concat(central); all.push(new Uint8Array(end)); var total=0; all.forEach(function(a){total+=a.length;}); var out=new Uint8Array(total),pos=0; all.forEach(function(a){out.set(a,pos);pos+=a.length;}); return out; }
@@ -7359,7 +7376,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r201';
+const BUILD_ID = '2026-06-10-r202';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
