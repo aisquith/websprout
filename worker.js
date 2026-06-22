@@ -131,7 +131,7 @@ EDIT PRINCIPLES:
 - If the user says "make it darker/lighter": adjust the whole color palette coherently
 - READABILITY: after ANY color change, verify every text element still strongly contrasts with its background — never leave dark text on a dark background or light text on a light background. Hero or section text sitting over a dark background or photo must be white/near-white and instantly readable.
 - Preserve ALL JavaScript — routing, menus, animations, form handlers, FAQ toggles
-- ANIMATION REQUESTS: when the user asks to animate something (text, a headline, a button, a section), make it OBVIOUSLY and continuously animated — never rely on a one-time entrance they may have already missed, and never just claim it's done. Define real CSS @keyframes and apply them directly to the element the user pointed at with an animation: rule that loops (animation-iteration-count:infinite). Good options: an animated gradient sweep across headline text (color:transparent; background:linear-gradient(...); -webkit-background-clip:text; background-clip:text; with a keyframe that moves background-position), a gentle infinite glow/pulse, a slow float, or a shimmer. Make sure the @keyframes are actually present in the page CSS and the selector truly targets that element, and do NOT leave it hidden behind a scroll-reveal class. Keep it tasteful (1.5-4s, ease-in-out) and add @media(prefers-reduced-motion:reduce){ animation:none } for it.
+- ANIMATION REQUESTS: when the user asks to animate something (text, a headline, a button, a section), make it OBVIOUSLY and continuously animated — never rely on a one-time entrance they may have already missed, and never just claim it's done. Define real CSS @keyframes and apply them directly to the element the user pointed at with an animation: rule that loops (animation-iteration-count:infinite). Good options: an animated gradient sweep across headline text (color:transparent; background:linear-gradient(...); -webkit-background-clip:text; background-clip:text; with a keyframe that moves background-position), a gentle infinite glow/pulse, a slow float, or a shimmer. Make sure the @keyframes are actually present in the page CSS and the selector truly targets that element, and do NOT leave it hidden behind a scroll-reveal class. Keep it tasteful (1.5-4s, ease-in-out) and add @media(prefers-reduced-motion:reduce){ animation:none } for it. If you ever animate a headline word letter-by-letter (a typewriter / type-and-delete effect) or otherwise change its visible width while it plays, RESERVE the word’s FINAL width up front — size the animated span to the complete word (e.g. an inline-block span with a min-width matching the full word, or a hidden full-text sizer beneath it) — so the headline NEVER reflows, jumps or drifts off-center mid-animation. The line must stay locked in the exact position of the finished text the whole time it types. When the effect cycles through MULTIPLE words, do NOT hardcode them in a JS array: store the word list in a data-ws-rotate attribute on the animated span (pipe-separated, e.g. data-ws-rotate="Bold|Refined|Timeless"), set that span's initial text to the first word, and have the script read its words from el.getAttribute("data-ws-rotate").split("|"), re-reading at the start of every cycle, so the owner can edit the words from the on-page editor.
 - Keep the site self-contained except Google Fonts, which are allowed (a <link> in the head). Preserve any existing Google Fonts link unless the user asks to change the typography; if they ask for a different font, swap to a fitting Google Font and keep a system fallback. No other CDNs or JS libraries. No vh/vw for heights — heroes/sections sized in px or %.
 If adding or editing a contact form, always include action="#" method="POST" and a hidden field: <input type="hidden" name="_subject" value="New message from your website">
 - End with </body></html>
@@ -143,7 +143,7 @@ const DESIGN_AMBITION = `DESIGN AMBITION — do NOT build a safe, templated busi
 
 COMMIT TO ONE CONCEPT — before building, lock in a single strong art direction that fits this exact business (e.g. dark-luxe with neon accents, warm sun-baked editorial, retro-futuristic, refined brutalist, organic & earthy, glassy & high-tech, bold & playful). Every decision — color, type, motion, shapes, spacing — reinforces that one concept so the page feels custom and intentional, never assembled from defaults.
 
-TYPOGRAPHY IS THE #1 LEVER — be dramatic. Load TWO Google Fonts: a characterful DISPLAY font for headlines paired with a clean, readable body font, chosen to fit the concept (modern/tech: Sora, Space Grotesk, Archivo; editorial/premium: Fraunces, Playfair Display; friendly: Poppins, Nunito Sans; bold/quirky: Unbounded, Bricolage Grotesque). Hero headline is huge and confident: font-size clamp(2.6rem,7vw,5.5rem), weight 800-900, tracking -0.03em; section titles ~2-3rem; body 16-18px / line-height 1.65. Use big scale jumps and emphasize key words with a GRADIENT text fill or a bold colored highlight/underline. Type should dominate the page, never whisper.
+TYPOGRAPHY IS THE #1 LEVER — be dramatic. Load TWO Google Fonts: a characterful DISPLAY font for headlines paired with a clean, readable body font, chosen to fit the concept (modern/tech: Sora, Space Grotesk, Archivo; editorial/premium: Fraunces, Playfair Display; friendly: Poppins, Nunito Sans; bold/quirky: Unbounded, Bricolage Grotesque). Hero headline is huge and confident: font-size clamp(2.6rem,7vw,5.5rem), weight 800-900, tracking -0.03em; section titles ~2-3rem; body 16-18px / line-height 1.65. Use big scale jumps and emphasize key words with a GRADIENT text fill or a bold colored highlight/underline. Type should dominate the page, never whisper. If you ever animate a headline word letter-by-letter (a typewriter / type-and-delete effect) or otherwise change its visible width while it plays, RESERVE the word’s FINAL width up front — size the animated span to the complete word (e.g. an inline-block span with a min-width matching the full word, or a hidden full-text sizer beneath it) — so the headline NEVER reflows, jumps or drifts off-center mid-animation. The line must stay locked in the exact position of the finished text the whole time it types. When the effect cycles through MULTIPLE words, do NOT hardcode them in a JS array: store the word list in a data-ws-rotate attribute on the animated span (pipe-separated, e.g. data-ws-rotate="Bold|Refined|Timeless"), set that span's initial text to the first word, and have the script read its words from el.getAttribute("data-ws-rotate").split("|"), re-reading at the start of every cycle, so the owner can edit the words from the on-page editor.
 
 A HERO THAT STOPS THE SCROLL — make the hero feel alive with pure CSS (no images required): an animated gradient / aurora / mesh background, OR a few large blurred color "blobs" drifting slowly behind the content, OR a subtle grain/noise texture over a rich gradient. Bold headline, a punchy one-sentence subhead, and two CTAs (primary = solid with a gradient + soft glow; secondary = ghost/outline). Tall and full-bleed (min-height ~640-780px using px, never vh).
 
@@ -180,8 +180,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r187">
-<script>window._wsBuild="2026-06-10-r187";console.log("%c[Websprout] build 2026-06-10-r187 — nav: hide mobile menu on desktop (no duplicate nav)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r196">
+<script>window._wsBuild="2026-06-10-r196";console.log("%c[Websprout] build 2026-06-10-r196 — Pro generates on gemini-2.5-pro (longer timeout, Flash fallback)","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -791,6 +791,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .s-mobtab{flex:1;background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
 .s-mobtab.active{background:rgba(45,122,58,.2);color:#4ade80;border-color:rgba(45,122,58,.4)}
 .auth-ava{display:none;width:30px;height:30px;border-radius:50%;background:#2d7a3a;color:#fff;align-items:center;justify-content:center;font-weight:700;font-size:13px;line-height:1}
+.auth-ava-guest{display:none;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.12);align-items:center;justify-content:center;line-height:0}
 @media(max-width:860px){
   .nav-burger{display:inline-flex}
   nav{gap:12px}
@@ -827,6 +828,9 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
   #signInBtn.is-authed{border:none !important;background:transparent !important;padding:0 !important;margin-right:4px;max-width:none;min-width:0}
   #signInBtn.is-authed .auth-name{display:none}
   #signInBtn.is-authed .auth-ava{display:inline-flex}
+  #signInBtn:not(.is-authed){border:none !important;background:transparent !important;padding:0 !important;margin-right:4px;max-width:none;min-width:0}
+  #signInBtn:not(.is-authed) .auth-name{display:none}
+  #signInBtn:not(.is-authed) .auth-ava-guest{display:inline-flex}
 }
 </style>
 <script>try{var _wsDE=document.documentElement;if(localStorage.getItem('ws_rm')==='1')_wsDE.classList.add('ws-rm');if(localStorage.getItem('ws_focus')==='1')_wsDE.classList.add('ws-focus');}catch(_e){}
@@ -2029,7 +2033,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   function applyAuthBtn(btn,me,prefix){
     if(!btn)return;
     if(me&&me.auth){var dn=displayName(me);btn.textContent='';var nmS=document.createElement('span');nmS.className='auth-name';nmS.textContent='Hello, '+dn;var avS=document.createElement('span');avS.className='auth-ava';avS.textContent=(dn?dn.charAt(0):'?').toUpperCase();btn.appendChild(nmS);btn.appendChild(avS);btn.title='Signed in as '+(me.email||'')+' — view your account';btn.onclick=function(){if(window.openProfile)window.openProfile();};btn.classList.add('is-authed');}
-    else{btn.textContent=(prefix||'')+'Sign in';btn.title='Sign in to save your sites to your account';btn.onclick=openAuth;btn.classList.remove('is-authed');}
+    else{btn.textContent='';var nmG=document.createElement("span");nmG.className="auth-name";nmG.textContent=(prefix||"")+"Sign in";var avG=document.createElement("span");avG.className="auth-ava-guest";avG.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="#fff" aria-hidden="true"><path d="M12 12.2a4.4 4.4 0 1 0 0-8.8 4.4 4.4 0 0 0 0 8.8Zm0 1.6c-4.3 0-7.8 2.2-7.8 5v1.4h15.6V18.8c0-2.8-3.5-5-7.8-5Z"/></svg>';btn.appendChild(nmG);btn.appendChild(avG);btn.title="Sign in to save your sites to your account";btn.onclick=openAuth;btn.classList.remove("is-authed");}
   }
   function setAuthUI(me){
     window._wsUser=me;
@@ -2339,6 +2343,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   }
   function upsert(sid,k,nm){var p=getProjects(),f=null;for(var i=0;i<p.length;i++){if(p[i].siteId===sid){f=p[i];break;}}if(f){f.name=nm;f.key=k||f.key;f.ts=Date.now();}else{p.push({siteId:sid,key:k,name:nm,ts:Date.now()});}p.sort(function(a,b){return b.ts-a.ts;});setProjects(p);}
   var lastSite='',lastHtml='';
+  function _wsSaveData(h){var mp=false;try{mp=!!(window._wsPages&&window._wsPages.length>1);}catch(e){}if(!mp)return {html:h,pages:undefined};try{if(window.wsSyncPages)window.wsSyncPages();}catch(e){}var home=(window._wsPages[0]&&window._wsPages[0].html)||h;var pgs=window._wsPages.map(function(p){return{path:p.path,title:p.title,html:p.html};});return {html:home,pages:pgs};}
   function tick(){
     if(window._wsSaveReady===false)return;
     var s=site(),k=key(),h=curHtml();
@@ -2347,7 +2352,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     lastSite=s;lastHtml=h;var nm=nameFrom(h);upsert(s,k,nm);
     var _ss=document.getElementById('saveStatus');
     if(_ss){_ss.textContent='Saving\u2026';_ss.style.color='rgba(255,255,255,.55)';_ss.style.opacity='1';}
-    fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({siteId:s,key:k,html:h,name:nm})}).then(function(r){
+    var _sd=_wsSaveData(h);fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({siteId:s,key:k,html:_sd.html,name:nm,pages:_sd.pages})}).then(function(r){
       if(!r.ok)throw new Error('save '+r.status);
       try{sessionStorage.removeItem('ws_freshgen');}catch(_fg){}  // confirmed on the server now
       if(_ss){_ss.textContent='Saved \u2713';_ss.style.color='rgba(127,227,154,.9)';_ss.style.opacity='1';setTimeout(function(){if(_ss&&_ss.textContent.indexOf('Saved')===0)_ss.style.opacity='.45';},1500);}
@@ -2358,7 +2363,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   }
   setInterval(tick,12000);setTimeout(tick,4000);window._wsTrackNow=tick;
   document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')tick();});
-  function _wsBeacon(){if(window._wsSaveReady===false)return;try{var s=site(),k=key(),h=curHtml();if(!s||!h||h.length<100)return;var nm=nameFrom(h);var payload=JSON.stringify({siteId:s,key:k,html:h,name:nm});if(navigator.sendBeacon){var blob=new Blob([payload],{type:'application/json'});if(navigator.sendBeacon('/save',blob)){lastSite=s;lastHtml=h;upsert(s,k,nm);return;}}try{fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},body:payload,keepalive:true});lastSite=s;lastHtml=h;upsert(s,k,nm);}catch(e){}}catch(e){}}
+  function _wsBeacon(){if(window._wsSaveReady===false)return;try{var s=site(),k=key(),h=curHtml();if(!s||!h||h.length<100)return;var nm=nameFrom(h);var _sd=_wsSaveData(h);var payload=JSON.stringify({siteId:s,key:k,html:_sd.html,name:nm,pages:_sd.pages});if(navigator.sendBeacon){var blob=new Blob([payload],{type:'application/json'});if(navigator.sendBeacon('/save',blob)){lastSite=s;lastHtml=h;upsert(s,k,nm);return;}}try{fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},body:payload,keepalive:true});lastSite=s;lastHtml=h;upsert(s,k,nm);}catch(e){}}catch(e){}}
   window.addEventListener('pagehide',_wsBeacon);window.addEventListener('beforeunload',_wsBeacon);
   var modal=document.getElementById('mySitesModal'),listEl=document.getElementById('msList');
   function fmt(ts){try{return new Date(ts).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});}catch(e){return '';}}
@@ -2449,26 +2454,7 @@ var gHTML='',unlocked=false,selectedType='',selectedStyle='';
 var undoStack=[],redoStack=[],editCount=0;
 var loadMsgs=['Planting your prompt...','Writing your hero section...','Designing the layout...','Adding feature cards...','Styling the navigation...','Building the footer...','Writing your copy...','Polishing the details...','Almost ready...'];
 
-// Live counter
-// Live counter - starts at 340 base, grows ~2-3 sites/day since Jan 1 2026
-(function(){
-  var BASE=340;
-  var START_MS=new Date('2026-01-01').getTime();
-  var RATE=2.4; // sites per day
-  function calcCount(){
-    var days=(Date.now()-START_MS)/(1000*60*60*24);
-    return Math.floor(BASE + days*RATE);
-  }
-  var liveCount=calcCount();
-  var el=document.getElementById('liveCount');
-  if(el)el.textContent=liveCount.toLocaleString();
-  // Tick up every 8-12 minutes to simulate real-time growth
-  setInterval(function(){
-    liveCount+=1;
-    var el=document.getElementById('liveCount');
-    if(el)el.textContent=liveCount.toLocaleString();
-  }, Math.floor(Math.random()*240000)+240000);
-})();
+// "Sites grown" is the REAL total (sum of all builds), rendered server-side into #liveCount.
 
 // Auto-detect device type and set preview mode
 function autoSetDevice(){
@@ -3462,7 +3448,7 @@ document.addEventListener('DOMContentLoaded',function(){
       var doc=new DOMParser().parseFromString(gHTML||'','text/html');
       var title=((doc.querySelector('title')||{}).textContent||'').trim();
       var sc=doc.querySelectorAll('script,style');for(var i=0;i<sc.length;i++)sc[i].remove();
-      var txt=((doc.body?doc.body.textContent:'')||'').replace(/\s+/g,' ').trim().slice(0,1500);
+      var txt=((doc.body?doc.body.textContent:'')||'').replace(/\\s+/g,' ').trim().slice(0,1500);
       return (title?('Business / site title: '+title+'\\n'):'')+txt;
     }catch(e){return '';}
   }
@@ -4042,7 +4028,7 @@ function wsShowBar(kind,tag,slotId){
     wsCvBtn(acts,'\u2B07',function(){wsCvMove(1);},'Move down');
     wsCvBtn(acts,'\uD83D\uDDD1 Delete',wsCvDelete,'Delete section');
   }else{
-    wsCvBtn(acts,'\u270F Edit',wsCvEdit,'Edit the words');
+    var _selR=wsSelEl();if(_selR&&_selR.getAttribute&&_selR.getAttribute('data-ws-rotate')!==null){wsCvBtn(acts,'\u270F Edit words',wsCvRotate,'Edit the typing words');}else{wsCvBtn(acts,'\u270F Edit',wsCvEdit,'Edit the words');}
     var _T=(tag||'').toUpperCase();
     if(_T==='A'||_T==='BUTTON')wsCvBtn(acts,'\uD83D\uDD17 Link',wsCvLink,'Set where this button goes');
     wsCvBtn(acts,'A+',function(){wsCvFont(1);},'Bigger');
@@ -4064,6 +4050,7 @@ function wsCvColor(){var el=wsSelEl();if(!el)return;wsCvColorInput(function(v){e
 function wsCvBg(){var el=wsSelEl();if(!el)return;wsCvColorInput(function(v){el.style.background=v;wsSyncFromFrame();});}
 function wsCvMove(dir){var el=wsSelEl();if(!el||!el.parentNode)return;var p=el.parentNode;if(dir<0){var pv=el.previousElementSibling;if(pv)p.insertBefore(el,pv);}else{var nx=el.nextElementSibling;if(nx)p.insertBefore(nx,el);}wsSyncFromFrame();if(el.scrollIntoView)el.scrollIntoView({block:'center'});}
 function wsCvEdit(){var el=wsSelEl();if(!el)return;el.contentEditable='true';el.focus();var done=function(){el.removeAttribute('contenteditable');el.removeEventListener('blur',done);wsSyncFromFrame();};el.addEventListener('blur',done);toast('Type to edit — click away when done',3500);}
+function wsCvRotate(){var el=wsSelEl();if(!el)return;var NL=String.fromCharCode(10);var raw=el.getAttribute('data-ws-rotate')||'';var cur=[];raw.split('|').forEach(function(w){w=w.trim();if(w)cur.push(w);});if(!cur.length){var t=(el.textContent||'').trim();if(t)cur.push(t);}var v=prompt('Typewriter words (one per line). These type out and cycle in your headline:',cur.join(NL));if(v===null)return;var words=[];v.split(NL).join('|').split('|').forEach(function(w){w=w.trim();if(w)words.push(w);});if(!words.length){toast('Add at least one word',2500);return;}el.setAttribute('data-ws-rotate',words.join('|'));el.textContent=words[0];wsSyncFromFrame();try{if(window.setPreview)window.setPreview(gHTML);}catch(e){}toast('Typewriter words updated',2500);}
 function wsCvAlign(){var el=wsSelEl();if(!el)return;var d=wsPfDoc();if(!d)return;var cur=d.defaultView.getComputedStyle(el).textAlign;var order=['left','center','right'];var idx=order.indexOf(cur);var next=order[(idx+1)%3];if(idx===-1)next='center';el.style.textAlign=next;wsSyncFromFrame();toast('Aligned '+next,1600);}
 function wsCvLink(){
   var el=wsSelEl();if(!el)return;
@@ -4596,6 +4583,7 @@ function _wsRecoverDraft(){
             try{setPreview(gHTML);}catch(e){}
             try{toast('Restored your latest saved version \u2713',3000);}catch(e){}
           }
+          try{ if(j.pages&&j.pages.length>1&&window.wsRestorePages&&!(window._wsPages&&window._wsPages.length>1))window.wsRestorePages(j.pages); }catch(_pe){}
         }
       }catch(e){}
       done();
@@ -4983,6 +4971,7 @@ function injectImageIntoSite(dataUrl,action){
     });
   }
   window.wsRenderPageTabs=renderTabs;
+  window.wsRestorePages=function(pgs){try{if(!pgs||pgs.length<2)return;window._wsPages=pgs.map(function(p){return{path:p.path||"",title:p.title||(p.path?p.path:"Home"),html:p.html||""};});window._wsCurPage=0;renderTabs(0);persist();}catch(e){}};
   function wsCrc32(bytes){ var c,table=wsCrc32.t; if(!table){ table=[]; for(var n=0;n<256;n++){ c=n; for(var k=0;k<8;k++){ c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1); } table[n]=c>>>0; } wsCrc32.t=table; } var crc=0xFFFFFFFF; for(var i=0;i<bytes.length;i++){ crc=(crc>>>8)^table[(crc^bytes[i])&0xFF]; } return (crc^0xFFFFFFFF)>>>0; }
   function wsZip(files){ var parts=[],central=[],offset=0; function u16(n){ return [n&0xFF,(n>>>8)&0xFF]; } function u32(n){ n=n>>>0; return [n&0xFF,(n>>>8)&0xFF,(n>>>16)&0xFF,(n>>>24)&0xFF]; } var enc=new TextEncoder(); files.forEach(function(fl){ var nameBytes=enc.encode(fl.name); var crc=wsCrc32(fl.bytes); var sz=fl.bytes.length; var local=[].concat([0x50,0x4b,0x03,0x04],u16(20),u16(0),u16(0),u16(0),u16(33),u32(crc),u32(sz),u32(sz),u16(nameBytes.length),u16(0)); parts.push(new Uint8Array(local)); parts.push(nameBytes); parts.push(fl.bytes); var cen=[].concat([0x50,0x4b,0x01,0x02],u16(20),u16(20),u16(0),u16(0),u16(0),u16(33),u32(crc),u32(sz),u32(sz),u16(nameBytes.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset)); central.push(new Uint8Array(cen)); central.push(nameBytes); offset+=local.length+nameBytes.length+sz; }); var cstart=offset,clen=0; central.forEach(function(a){clen+=a.length;}); var end=[].concat([0x50,0x4b,0x05,0x06],u16(0),u16(0),u16(files.length),u16(files.length),u32(clen),u32(cstart),u16(0)); var all=parts.concat(central); all.push(new Uint8Array(end)); var total=0; all.forEach(function(a){total+=a.length;}); var out=new Uint8Array(total),pos=0; all.forEach(function(a){out.set(a,pos);pos+=a.length;}); return out; }
   function wsRewriteLinks(html,paths){ var out=html; out=out.split('href="/"').join('href="index.html"'); out=out.split("href='/'").join("href='index.html'"); paths.forEach(function(p){ if(!p) return; out=out.split('href="/'+p+'"').join('href="'+p+'.html"'); out=out.split("href='/"+p+"'").join("href='"+p+".html'"); }); return out; }
@@ -5005,7 +4994,7 @@ function injectImageIntoSite(dataUrl,action){
       var rest=plan.slice(1); var i=0;
       function step(){
         if(i>=rest.length){
-          window._wsPages=pages; window._wsCurPage=0; renderTabs(0); persist();
+          try{ pages[0].html=wsLinkHomeNav(pages[0].html, navPages); }catch(_e){} window._wsPages=pages; window._wsCurPage=0; renderTabs(0); persist();
           if(btn){ btn.disabled=false; btn.textContent="Pages ("+pages.length+")"; }
           tt("Built "+pages.length+" pages - use the tabs above the preview, then Publish");
           return;
@@ -5020,6 +5009,36 @@ function injectImageIntoSite(dataUrl,action){
       step();
     })
     .catch(function(){ tt("Could not plan pages"); if(btn) btn.disabled=false; });
+  }
+  function wsLinkHomeNav(homeHtml, navPages){
+    try{
+      if(!homeHtml || !navPages || navPages.length<2) return homeHtml;
+      function nrm(x){ return (x||"").replace(/[ ]+/g," ").trim().toLowerCase(); }
+      var syn={ "":["home"], about:["about","about us","our story","story","who we are"], shop:["shop","store","products","shop now","shop all","browse","catalog"], menu:["menu","our menu"], contact:["contact","contact us","get in touch"], work:["work","portfolio","projects","case studies"], services:["services","what we do"], pricing:["pricing","plans"] };
+      function pathFor(text){
+        var t=nrm(text); if(!t) return null;
+        for(var k=0;k<navPages.length;k++){ if(nrm(navPages[k].title)===t) return navPages[k].path; }
+        for(var m=0;m<navPages.length;m++){ var bucket=syn[navPages[m].path]; if(bucket){ for(var b=0;b<bucket.length;b++){ if(bucket[b]===t) return navPages[m].path; } } }
+        return null;
+      }
+      var doc=new DOMParser().parseFromString(homeHtml,"text/html");
+      var nav=doc.querySelector("nav")||doc.querySelector("header");
+      if(!nav) return homeHtml;
+      var changed=0;
+      var logoA=nav.querySelector("a.logo,a.brand,a.navbar-brand,a[class*=logo],a[class*=brand]");
+      if(!logoA){ var fimg=nav.querySelector("a img"); if(fimg&&fimg.closest) logoA=fimg.closest("a"); }
+      if(logoA){ logoA.setAttribute("href","/"); changed++; }
+      var links=nav.getElementsByTagName("a");
+      for(var i=0;i<links.length;i++){
+        var a=links[i]; if(a===logoA) continue;
+        var href=a.getAttribute("href")||"";
+        if(href && href.charAt(0)!=="#" && href!=="/") continue;
+        var p=pathFor(a.textContent);
+        if(p!==null){ a.setAttribute("href", p===""?"/":"/"+p); changed++; }
+      }
+      if(!changed) return homeHtml;
+      return "<!DOCTYPE html>"+doc.documentElement.outerHTML;
+    }catch(_e){ return homeHtml; }
   }
   window.wsBuildFullSite=buildFullSite;
   function wire(){ var b=$("multiBtn"); if(b&&!b._wsWired){ b._wsWired=true; b.addEventListener("click", buildFullSite); } try{ restorePages(); }catch(e){} }
@@ -5501,6 +5520,22 @@ document.querySelectorAll('.faq-q').forEach(function(q){
 
 
 // ── Feature 3: Analytics ──────────────────────────────────────
+function fmtThousands(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+async function getSitesGrown(env){
+  try{
+    if(!env.KV) return 0;
+    const v = await env.KV.get('stat:sitesgrown');
+    if(v !== null){ const n = parseInt(v,10); return isNaN(n)?0:n; }
+    let total = 0, cur, g = 0;
+    do {
+      const r = await env.KV.list({ prefix:'bcount:', cursor:cur, limit:1000 });
+      for(const k of r.keys){ try{ total += (parseInt(await env.KV.get(k.name)||'0',10)||0); }catch(e){} }
+      cur = r.list_complete ? null : r.cursor; g++;
+    } while(cur && g < 20);
+    await env.KV.put('stat:sitesgrown', String(total));
+    return total;
+  }catch(e){ return 0; }
+}
 async function doTrack(request, env) {
   // Analytics - completely optional, won't break if KV missing
   try {
@@ -5772,6 +5807,7 @@ export default {
     const _host = url.hostname.toLowerCase();
     const _appHosts = ['websprout.app','www.websprout.app'];
     if (url.pathname === '/checkout' && request.method === 'GET') return doCheckout(request, env);
+    if (url.pathname === '/cart-checkout' && request.method === 'POST') return doCartCheckout(request, env);
     if (request.method === 'GET' && _appHosts.indexOf(_host) === -1 && _host.indexOf('.workers.dev') === -1 && _host.indexOf('localhost') === -1 && !url.pathname.startsWith('/api/')) {
       if (_host.endsWith('.websprout.app')) {
         const _sub = _host.slice(0, _host.length - '.websprout.app'.length);
@@ -5865,6 +5901,7 @@ export default {
     // (a hardcoded link in the file would be overwritten every time worker.js is redeployed).
     const _sub = (env.STRIPE_SUB_LINK || env.SUB_LINK || '').trim();
     if (_sub) _html = _html.split(SUB_LINK).join(_sub);
+    try { const _sg = await getSitesGrown(env); if (_sg && _sg > 0) _html = _html.split('id="liveCount">715<').join('id="liveCount">' + fmtThousands(_sg) + '<'); } catch (e) {}
     return new Response(_html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate', 'Pragma': 'no-cache' } });
   }
 };
@@ -6861,6 +6898,7 @@ async function servePublished(slug, env, path){
         } catch(e){}
       }
       html = html.split('<!--WS_PRODUCTS-->').join(renderProductGrid(_prods, _sid, _ckEnabled));
+      if (_ckEnabled && _prods.length) { try { var _cartHtml = cartInjection(_prods, _sid); var _bi = html.lastIndexOf('</body>'); if (_bi > -1) { html = html.slice(0,_bi) + _cartHtml + html.slice(_bi); } else { html += _cartHtml; } } catch(e){} }
     } catch(e){}
   }
   let nobadge = false; try { const m = await env.KV.get('pubmeta:' + slug); if (m) nobadge = !!JSON.parse(m).nobadge; } catch(e){}
@@ -7311,7 +7349,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r187';
+const BUILD_ID = '2026-06-10-r196';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -7474,7 +7512,13 @@ async function doSave(request, env){
     if (!b.siteId || !b.key || !b.html) return fail('Missing data');
     if (b.key !== (await siteKey(b.siteId, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
     if (b.html.length > 4*1024*1024) return fail('Site too large');
-    await env.KV.put('draft:' + b.siteId, JSON.stringify({ html: b.html, name: (b.name||'My site').slice(0,90), ts: Date.now() }), { expirationTtl: 60*60*24*365 });
+    var _dft = { html: b.html, name: (b.name||'My site').slice(0,90), ts: Date.now() };
+    if (Array.isArray(b.pages) && b.pages.length > 1) {
+      var _pgs = b.pages.slice(0,12).map(function(p){ return { path: String(p.path||''), title: String(p.title||'').slice(0,60), html: String(p.html||'') }; });
+      var _tot = 0; for (var _pi=0; _pi<_pgs.length; _pi++) _tot += _pgs[_pi].html.length;
+      if (_tot <= 12*1024*1024) _dft.pages = _pgs;
+    }
+    await env.KV.put('draft:' + b.siteId, JSON.stringify(_dft), { expirationTtl: 60*60*24*365 });
     try {
       const s = await getSession(request, env);
       if (s && s.email) {
@@ -7876,6 +7920,138 @@ async function doCheckout(request, env){
     return new Response(null, { status: 302, headers: { 'Location': j.url } });
   } catch(e) { return errPage('We could not start checkout. Please try again in a moment.', slug); }
 }
+function cartInjection(products, siteId){
+  function _cl(x){ return String(x||'').split('<').join('').split('>').join(''); }
+  var pdata = products.map(function(p){ return { n:_cl(p.name), pr:_cl(p.price), im:_cl(p.img) }; });
+  var dataJson = JSON.stringify(pdata);
+  return `
+<script>
+(function(){
+  try{
+    var SITE=${JSON.stringify(siteId)};
+    var P=${dataJson};
+    var KEY="wscart_"+SITE;
+    function gv(){ try{ return JSON.parse(localStorage.getItem(KEY)||"{}")||{}; }catch(e){ return {}; } }
+    function sv(c){ try{ localStorage.setItem(KEY,JSON.stringify(c)); }catch(e){} render(); }
+    function cents(s){ var n=parseFloat(String(s).replace(/[^0-9.]/g,"")); return (isFinite(n)&&n>0)?Math.round(n*100):0; }
+    function money(c){ return "$"+(c/100).toFixed(2); }
+    function esc(s){ return String(s).replace(/[<>&"']/g,function(ch){ return ch==="<"?"&lt;":ch===">"?"&gt;":ch==="&"?"&amp;":ch==='"'?"&quot;":"&#39;"; }); }
+    var btn,ov,panel,itemsEl,totEl,ctEl;
+    function count(c){ var n=0; for(var k in c){ n+=c[k]; } return n; }
+    function open(){ if(ov){ ov.style.display="block"; render(); } }
+    function close(){ if(ov){ ov.style.display="none"; } }
+    function render(){
+      if(!itemsEl) return;
+      var c=gv(); var n=count(c);
+      if(ctEl) ctEl.textContent=n;
+      if(btn) btn.style.display=n>0?"inline-flex":"none";
+      var html="", total=0, any=false;
+      for(var k in c){
+        var i=parseInt(k,10); var q=c[k]; if(!P[i]||q<1) continue; any=true;
+        total+=cents(P[i].pr)*q;
+        html+="<div style='display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #f1f1f1'>";
+        html+=(P[i].im?("<img src='"+esc(P[i].im)+"' style='width:46px;height:46px;object-fit:cover;border-radius:8px;flex-shrink:0'>"):"");
+        html+="<div style='flex:1;min-width:0'><div style='font-weight:600;color:#111'>"+esc(P[i].n)+"</div><div style='color:#888;font-size:12px'>"+esc(P[i].pr)+"</div></div>";
+        html+="<div style='display:flex;align-items:center;gap:6px'><button type='button' data-d='"+i+"' style='width:26px;height:26px;border:1px solid #ddd;background:#fff;color:#111;border-radius:6px;cursor:pointer;font-size:15px'>-</button><span style='min-width:18px;text-align:center;color:#111'>"+q+"</span><button type='button' data-a='"+i+"' style='width:26px;height:26px;border:1px solid #ddd;background:#fff;color:#111;border-radius:6px;cursor:pointer;font-size:15px'>+</button></div>";
+        html+="</div>";
+      }
+      itemsEl.innerHTML=any?html:"<div style='color:#999;text-align:center;padding:46px 0'>Your cart is empty</div>";
+      if(totEl) totEl.textContent=money(total);
+      var bs=itemsEl.querySelectorAll("button");
+      for(var b=0;b<bs.length;b++){ bs[b].onclick=function(){ var a=this.getAttribute("data-a"), d=this.getAttribute("data-d"); var cc=gv(); if(a!==null){ cc[a]=(cc[a]||0)+1; } else if(d!==null){ cc[d]=(cc[d]||0)-1; if(cc[d]<1){ delete cc[d]; } } sv(cc); }; }
+    }
+    function checkout(){
+      var c=gv(); var items=[]; for(var k in c){ if(c[k]>0){ items.push({p:parseInt(k,10),qty:c[k]}); } }
+      if(!items.length) return;
+      var co=document.getElementById("wsCartCo"); if(co){ co.disabled=true; co.textContent="Starting checkout..."; }
+      fetch("/cart-checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({site:SITE,items:items})}).then(function(r){ return r.json(); }).then(function(j){
+        if(j&&j.url){ location.href=j.url; } else { if(co){ co.disabled=false; co.textContent="Checkout"; } alert((j&&j.error)||"Could not start checkout. Please try again."); }
+      }).catch(function(){ if(co){ co.disabled=false; co.textContent="Checkout"; } alert("Could not start checkout. Please try again."); });
+    }
+    function build(){
+      if(document.getElementById("wsCartBtn")) return;
+      btn=document.createElement("div"); btn.id="wsCartBtn";
+      btn.style.cssText="position:fixed;right:18px;bottom:18px;z-index:2147483000;background:#111;color:#fff;border-radius:100px;padding:12px 18px;font:600 15px system-ui,-apple-system,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);cursor:pointer;display:none;align-items:center;gap:8px";
+      btn.innerHTML="🛒 Cart (<span id='wsCartCt'>0</span>)";
+      btn.onclick=open; document.body.appendChild(btn);
+      ov=document.createElement("div"); ov.id="wsCartOv";
+      ov.style.cssText="position:fixed;inset:0;z-index:2147483001;background:rgba(0,0,0,.45);display:none";
+      ov.onclick=function(e){ if(e.target===ov){ close(); } };
+      panel=document.createElement("div");
+      panel.style.cssText="position:absolute;right:0;top:0;height:100%;width:340px;max-width:88vw;background:#fff;color:#111;box-shadow:-8px 0 30px rgba(0,0,0,.2);display:flex;flex-direction:column;font:14px system-ui,-apple-system,sans-serif";
+      panel.innerHTML="<div style='padding:16px 18px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center'><b style='font-size:16px;color:#111'>Your cart</b><span id='wsCartX' style='cursor:pointer;font-size:24px;line-height:1;color:#999'>×</span></div><div id='wsCartItems' style='flex:1;overflow:auto;padding:8px 18px'></div><div style='padding:16px 18px;border-top:1px solid #eee'><div style='display:flex;justify-content:space-between;font-weight:700;font-size:16px;margin-bottom:12px;color:#111'><span>Total</span><span id='wsCartTot'>$0.00</span></div><button type='button' id='wsCartCo' style='width:100%;background:#16a34a;color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer'>Checkout</button><div style='text-align:center;font-size:11px;color:#999;margin-top:8px'>Secure checkout via Stripe</div></div>";
+      ov.appendChild(panel); document.body.appendChild(ov);
+      itemsEl=document.getElementById("wsCartItems"); totEl=document.getElementById("wsCartTot"); ctEl=document.getElementById("wsCartCt");
+      var x=document.getElementById("wsCartX"); if(x){ x.onclick=close; }
+      var co=document.getElementById("wsCartCo"); if(co){ co.onclick=checkout; }
+      render();
+    }
+    window.wsAddToCart=function(i){ if(!ov){ build(); } var c=gv(); c[i]=(c[i]||0)+1; sv(c); open(); };
+    if(document.readyState!=="loading"){ build(); } else { document.addEventListener("DOMContentLoaded",build); }
+  }catch(e){}
+})();
+</script>`;
+}
+async function doCartCheckout(request, env){
+  try{
+    if(!env.KV) return fail('Storage not configured');
+    var b = await request.json();
+    var siteId = (b.site||'').trim();
+    var items = Array.isArray(b.items) ? b.items : [];
+    if(!siteId || !items.length) return fail('Your cart is empty');
+    var sk = (env.STRIPE_SECRET_KEY||'').trim();
+    if(!sk) return fail('Payments are not configured yet');
+    var products = [];
+    try{ var raw = await env.KV.get('products:'+siteId); if(raw){ products = JSON.parse(raw); } }catch(e){}
+    if(!products.length) return fail('This store has no products');
+    var owner = '';
+    try{ owner = ((await env.KV.get('notify:'+siteId))||'').toLowerCase(); }catch(e){}
+    if(!owner) return fail('This store is not set up to take payments yet');
+    var u = null;
+    try{ u = JSON.parse(await env.KV.get('user:'+owner)||'null'); }catch(e){}
+    var isPlatformOwner = owner === SUPPORT_EMAIL.toLowerCase();
+    var isPro = isPlatformOwner || (u && u.plan==='pro');
+    if(!isPro) return fail('This store is not currently accepting online payments');
+    var stripeAccount = '';
+    if(!isPlatformOwner){
+      if(!(u && u.stripeConnect && u.stripeConnectReady)) return fail('This store has not finished connecting its payment account');
+      stripeAccount = u.stripeConnect;
+    }
+    var lines = []; var total = 0;
+    for(var i=0;i<items.length;i++){
+      var idx = parseInt(items[i].p,10);
+      var qty = parseInt(items[i].qty,10)||1; if(qty<1){ qty=1; } if(qty>99){ qty=99; }
+      if(isNaN(idx)||idx<0||idx>=products.length) continue;
+      var prod = products[idx]; if(!prod) continue;
+      var amount = priceToCents(prod.price);
+      if(!amount || amount<50) continue;
+      total += amount*qty;
+      lines.push({ name:String(prod.name||'Item').slice(0,120), amount:amount, qty:qty, desc:prod.desc?String(prod.desc).slice(0,200):'' });
+    }
+    if(!lines.length || total<50) return fail('Nothing in your cart can be purchased online');
+    var appFee = 0;
+    if(stripeAccount){ appFee = Math.round(total*0.02); if(appFee>total-1){ appFee=total-1; } if(appFee<0){ appFee=0; } }
+    var slug = '';
+    try{ slug = (await env.KV.get('slugof:'+siteId))||''; }catch(e){}
+    var origin = slug ? ('https://'+slug+'.websprout.app') : 'https://websprout.app';
+    var enc = encodeURIComponent;
+    var sHeaders = { 'Authorization':'Bearer '+sk, 'Content-Type':'application/x-www-form-urlencoded' };
+    if(stripeAccount){ sHeaders['Stripe-Account'] = stripeAccount; }
+    var body = 'mode=payment&success_url='+enc(origin+'/?ws_paid=1')+'&cancel_url='+enc(origin+'/');
+    for(var li=0;li<lines.length;li++){
+      body += '&line_items['+li+'][quantity]='+lines[li].qty;
+      body += '&line_items['+li+'][price_data][currency]=usd';
+      body += '&line_items['+li+'][price_data][unit_amount]='+lines[li].amount;
+      body += '&line_items['+li+'][price_data][product_data][name]='+enc(lines[li].name);
+      if(lines[li].desc){ body += '&line_items['+li+'][price_data][product_data][description]='+enc(lines[li].desc); }
+    }
+    if(appFee>0){ body += '&payment_intent_data[application_fee_amount]='+appFee; }
+    var r = await fetch('https://api.stripe.com/v1/checkout/sessions', { method:'POST', headers:sHeaders, body:body });
+    var j = await r.json();
+    if(!r.ok || j.error || !j.url) return fail('We could not start checkout. Please try again.');
+    return succeed({ url:j.url });
+  }catch(e){ return fail(e.message); }
+}
 function renderProductGrid(products, siteId, checkoutEnabled){
   if (!Array.isArray(products) || !products.length) return '<div style="text-align:center;opacity:.6;padding:40px 0;font-size:1rem">Products coming soon.</div>';
   var esc = function(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
@@ -7883,7 +8059,7 @@ function renderProductGrid(products, siteId, checkoutEnabled){
     var img = p.img ? ('<div class="wsp-img" style="background-image:url(' + esc(p.img) + ')"></div>') : '<div class="wsp-img wsp-noimg"></div>';
     var price = p.price ? ('<div class="wsp-price">' + esc(p.price) + '</div>') : '';
     var desc = p.desc ? ('<div class="wsp-desc">' + esc(p.desc) + '</div>') : '';
-    return '<div class="wsp-card">' + img + '<div class="wsp-body"><div class="wsp-name">' + esc(p.name||'Product') + '</div>' + price + desc + '<a class="wsp-buy" href="' + ((checkoutEnabled && siteId) ? ('/checkout?site=' + encodeURIComponent(siteId) + '&p=' + i) : '#contact') + '">' + ((checkoutEnabled && siteId) ? 'Buy' : 'Inquire') + '</a></div></div>';
+    return '<div class="wsp-card">' + img + '<div class="wsp-body"><div class="wsp-name">' + esc(p.name||'Product') + '</div>' + price + desc + ((checkoutEnabled && siteId) ? ('<button class="wsp-buy" type="button" onclick="wsAddToCart(' + i + ')">Add to cart</button>') : ('<a class="wsp-buy" href="#contact">Inquire</a>')) + '</div></div>';
   }).join('');
   var css = '<style>.wsp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:22px;max-width:1100px;margin:0 auto;padding:8px 0}.wsp-card{border:1px solid rgba(128,128,128,.18);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;background:rgba(128,128,128,.04)}.wsp-img{aspect-ratio:4/3;background-size:cover;background-position:center}.wsp-noimg{background:linear-gradient(135deg,rgba(128,128,128,.12),rgba(128,128,128,.05))}.wsp-body{padding:16px;display:flex;flex-direction:column;gap:6px}.wsp-name{font-weight:700;font-size:1.05rem}.wsp-price{font-weight:700;opacity:.85}.wsp-desc{font-size:.9rem;opacity:.7;line-height:1.5}.wsp-buy{margin-top:8px;display:inline-block;text-align:center;padding:10px 16px;border:1px solid currentColor;border-radius:10px;text-decoration:none;color:inherit;font-weight:600}.wsp-buy:hover{opacity:.8}</style>';
   return css + '<div class="wsp-grid">' + cards + '</div>';
@@ -7982,13 +8158,10 @@ async function doGenerate(request, env) {
     const _isOwner = _email === SUPPORT_EMAIL.toLowerCase();
     const _u = JSON.parse((env.KV && await env.KV.get('user:'+_email)) || '{}');
     _isPaid = (_isOwner || _u.plan === 'pro');
-    // Generation runs on Flash for EVERYONE — including Pro. A full site is ~12-18k output tokens, and
-    // the Pro model emits those too slowly to finish inside Cloudflare's ~100s request window, which was
-    // causing paid users to hit timeouts. The bottleneck is output length, not thinking, so trimming
-    // thinking can't fix it. Pro's other perks (no badge, custom domain, code download) are unaffected.
-    // To bring the Pro MODEL back for generation, it must run as a background job (Durable Objects /
-    // Queues) so it isn't bound by the synchronous request limit.
-    // if (_isPaid) genModel = 'gemini-2.5-pro';
+    // Paid members generate on the higher-quality Pro model with a generous timeout. Cloudflare imposes
+    // no hard wall-clock limit while the client stays connected, so a longer Pro build is fine; and if Pro
+    // stalls or errors we fall back to Flash below, so a paid user is never worse off than a free one.
+    if (_isPaid) genModel = 'gemini-2.5-pro';
   } catch (e) {}
   // Free tier: cap total generations per account (Pro/owner unlimited). Free generations — including
   // the first — run on the fast Flash model so the make-or-break first impression is quick and reliable.
@@ -8006,10 +8179,10 @@ async function doGenerate(request, env) {
     });
     // Generation budget: give Pro a tight window so that if it stalls we can still fall back to the
     // faster, more reliable Flash model and return a site instead of a Cloudflare 524 timeout.
-    let result = await callGemini(keys, body2, genModel, genModel === 'gemini-2.5-pro' ? 82000 : 91000, genModel === 'gemini-2.5-pro' ? 84000 : 94000);
+    let result = await callGemini(keys, body2, genModel, genModel === 'gemini-2.5-pro' ? 140000 : 91000, genModel === 'gemini-2.5-pro' ? 143000 : 94000);
     if (result.error && genModel === 'gemini-2.5-pro') {
       try { console.warn('[Websprout] Pro generation failed (' + result.error + ') — falling back to Flash'); } catch (e) {}
-      result = await callGemini(keys, body2, 'gemini-2.5-flash', 10000, 11000);
+      result = await callGemini(keys, body2, 'gemini-2.5-flash', 91000, 94000);
     }
     if (result.error) return fail(result.error);
     const generatedHtml = cleanHTML(result.data);
@@ -8025,6 +8198,7 @@ async function doGenerate(request, env) {
     finalHtml = withReviews(finalHtml, siteId);
     const formKey = await siteKey(siteId, env);
     if (env.KV && _email) { try { let _bcRaw = await env.KV.get('bcount:' + _email); if (_bcRaw === null) { _bcRaw = (await env.KV.get('gencount:' + _email)) || '0'; } await env.KV.put('bcount:' + _email, String((parseInt(_bcRaw, 10) || 0) + 1)); } catch (e) {} }
+    try { if (env.KV) { const _sgC = await env.KV.get('stat:sitesgrown'); if (_sgC !== null) await env.KV.put('stat:sitesgrown', String((parseInt(_sgC, 10) || 0) + 1)); } } catch (e) {}
     if (!_isPaid && env.KV) { try { const _gc2 = parseInt((await env.KV.get('gencount:' + _email)) || '0', 10) || 0; await env.KV.put('gencount:' + _email, String(_gc2 + 1)); } catch (e) {} }
     return succeed({ html: finalHtml, siteId: siteId, formKey: formKey, inboxUrl: 'https://websprout.app/inbox?site=' + siteId + '&key=' + formKey });
   } catch(e) { return fail(e.message); }
