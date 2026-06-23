@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r215">
-<script>window._wsBuild="2026-06-10-r215";console.log("%c[Websprout] build 2026-06-10-r215 — favicon is now the real sprout logo across all pages","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r216">
+<script>window._wsBuild="2026-06-10-r216";console.log("%c[Websprout] build 2026-06-10-r216 — deploy guide rewritten beginner-first: publish free, custom domain, self-host","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -5585,15 +5585,51 @@ footer{border-top:1px solid #e8f0e5;padding:28px 5vw;display:flex;align-items:ce
   <div class="hero-inner">
     <div class="eyebrow">Deploy Guide</div>
     <h1>Get your site live in minutes</h1>
-    <p class="lead">You've built your site. Now let's put it on the internet. Here's everything you need to know about deploying with Netlify or Cloudflare Pages — both free forever.</p>
+    <p class="lead">You built your site — now let's get it online. There are three ways to do it, easiest first. Most people never need to look past Option 1.</p>
   </div>
 </div>
 
 <div class="wrap">
-  <div class="rec-banner"><div class="rec-icon">💡</div><div>New to hosting? <strong>Start with Netlify</strong> — it's the fastest path to a live site with zero configuration. You'll be online in under 2 minutes.</div></div>
+  <div class="rec-banner"><div class="rec-icon">💡</div><div><strong>New here? Use Option 1.</strong> Publishing on Websprout is free and takes one click — no other accounts, no tokens, no files. The other options are only if you want your own domain or want to host the files yourself.</div></div>
 
-  <div class="compare-title">Netlify vs Cloudflare Pages</div>
-  <div class="compare-sub">Both are free, both give you HTTPS and a custom domain. Here's what's different.</div>
+  <div class="guide-card" style="margin-bottom:28px">
+    <div class="guide-header">
+      <div class="guide-logo">🌐</div>
+      <h2>Option 1 — Publish free on Websprout (easiest)</h2>
+      <p>The simplest way to go live. Your site gets a free address like <code>yourname.websprout.app</code>, with HTTPS, in one click. No second account, nothing to download.</p>
+    </div>
+    <div class="guide-body">
+      <ol class="step-list">
+        <li class="step-item"><div class="step-num">1</div><div class="step-content"><strong>Build your site</strong>Describe your business on the Websprout home page and let it generate the site. Tweak anything with the chat until it looks right.</div></li>
+        <li class="step-item"><div class="step-num">2</div><div class="step-content"><strong>Click the Publish button</strong>In the studio toolbar at the top, click <strong>🌐 Publish</strong>.</div></li>
+        <li class="step-item"><div class="step-num">3</div><div class="step-content"><strong>Choose your free address</strong>Type the name you want — say <code>joes-tacos</code> — and you will get <code>joes-tacos.websprout.app</code>. If it is taken, try another.</div></li>
+        <li class="step-item"><div class="step-num">4</div><div class="step-content"><strong>Hit Publish — you are live</strong>Your site is online instantly at that address with free HTTPS. Share the link right away. A small "Made with Websprout" badge sits in the corner.</div></li>
+        <li class="step-item"><div class="step-num">5</div><div class="step-content"><strong>(Optional) Remove the badge</strong>Go Pro ($10/month) to remove the badge, connect your own domain, and unlock downloading the code. Cancel anytime.</div></li>
+      </ol>
+      <div style="margin-top:18px;font-size:13.5px;color:#666">To update later, edit in Websprout and click Publish again — the same address refreshes instantly.</div>
+    </div>
+  </div>
+
+  <div class="guide-card" style="margin-bottom:28px">
+    <div class="guide-header">
+      <div class="guide-logo">🔗</div>
+      <h2>Option 2 — Use your own domain (Pro)</h2>
+      <p>Want <code>yourbusiness.com</code> instead of a websprout.app address? Point any domain you own at your published site. This is a Pro feature.</p>
+    </div>
+    <div class="guide-body">
+      <ol class="step-list">
+        <li class="step-item"><div class="step-num">1</div><div class="step-content"><strong>Publish your site first</strong>Do Option 1 so your site is live at a websprout.app address. Your custom domain will point at that.</div></li>
+        <li class="step-item"><div class="step-num">2</div><div class="step-content"><strong>Get a domain (if you do not have one)</strong>Buy one from a registrar such as Namecheap, Cloudflare, or GoDaddy — usually about $10–15 a year. Already own one? Skip ahead.</div></li>
+        <li class="step-item"><div class="step-num">3</div><div class="step-content"><strong>Enter your domain in Websprout</strong>Go Pro, open the <strong>Custom domain</strong> box in Websprout, and type your domain (for example <code>yourbusiness.com</code>). Websprout shows you the exact record to add.</div></li>
+        <li class="step-item"><div class="step-num">4</div><div class="step-content"><strong>Add one DNS record at your registrar</strong>Log in where you bought the domain, find its <strong>DNS settings</strong>, and add a <strong>CNAME</strong> record pointing to <code>yourslug.websprout.app</code> (Websprout shows your exact target). Save it.</div></li>
+        <li class="step-item"><div class="step-num">5</div><div class="step-content"><strong>Wait a little — then you are live</strong>DNS changes take a few minutes to a few hours to spread. Once they do, your site loads on your own domain, with HTTPS set up automatically.</div></li>
+      </ol>
+      <div style="margin-top:18px;font-size:13.5px;color:#666">Cannot find your DNS settings? Search "[your registrar] add CNAME record" — every registrar has a short help page with screenshots.</div>
+    </div>
+  </div>
+
+  <div class="compare-title">Option 3 — Host the code yourself (advanced)</div>
+  <div class="compare-sub">Prefer to put the downloaded HTML on your own free hosting? Go Pro to download your code, then pick one of these. Both are free forever with HTTPS and custom domains — here is how they compare.</div>
   <table class="cmp-table">
     <thead>
       <tr>
@@ -5630,7 +5666,7 @@ footer{border-top:1px solid #e8f0e5;padding:28px 5vw;display:flex;align-items:ce
           </li>
           <li class="step-item">
             <div class="step-num">2</div>
-            <div class="step-content"><strong>Click "Deploy to Netlify"</strong>Hit the button in the studio. Enter your Netlify Personal Access Token once — we save it locally so you never have to enter it again.</div>
+            <div class="step-content"><strong>Get your Netlify access token</strong>A one-time key that lets Websprout deploy for you. In Netlify: click your avatar (top right) → <strong>User settings</strong> → <strong>Applications</strong> → scroll to <strong>Personal access tokens</strong> → <strong>New access token</strong> → name it "Websprout" → <strong>Generate</strong> → copy it. Then in the studio open <strong>Deploy → Netlify</strong> and paste it. It is saved on your device only — we never see it.</div>
           </li>
           <li class="step-item">
             <div class="step-num">3</div>
@@ -5641,6 +5677,7 @@ footer{border-top:1px solid #e8f0e5;padding:28px 5vw;display:flex;align-items:ce
             <div class="step-content"><strong>Add a custom domain (optional)</strong>In your Netlify dashboard go to Site Settings → Domain Management → Add custom domain. Free with any domain registrar.</div>
           </li>
         </ol>
+        <div style="margin-top:16px;font-size:13px;color:#666"><strong>No token, even simpler:</strong> click ⬇ Download in Websprout, then go to <code>app.netlify.com/drop</code> and drag your HTML file onto the page — instantly live.</div>
         <a href="https://app.netlify.com/signup" target="_blank" class="guide-cta netlify">Create free Netlify account →</a>
       </div>
     </div>
@@ -5680,6 +5717,14 @@ footer{border-top:1px solid #e8f0e5;padding:28px 5vw;display:flex;align-items:ce
 
   <div class="faq-title">Frequently asked questions</div>
   <div class="faq-list">
+    <div class="faq-item">
+      <div class="faq-q">Which option should I pick? <span class="faq-icon">+</span></div>
+      <div class="faq-a">If you just want your site online, use Option 1 — publishing free on Websprout is the fastest and needs nothing else. Use Option 2 if you own a domain like yourbusiness.com and want to use it. Only use Option 3 if you specifically want the files hosted on your own Netlify or Cloudflare account.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Do I have to pay to put my site online? <span class="faq-icon">+</span></div>
+      <div class="faq-a">No. Publishing live on Websprout is free, with a small badge. You only need Pro ($10/month) to remove the badge, use your own domain, or download and self-host the code.</div>
+    </div>
     <div class="faq-item">
       <div class="faq-q">Do I need to pay for hosting? <span class="faq-icon">+</span></div>
       <div class="faq-a">No. Both Netlify and Cloudflare Pages have permanently free tiers that are more than enough for most websites. Netlify gives you 100GB of bandwidth per month for free, and Cloudflare Pages offers unlimited bandwidth.</div>
@@ -7564,7 +7609,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r215';
+const BUILD_ID = '2026-06-10-r216';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
