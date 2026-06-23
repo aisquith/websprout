@@ -1,7 +1,6 @@
 // WEBSPROUT — Cloudflare Worker
 // Env variables: GEMINI_API_KEY (required), GEMINI_API_KEY2 (optional fallback), RESEND_API_KEY, KV
 
-const STRIPE = 'https://buy.stripe.com/00w00kgq56Bd1ds2Wy6Na00';
 // $10/mo unlimited subscription — create a RECURRING ($10/month) Payment Link in your
 // Stripe dashboard and paste its URL here. Set its success URL to https://websprout.app/?sub=success
 const SUB_LINK = 'https://buy.stripe.com/00w00kgq56Bd1ds2Wy6Na00';
@@ -180,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r208">
-<script>window._wsBuild="2026-06-10-r208";console.log("%c[Websprout] build 2026-06-10-r208 — a11y: input labels, skip link, main landmark, accessible generated sites","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r213">
+<script>window._wsBuild="2026-06-10-r213";console.log("%c[Websprout] build 2026-06-10-r213 — cleanup: removed dead STRIPE const + unused loadMsgs array","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1076,6 +1075,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     <span style="color:rgba(255,255,255,.72);font-size:13px">&#169; 2026 Websprout</span>
     <a href="/terms" target="_blank">Terms</a>
     <a href="/privacy" target="_blank">Privacy</a>
+    <a href="/accessibility" target="_blank">Accessibility</a>
     <a href="/deploy-guide" target="_blank">Deploy guide</a>
     <a href="mailto:support@websprout.app">Contact</a>
   </div>
@@ -1948,6 +1948,12 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <div class="set-note">Websprout uses passwordless sign-in &mdash; your Google account or a one-time email link &mdash; so there&rsquo;s no password to set or change.</div>
         <a class="set-link" href="https://myaccount.google.com/security" target="_blank" rel="noopener">If you use Google, manage 2-step verification there &#8594;</a>
       </div>
+      <div class="set-sec">
+        <div class="set-h">Your data &amp; privacy</div>
+        <div class="set-note">Download everything Websprout stores about you, or permanently delete your account and all your sites and data.</div>
+        <button id="pfExport" style="display:block;width:100%;text-align:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#eaf2e8;border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:8px">&#11015; Download my data</button>
+        <button id="pfDeleteAcct" style="display:block;width:100%;text-align:center;background:rgba(220,60,60,.12);border:1px solid rgba(220,60,60,.42);color:#ff9b9b;border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">&#128465; Delete account &amp; all data</button>
+      </div>
       <button id="pfMySites" style="width:100%;margin-bottom:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#eaf2e8;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">&#128194; My sites<span id="pfSitesCount" style="font-size:12px;color:rgba(255,255,255,.72);font-weight:500"></span></button>
       <button id="pfSignOut" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.8);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Sign out</button>
     </div>
@@ -1992,6 +1998,19 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   if($('profileClose'))$('profileClose').addEventListener('click',closePf);
   var _pfms=$('pfMySites');if(_pfms)_pfms.addEventListener('click',function(){closePf();if(window.openMySites)window.openMySites();else if(window.toast)toast('Loading your sites...');});
   if(pm)pm.addEventListener('click',function(e){if(e.target===pm)closePf();});
+  var _pfe=$('pfExport');
+  if(_pfe)_pfe.addEventListener('click',function(){
+    if(window.toast)window.toast('Preparing your data...');
+    fetch('/account/export').then(function(r){ if(!r.ok) throw 0; return r.blob(); }).then(function(b){ var u=URL.createObjectURL(b); var a=document.createElement('a'); a.href=u; a.download='websprout-my-data.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(u);},3000); if(window.toast)window.toast('Your data downloaded'); }).catch(function(){ if(window.toast)window.toast('Could not export your data'); });
+  });
+  var _pfd=$('pfDeleteAcct');
+  if(_pfd)_pfd.addEventListener('click',function(){
+    var em=(window._wsUser&&window._wsUser.email)?window._wsUser.email:'your account';
+    if(!confirm('Permanently delete '+em+' and ALL your sites, drafts, products and data? This cannot be undone.')) return;
+    var typed=prompt('This is permanent and cannot be undone. Type DELETE to confirm.');
+    if(typed!=='DELETE'){ if(window.toast)window.toast('Deletion cancelled'); return; }
+    fetch('/account/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({confirm:'DELETE'})}).then(function(r){return r.json();}).then(function(j){ if(j&&j.ok){ try{localStorage.clear();}catch(e){} alert('Your account and all your data have been permanently deleted.'); location.href='/'; } else { if(window.toast)window.toast((j&&j.error)||'Could not delete account'); } }).catch(function(){ if(window.toast)window.toast('Could not delete account'); });
+  });
   var so=$('pfSignOut');
   if(so)so.addEventListener('click',function(){
     if(confirm('Sign out'+((window._wsUser&&window._wsUser.email)?(' of '+window._wsUser.email):'')+'?')){
@@ -2460,7 +2479,6 @@ var gHTML='',unlocked=false,selectedType='',selectedStyle='';
   window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;window._wsReport({msg:('promise: '+((r&&r.message)||String(r||''))).slice(0,200),stack:(r&&r.stack)||''});});
 })();
 var undoStack=[],redoStack=[],editCount=0;
-var loadMsgs=['Planting your prompt...','Writing your hero section...','Designing the layout...','Adding feature cards...','Styling the navigation...','Building the footer...','Writing your copy...','Polishing the details...','Almost ready...'];
 
 // "Sites grown" is the REAL total (sum of all builds), rendered server-side into #liveCount.
 
@@ -5310,7 +5328,8 @@ const TERMS_PAGE = `<!DOCTYPE html>
 body{background:#f2f7f0;color:#0f1a0d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;padding:4rem 2rem;line-height:1.7}
 .wrap{max-width:700px;margin:0 auto}
 h1{font-size:2rem;font-weight:900;margin-bottom:.5rem}
-.meta{color:#7a8c77;margin-bottom:3rem;font-size:14px}
+.meta{color:#4d5c4a;margin-bottom:3rem;font-size:14px}
+ul{margin:.2rem 0 1rem 1.25rem}li{margin-bottom:.4rem;color:#2e3d2b}
 h2{font-size:1.1rem;font-weight:700;margin:2rem 0 .5rem}
 p{margin-bottom:1rem;color:#2e3d2b}
 a{color:#2d7a3a}
@@ -5355,7 +5374,7 @@ a{color:#2d7a3a}
 <p>To the maximum extent permitted by law, Websprout will not be liable for any indirect, incidental, special, or consequential damages, or for lost profits, revenue, data, or goodwill, arising from your use of the Service. Our total liability for any claim relating to the Service will not exceed the amount you paid us in the three months before the claim.</p>
 
 <h2>10. Termination</h2>
-<p>You may stop using the Service and cancel at any time. We may suspend or terminate access for violations of these Terms or to comply with law. Provisions that by their nature should survive termination (including ownership, fees owed, disclaimers, and limitation of liability) will survive.</p>
+<p>You may stop using the Service and cancel at any time. We may suspend or terminate access for violations of these Terms or to comply with law. Provisions that by their nature should survive termination (including ownership, fees owed, disclaimers, indemnification, and limitation of liability) will survive.</p>
 
 <h2>11. Changes to these Terms</h2>
 <p>We may update these Terms from time to time. Material changes are reflected by updating the date above; continued use after changes take effect constitutes acceptance.</p>
@@ -5363,7 +5382,13 @@ a{color:#2d7a3a}
 <h2>12. Governing law</h2>
 <p>These Terms are governed by the laws of the State of Georgia, United States, without regard to conflict-of-law rules, and you submit to the exclusive jurisdiction of the state and federal courts located in Georgia, except where mandatory consumer-protection law grants you rights where you live.</p>
 
-<h2>13. Contact</h2>
+<h2>13. Copyright and takedown</h2>
+<p>We respect intellectual property rights and expect you to do the same. You must not use Websprout to build or publish content that infringes another person's copyright, trademark, or other rights.</p>
+<p>If you believe content published through Websprout infringes a copyright you own or represent, send a notice to <a href="mailto:support@websprout.app">support@websprout.app</a> that includes: (a) your contact information; (b) identification of the work you say is infringed; (c) the URL or location of the material you want removed; (d) a statement that you have a good-faith belief the use is not authorized by the rights holder, its agent, or the law; (e) a statement, under penalty of perjury, that the information in your notice is accurate and that you are the rights holder or authorized to act on their behalf; and (f) your physical or electronic signature.</p>
+<p>We will review valid notices and may remove or disable access to the material. We may also remove sites and terminate the accounts of users who repeatedly infringe. If you believe your material was removed in error, you may send a counter-notice to the same address with your contact details and a statement, under penalty of perjury, that you have a good-faith belief the material was removed by mistake.</p>
+<h2>14. Indemnification</h2>
+<p>You agree to indemnify and hold harmless Websprout and the people who operate it from any claims, damages, losses, liabilities, and reasonable costs (including legal fees) arising from: (a) the content you create, publish, or sell through the Service; (b) your products, their fulfilment, and your transactions with your customers; (c) your use of the Service in violation of these Terms or any law; or (d) your infringement of another party's rights. We will notify you of any such claim and may take part in its defense; you may not settle a claim in a way that creates obligations for us without our consent.</p>
+<h2>15. Contact</h2>
 <p>Questions about these Terms: <a href="mailto:support@websprout.app">support@websprout.app</a></p>
 </div>
 </body>
@@ -5380,7 +5405,8 @@ const PRIVACY_PAGE = `<!DOCTYPE html>
 body{background:#f2f7f0;color:#0f1a0d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;padding:4rem 2rem;line-height:1.7}
 .wrap{max-width:700px;margin:0 auto}
 h1{font-size:2rem;font-weight:900;margin-bottom:.5rem}
-.meta{color:#7a8c77;margin-bottom:3rem;font-size:14px}
+.meta{color:#4d5c4a;margin-bottom:3rem;font-size:14px}
+ul{margin:.2rem 0 1rem 1.25rem}li{margin-bottom:.4rem;color:#2e3d2b}
 h2{font-size:1.1rem;font-weight:700;margin:2rem 0 .5rem}
 p{margin-bottom:1rem;color:#2e3d2b}
 a{color:#2d7a3a}
@@ -5391,15 +5417,35 @@ a{color:#2d7a3a}
 <div class="wrap">
 <a href="/" class="back">← Back to Websprout</a>
 <h1>Privacy Policy</h1>
-<p class="meta">Last updated: May 2026</p>
+<p class="meta">Last updated: June 2026</p>
 <h2>What we collect</h2>
-<p>We collect your email address if you choose to provide it before purchase. We use Stripe for payments — we never see or store your card details.</p>
+<p>When you sign in, we store your email address and basic account details (your plan, and a payment reference if you upgrade). We use Stripe for payments — we never see or store your card details. When you build with Websprout, we store the sites you create on our servers so your work is saved to your account and your published sites stay live: this includes your drafts and published pages, any products you add, customer reviews, the contact-form messages (leads) your visitors send you, and basic usage counts.</p>
 <h2>What we don't collect</h2>
-<p>We do not track you across other websites. We do not sell your data. We do not use cookies beyond what's necessary for the service to function.</p>
+<p>We do not track you across other websites. We do not sell your data. We use only the cookies necessary for the service to work, including a sign-in cookie to keep you logged in.</p>
 <h2>Your prompts</h2>
 <p>The prompts you type to generate websites are sent to Google's Gemini API for processing. Please see Google's privacy policy for how they handle this data.</p>
 <h2>Generated sites</h2>
-<p>Your generated HTML is stored temporarily in your browser's localStorage. It is not stored on our servers.</p>
+<p>While you are building, a working copy of your site is kept in your browser. Once you sign in or publish, your site (drafts and published pages) is also stored on our servers so it stays saved to your account and stays live on the web. You can remove any site at any time, or delete everything at once from your account settings (see below).</p>
+<h2>Service providers we use</h2>
+<p>We rely on a small number of trusted providers to run the Service. Each processes data only to provide its part of the Service:</p>
+<ul>
+<li><strong>Cloudflare</strong> — hosts Websprout and securely stores your account and the sites you build.</li>
+<li><strong>Google (Gemini API)</strong> — generates websites from the prompts you write.</li>
+<li><strong>Stripe</strong> — processes subscription and store payments. We never see or store card details.</li>
+<li><strong>Resend</strong> — delivers transactional email, such as notifying you when a visitor submits a form on your site.</li>
+</ul>
+<h2>How long we keep your data</h2>
+<p>We keep your account and the sites you build for as long as your account is active. Contact-form submissions (leads) and customer reviews are kept for a limited period and then expire automatically. When you delete a site or your account, the associated data is removed from our systems, except payment records that Stripe is required to retain by law. You can delete everything at any time (see below).</p>
+<h2>Children</h2>
+<p>Websprout is not directed to children, and we do not knowingly collect personal information from anyone under 16. If you believe a child has provided us information, contact us and we will delete it.</p>
+<h2>Your data and your rights</h2>
+<p>You are in control of your data. From <strong>Settings</strong> in the Websprout studio you can, at any time:</p>
+<ul>
+<li><strong>Download my data</strong> — export everything we hold about you (your account, sites, products, reviews, leads and invoices) as a single JSON file. This covers your right to access and to data portability.</li>
+<li><strong>Delete account and all data</strong> — permanently erase your account and every site, draft, product, review, lead and invoice tied to it, and sign you out. This covers your right to erasure (the right to be forgotten / the right to delete).</li>
+</ul>
+<p>Depending on where you live, laws such as the EU and UK GDPR and the California CCPA give you these rights to access, export and delete your personal data. The tools above let you exercise them yourself, instantly — or you can email us and we will help.</p>
+<p>Two things to note. First, payment records held by our payment processor (Stripe) may be kept as required by law even after you delete your account, so we can meet tax and accounting obligations; this data lives with Stripe, not in your Websprout account. Second, if you connected a custom domain, that domain mapping may need to be removed separately — email us and we will clear it for you.</p>
 <h2>Contact</h2>
 <p>Questions? Email us at <a href="mailto:support@websprout.app">support@websprout.app</a></p>
 </div>
@@ -5407,6 +5453,43 @@ a{color:#2d7a3a}
 </html>`;
 
 
+const ACCESSIBILITY_PAGE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accessibility — Websprout</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f2f7f0;color:#0f1a0d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;padding:4rem 2rem;line-height:1.7}
+.wrap{max-width:700px;margin:0 auto}
+h1{font-size:2rem;font-weight:900;margin-bottom:.5rem}
+.meta{color:#4d5c4a;margin-bottom:3rem;font-size:14px}
+h2{font-size:1.1rem;font-weight:700;margin:2rem 0 .5rem}
+p{margin-bottom:1rem;color:#2e3d2b}
+ul{margin:.2rem 0 1rem 1.25rem}li{margin-bottom:.4rem;color:#2e3d2b}
+a{color:#2d7a3a}
+.back{display:inline-block;margin-bottom:2rem;color:#2d7a3a;text-decoration:none;font-weight:600}
+:focus-visible{outline:3px solid #2d7a3a;outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a href="/" class="back">← Back to Websprout</a>
+<h1>Accessibility</h1>
+<p class="meta">Last updated: June 2026</p>
+<p>We want Websprout to be usable by as many people as possible, including people who use screen readers, keyboard navigation, or other assistive technology. We aim to meet the Web Content Accessibility Guidelines (WCAG) 2.1 at level AA.</p>
+<h2>What we have done</h2>
+<p>Across the Websprout app we use semantic structure and landmarks, a skip-to-content link, labels on form fields, clearly visible keyboard focus indicators, and text that meets AA color-contrast guidance. We review these as the product changes.</p>
+<h2>Sites you build</h2>
+<p>We also build accessibility into the websites Websprout generates for you: semantic landmarks, a logical heading order, descriptive alternative text for images, labeled form fields, and readable color contrast. Because you can edit your site freely, we encourage you to keep these in mind as you change content — for example, writing meaningful alt text and keeping strong contrast.</p>
+<h2>Ongoing work</h2>
+<p>Accessibility is an ongoing effort, not a one-time task. Some areas may not yet fully conform, and we are continuing to improve. This statement reflects our current status and good-faith commitment; it is not a certification of compliance.</p>
+<h2>Tell us about a barrier</h2>
+<p>If you run into anything on Websprout that is hard to use with assistive technology, please tell us — we take accessibility issues seriously and will work to fix them. Email <a href="mailto:support@websprout.app">support@websprout.app</a> and describe the problem and the page or feature where you found it.</p>
+</div>
+</body>
+</html>`;
 const DEPLOY_GUIDE_PAGE = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5629,7 +5712,7 @@ footer{border-top:1px solid #e8f0e5;padding:28px 5vw;display:flex;align-items:ce
   <div class="foot-links">
     <a href="/showcase">Showcase</a>
     <a href="/terms">Terms</a>
-    <a href="/privacy">Privacy</a>
+    <a href="/privacy">Privacy</a><a href="/accessibility">Accessibility</a>
     <a href="mailto:support@websprout.app">Contact</a>
   </div>
 </footer>
@@ -5868,7 +5951,7 @@ footer a{margin:0 9px}footer a:hover{color:#4ade80}
   <a class="hero-cta" href="/">🌱 Build your site free</a>
 </div>
 <div class="grid" id="grid"><div class="loading">Loading the showcase…</div></div>
-<footer><a href="/">Home</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="mailto:support@websprout.app">Contact</a></footer>
+<footer><a href="/">Home</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/accessibility">Accessibility</a><a href="mailto:support@websprout.app">Contact</a></footer>
 <script>
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 fetch('/showcase/data').then(function(r){return r.json();}).then(function(j){
@@ -6006,6 +6089,8 @@ export default {
     if (url.pathname === '/save' && request.method === 'POST') return doSave(request, env);
     if (url.pathname === '/load' && request.method === 'GET') return doLoad(request, env);
     if (url.pathname === '/my-sites' && request.method === 'GET') return doMySites(request, env);
+    if (url.pathname === '/account/export' && request.method === 'GET') return doAccountExport(request, env);
+    if (url.pathname === '/account/delete' && request.method === 'POST') return doAccountDelete(request, env);
     if (url.pathname === '/my-sites/claim' && request.method === 'POST') return doMySitesClaim(request, env);
     if (url.pathname === '/my-sites/delete' && request.method === 'POST') return doMySitesDelete(request, env);
     if (url.pathname === '/api/hit' && request.method === 'POST') return doHit(request, env);
@@ -6021,6 +6106,7 @@ export default {
     if (url.pathname === '/success') return new Response(SUCCESS_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     if (url.pathname === '/terms') return new Response(TERMS_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     if (url.pathname === '/privacy') return new Response(PRIVACY_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    if (url.pathname === '/accessibility') return new Response(ACCESSIBILITY_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     if (url.pathname === '/deploy-guide') return new Response(DEPLOY_GUIDE_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     if (url.pathname === '/sitemap.xml') return new Response(SITEMAP, { headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=86400' } });
     if (url.pathname === '/og.svg') return new Response(OG_IMAGE, { headers: { 'Content-Type': 'image/svg+xml; charset=utf-8', 'Cache-Control': 'public, max-age=86400' } });
@@ -7478,7 +7564,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r208';
+const BUILD_ID = '2026-06-10-r213';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -7704,6 +7790,72 @@ async function doMySitesDelete(request, env){
     await env.KV.put(lk, JSON.stringify(list));
     return succeed({ ok:true });
   } catch(e){ return fail(e.message); }
+}
+
+async function doAccountExport(request, env){
+  const sess = await getSession(request, env);
+  if(!sess || !sess.email) return fail('Please sign in.');
+  if(!env.KV) return fail('Storage not configured.');
+  const em = sess.email; const eml = (em||'').toLowerCase();
+  async function gj(k){ try{ const v=await env.KV.get(k); return v?JSON.parse(v):null; }catch(e){ return null; } }
+  async function gt(k){ try{ return await env.KV.get(k); }catch(e){ return null; } }
+  const out = { format:'websprout-data-export-v1', exportedAt:new Date().toISOString(), email: em, account:null, usage:{}, sites:[], invoices:[] };
+  out.account = (await gj('user:'+eml)) || (await gj('user:'+em));
+  out.usage.generations = parseInt((await gt('gencount:'+eml)) || (await gt('gencount:'+em)) || '0', 10) || 0;
+  out.usage.sitesPublished = parseInt((await gt('bcount:'+eml)) || (await gt('bcount:'+em)) || '0', 10) || 0;
+  try{ const inv = await env.KV.list({ prefix:'invoice:'+eml+':', limit:1000 }); for(const k of inv.keys){ const v=await gj(k.name); if(v) out.invoices.push(v); } }catch(e){}
+  let list=[]; try{ list = JSON.parse((await gt('usersites:'+em)) || (await gt('usersites:'+eml)) || '[]'); }catch(e){}
+  for(const it of list){
+    const sid = it && it.siteId; if(!sid) continue;
+    const site = { siteId:sid, name:(it.name||''), savedAt:(it.ts||null) };
+    site.draft = await gj('draft:'+sid);
+    site.products = await gj('products:'+sid);
+    site.leadsNotifyEmail = await gt('notify:'+sid);
+    const slug = await gt('slugof:'+sid);
+    if(slug){
+      site.publishedSlug = slug;
+      site.publishedMeta = await gj('pubmeta:'+slug);
+      site.publishedHtml = await gt('pub:'+slug);
+      const paths = await gj('pubpages:'+slug);
+      if(Array.isArray(paths) && paths.length){ site.publishedPages={}; for(const p of paths){ site.publishedPages[p] = await gt('pub:'+slug+':'+p); } }
+    }
+    try{ const fl = await env.KV.list({ prefix:'form:'+sid+':', limit:1000 }); if(fl.keys.length){ site.leads=[]; for(const k of fl.keys){ const v=await gj(k.name); if(v) site.leads.push(v); } } }catch(e){}
+    try{ const rl = await env.KV.list({ prefix:'review:'+sid+':', limit:1000 }); if(rl.keys.length){ site.reviews=[]; for(const k of rl.keys){ const v=await gj(k.name); if(v) site.reviews.push(v); } } }catch(e){}
+    out.sites.push(site);
+  }
+  return new Response(JSON.stringify(out, null, 2), { status:200, headers:{ 'Content-Type':'application/json; charset=utf-8', 'Content-Disposition':'attachment; filename="websprout-my-data.json"', 'Cache-Control':'no-store' } });
+}
+
+async function doAccountDelete(request, env){
+  const sess = await getSession(request, env);
+  if(!sess || !sess.email) return fail('Please sign in.');
+  if(!env.KV) return fail('Storage not configured.');
+  let body={}; try{ body = await request.json(); }catch(e){}
+  if(((body && body.confirm)||'') !== 'DELETE') return fail('Type DELETE to confirm.');
+  const em = sess.email; const eml = (em||'').toLowerCase();
+  async function gt(k){ try{ return await env.KV.get(k); }catch(e){ return null; } }
+  async function del(k){ try{ await env.KV.delete(k); }catch(e){} }
+  async function delPrefix(prefix){ try{ let cur, g=0; do{ const r=await env.KV.list({ prefix, cursor:cur, limit:1000 }); for(const k of r.keys){ await env.KV.delete(k.name); } cur=r.list_complete?null:r.cursor; g++; }while(cur && g<25); }catch(e){} }
+  let list=[]; try{ list = JSON.parse((await gt('usersites:'+em)) || (await gt('usersites:'+eml)) || '[]'); }catch(e){}
+  let n=0;
+  for(const it of list){
+    const sid = it && it.siteId; if(!sid) continue;
+    const slug = await gt('slugof:'+sid);
+    if(slug){
+      try{ const paths=JSON.parse((await gt('pubpages:'+slug))||'[]'); for(const p of paths){ await del('pub:'+slug+':'+p); } }catch(e){}
+      await del('pub:'+slug); await del('pubpages:'+slug); await del('pubmeta:'+slug); await del('slugof:'+sid);
+    }
+    await del('draft:'+sid); await del('products:'+sid); await del('notify:'+sid); await del('revnotify:'+sid); await del('reviewsPub:'+sid);
+    await delPrefix('form:'+sid+':'); await delPrefix('review:'+sid+':'); await delPrefix('views:'+sid+':');
+    n++;
+  }
+  await delPrefix('invoice:'+eml+':'); await delPrefix('invoice:'+em+':');
+  await del('user:'+eml); await del('user:'+em);
+  await del('gencount:'+eml); await del('gencount:'+em);
+  await del('bcount:'+eml); await del('bcount:'+em);
+  await del('usersites:'+em); await del('usersites:'+eml);
+  try{ const t=parseCookies(request)['ws_sess']; if(t) await del('sess:'+t); }catch(e){}
+  return new Response(JSON.stringify({ ok:true, deletedSites:n }), { status:200, headers:{ 'Content-Type':'application/json', 'Set-Cookie':'ws_sess=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0', 'Cache-Control':'no-store' } });
 }
 
 async function doLoad(request, env){
