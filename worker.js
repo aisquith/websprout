@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r219">
-<script>window._wsBuild="2026-06-10-r219";console.log("%c[Websprout] build 2026-06-10-r219 — clearer hero stat: Free to publish","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r220">
+<script>window._wsBuild="2026-06-10-r220";console.log("%c[Websprout] build 2026-06-10-r220 — hero pill uses the real sprout logo","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -870,7 +870,7 @@ window.wsClearSiteState=function(){try{var _keep={ws_rm:1,ws_focus:1,ws_theme:1,
 <main id="wsMain" tabindex="-1">
 <div class="hero" id="hero">
   <div class="hero-pill">
-    <div class="hero-pill-dot">&#127807;</div>
+    <div class="hero-pill-dot"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden="true"><path d="M12 21V12" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/><path d="M12 14.5C10.4 9.8 6.2 7.6 3 8.2C3.4 13 7.6 15.5 12 14.5Z" fill="#fff"/><path d="M12 13C13.5 8.2 17.8 6 21 6.6C20.6 11.4 16.4 13.9 12 13Z" fill="#fff"/></svg></div>
     Free to generate &amp; preview
   </div>
   <h1>Plant an idea.<br><em>Grow a website.</em></h1>
@@ -7639,7 +7639,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r219';
+const BUILD_ID = '2026-06-10-r220';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
