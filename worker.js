@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r216">
-<script>window._wsBuild="2026-06-10-r216";console.log("%c[Websprout] build 2026-06-10-r216 — deploy guide rewritten beginner-first: publish free, custom domain, self-host","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r217">
+<script>window._wsBuild="2026-06-10-r217";console.log("%c[Websprout] build 2026-06-10-r217 — settings redesigned into tabs (Account/Plan/Privacy/Display) + login logo","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -239,6 +239,13 @@ nav.scrolled{background:rgba(6,13,5,.9);backdrop-filter:blur(16px);border-bottom
 .set-note{font-size:12.5px;color:rgba(255,255,255,.72);line-height:1.55;margin-bottom:10px}
 .set-link{display:inline-block;font-size:13px;color:#7fe39a;text-decoration:none;font-weight:600}
 .set-link:hover{text-decoration:underline}
+.pf-tabs{display:flex;gap:3px;margin:18px 0 14px;background:rgba(255,255,255,.05);border-radius:11px;padding:4px;overflow-x:auto}
+.pf-tab{flex:1;white-space:nowrap;text-align:center;padding:8px 10px;border-radius:8px;font-size:13px;font-weight:600;color:rgba(255,255,255,.6);background:transparent;border:none;cursor:pointer;font-family:inherit;transition:background .15s,color .15s}
+.pf-tab.active{background:rgba(255,255,255,.12);color:#fff}
+.pf-tab:hover{color:#fff}
+.pf-pane{display:none}
+.pf-pane.active{display:block;animation:pfFade .2s ease}
+@keyframes pfFade{from{opacity:0}to{opacity:1}}
 /* accessibility effects */
 html.ws-rm *,html.ws-rm *::before,html.ws-rm *::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}
 html.ws-focus :focus{outline:2px solid #4ade80 !important;outline-offset:2px}
@@ -1906,7 +1913,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
 <div id="authModal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:18px">
   <div style="background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:18px;max-width:400px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.6)">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.07)">
-      <div style="font-size:17px;font-weight:800;color:#fff">Sign in to Websprout</div>
+      <div style="display:flex;align-items:center;gap:9px"><div class="nav-logo-mark" style="width:26px;height:26px"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true"><path d="M12 21V12" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/><path d="M12 14.5C10.4 9.8 6.2 7.6 3 8.2C3.4 13 7.6 15.5 12 14.5Z" fill="#fff"/><path d="M12 13C13.5 8.2 17.8 6 21 6.6C20.6 11.4 16.4 13.9 12 13Z" fill="#fff"/></svg></div><div style="font-size:17px;font-weight:800;color:#fff">Sign in to Websprout</div></div>
       <button id="authClose" style="background:none;border:none;color:rgba(255,255,255,.72);font-size:22px;cursor:pointer;line-height:1">&times;</button>
     </div>
     <div style="padding:22px">
@@ -1925,7 +1932,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
 <div id="profileModal" style="display:none;position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:18px">
   <div style="background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:18px;max-width:420px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.07)">
-      <div style="font-size:17px;font-weight:800;color:#fff">Your account</div>
+      <div style="font-size:17px;font-weight:800;color:#fff">Settings</div>
       <button id="profileClose" style="background:none;border:none;color:rgba(255,255,255,.72);font-size:22px;cursor:pointer;line-height:1">&times;</button>
     </div>
     <div style="padding:22px">
@@ -1937,25 +1944,37 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         </div>
         <span id="pfPlanBadge" style="font-size:11px;font-weight:800;letter-spacing:.5px;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.72);flex-shrink:0">FREE</span>
       </div>
-      <div id="pfActions" style="margin-bottom:16px"></div>
-      <div class="set-sec">
-        <div class="set-h">Accessibility</div>
-        <div class="set-row" id="rowMotion"><span class="set-lbl"><b>Reduce motion</b><em>Turn off animations and transitions</em></span><span class="set-tog" id="togMotion"></span></div>
-        <div class="set-row" id="rowFocus"><span class="set-lbl"><b>Always show focus outlines</b><em>Clear keyboard focus rings</em></span><span class="set-tog" id="togFocus"></span></div>
+      <div class="pf-tabs">
+        <button class="pf-tab active" data-pane="paneAccount">Account</button>
+        <button class="pf-tab" data-pane="panePlan">Plan</button>
+        <button class="pf-tab" data-pane="panePrivacy">Privacy</button>
+        <button class="pf-tab" data-pane="panePrefs">Display</button>
       </div>
-      <div class="set-sec">
-        <div class="set-h">Sign-in &amp; security</div>
+      <div id="paneAccount" class="pf-pane active">
+        <div class="set-h" style="margin-top:4px">Sign-in &amp; security</div>
         <div class="set-note">Websprout uses passwordless sign-in &mdash; your Google account or a one-time email link &mdash; so there&rsquo;s no password to set or change.</div>
         <a class="set-link" href="https://myaccount.google.com/security" target="_blank" rel="noopener">If you use Google, manage 2-step verification there &#8594;</a>
+        <div style="height:16px"></div>
+        <button id="pfMySites" style="width:100%;margin-bottom:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#eaf2e8;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">&#128194; My sites<span id="pfSitesCount" style="font-size:12px;color:rgba(255,255,255,.72);font-weight:500"></span></button>
+        <button id="pfSignOut" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.8);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Sign out</button>
       </div>
-      <div class="set-sec">
-        <div class="set-h">Your data &amp; privacy</div>
+      <div id="panePlan" class="pf-pane">
+        <div id="pfActions" style="margin-bottom:14px"></div>
+        <div class="set-h">What Pro includes</div>
+        <div class="set-note" style="margin-bottom:0">Remove the &ldquo;Made with Websprout&rdquo; badge, connect your own custom domain, download your full source code, and unlock multi-page sites and the built-in store. $10/month, cancel anytime.</div>
+      </div>
+      <div id="panePrivacy" class="pf-pane">
+        <div class="set-h" style="margin-top:4px">Your data</div>
         <div class="set-note">Download everything Websprout stores about you, or permanently delete your account and all your sites and data.</div>
         <button id="pfExport" style="display:block;width:100%;text-align:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#eaf2e8;border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:8px">&#11015; Download my data</button>
         <button id="pfDeleteAcct" style="display:block;width:100%;text-align:center;background:rgba(220,60,60,.12);border:1px solid rgba(220,60,60,.42);color:#ff9b9b;border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">&#128465; Delete account &amp; all data</button>
+        <div style="margin-top:14px;font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.5">Read our <a href="/privacy" target="_blank" style="color:#7fe39a;text-decoration:none">Privacy Policy</a> and <a href="/accessibility" target="_blank" style="color:#7fe39a;text-decoration:none">Accessibility statement</a>.</div>
       </div>
-      <button id="pfMySites" style="width:100%;margin-bottom:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#eaf2e8;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">&#128194; My sites<span id="pfSitesCount" style="font-size:12px;color:rgba(255,255,255,.72);font-weight:500"></span></button>
-      <button id="pfSignOut" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.8);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Sign out</button>
+      <div id="panePrefs" class="pf-pane">
+        <div class="set-h" style="margin-top:4px">Display &amp; accessibility</div>
+        <div class="set-row" id="rowMotion"><span class="set-lbl"><b>Reduce motion</b><em>Turn off animations and transitions</em></span><span class="set-tog" id="togMotion"></span></div>
+        <div class="set-row" id="rowFocus"><span class="set-lbl"><b>Always show focus outlines</b><em>Clear keyboard focus rings</em></span><span class="set-tog" id="togFocus"></span></div>
+      </div>
     </div>
   </div>
 </div>
@@ -1996,6 +2015,8 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     if(pm)pm.style.display='flex';
   };
   if($('profileClose'))$('profileClose').addEventListener('click',closePf);
+  var _pft=document.querySelectorAll(".pf-tab");
+  _pft.forEach(function(t){t.addEventListener("click",function(){_pft.forEach(function(x){x.classList.remove("active");});t.classList.add("active");document.querySelectorAll(".pf-pane").forEach(function(p){p.classList.remove("active");});var pane=$(t.getAttribute("data-pane"));if(pane)pane.classList.add("active");});});
   var _pfms=$('pfMySites');if(_pfms)_pfms.addEventListener('click',function(){closePf();if(window.openMySites)window.openMySites();else if(window.toast)toast('Loading your sites...');});
   if(pm)pm.addEventListener('click',function(e){if(e.target===pm)closePf();});
   var _pfe=$('pfExport');
@@ -7609,7 +7630,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r216';
+const BUILD_ID = '2026-06-10-r217';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
