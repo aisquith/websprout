@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r217">
-<script>window._wsBuild="2026-06-10-r217";console.log("%c[Websprout] build 2026-06-10-r217 — settings redesigned into tabs (Account/Plan/Privacy/Display) + login logo","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r218">
+<script>window._wsBuild="2026-06-10-r218";console.log("%c[Websprout] build 2026-06-10-r218 — Plan tab: manage billing + cancel Pro via Stripe portal","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1989,6 +1989,13 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     var email=(window._wsUser&&window._wsUser.email)||'';
     window.location.href=link+'?client_reference_id='+encodeURIComponent(email)+'&prefilled_email='+encodeURIComponent(email);
   }
+  function openBilling(){
+    var b=$('pfBilling'); if(b){b.disabled=true;b.textContent='Opening Stripe...';}
+    fetch('/account/billing-portal',{method:'POST'}).then(function(r){return r.json();}).then(function(j){
+      if(j&&j.url){window.location.href=j.url;}
+      else{if(b){b.disabled=false;b.innerHTML='Manage billing &amp; cancel plan';}if(window.toast)toast((j&&j.error)||'Could not open billing right now.',5000);}
+    }).catch(function(){if(b){b.disabled=false;b.innerHTML='Manage billing &amp; cancel plan';}if(window.toast)toast('Could not open billing right now.',5000);});
+  }
   window.openProfile=function(){
     var me=window._wsUser||{};
     var nm=((me.name||'').trim())||(me.email?me.email.split('@')[0]:'You');
@@ -2004,7 +2011,8 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     var act=$('pfActions');
     if(act){
       if(pro){
-        act.innerHTML='<div style="background:rgba(45,158,74,.12);border:1px solid rgba(45,158,74,.3);border-radius:12px;padding:14px 16px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.55">\u2713 <b style="color:#7fe39a">Pro is active.</b> You can download, deploy, and edit across all of your sites. Cancel anytime.</div>';
+        act.innerHTML='<div style="background:rgba(45,158,74,.12);border:1px solid rgba(45,158,74,.3);border-radius:12px;padding:14px 16px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.55">\u2713 <b style="color:#7fe39a">Pro is active.</b> You can download, deploy, and edit across all of your sites.</div><button id="pfBilling" style="width:100%;margin-top:10px;background:transparent;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.8);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Manage billing &amp; cancel plan</button><div style="font-size:11.5px;color:rgba(255,255,255,.5);text-align:center;margin-top:7px;line-height:1.45">Opens Stripe to update payment or cancel your subscription.</div>';
+        var pb=$('pfBilling');if(pb)pb.addEventListener('click',openBilling);
       }else{
         act.innerHTML='<button id="pfGoPro" style="width:100%;background:linear-gradient(135deg,#2d9e4a,#1c6e32);color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(45,158,74,.35)">\u2726 Go Pro \u2014 $10/mo</button><div style="font-size:12px;color:rgba(255,255,255,.72);text-align:center;margin-top:9px;line-height:1.5">Unlock downloads, deploys, and editing across all of your sites.</div>';
         var gp=$('pfGoPro');if(gp)gp.addEventListener('click',goPro);
@@ -6156,6 +6164,7 @@ export default {
     if (url.pathname === '/load' && request.method === 'GET') return doLoad(request, env);
     if (url.pathname === '/my-sites' && request.method === 'GET') return doMySites(request, env);
     if (url.pathname === '/account/export' && request.method === 'GET') return doAccountExport(request, env);
+    if (url.pathname === '/account/billing-portal' && request.method === 'POST') return doBillingPortal(request, env);
     if (url.pathname === '/account/delete' && request.method === 'POST') return doAccountDelete(request, env);
     if (url.pathname === '/my-sites/claim' && request.method === 'POST') return doMySitesClaim(request, env);
     if (url.pathname === '/my-sites/delete' && request.method === 'POST') return doMySitesDelete(request, env);
@@ -7630,7 +7639,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r217';
+const BUILD_ID = '2026-06-10-r218';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -7856,6 +7865,25 @@ async function doMySitesDelete(request, env){
     await env.KV.put(lk, JSON.stringify(list));
     return succeed({ ok:true });
   } catch(e){ return fail(e.message); }
+}
+
+async function doBillingPortal(request, env){
+  const sess = await getSession(request, env);
+  if(!sess || !sess.email) return fail('Please sign in.');
+  const sk = (env.STRIPE_SECRET_KEY||'').trim();
+  if(!sk) return fail('Billing is not set up yet.');
+  const eml = (sess.email||'').toLowerCase();
+  let u={}; try{ u = JSON.parse(await env.KV.get('user:'+eml) || '{}'); }catch(e){}
+  const cust = u && u.stripeCustomer;
+  if(!cust) return fail('No paid subscription is attached to this account. If this seems wrong, email support@websprout.app.');
+  try{
+    const origin = new URL(request.url).origin;
+    const params = 'customer='+encodeURIComponent(cust)+'&return_url='+encodeURIComponent(origin+'/');
+    const r = await fetch('https://api.stripe.com/v1/billing_portal/sessions', { method:'POST', headers:{ 'Authorization':'Bearer '+sk, 'Content-Type':'application/x-www-form-urlencoded' }, body: params });
+    const j = await r.json();
+    if(j && j.url) return succeed({ url: j.url });
+    return fail((j && j.error && j.error.message) || 'Could not open the billing portal.');
+  }catch(e){ return fail('Could not reach Stripe. Please try again.'); }
 }
 
 async function doAccountExport(request, env){
