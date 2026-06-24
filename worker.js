@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r218">
-<script>window._wsBuild="2026-06-10-r218";console.log("%c[Websprout] build 2026-06-10-r218 — Plan tab: manage billing + cancel Pro via Stripe portal","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r219">
+<script>window._wsBuild="2026-06-10-r219";console.log("%c[Websprout] build 2026-06-10-r219 — clearer hero stat: Free to publish","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -891,7 +891,7 @@ window.wsClearSiteState=function(){try{var _keep={ws_rm:1,ws_focus:1,ws_theme:1,
     </div>
     <div class="hero-stat">
       <div class="stat-n">Free</div>
-      <div class="stat-l">To preview</div>
+      <div class="stat-l">to publish</div>
     </div>
   </div>
 
@@ -7639,7 +7639,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r218';
+const BUILD_ID = '2026-06-10-r219';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
