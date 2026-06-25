@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r220">
-<script>window._wsBuild="2026-06-10-r220";console.log("%c[Websprout] build 2026-06-10-r220 — hero pill uses the real sprout logo","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r221">
+<script>window._wsBuild="2026-06-10-r221";console.log("%c[Websprout] build 2026-06-10-r221 — How it works + Pricing sections re-themed dark","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -360,24 +360,24 @@ textarea.dark-input{resize:vertical;min-height:76px;line-height:1.6}
 .trust-icon{font-size:16px}
 
 /* ---- HOW IT WORKS ---- */
-.how{background:#fff;padding:88px 5vw}
+.how{background:#060d05;padding:88px 5vw}
 .how-inner{max-width:960px;margin:0 auto}
 .section-eyebrow{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;background:linear-gradient(90deg,#16a34a,#0e7490);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
 .section-title{font-size:clamp(1.7rem,2.8vw,2.4rem);font-weight:800;color:#0a0a0a;letter-spacing:-1.5px;margin-bottom:40px;line-height:1.1}
 .how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-.how-card{border:1px solid #eee;border-radius:18px;padding:28px;background:#fff;transition:all .2s;position:relative;overflow:hidden}
-.how-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(45,122,58,.03),transparent);opacity:0;transition:opacity .2s}
-.how-card:hover{border-color:#c8e8c4;box-shadow:0 8px 32px rgba(45,122,58,.08);transform:translateY(-3px)}
+.how-card{border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:28px;background:rgba(255,255,255,.02);transition:all .2s;position:relative;overflow:hidden}
+.how-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(45,122,58,.08),transparent);opacity:0;transition:opacity .2s}
+.how-card:hover{border-color:rgba(45,122,58,.35);box-shadow:0 8px 32px rgba(0,0,0,.25);transform:translateY(-3px)}
 .how-card:hover::before{opacity:1}
-.how-step-num{width:36px;height:36px;background:#f0faf2;border:1.5px solid #c8e8c4;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#2d7a3a;margin-bottom:18px}
-.how-card h3{font-size:16px;font-weight:800;color:#0a0a0a;margin-bottom:8px;letter-spacing:-.3px}
-.how-card p{font-size:14px;color:#666;line-height:1.7}
+.how-step-num{width:36px;height:36px;background:rgba(45,122,58,.15);border:1.5px solid rgba(45,122,58,.4);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#4ade80;margin-bottom:18px}
+.how-card h3{font-size:16px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-.3px}
+.how-card p{font-size:14px;color:rgba(255,255,255,.7);line-height:1.7}
 
 /* ---- COMPARE ---- */
 .compare{background:#060d05;padding:88px 5vw}
 .compare-inner{max-width:780px;margin:0 auto}
-.compare-inner .section-eyebrow{background:linear-gradient(90deg,#4ade80,#22d3ee);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.compare-inner .section-title{color:#fff}
+.compare-inner .section-eyebrow,.how-inner .section-eyebrow,.pricing-inner .section-eyebrow{background:linear-gradient(90deg,#4ade80,#22d3ee);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.compare-inner .section-title,.how-inner .section-title,.pricing-inner .section-title{color:#fff}
 .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .cmp-card{border-radius:16px;padding:26px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.02)}
 .cmp-card.highlight{border-color:rgba(45,122,58,.35);background:rgba(45,122,58,.07)}
@@ -390,20 +390,20 @@ textarea.dark-input{resize:vertical;min-height:76px;line-height:1.6}
 .cmp-item.no::before{content:'x';color:rgba(255,255,255,.72)}
 
 /* ---- PRICING ---- */
-.pricing{background:#fff;padding:88px 5vw}
+.pricing{background:#060d05;padding:88px 5vw}
 .pricing-inner{max-width:640px;margin:0 auto}
 .price-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:40px}
-.price-card{border:1.5px solid #e8e8e8;border-radius:18px;padding:28px;background:#fff}
-.price-card.pick{border-color:#2d7a3a;box-shadow:0 0 0 4px rgba(45,122,58,.08)}
-.price-name{font-size:13px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
-.price-amt{font-size:44px;font-weight:800;color:#0a0a0a;letter-spacing:-2px;line-height:1}
+.price-card{border:1.5px solid rgba(255,255,255,.1);border-radius:18px;padding:28px;background:rgba(255,255,255,.02)}
+.price-card.pick{border-color:#3ea04e;box-shadow:0 0 0 4px rgba(45,122,58,.15)}
+.price-name{font-size:13px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+.price-amt{font-size:44px;font-weight:800;color:#fff;letter-spacing:-2px;line-height:1}
 .price-amt sup{font-size:20px;font-weight:700;vertical-align:top;margin-top:8px;display:inline-block}
-.price-freq{font-size:13px;color:#aaa;margin:6px 0 20px}
+.price-freq{font-size:13px;color:rgba(255,255,255,.5);margin:6px 0 20px}
 .price-list{list-style:none;display:flex;flex-direction:column;gap:9px}
-.price-item{font-size:14px;color:#444;display:flex;align-items:center;gap:7px}
-.price-item::before{content:'v';color:#2d7a3a;font-weight:900;font-size:11px}
-.price-item.dim{color:#ccc}
-.price-item.dim::before{content:'-';color:#ddd;font-weight:400}
+.price-item{font-size:14px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:7px}
+.price-item::before{content:'v';color:#4ade80;font-weight:900;font-size:11px}
+.price-item.dim{color:rgba(255,255,255,.38)}
+.price-item.dim::before{content:'-';color:rgba(255,255,255,.3)}
 
 /* ---- CTA BAND ---- */
 .cta-band{background:linear-gradient(135deg,#0a1f0a 0%,#1a4025 40%,#2d7a3a 100%);padding:88px 5vw;text-align:center;position:relative;overflow:hidden}
@@ -1035,7 +1035,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   <div class="pricing-inner">
     <div class="section-eyebrow">Pricing</div>
     <div class="section-title">Plant for free. Own it for $10.</div>
-    <p style="color:#888;font-size:15px">Build and launch your site live for free. Go Pro to make it fully yours &mdash; your domain, no badge, the code.</p>
+    <p style="color:rgba(255,255,255,.6);font-size:15px">Build and launch your site live for free. Go Pro to make it fully yours &mdash; your domain, no badge, the code.</p>
     <div class="price-grid">
       <div class="price-card">
         <div class="price-name">Free</div>
@@ -7639,7 +7639,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r220';
+const BUILD_ID = '2026-06-10-r221';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
