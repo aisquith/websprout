@@ -179,8 +179,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r221">
-<script>window._wsBuild="2026-06-10-r221";console.log("%c[Websprout] build 2026-06-10-r221 — How it works + Pricing sections re-themed dark","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r225">
+<script>window._wsBuild="2026-06-10-r225";console.log("%c[Websprout] build 2026-06-10-r225 — filter in-app-browser noise from error logger","color:#4ade80;font-weight:700")</script>
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -360,7 +360,7 @@ textarea.dark-input{resize:vertical;min-height:76px;line-height:1.6}
 .trust-icon{font-size:16px}
 
 /* ---- HOW IT WORKS ---- */
-.how{background:#060d05;padding:88px 5vw}
+.how{background:#000;padding:88px 5vw}
 .how-inner{max-width:960px;margin:0 auto}
 .section-eyebrow{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;background:linear-gradient(90deg,#16a34a,#0e7490);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
 .section-title{font-size:clamp(1.7rem,2.8vw,2.4rem);font-weight:800;color:#0a0a0a;letter-spacing:-1.5px;margin-bottom:40px;line-height:1.1}
@@ -390,7 +390,7 @@ textarea.dark-input{resize:vertical;min-height:76px;line-height:1.6}
 .cmp-item.no::before{content:'x';color:rgba(255,255,255,.72)}
 
 /* ---- PRICING ---- */
-.pricing{background:#060d05;padding:88px 5vw}
+.pricing{background:#000;padding:88px 5vw}
 .pricing-inner{max-width:640px;margin:0 auto}
 .price-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:40px}
 .price-card{border:1.5px solid rgba(255,255,255,.1);border-radius:18px;padding:28px;background:rgba(255,255,255,.02)}
@@ -2497,6 +2497,8 @@ var gHTML='',unlocked=false,selectedType='',selectedStyle='';
   window._wsReport=function(o){
     try{
       if(_errSent>15)return;
+      var _ign=['_AutofillCallbackHandler','webkit.messageHandlers','ResizeObserver loop','Non-Error promise rejection'];
+      for(var _ii=0;_ii<_ign.length;_ii++){ if((o.msg||'').indexOf(_ign[_ii])>-1) return; }
       var key=(o.msg||'')+'|'+(o.line||'');
       if(_errSeen[key])return;_errSeen[key]=1;_errSent++;
       o.where=o.where||'studio';o.url=location.href;
@@ -5235,11 +5237,13 @@ function injectImageIntoSite(dataUrl,action){
     modal.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px";
     var box=document.createElement("div");
     box.style.cssText="background:#0f1a0d;border:1px solid rgba(255,255,255,.12);border-radius:16px;max-width:560px;width:100%;padding:22px;color:#fff;font-family:inherit;box-shadow:0 30px 80px rgba(0,0,0,.5)";
-    box.innerHTML="<div style='font-size:18px;font-weight:800;margin-bottom:4px'>Your products</div><div style='font-size:13px;color:rgba(255,255,255,.72);margin-bottom:14px;line-height:1.6'>One product per line: <b>Name | Price | Image URL | Description</b>. They appear on your Shop page automatically.</div>";
-    var ta=document.createElement("textarea"); ta.id="wsProdTa"; ta.rows=10;
-    ta.placeholder="Lavender Candle | $24 | https://site.com/candle.jpg | Hand-poured soy wax";
-    ta.style.cssText="width:100%;box-sizing:border-box;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#fff;padding:12px;font-family:inherit;font-size:13px;line-height:1.7;resize:vertical";
-    box.appendChild(ta);
+    box.innerHTML="<div style='font-size:18px;font-weight:800;margin-bottom:4px'>Your products</div><div style='font-size:13px;color:rgba(255,255,255,.72);margin-bottom:14px;line-height:1.6'>Add each product below. To sell, paste a <b>Stripe payment link</b> - its Buy button sends customers straight to your Stripe checkout, no Stripe Connect needed. Leave the link blank to use the built-in cart. Products show on your Shop page automatically.</div>";
+    var rowsBox=document.createElement("div"); rowsBox.id="wsProdRows"; rowsBox.style.cssText="max-height:48vh;overflow-y:auto;margin-bottom:8px";
+    box.appendChild(rowsBox);
+    var addBtn=document.createElement("button"); addBtn.type="button"; addBtn.textContent="+ Add product";
+    addBtn.style.cssText="width:100%;background:rgba(255,255,255,.06);border:1px dashed rgba(255,255,255,.2);color:#eaf2e8;border-radius:10px;padding:11px;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px";
+    addBtn.onclick=function(){ addRow({}); };
+    box.appendChild(addBtn);
     var row=document.createElement("div"); row.style.cssText="display:flex;gap:10px;margin-top:16px;justify-content:flex-end";
     var cancel=document.createElement("button"); cancel.textContent="Close";
     cancel.style.cssText="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:10px;padding:10px 18px;font-weight:600;cursor:pointer;font-family:inherit";
@@ -5253,11 +5257,12 @@ function injectImageIntoSite(dataUrl,action){
     document.body.appendChild(modal);
     return modal;
   }
-  function toLines(products){ return (products||[]).map(function(p){ return [p.name||"",p.price||"",p.img||"",p.desc||""].join(" | "); }).join(NL); }
-  function parseLines(text){ var out=[]; (text||"").split(NL).forEach(function(ln){ if(!ln.replace(/ /g,"").length) return; var parts=ln.split("|"); var name=(parts[0]||"").trim(); if(!name) return; out.push({ name:name, price:(parts[1]||"").trim(), img:(parts[2]||"").trim(), desc:(parts[3]||"").trim() }); }); return out; }
+  function fld(row,ph,val,key,full){ var i=document.createElement("input"); i.type="text"; i.placeholder=ph; i.value=val||""; i.setAttribute("data-k",key); i.setAttribute("aria-label",ph); i.style.cssText="box-sizing:border-box;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;padding:9px 10px;font-family:inherit;font-size:13px"+(full?";grid-column:1/-1":""); row.appendChild(i); return i; }
+  function makeRow(p){ p=p||{}; var row=document.createElement("div"); row.className="wsProdRow"; row.style.cssText="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:12px;margin-bottom:10px;background:rgba(255,255,255,.02)"; fld(row,"Product name",p.name,"name"); fld(row,"Price (e.g. $24)",p.price,"price"); fld(row,"Image URL (optional)",p.img,"img",true); fld(row,"Short description",p.desc,"desc",true); fld(row,"Stripe payment link (optional)",p.payUrl,"payUrl",true); var del=document.createElement("button"); del.type="button"; del.textContent="Remove"; del.style.cssText="grid-column:1/-1;justify-self:start;background:transparent;border:none;color:#ff9b9b;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;padding:2px 0"; del.onclick=function(){ row.remove(); }; row.appendChild(del); return row; }
+  function addRow(p){ var w=$("wsProdRows"); if(w) w.appendChild(makeRow(p)); }
+  function readRows(){ var out=[]; var rows=document.querySelectorAll(".wsProdRow"); for(var r=0;r<rows.length;r++){ var ins=rows[r].querySelectorAll("input"); var o={}; for(var n=0;n<ins.length;n++){ o[ins[n].getAttribute("data-k")]=(ins[n].value||"").trim(); } if(o.name) out.push(o); } return out; }
   function doSave(){
-    var ta=$("wsProdTa"); if(!ta) return;
-    var products=parseLines(ta.value); var s=sid(), k=skey();
+    var products=readRows(); var s=sid(), k=skey();
     if(!s){ tt("Publish or save your site first"); return; }
     tt("Saving products...");
     fetch("/products",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({siteId:s,key:k,products:products})})
@@ -5272,8 +5277,9 @@ function injectImageIntoSite(dataUrl,action){
   }
   function openProducts(){
     buildModal();
-    var s=sid(), k=skey(); var ta=$("wsProdTa"); if(ta) ta.value="";
-    if(s){ fetch("/products?siteId="+encodeURIComponent(s)+"&key="+encodeURIComponent(k)).then(function(r){return r.json();}).then(function(j){ var ta2=$("wsProdTa"); if(ta2&&j&&j.products) ta2.value=toLines(j.products); }).catch(function(){}); }
+    var s=sid(), k=skey(); var w=$("wsProdRows"); if(w) w.innerHTML="";
+    if(s){ fetch("/products?siteId="+encodeURIComponent(s)+"&key="+encodeURIComponent(k)).then(function(r){return r.json();}).then(function(j){ var prods=(j&&j.products&&j.products.length)?j.products:[{}]; for(var n=0;n<prods.length;n++) addRow(prods[n]); }).catch(function(){ addRow({}); }); }
+    else { addRow({}); }
     modal.style.display="flex";
   }
   window.wsOpenProducts=openProducts;
@@ -7639,7 +7645,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r221';
+const BUILD_ID = '2026-06-10-r225';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -8434,7 +8440,11 @@ function renderProductGrid(products, siteId, checkoutEnabled){
     var img = p.img ? ('<div class="wsp-img" style="background-image:url(' + esc(p.img) + ')"></div>') : '<div class="wsp-img wsp-noimg"></div>';
     var price = p.price ? ('<div class="wsp-price">' + esc(p.price) + '</div>') : '';
     var desc = p.desc ? ('<div class="wsp-desc">' + esc(p.desc) + '</div>') : '';
-    return '<div class="wsp-card">' + img + '<div class="wsp-body"><div class="wsp-name">' + esc(p.name||'Product') + '</div>' + price + desc + ((checkoutEnabled && siteId) ? ('<button class="wsp-buy" type="button" onclick="wsAddToCart(' + i + ')">Add to cart</button>') : ('<a class="wsp-buy" href="#contact">Inquire</a>')) + '</div></div>';
+    var buy;
+    if (p.payUrl && /^https:\/\//i.test(p.payUrl)) buy = '<a class="wsp-buy" href="' + esc(p.payUrl) + '" target="_blank" rel="noopener">Buy now</a>';
+    else if (checkoutEnabled && siteId) buy = '<button class="wsp-buy" type="button" onclick="wsAddToCart(' + i + ')">Add to cart</button>';
+    else buy = '<a class="wsp-buy" href="#contact">Inquire</a>';
+    return '<div class="wsp-card">' + img + '<div class="wsp-body"><div class="wsp-name">' + esc(p.name||'Product') + '</div>' + price + desc + buy + '</div></div>';
   }).join('');
   var css = '<style>.wsp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:22px;max-width:1100px;margin:0 auto;padding:8px 0}.wsp-card{border:1px solid rgba(128,128,128,.18);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;background:rgba(128,128,128,.04)}.wsp-img{aspect-ratio:4/3;background-size:cover;background-position:center}.wsp-noimg{background:linear-gradient(135deg,rgba(128,128,128,.12),rgba(128,128,128,.05))}.wsp-body{padding:16px;display:flex;flex-direction:column;gap:6px}.wsp-name{font-weight:700;font-size:1.05rem}.wsp-price{font-weight:700;opacity:.85}.wsp-desc{font-size:.9rem;opacity:.7;line-height:1.5}.wsp-buy{margin-top:8px;display:inline-block;text-align:center;padding:10px 16px;border:1px solid currentColor;border-radius:10px;text-decoration:none;color:inherit;font-weight:600}.wsp-buy:hover{opacity:.8}</style>';
   return css + '<div class="wsp-grid">' + cards + '</div>';
@@ -8458,7 +8468,7 @@ async function doProducts(request, env){
     try { const _s = await getSession(request, env); if (_s){ const _u = JSON.parse((await env.KV.get('user:'+(_s.email||'').toLowerCase()))||'{}'); _pro = !!(_u && _u.plan==='pro') || ((_s.email||'').toLowerCase()===SUPPORT_EMAIL.toLowerCase()); } } catch(e){}
     if (!_pro) return fail('PRO_REQUIRED');
     let products = Array.isArray(b.products) ? b.products.slice(0,200) : [];
-    products = products.map(function(p){ return { name:String(p.name||'').slice(0,140), price:String(p.price||'').slice(0,40), img:String(p.img||'').slice(0,600), desc:String(p.desc||'').slice(0,500) }; }).filter(function(p){ return p.name; });
+    products = products.map(function(p){ var pu=String(p.payUrl||'').trim().slice(0,600); if(!/^https:\/\//i.test(pu)) pu=''; return { name:String(p.name||'').slice(0,140), price:String(p.price||'').slice(0,40), img:String(p.img||'').slice(0,600), desc:String(p.desc||'').slice(0,500), payUrl:pu }; }).filter(function(p){ return p.name; });
     await env.KV.put('products:' + b.siteId, JSON.stringify(products));
     return succeed({ ok:true, products: products });
   } catch(e){ return fail(e.message); }
