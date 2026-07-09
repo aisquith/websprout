@@ -22,6 +22,60 @@ function withReveal(html){
   return bi>-1?html.slice(0,bi)+REVEAL_SCRIPT+html.slice(bi):html+REVEAL_SCRIPT;
 }
 
+// Interactive-section vocabulary shared by both the initial-build PROMPT and the
+// chat-edit MODIFY prompt. The AI can produce ANY of these on request via chat;
+// each one has one canonical, consistent markup so results don't vary per site.
+const INTERACTIVE_SECTIONS = `━━━ INTERACTIVE-SECTION VOCABULARY (shared) ━━━
+Users edit their site by chatting with you. You must be able to add or restyle any of the following on request — always using the standard patterns below so the result is consistent every time. Match the current site's color palette, typography and spacing; do not copy these exact colors.
+
+1) FAQ / DROPDOWN — an accordion of question/answer pairs (or generic label/content pairs). MANDATORY MARKUP: use native <details> with a <summary>, no JS required:
+   <div class="ws-faq">
+     <details class="ws-faq-item"><summary>Question here?</summary><div class="ws-faq-body">Answer paragraph here.</div></details>
+     <details class="ws-faq-item"><summary>Another question?</summary><div class="ws-faq-body">Answer.</div></details>
+   </div>
+   Style .ws-faq-item as bordered/rounded rows with generous padding; rotate a chevron on summary via [open]. Never build a JS accordion — always <details>/<summary>. Works for FAQs, "our process" steps, service descriptions, product specs, or any expandable list.
+
+2) HOURS & LOCATION — a card or band showing days + times and address. Use a semantic list:
+   <div class="ws-hours"><div class="ws-hours-title">Hours</div><ul class="ws-hours-list"><li><span>Monday</span><span>9–5</span></li>...</ul></div>
+   Pair with a "Get directions" link: <a href="https://maps.google.com/?q=[Your Address]" target="_blank" rel="noopener">Get directions</a>. Keep [Your Address] and [Your Phone] as placeholders.
+
+3) MENU WITH PRICES (food/services) — a two-column list styled like a printed menu, grouped by section:
+   <div class="ws-menu"><h3 class="ws-menu-group">Starters</h3><ul class="ws-menu-list"><li class="ws-menu-row"><div><div class="ws-menu-name">Item name</div><div class="ws-menu-desc">Short description</div></div><div class="ws-menu-price">$00</div></li>...</ul></div>
+   Group headings, item + description on the left, price on the right, aligned. Use real dishes/services for the business.
+
+4) TESTIMONIALS — carousel-free grid or column of quote cards:
+   <div class="ws-testimonials"><figure class="ws-testimonial"><blockquote>"Quote text."</blockquote><figcaption>— Name, role/location</figcaption></figure>...</div>
+   Real business-appropriate quotes; never fabricate specific people/companies. For the built-in reviews container use <div data-ws-reviews></div> (Websprout injects real reviews there).
+
+5) GALLERY — a responsive image grid using the ws-img-slot format so users can upload their own photos:
+   <div class="ws-gallery" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px">
+     <div class="ws-img-slot" data-slot="gallery-1" data-label="Gallery image 1" style="width:100%;height:220px;background:linear-gradient(135deg,#2b2620,#3a322a);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;border-radius:12px"><div style="font-size:36px;opacity:.35">&#128247;</div><div style="color:rgba(255,255,255,.72);font-size:13px;font-weight:600">Click to add photo</div></div>
+     (repeat with unique data-slot ids — gallery-2, gallery-3…)
+   </div>
+   Use the LIGHT variant instead when the section background is light. NEVER render a plain colored div as a photo placeholder — every uploadable spot MUST be a ws-img-slot with a unique data-slot.
+
+6) TEAM MEMBERS — grid of cards, each with a photo slot, name, role, one-line bio:
+   <div class="ws-team"><div class="ws-team-card"><div class="ws-img-slot" data-slot="team-1" data-label="Team photo 1" style="...(dark or light variant, ~180px round)"></div><div class="ws-team-name">Name</div><div class="ws-team-role">Role</div><p class="ws-team-bio">One-line bio.</p></div>...</div>
+
+7) PRICING TABLE — up to 3 tiers, center one highlighted, checkmark feature lists (same shape as the initial-build pricing section).
+
+8) CONTACT FORM — action="#" method="POST", real named fields relevant to the business, plus this hidden field: <input type="hidden" name="_subject" value="New message from your website">. Add tap-to-call links for phone-driven local businesses.
+
+9) NEWSLETTER SIGNUP — a single-row email form styled like a hero CTA:
+   <form class="ws-newsletter" action="#" method="POST"><input type="email" name="email" required placeholder="you@example.com"><button type="submit">Subscribe</button><input type="hidden" name="_subject" value="New newsletter signup"></form>
+
+10) STATS BAND — 3–4 big-number stats in a row (real, plausible for the business — no invented percentages).
+
+11) VIDEO EMBED — only if the user provides a URL. Use a responsive 16:9 wrapper with the given YouTube/Vimeo embed URL. Never invent one.
+
+12) CALL-TO-ACTION BAND — full-width colored band, headline + subhead + one primary button, button links to #contact (or the existing quote/book/order section).
+
+GENERAL RULES for these:
+- Match the SITE'S existing palette, type scale, radius and spacing — do not copy the example colors.
+- When ADDING to an existing site (chat-edit), place the new section where it fits the page's flow, keep all existing routing/JS intact, and update any nav that lists top-level sections.
+- Use semantic HTML (details/summary, ul/li, figure/blockquote, form) — no click handlers required for FAQ, hours, menu, testimonials, gallery, team, pricing, or CTA.
+- Every button/link must actually do something (href="#realId" or a real URL). Never a dead control.`;
+
 const PROMPT = `You are a world-class creative director and front-end developer. Build a complete, detailed, professional website for the business described. Every section must contain real, specific content written for this exact business type.
 
 OUTPUT: Raw HTML only, <!DOCTYPE html> to </html>. No markdown, no backticks, no explanation.
@@ -123,6 +177,8 @@ Never create a styled box or placeholder that looks like an image area WITHOUT u
 
 When the user asks to make an existing area or element uploadable, or to "add a picture here" / "let me add a photo where X is", CONVERT that exact element into the ws-img-slot format above with a NEW unique data-slot id (and keep its existing size/position). Do not leave a plain colored div — any region meant to hold a user photo MUST be a ws-img-slot carrying a data-slot attribute, or the upload click cannot target it.
 
+PRECISION IS THE POINT — this is surgical work, not a redesign. Do EXACTLY the one thing the user asked and NOTHING ELSE. Do not "improve" copy, colors, spacing, layout, images, or wording that the user did not point at. If the user asked for a green button, only the button changes color; the section next to it does not get "warmer", the hero copy does not get "crisper", the nav does not get "cleaner". Preserve every id, class, data-attribute, inline style, image src (including any WSIMGREF placeholders), form action/name attributes, script, and href on elements you were not asked to touch. If the instruction is ambiguous, pick the smallest possible interpretation. The success test: a diff against the original should show ONLY the changes the user asked for.
+
 EDIT PRINCIPLES:
 - Make EXACTLY what the user asked — don't change anything else
 - If changing colors: update ALL instances consistently across ALL pages — buttons, borders, gradients, accents, icons, hover states
@@ -138,7 +194,7 @@ If adding or editing a contact form, always include action="#" method="POST" and
 QUALITY BAR: The edit should look intentional and professional — not like a quick find-and-replace.`;
 
 // Pushes generation toward genuinely impressive, modern design (appended to the generate prompt).
-const DESIGN_AMBITION = `DESIGN AMBITION — do NOT build a safe, templated business website. Build something genuinely memorable: the kind of site that gets featured on Awwwards and makes a visitor stop and say "whoa." Take a bold, opinionated aesthetic stance that fits the brand and fully commit to it. Generic and forgettable is the ONLY failure mode here.
+const DESIGN_AMBITION = `DESIGN AMBITION — TAKE CREATIVE RISKS. The single worst thing you can produce is a competent, forgettable, template-shaped business website. Nothing here is a suggestion; the following are creative demands. Do NOT build a safe, templated business website. Build something genuinely memorable: the kind of site that gets featured on Awwwards and makes a visitor stop and say "whoa." Take a bold, opinionated aesthetic stance that fits the brand and fully commit to it. Generic and forgettable is the ONLY failure mode here.
 
 COMMIT TO ONE CONCEPT — before building, lock in a single strong art direction that fits this exact business (e.g. dark-luxe with neon accents, warm sun-baked editorial, retro-futuristic, refined brutalist, organic & earthy, glassy & high-tech, bold & playful). Every decision — color, type, motion, shapes, spacing — reinforces that one concept so the page feels custom and intentional, never assembled from defaults.
 
@@ -179,8 +235,43 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r229">
-<script>window._wsBuild="2026-06-10-r229";console.log("%c[Websprout] build 2026-06-10-r229 — re-engagement nudge email + unsubscribe + admin dry-run","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r232">
+<script>window._wsBuild="2026-06-10-r232";console.log("%c[Websprout] build 2026-06-10-r232 — bolder generation prompt + tighter surgical chat-edit","color:#4ade80;font-weight:700")</script>
+<style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}</style>
+<script>
+window.wsConfirm=function(opts){
+  return new Promise(function(resolve){
+    opts=opts||{};
+    var title=opts.title||"Are you sure?";
+    var message=opts.message||"";
+    var okLabel=opts.okLabel||"Confirm";
+    var cancelLabel=opts.cancelLabel||"Cancel";
+    var danger=!!opts.danger;
+    var back=document.createElement("div"); back.className="wsCfm-back"; back.setAttribute("role","dialog"); back.setAttribute("aria-modal","true"); back.setAttribute("aria-labelledby","wsCfmT");
+    var box=document.createElement("div"); box.className="wsCfm-box";
+    var h=document.createElement("div"); h.className="wsCfm-title"; h.id="wsCfmT"; h.textContent=title;
+    var p=document.createElement("div"); p.className="wsCfm-msg"; p.textContent=message;
+    var row=document.createElement("div"); row.className="wsCfm-actions";
+    var c=document.createElement("button"); c.type="button"; c.className="wsCfm-btn"; c.textContent=cancelLabel;
+    var k=document.createElement("button"); k.type="button"; k.className="wsCfm-btn "+(danger?"danger":"primary"); k.textContent=okLabel;
+    row.appendChild(c); row.appendChild(k); box.appendChild(h); box.appendChild(p); box.appendChild(row); back.appendChild(box); document.body.appendChild(back);
+    var prev=document.activeElement;
+    requestAnimationFrame(function(){ back.classList.add("on"); k.focus(); });
+    function close(ans){
+      back.classList.remove("on");
+      setTimeout(function(){ if(back.parentNode) back.parentNode.removeChild(back); try{ if(prev&&prev.focus) prev.focus(); }catch(e){} }, 160);
+      document.removeEventListener("keydown", onKey, true);
+      resolve(ans);
+    }
+    function onKey(e){ if(e.key==="Escape"){ e.preventDefault(); close(false); } else if(e.key==="Enter"){ e.preventDefault(); close(true); } else if(e.key==="Tab"){ var els=[c,k]; var i=els.indexOf(document.activeElement); e.preventDefault(); els[(i+ (e.shiftKey?els.length-1:1) )%els.length].focus(); } }
+    c.addEventListener("click", function(){ close(false); });
+    k.addEventListener("click", function(){ close(true); });
+    back.addEventListener("click", function(e){ if(e.target===back) close(false); });
+    document.addEventListener("keydown", onKey, true);
+  });
+};
+</script>
+
 <meta name="application-name" content="Websprout">
 <meta name="apple-mobile-web-app-title" content="Websprout">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1307,8 +1398,8 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       fetch('/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html:curHtml(),slug:window._wsSlug,siteId:site(),key:key(),pages:(window._wsPages&&window._wsPages.length>1)?(window.wsSyncPages&&window.wsSyncPages(),window._wsPages.map(function(p){return{path:p.path,html:p.html};})):undefined})}).then(function(r){return r.json();}).then(function(j){btn.innerHTML=orig;if(window.toast)toast(j.error?j.error:'\u2713 Updated — your live site now shows your latest edits.');}).catch(function(){btn.innerHTML=orig;if(window.toast)toast('Could not update — please try again');});
     });
     var unpubBtn=$('pubUnpub');
-    if(unpubBtn)unpubBtn.addEventListener('click',function(){
-      if(!confirm('Take your site offline? The link will stop working until you publish it again.'))return;
+    if(unpubBtn)unpubBtn.addEventListener('click',async function(){
+      var __ok=await wsConfirm({title:'Take your site offline?',message:'The link will stop working until you publish it again. Your site stays saved to your account.',okLabel:'Take offline',cancelLabel:'Keep live',danger:true});if(!__ok)return;
       var self=this;self.textContent='Taking offline...';
       fetch('/unpublish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:window._wsSlug,siteId:site(),key:key()})}).then(function(r){return r.json();}).then(function(j){
         self.textContent='Take this site offline';
@@ -2034,16 +2125,16 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     fetch('/account/export').then(function(r){ if(!r.ok) throw 0; return r.blob(); }).then(function(b){ var u=URL.createObjectURL(b); var a=document.createElement('a'); a.href=u; a.download='websprout-my-data.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(u);},3000); if(window.toast)window.toast('Your data downloaded'); }).catch(function(){ if(window.toast)window.toast('Could not export your data'); });
   });
   var _pfd=$('pfDeleteAcct');
-  if(_pfd)_pfd.addEventListener('click',function(){
+  if(_pfd)_pfd.addEventListener('click',async function(){
     var em=(window._wsUser&&window._wsUser.email)?window._wsUser.email:'your account';
-    if(!confirm('Permanently delete '+em+' and ALL your sites, drafts, products and data? This cannot be undone.')) return;
+    var __ok=await wsConfirm({title:'Permanently delete your account?',message:'This will delete '+em+' and ALL your sites, drafts, products and data. This cannot be undone.',okLabel:'Delete everything',cancelLabel:'Cancel',danger:true});if(!__ok) return;
     var typed=prompt('This is permanent and cannot be undone. Type DELETE to confirm.');
     if(typed!=='DELETE'){ if(window.toast)window.toast('Deletion cancelled'); return; }
     fetch('/account/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({confirm:'DELETE'})}).then(function(r){return r.json();}).then(function(j){ if(j&&j.ok){ try{localStorage.clear();}catch(e){} alert('Your account and all your data have been permanently deleted.'); location.href='/'; } else { if(window.toast)window.toast((j&&j.error)||'Could not delete account'); } }).catch(function(){ if(window.toast)window.toast('Could not delete account'); });
   });
   var so=$('pfSignOut');
-  if(so)so.addEventListener('click',function(){
-    if(confirm('Sign out'+((window._wsUser&&window._wsUser.email)?(' of '+window._wsUser.email):'')+'?')){
+  if(so)so.addEventListener('click',async function(){
+    var __ok=await wsConfirm({title:'Sign out?',message:'You can sign back in anytime with the same email'+((window._wsUser&&window._wsUser.email)?(': '+window._wsUser.email):'')+'.',okLabel:'Sign out',cancelLabel:'Stay signed in'});if(__ok){
       try{if(window.wsClearSiteState)window.wsClearSiteState();}catch(e){}
       fetch('/auth/logout').then(function(){location.href='/';}).catch(function(){location.href='/';});
     }
@@ -2439,7 +2530,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     }
     listEl.innerHTML=h;
     var eds=listEl.querySelectorAll('.ms-edit');for(var j=0;j<eds.length;j++){eds[j].addEventListener('click',function(){openProject(this.getAttribute('data-sid'),this);});}
-    var dls=listEl.querySelectorAll('.ms-del');for(var m=0;m<dls.length;m++){dls[m].addEventListener('click',function(){
+    var dls=listEl.querySelectorAll('.ms-del');for(var m=0;m<dls.length;m++){dls[m].addEventListener('click',async function(){
       var sid=this.getAttribute('data-sid');
       var nm='this site',pkey='';try{var pp=getProjects();for(var z=0;z<pp.length;z++){if(pp[z].siteId===sid){nm=pp[z].name||nm;pkey=pp[z].key||'';break;}}}catch(e){}
       var slug='';try{slug=localStorage.getItem('ws_slug_'+sid)||'';}catch(e){}
@@ -2449,7 +2540,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         if((typed||'').trim().toLowerCase()!==(nm||'').trim().toLowerCase()){alert('That did not match \u2014 your site was NOT deleted.');return;}
         try{fetch('/unpublish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:slug,siteId:sid,key:pkey})}).catch(function(){});localStorage.removeItem('ws_slug_'+sid);}catch(e){}
       } else {
-        if(!confirm('Remove \u201C'+nm+'\u201D from your sites?'))return;
+        var __ok=await wsConfirm({title:'Remove this site?',message:'Remove \u201C'+nm+'\u201D from your sites? You can rebuild it anytime.',okLabel:'Remove',cancelLabel:'Keep',danger:true});if(!__ok)return;
       }
       setProjects(getProjects().filter(function(x){return x.siteId!==sid;}));
       fetch('/my-sites/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({siteId:sid})}).catch(function(){});
@@ -3370,8 +3461,8 @@ document.addEventListener('DOMContentLoaded',function(){
       }
       // If Netlify token saved, offer to deploy
       if(localStorage.getItem('ws_netlify_token')){
-        setTimeout(function(){
-          if(confirm('Deploy your site to Netlify now? Your token is already saved - takes about 10 seconds.')){
+        setTimeout(async function(){
+          var __ok=await wsConfirm({title:'Deploy to Netlify now?',message:'Your token is already saved and this takes about 10 seconds.',okLabel:'Deploy',cancelLabel:'Not yet'});if(__ok){
             document.getElementById('deployBtn').click();
           }
         },4000);
@@ -7888,7 +7979,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r229';
+const BUILD_ID = '2026-06-10-r232';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -8805,7 +8896,7 @@ async function doGenerate(request, env) {
   }
   try {
     const body2 = JSON.stringify({
-      contents: [{ parts: [{ text: PROMPT + '\n\nUser request: ' + prompt + getNicheDirection(prompt) + '\n\nSTYLE DIRECTION: ' + getStyleDirection(prompt) + '\n\n' + DESIGN_AMBITION + varietyBrief(prompt) + '\n\nCRITICAL RULES:\n1. CONTRAST IS THE #1 PRIORITY: every text element must be instantly readable against the EXACT background behind it — dark text only on light backgrounds, white/near-white text only on dark backgrounds, never dark-on-dark or light-on-light. If the hero background is dark or uses a photo/image slot, the hero headline and subtext MUST be white/near-white. A dark headline on a dark hero is a failure.\n2. Do NOT use vh or viewport-height units for section/hero HEIGHTS — size heights with px or % (e.g. min-height:640px), required for correct rendering. You SHOULD use clamp() with vw for responsive FONT-SIZE so large headings shrink on small screens and never overflow (e.g. font-size:clamp(2rem,6vw,4.5rem)).\n3. Scroll-reveal and entrance animations are ENCOURAGED, but every element MUST animate from hidden TO fully visible — nothing stays hidden. Keep transitions under 0.8s.\n4. ALWAYS end with </body></html> — never leave HTML incomplete.\n5. COMPLETION IS MANDATORY: always finish the entire page through </body></html>. Keep the page TIGHT and FOCUSED — aim for roughly 380-520 lines total, favoring 4-6 strong sections over many and keeping each one concise. A shorter, complete, well-designed page always beats a long or truncated one. 6. NO horizontal overflow: set box-sizing:border-box globally, never let any element be wider than the viewport, and the page must NEVER scroll sideways; headings and long text must wrap (overflow-wrap:break-word) and must never use white-space:nowrap on multi-word text. 7. SPACING: the nav logo must never touch the menu links, and text must never touch the screen edges — use container padding/margins and clear gaps between elements. 8. WORKING INTERACTIVITY: every button and nav link must actually do something — nav links use href="#id" and scroll to a real section that has that id, and the primary CTA points to the contact, quote, or inventory section. Do NOT render any clickable-looking control that does nothing. If you include a hamburger/menu icon, it MUST be hidden on desktop (display:none above ~820px, shown only on mobile) AND wired with a few lines of JS to toggle a real mobile menu of the nav links — never an animated icon with no menu behind it.' }] }],
+      contents: [{ parts: [{ text: PROMPT + '\n\nUser request: ' + prompt + getNicheDirection(prompt) + '\n\nSTYLE DIRECTION: ' + getStyleDirection(prompt) + '\n\n' + DESIGN_AMBITION + varietyBrief(prompt) + '\n\n' + INTERACTIVE_SECTIONS + '\n\nCRITICAL RULES:\n1. CONTRAST IS THE #1 PRIORITY: every text element must be instantly readable against the EXACT background behind it — dark text only on light backgrounds, white/near-white text only on dark backgrounds, never dark-on-dark or light-on-light. If the hero background is dark or uses a photo/image slot, the hero headline and subtext MUST be white/near-white. A dark headline on a dark hero is a failure.\n2. Do NOT use vh or viewport-height units for section/hero HEIGHTS — size heights with px or % (e.g. min-height:640px), required for correct rendering. You SHOULD use clamp() with vw for responsive FONT-SIZE so large headings shrink on small screens and never overflow (e.g. font-size:clamp(2rem,6vw,4.5rem)).\n3. Scroll-reveal and entrance animations are ENCOURAGED, but every element MUST animate from hidden TO fully visible — nothing stays hidden. Keep transitions under 0.8s.\n4. ALWAYS end with </body></html> — never leave HTML incomplete.\n5. COMPLETION IS MANDATORY: always finish the entire page through </body></html>. Keep the page TIGHT and FOCUSED — aim for roughly 380-520 lines total, favoring 4-6 strong sections over many and keeping each one concise. A shorter, complete, well-designed page always beats a long or truncated one. 6. NO horizontal overflow: set box-sizing:border-box globally, never let any element be wider than the viewport, and the page must NEVER scroll sideways; headings and long text must wrap (overflow-wrap:break-word) and must never use white-space:nowrap on multi-word text. 7. SPACING: the nav logo must never touch the menu links, and text must never touch the screen edges — use container padding/margins and clear gaps between elements. 8. WORKING INTERACTIVITY: every button and nav link must actually do something — nav links use href="#id" and scroll to a real section that has that id, and the primary CTA points to the contact, quote, or inventory section. Do NOT render any clickable-looking control that does nothing. If you include a hamburger/menu icon, it MUST be hidden on desktop (display:none above ~820px, shown only on mobile) AND wired with a few lines of JS to toggle a real mobile menu of the nav links — never an animated icon with no menu behind it.' }] }],
       generationConfig: { maxOutputTokens: 32768, temperature: 0.95, thinkingConfig: { thinkingBudget: 1536 } }
     });
     // Generation budget: give Pro a tight window so that if it stalls we can still fall back to the
@@ -8902,8 +8993,8 @@ async function doModify(request, env) {
     const stripped = stripDataUris(body.html);
     const imgNote = stripped.map.length ? '\n\nIMPORTANT: Some image src values are shortened placeholders shaped like data:image/jpeg;base64,WSIMGREF<N>XEND. Keep every such src EXACTLY as written — never alter, complete, shorten, or remove them.' : '';
     const mbody = JSON.stringify({
-      contents: [{ parts: [{ text: MODIFY + imgNote + '\n\nCurrent HTML:\n' + stripped.html + '\n\nInstruction: ' + body.instruction.trim() }] }],
-      generationConfig: { maxOutputTokens: 32768, temperature: 0.5, thinkingConfig: { thinkingBudget: 0 } }
+      contents: [{ parts: [{ text: MODIFY + '\n\n' + INTERACTIVE_SECTIONS + imgNote + '\n\nCurrent HTML:\n' + stripped.html + '\n\nInstruction: ' + body.instruction.trim() }] }],
+      generationConfig: { maxOutputTokens: 32768, temperature: 0.3, thinkingConfig: { thinkingBudget: 0 } }
     });
     const result = await callGemini(keys, mbody, undefined, 90000, 92000);
     if (result.error) return fail(result.error);
