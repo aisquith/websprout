@@ -279,7 +279,7 @@ const PAGE = `<!DOCTYPE html>
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
 <meta name="ws-build" content="2026-06-10-r232">
-<script>window._wsBuild="2026-06-10-r232";console.log("%c[Websprout] build 2026-06-10-r240 — canonical behaviors vocabulary + sticky header by default","color:#4ade80;font-weight:700")</script>
+<script>window._wsBuild="2026-06-10-r232";console.log("%c[Websprout] build 2026-06-10-r241 — deterministic sticky-header enforcer for chat-edits","color:#4ade80;font-weight:700")</script>
 <style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}</style>
 <script>
 window.wsConfirm=function(opts){
@@ -9028,6 +9028,29 @@ function restoreDataUris(html, map){
 
 // When a modify instruction targets nav text color, append a very-specific override so the
 // cascade can never beat the user's request. Deterministic; only fires when intent is clear.
+// When a modify instruction asks for a sticky/floating/pinned header, inject a very-specific
+// !important rule + scroll listener. Deterministic; only fires when intent is clear.
+function forceStickyHeaderFromInstruction(html, instruction){
+  try{
+    const t = String(instruction||'').toLowerCase();
+    if (!/(header|nav)/.test(t)) return html;
+    // Only fire if user is asking for stickiness in some form
+    if (!/(sticky|stay|pinned|pin\s|fix(ed)?|float|stays?\s+when|when\s+i\s+scroll|top of the page)/.test(t)) return html;
+    // Skip if they're asking to REMOVE stickiness
+    if (/(remove|no\slonger|stop|un-?stick|not sticky|non-sticky)/.test(t)) return html;
+    if (/id=["\x27]_wsStickyHeader/.test(html)) return html; // idempotent
+    const rule = '<style id="_wsStickyHeader">header,nav.site-nav,nav.main-nav,.site-header,body>nav:first-of-type,body>header:first-of-type{position:fixed !important;top:0 !important;left:0 !important;right:0 !important;z-index:1000 !important;transition:background-color .25s ease, backdrop-filter .25s ease, box-shadow .25s ease}header.scrolled,nav.scrolled,.site-header.scrolled{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 1px 0 rgba(255,255,255,.06)}</style>';
+    const script = '<script id="_wsStickyHeaderJS">(function(){function findHdr(){return document.querySelector("header")||document.querySelector("nav.site-nav")||document.querySelector("nav.main-nav")||document.querySelector(".site-header")||document.querySelector("body>nav")||document.querySelector("body>header");}function apply(){var h=findHdr();if(!h)return;var s=window.scrollY>40;h.classList.toggle("scrolled",s);if(s){var cs=getComputedStyle(document.body).backgroundColor||"rgb(0,0,0)";h.style.backgroundColor=cs;}else{h.style.backgroundColor="";}}apply();window.addEventListener("scroll",apply,{passive:true});})();</script>';
+    const hi = html.indexOf('</head>');
+    if (hi > -1) html = html.slice(0,hi) + rule + html.slice(hi);
+    else html = rule + html;
+    const bi = html.lastIndexOf('</body>');
+    if (bi > -1) html = html.slice(0,bi) + script + html.slice(bi);
+    else html = html + script;
+    return html;
+  }catch(e){ return html; }
+}
+
 function forceNavColorFromInstruction(html, instruction){
   try{
     const t = String(instruction||'').toLowerCase();
@@ -9083,6 +9106,7 @@ async function doModify(request, env) {
     }
     const mSite = (body.html.match(/name="ws-site" content="([^"]+)"/) || [])[1] || ('ws' + Math.random().toString(36).slice(2,9));
     cleaned = forceNavColorFromInstruction(cleaned, body.instruction);
+    cleaned = forceStickyHeaderFromInstruction(cleaned, body.instruction);
     return succeed({ html: withReviews(withForms(withFix(withReveal(cleaned)), mSite), mSite), message: 'Done! Your site has been updated.' });
   } catch(e) { return fail(e.message); }
 }
