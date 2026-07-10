@@ -239,7 +239,7 @@ const PAGE = `<!DOCTYPE html>
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
 <meta name="ws-build" content="2026-06-10-r232">
-<script>window._wsBuild="2026-06-10-r232";console.log("%c[Websprout] build 2026-06-10-r238 — nav color changes now deterministically win the CSS cascade","color:#4ade80;font-weight:700")</script>
+<script>window._wsBuild="2026-06-10-r232";console.log("%c[Websprout] build 2026-06-10-r239 — strip Websprout scripts before AI edit to prevent minified corruption","color:#4ade80;font-weight:700")</script>
 <style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}</style>
 <script>
 window.wsConfirm=function(opts){
@@ -9009,6 +9009,17 @@ function forceNavColorFromInstruction(html, instruction){
   }catch(e){ return html; }
 }
 
+// Strip the utility scripts Websprout injects (nav-contrast, reveal, forms, reviews, error logger, forced nav color).
+// Chat-edit round-trips the full HTML through Gemini which occasionally corrupts these minified blobs.
+// We strip them before sending, and the outer withReveal/withForms/withReviews chain re-injects them clean on the way out.
+function stripInjected(html){
+  try{
+    return html
+      .replace(/<script\s+id=["']_ws[^"']*["'][\s\S]*?<\/script>/gi, '')
+      .replace(/<style\s+id=["']_ws[^"']*["'][\s\S]*?<\/style>/gi, '');
+  }catch(e){ return html; }
+}
+
 async function doModify(request, env) {
   const keys = geminiKeys(env);
   if (!keys.length) return fail('GEMINI_API_KEY not set.');
@@ -9016,7 +9027,7 @@ async function doModify(request, env) {
   try { body = await request.json(); } catch { return fail('Invalid request'); }
   if (!body.html || !body.instruction) return fail('Missing html or instruction');
   try {
-    const stripped = stripDataUris(body.html);
+    const stripped = stripDataUris(stripInjected(body.html));
     const imgNote = stripped.map.length ? '\n\nIMPORTANT: Some image src values are shortened placeholders shaped like data:image/jpeg;base64,WSIMGREF<N>XEND. Keep every such src EXACTLY as written — never alter, complete, shorten, or remove them.' : '';
     const mbody = JSON.stringify({
       contents: [{ parts: [{ text: MODIFY + '\n\n' + INTERACTIVE_SECTIONS + imgNote + '\n\nCurrent HTML:\n' + stripped.html + '\n\nInstruction: ' + body.instruction.trim() }] }],
