@@ -184,7 +184,7 @@ PRECISION IS THE POINT — this is surgical work, not a redesign. Do EXACTLY the
 
 EDIT PRINCIPLES:
 - Make EXACTLY what the user asked — don't change anything else
-- If changing colors: update ALL instances consistently across ALL pages — buttons, borders, gradients, accents, icons, hover states
+- If changing colors: update ALL instances consistently across ALL pages — buttons, borders, gradients, accents, icons, hover states. When a color change targets nav links, the logo/brand mark, headline text, or button text on a solid background, ALWAYS include !important on that color declaration to defeat any more-specific existing selector — e.g. nav a, nav .brand, nav .logo, header a { color: #ffffff !important; }. The single most common failure is 'AI said Done! but nothing changed' because the existing CSS is more specific — !important on the exact target selectors prevents that.
 - If adding content to a page: add it where it makes most sense in the layout
 - If the user says "make it darker/lighter": adjust the whole color palette coherently
 - READABILITY: after ANY color change, verify every text element still strongly contrasts with its background — never leave dark text on a dark background or light text on a light background. Hero or section text sitting over a dark background or photo must be white/near-white and instantly readable.
@@ -239,7 +239,7 @@ const PAGE = `<!DOCTYPE html>
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
 <meta name="ws-build" content="2026-06-10-r232">
-<script>window._wsBuild="2026-06-10-r232";console.log("%c[Websprout] build 2026-06-10-r237 — nav contrast fixer: detect background via elementFromPoint (transparent nav case)","color:#4ade80;font-weight:700")</script>
+<script>window._wsBuild="2026-06-10-r232";console.log("%c[Websprout] build 2026-06-10-r238 — nav color changes now deterministically win the CSS cascade","color:#4ade80;font-weight:700")</script>
 <style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}</style>
 <script>
 window.wsConfirm=function(opts){
@@ -8986,6 +8986,29 @@ function restoreDataUris(html, map){
   return out;
 }
 
+// When a modify instruction targets nav text color, append a very-specific override so the
+// cascade can never beat the user's request. Deterministic; only fires when intent is clear.
+function forceNavColorFromInstruction(html, instruction){
+  try{
+    const t = String(instruction||'').toLowerCase();
+    if (!/(nav|header|menu|logo|brand)/.test(t)) return html;
+    let color = null;
+    if (/\bwhite\b|#fff|#ffffff/.test(t)) color = '#ffffff';
+    else if (/\bblack\b|#000\b|#111\b/.test(t)) color = '#111111';
+    else {
+      const hex = t.match(/#[0-9a-f]{3,8}/); if (hex) color = hex[0];
+    }
+    if (!color) return html;
+    if (!/color\s*:/.test(t)) {
+      if (!/(text|color|link|links|make.+(nav|header|menu|logo|brand))/.test(t)) return html;
+    }
+    const rule = '<style id="_wsNavForced">nav a,nav .brand,nav .logo,nav ul li a,header nav a,header a{color:' + color + ' !important;}</style>';
+    const hi = html.indexOf('</head>');
+    if (hi > -1) return html.slice(0,hi) + rule + html.slice(hi);
+    return rule + html;
+  }catch(e){ return html; }
+}
+
 async function doModify(request, env) {
   const keys = geminiKeys(env);
   if (!keys.length) return fail('GEMINI_API_KEY not set.');
@@ -9008,6 +9031,7 @@ async function doModify(request, env) {
       return fail('Edit produced incomplete output — please try again with a simpler instruction.');
     }
     const mSite = (body.html.match(/name="ws-site" content="([^"]+)"/) || [])[1] || ('ws' + Math.random().toString(36).slice(2,9));
+    cleaned = forceNavColorFromInstruction(cleaned, body.instruction);
     return succeed({ html: withReviews(withForms(withFix(withReveal(cleaned)), mSite), mSite), message: 'Done! Your site has been updated.' });
   } catch(e) { return fail(e.message); }
 }
