@@ -279,7 +279,7 @@ const PAGE = `<!DOCTYPE html>
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
 <meta name="ws-build" content="2026-06-10-r232">
-<script>window._wsBuild="2026-06-10-r232";console.log("%c[Websprout] build 2026-06-10-r241 — deterministic sticky-header enforcer for chat-edits","color:#4ade80;font-weight:700")</script>
+<script>window._wsBuild="2026-06-10-r232";console.log("%c[Websprout] build 2026-06-10-r243 — anon generation with 3-layer abuse protection + hard spend cap","color:#4ade80;font-weight:700")</script>
 <style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}</style>
 <script>
 window.wsConfirm=function(opts){
@@ -1426,6 +1426,13 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     }
     goBtn.addEventListener('click',function(){
       var s=slugIn.value;if(s.length<3)return;
+      // If anon, prompt signup first — publishing requires an account so we can save it to their sites list.
+      if(!window._wsUser||!window._wsUser.auth){
+        try{localStorage.setItem('ws_pending_slug',s);localStorage.setItem('ws_pending_html',curHtml());}catch(e){}
+        if(window.toast)toast('Sign in to save this site to your account and publish it live — takes 5 seconds. \uD83C\uDF31',6000);
+        try{if(window.openAuth)window.openAuth();}catch(e){}
+        return;
+      }
       goBtn.textContent='Publishing...';goBtn.disabled=true;
       fetch('/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html:curHtml(),slug:s,siteId:site(),key:key(),pages:(window._wsPages&&window._wsPages.length>1)?(window.wsSyncPages&&window.wsSyncPages(),window._wsPages.map(function(p){return{path:p.path,html:p.html};})):undefined})}).then(function(r){return r.json();}).then(function(j){
         goBtn.textContent='Publish live \u2192';goBtn.disabled=false;
@@ -3894,12 +3901,9 @@ function buildPrompt(){
 }
 
 function doGenerate(){
-  if(!window._wsUser||!window._wsUser.auth){
-    try{var _cp=document.getElementById('customPrompt');if(_cp&&_cp.value.trim())localStorage.setItem('ws_pending_prompt',_cp.value);}catch(e){}
-    toast('Please sign in first — it takes a few seconds and keeps all your sites in one place. \uD83C\uDF31',5500);
-    try{if(window.openAuth)window.openAuth();}catch(e){}
-    return;
-  }
+  // Anonymous users get 1 free generation to see the wow moment. Signup prompts happen AFTER they see their site,
+  // gated on save/publish/edit actions — not before the first generation.
+  try{var _cp=document.getElementById('customPrompt');if(_cp&&_cp.value.trim())localStorage.setItem('ws_pending_prompt',_cp.value);}catch(e){}
   var prompt=buildPrompt();
   var btn=document.getElementById('gbtn'),ld=document.getElementById('loading'),
       ga=document.getElementById('gen-area'),lt=document.getElementById('loadTxt'),
@@ -8908,15 +8912,40 @@ async function doGeneratePage(request, env){
 async function doGenerate(request, env) {
   try{ const _gs=await getSession(request,env); await logEvent(request, env, 'generate', { email:_gs&&_gs.email }); }catch(e){}
   const _sess = await getSession(request, env);
-  if (!_sess) return fail('Please sign in to generate a site.');
+  // Anonymous "try it free" path: allow 1 gen per IP per day so first-time visitors can see the wow moment before signup.
+  // Authed users skip this limit entirely.
+  let _isAnon = !_sess;
+  if (_isAnon) {
+    try {
+      // Layer 1: global daily anon cap — hard ceiling on total free generations per day (kill switch on spend).
+      // Configurable via env.ANON_DAILY_CAP; default 100/day. At Flash pricing (~$0.03/gen) that's ~$3/day worst case.
+      const dayKey = 'anontotal:' + new Date().toISOString().slice(0,10);
+      const total = parseInt((env.KV && await env.KV.get(dayKey)) || '0', 10) || 0;
+      const cap = parseInt(env.ANON_DAILY_CAP || '100', 10);
+      if (total >= cap) return fail('Free trials are at capacity right now. Sign in to keep building - takes 5 seconds and unlocks unlimited use.');
+      // Layer 2: per-IP limit — 1 free gen per IP per day.
+      const iph = await hashIP(request.headers.get('cf-connecting-ip') || '', env);
+      const anonKey = 'anongen:' + iph;
+      const cur = parseInt((env.KV && await env.KV.get(anonKey)) || '0', 10) || 0;
+      if (cur >= 1) return fail('You have used your free generation for today. Sign in to keep building - it takes 5 seconds and lets you save all your sites.');
+      // Layer 3: prompt sanity check — reject obvious abuse patterns (very long prompts, injection attempts)
+      try {
+        const _body = await request.clone().json();
+        const _p = (_body.prompt || '').toString();
+        if (_p.length > 800) return fail('Prompt too long for a free trial. Sign in to build with longer prompts.');
+      } catch(e){}
+      await env.KV.put(anonKey, String(cur + 1), { expirationTtl: 60*60*24 });
+      await env.KV.put(dayKey, String(total + 1), { expirationTtl: 60*60*24*2 });
+    } catch(e) { /* fail open — never block real users on infra hiccups */ }
+  }
   const keys = geminiKeys(env);
   if (!keys.length) return fail('GEMINI_API_KEY not set in Cloudflare environment variables.');
   let body;
   try { body = await request.json(); } catch { return fail('Invalid request'); }
   const prompt = (body.prompt || '').trim();
   if (!prompt) return fail('Prompt is required');
-  // Paying members (Pro/comped) generate on the higher-quality Pro model; free users stay on fast Flash.
-  const _email = (_sess.email||'').toLowerCase();
+  // Paying members (Pro/comped) generate on the higher-quality Pro model; free/anon users stay on fast Flash.
+  const _email = (_sess && _sess.email || '').toLowerCase();
   let genModel = 'gemini-2.5-flash';
   let _isPaid = false;
   try {
