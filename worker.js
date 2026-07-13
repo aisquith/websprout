@@ -150,7 +150,7 @@ OUTPUT: Raw HTML only, <!DOCTYPE html> to </html>. No markdown, no backticks, no
    Include a submit button with clear label. Business info placeholders: [Your Address], [Your Phone], [your@email.com], [Your Hours]
    BOOKING: If this business runs on appointments or bookings (salons, barbers, spas, fitness/yoga, medical/dental, tattoo, photographers, charters/tours, home services & trades, consultants, tutors, repair shops, etc.), ALSO add a prominent "Book now" / "Book an appointment" button — once in the hero and once in the contact band — as a real link: <a href="[Your Booking Link]" target="_blank" rel="noopener">Book now</a>, styled as a primary button. Use the exact placeholder [Your Booking Link] for the href so the owner can drop in their Calendly / Cal.com / Square scheduler. For pure storefronts or info sites with no appointments, skip the booking button.
    ORDERING: If this is a restaurant, cafe, food truck, bakery, bar, or any food business with online ordering or delivery, render every "Order online" / "Order now" / "Get delivery" button as a real link: <a href="[Your Ordering Link]" target="_blank" rel="noopener">Order online</a>, styled as a primary button. Use the exact placeholder [Your Ordering Link] for the href so the owner drops in their Toast / Square / DoorDash / Uber Eats ordering URL. Never point an order button at "#".
-   PRODUCTS: If the business sells individual purchasable items — a shop/store, a maker selling products, paid menu items, digital downloads, classes/passes, or service packages with set prices — give EACH item its own buy button as a real link using the EXACT placeholder format <a href="[Pay Link: ITEM NAME]" target="_blank" rel="noopener">Buy</a> (or "Buy now" / "Get it" / "Purchase"), styled as a primary button, where ITEM NAME is that specific item's real name (e.g. [Pay Link: Blue Linen Shirt], [Pay Link: 10-Class Pass]). One unique placeholder per item so the owner can paste each product's own Stripe / PayPal / Square / Gumroad checkout link. Do NOT use [Pay Link: ...] for the hero CTA, nav, or contact buttons — only for actual purchasable items.
+   PRODUCTS: If the business sells purchasable items - a shop or store, a maker selling products, paid menu items, digital downloads, classes or passes, or service packages with set prices - do NOT hand-build product cards and do NOT invent products or prices. Instead render the products area as a section heading (Shop, Featured Products, Our Collection, etc.) immediately followed by the EXACT html comment <!--WS_PRODUCTS--> on its OWN line, placed where the product grid belongs. The owner real products, added in the Store editor, are injected there automatically as a consistent grid whose Buy and Add-to-cart buttons are already wired to checkout. Put that comment exactly once per products section. NEVER build fake product cards, hard-coded price lists, or [Pay Link] buttons - the injected grid replaces all of that.
    CLICK-TO-CALL: Render EVERY phone number as a tappable link — <a href="tel:[Your Phone]">[Your Phone]</a> (use the [Your Phone] placeholder in BOTH the href and the visible text). For phone-driven local businesses (trades, repair, towing, plumbing, HVAC, locksmith, auto, etc.), add a clear "Call [Your Phone]" button in the hero and again in the contact band, styled as a primary or secondary button.
 10. FOOTER — dark background. 3 columns: brand+tagline, links, contact. Copyright line.
 
@@ -280,8 +280,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r250">
-<script>window._wsBuild="2026-06-10-r250";console.log("%c[Websprout] build 2026-06-10-r250 — store grid now renders in the studio preview, not just on publish","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r251">
+<script>window._wsBuild="2026-06-10-r251";console.log("%c[Websprout] build 2026-06-10-r251 — shop sites now use the store grid instead of freehand [Pay Link] cards","color:#4ade80;font-weight:700")</script>
 <style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}</style>
 <script>
 window.wsConfirm=function(opts){
@@ -8030,7 +8030,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r250';
+const BUILD_ID = '2026-06-10-r251';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -8577,7 +8577,7 @@ function planPages(prompt, type){
   var p = (prompt||'').toLowerCase();
   if (type==='store' || /\b(shop|store|sell|selling|product|products|ecommerce|e-commerce|merch|boutique|online store|catalog|checkout|buy online)\b/.test(p)) {
     return [
-      {path:'', title:'Home', role:'the landing page - the hook, what you sell, a few featured products or categories, and a clear path to the Shop page'},
+      {path:'', title:'Home', role:'the landing page - the hook and what you sell, with a clear path to the Shop page. If you feature products on the home page, place the EXACT html comment <!--WS_PRODUCTS--> on its own line where the product grid belongs - do NOT hand-build or invent product cards; the owner real products render there.'},
       {path:'shop', title:'Shop', role:'a shop page: a heading, a short intro line, and a products section. Place the EXACT html comment <!--WS_PRODUCTS--> on its own line where the product grid belongs - do NOT invent fake products, the owner real products are injected at that comment. Add a Buy/Inquire call to action that links to the contact section.'},
       {path:'about', title:'About', role:'the story, values and people behind the business, building trust'},
       {path:'contact', title:'Contact', role:'a contact section with a working contact form, plus hours, location and contact details'}
@@ -8994,6 +8994,14 @@ async function doGenerate(request, env) {
     const siteId = 'ws' + Math.random().toString(36).slice(2,9);
     finalHtml = withForms(finalHtml, siteId);
     finalHtml = withReviews(finalHtml, siteId);
+    try {
+      var _isShopGen = /\b(shop|store|sell|selling|product|products|ecommerce|e-commerce|merch|boutique|online store|catalog|checkout|buy online)\b/i.test(prompt||'');
+      if (_isShopGen && finalHtml.indexOf('<!--WS_PRODUCTS-->') === -1) {
+        var _shopSec = '\n<section id="shop" style="padding:64px 24px"><div style="max-width:1100px;margin:0 auto"><h2 style="text-align:center;margin:0 0 28px;font-size:2rem">Shop</h2>\n<!--WS_PRODUCTS-->\n</div></section>\n';
+        var _bi3 = finalHtml.lastIndexOf('</body>');
+        finalHtml = _bi3 > -1 ? (finalHtml.slice(0,_bi3) + _shopSec + finalHtml.slice(_bi3)) : (finalHtml + _shopSec);
+      }
+    } catch(e){}
     const formKey = await siteKey(siteId, env);
     if (env.KV && _email) { try { let _bcRaw = await env.KV.get('bcount:' + _email); if (_bcRaw === null) { _bcRaw = (await env.KV.get('gencount:' + _email)) || '0'; } await env.KV.put('bcount:' + _email, String((parseInt(_bcRaw, 10) || 0) + 1)); } catch (e) {} }
     try { if (env.KV) { const _sgC = await env.KV.get('stat:sitesgrown'); if (_sgC !== null) await env.KV.put('stat:sitesgrown', String((parseInt(_sgC, 10) || 0) + 1)); } } catch (e) {}
