@@ -283,8 +283,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r265">
-<script>window._wsBuild="2026-06-10-r265";console.log("%c[Websprout] build 2026-06-10-r265 — real category filter tabs in the store grid (sliding indicator + filtering)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r266">
+<script>window._wsBuild="2026-06-10-r266";console.log("%c[Websprout] build 2026-06-10-r266 — cart is now a themed corner popup (dark/light aware) instead of a full-page drawer","color:#4ade80;font-weight:700")</script>
 <style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}</style>
 <script>
 window.wsConfirm=function(opts){
@@ -8036,7 +8036,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r265';
+const BUILD_ID = '2026-06-10-r266';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -8723,13 +8723,13 @@ function cartInjection(products, siteId, preview){
       for(var k in c){
         var i=parseInt(k,10); var q=c[k]; if(!P[i]||q<1) continue; any=true;
         total+=cents(P[i].pr)*q;
-        html+="<div style='display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #f1f1f1'>";
+        html+="<div style='display:flex;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--wsc-line)'>";
         html+=(P[i].im?("<img src='"+esc(P[i].im)+"' style='width:46px;height:46px;object-fit:cover;border-radius:8px;flex-shrink:0'>"):"");
-        html+="<div style='flex:1;min-width:0'><div style='font-weight:600;color:#111'>"+esc(P[i].n)+"</div><div style='color:#888;font-size:12px'>"+esc(P[i].pr)+"</div></div>";
-        html+="<div style='display:flex;align-items:center;gap:6px'><button type='button' data-d='"+i+"' style='width:26px;height:26px;border:1px solid #ddd;background:#fff;color:#111;border-radius:6px;cursor:pointer;font-size:15px'>-</button><span style='min-width:18px;text-align:center;color:#111'>"+q+"</span><button type='button' data-a='"+i+"' style='width:26px;height:26px;border:1px solid #ddd;background:#fff;color:#111;border-radius:6px;cursor:pointer;font-size:15px'>+</button></div>";
+        html+="<div style='flex:1;min-width:0'><div style='font-weight:600;color:var(--wsc-fg)'>"+esc(P[i].n)+"</div><div style='color:var(--wsc-sub);font-size:12px'>"+esc(P[i].pr)+"</div></div>";
+        html+="<div style='display:flex;align-items:center;gap:6px'><button type='button' data-d='"+i+"' style='width:26px;height:26px;border:1px solid var(--wsc-line);background:transparent;color:var(--wsc-fg);border-radius:6px;cursor:pointer;font-size:15px'>-</button><span style='min-width:18px;text-align:center;color:var(--wsc-fg)'>"+q+"</span><button type='button' data-a='"+i+"' style='width:26px;height:26px;border:1px solid var(--wsc-line);background:transparent;color:var(--wsc-fg);border-radius:6px;cursor:pointer;font-size:15px'>+</button></div>";
         html+="</div>";
       }
-      itemsEl.innerHTML=any?html:"<div style='color:#aaa;text-align:center;padding:60px 20px'><div style='font-size:34px;margin-bottom:10px'>🛒</div><div style='font-weight:600;color:#888'>Your cart is empty</div></div>";
+      itemsEl.innerHTML=any?html:"<div style='color:var(--wsc-sub);text-align:center;padding:56px 20px'><div style='font-size:34px;margin-bottom:10px'>🛒</div><div style='font-weight:600;color:var(--wsc-sub)'>Your cart is empty</div></div>";
       if(totEl) totEl.textContent=money(total);
       var bs=itemsEl.querySelectorAll("button");
       for(var b=0;b<bs.length;b++){ bs[b].onclick=function(){ var a=this.getAttribute("data-a"), d=this.getAttribute("data-d"); var cc=gv(); if(a!==null){ cc[a]=(cc[a]||0)+1; } else if(d!==null){ cc[d]=(cc[d]||0)-1; if(cc[d]<1){ delete cc[d]; } } sv(cc); }; }
@@ -8743,17 +8743,17 @@ function cartInjection(products, siteId, preview){
       }).catch(function(){ if(co){ co.disabled=false; co.textContent="Checkout"; } alert("Could not start checkout. Please try again."); });
     }
     function build(){
-      if(document.getElementById("wsCartBtn")) return;
+      if(document.getElementById("wsCartBtn")) return; function _prgb(c){c=c||"";var i=c.indexOf("(");if(i<0)return null;var j=c.indexOf(")");var a=c.slice(i+1,j).split(",");var o=[];for(var k=0;k<a.length;k++)o.push(parseFloat(a[k]));return o.length>=3?o:null;} function _lum(pp){if(!pp)return -1;if(pp.length>3&&pp[3]<0.05)return -1;function ch(v){v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);}return 0.2126*ch(pp[0])+0.7152*ch(pp[1])+0.0722*ch(pp[2]);} function _themeDark(){var el=document.body;while(el){var st=getComputedStyle(el);var pc=_prgb(st.backgroundColor);if(pc&&(pc.length<4||pc[3]>0.5)){return _lum(pc)<0.42;}var bi=st.backgroundImage||"";if(bi.indexOf("gradient")>-1){var qq=bi.indexOf("rgb");if(qq>-1){var ee=bi.indexOf(")",qq);var gp=_prgb(bi.slice(qq,ee+1));if(gp)return _lum(gp)<0.42;}}if(el===document.documentElement)break;el=el.parentElement;}return false;} var DARK=_themeDark(); var VARS=DARK?"--wsc-fg:#fff;--wsc-sub:rgba(255,255,255,.55);--wsc-line:rgba(255,255,255,.12);--wsc-foot:rgba(255,255,255,.04);--wsc-btn:#fff;--wsc-btnfg:#111;":"--wsc-fg:#111;--wsc-sub:#999;--wsc-line:#efefef;--wsc-foot:#fafafa;--wsc-btn:#111;--wsc-btnfg:#fff;"; var CBG=DARK?"#1a1a1e":"#ffffff"; var CSH=DARK?"0 24px 70px rgba(0,0,0,.6)":"0 24px 70px rgba(0,0,0,.22)";
       btn=document.createElement("div"); btn.id="wsCartBtn";
-      btn.style.cssText="position:fixed;right:18px;bottom:18px;z-index:2147483000;background:#111;color:#fff;border-radius:100px;padding:12px 18px;font:600 15px system-ui,-apple-system,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);cursor:pointer;display:none;align-items:center;gap:8px";
+      btn.style.cssText="position:fixed;right:18px;bottom:18px;z-index:2147483000;background:"+(DARK?"#fff":"#111")+";color:"+(DARK?"#111":"#fff")+";border-radius:100px;padding:13px 20px;font:700 15px system-ui,-apple-system,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.3);cursor:pointer;display:none;align-items:center;gap:8px";
       btn.innerHTML="🛒 Cart (<span id='wsCartCt'>0</span>)";
       btn.onclick=open; document.body.appendChild(btn);
       ov=document.createElement("div"); ov.id="wsCartOv";
-      ov.style.cssText="position:fixed;inset:0;z-index:2147483001;background:rgba(0,0,0,.45);display:none";
+      ov.style.cssText="position:fixed;inset:0;z-index:2147483001;background:rgba(0,0,0,.15);display:none";
       ov.onclick=function(e){ if(e.target===ov){ close(); } };
       panel=document.createElement("div");
-      panel.style.cssText="position:absolute;right:0;top:0;height:100%;width:380px;max-width:90vw;background:#fff;color:#111;box-shadow:-14px 0 44px rgba(0,0,0,.16);display:flex;flex-direction:column;font:14px system-ui,-apple-system,sans-serif";
-      panel.innerHTML="<div style='padding:20px;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center'><b style='font-size:18px;font-weight:800;color:#111;letter-spacing:-.02em'>Your Cart</b><span id='wsCartX' style='cursor:pointer;font-size:26px;line-height:1;color:#bbb;padding:0 4px'>×</span></div><div id='wsCartItems' style='flex:1;overflow:auto;padding:8px 20px'></div><div style='padding:20px;border-top:1px solid #f0f0f0;background:#fafafa'><div style='display:flex;justify-content:space-between;font-weight:800;font-size:18px;margin-bottom:16px;color:#111'><span>Total</span><span id='wsCartTot'>$0.00</span></div><button type='button' id='wsCartCo' style='width:100%;background:#111;color:#fff;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:.01em'>Checkout →</button><div style='text-align:center;font-size:11px;color:#aaa;margin-top:12px'>Secure checkout · powered by Stripe</div></div>";
+      panel.style.cssText="position:absolute;right:18px;bottom:88px;width:360px;max-width:calc(100vw - 36px);max-height:72vh;"+VARS+"background:"+CBG+";color:var(--wsc-fg);border:1px solid var(--wsc-line);border-radius:18px;box-shadow:"+CSH+";display:flex;flex-direction:column;overflow:hidden;font:14px system-ui,-apple-system,sans-serif";
+      panel.innerHTML="<div style='padding:20px;border-bottom:1px solid var(--wsc-line);display:flex;justify-content:space-between;align-items:center'><b style='font-size:17px;font-weight:800;letter-spacing:-.02em'>Your Cart</b><span id='wsCartX' style='cursor:pointer;font-size:24px;line-height:1;color:var(--wsc-sub);padding:0 4px'>×</span></div><div id='wsCartItems' style='flex:1;overflow:auto;padding:8px 20px'></div><div style='padding:20px;border-top:1px solid var(--wsc-line);background:var(--wsc-foot)'><div style='display:flex;justify-content:space-between;font-weight:800;font-size:17px;margin-bottom:14px'><span>Total</span><span id='wsCartTot'>$0.00</span></div><button type='button' id='wsCartCo' style='width:100%;background:var(--wsc-btn);color:var(--wsc-btnfg);border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer'>Checkout →</button><div style='text-align:center;font-size:11px;color:var(--wsc-sub);margin-top:10px'>Secure checkout · powered by Stripe</div></div>";
       ov.appendChild(panel); document.body.appendChild(ov);
       itemsEl=document.getElementById("wsCartItems"); totEl=document.getElementById("wsCartTot"); ctEl=document.getElementById("wsCartCt");
       var x=document.getElementById("wsCartX"); if(x){ x.onclick=close; }
