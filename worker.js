@@ -280,8 +280,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r249">
-<script>window._wsBuild="2026-06-10-r249";console.log("%c[Websprout] build 2026-06-10-r249 — nav guarantee also hides leftover leaked CTA buttons","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r250">
+<script>window._wsBuild="2026-06-10-r250";console.log("%c[Websprout] build 2026-06-10-r250 — store grid now renders in the studio preview, not just on publish","color:#4ade80;font-weight:700")</script>
 <style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}</style>
 <script>
 window.wsConfirm=function(opts){
@@ -2960,8 +2960,10 @@ function setPreview(html){
 
   '</sc'+'ript>';
   // Use lastIndexOf to find the REAL </body> — not one inside a JS string
+  function wsRenderProducts(list){var esc=function(x){x=String(x==null?"":x);return x.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;").split(String.fromCharCode(34)).join("&quot;");};var css='<style>.wsp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:22px;max-width:1100px;margin:0 auto;padding:8px 0}.wsp-card{border:1px solid rgba(128,128,128,.18);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;background:rgba(128,128,128,.04)}.wsp-img{aspect-ratio:4/3;background-size:cover;background-position:center}.wsp-noimg{background:linear-gradient(135deg,rgba(128,128,128,.12),rgba(128,128,128,.05))}.wsp-body{padding:16px;display:flex;flex-direction:column;gap:6px}.wsp-name{font-weight:700;font-size:1.05rem}.wsp-price{font-weight:700;opacity:.85}.wsp-desc{font-size:.9rem;opacity:.7;line-height:1.5}.wsp-buy{margin-top:8px;display:inline-block;text-align:center;padding:10px 16px;border:1px solid currentColor;border-radius:10px;text-decoration:none;color:inherit;font-weight:600}</style>';if(!list||!list.length){return css+'<div style="text-align:center;opacity:.55;padding:44px 0;font-size:1rem">Your products show here - add them with the Store button, then Save.</div>';}var cards="";for(var i=0;i<list.length;i++){var p=list[i]||{};var img=p.img?('<div class="wsp-img" style="background-image:url('+esc(p.img)+')"></div>'):'<div class="wsp-img wsp-noimg"></div>';var price=p.price?('<div class="wsp-price">'+esc(p.price)+'</div>'):"";var desc=p.desc?('<div class="wsp-desc">'+esc(p.desc)+'</div>'):"";var pu=String(p.payUrl||"");var buy=(pu.indexOf("https://")===0)?'<a class="wsp-buy">Buy now</a>':'<a class="wsp-buy">Add to cart</a>';cards+='<div class="wsp-card">'+img+'<div class="wsp-body"><div class="wsp-name">'+esc(p.name||"Product")+'</div>'+price+desc+buy+'</div></div>';}return css+'<div class="wsp-grid">'+cards+'</div>';}
   var bodyClose=html.lastIndexOf('</body>');
   var out=bodyClose>-1?html.slice(0,bodyClose)+slotScript+'</body>'+html.slice(bodyClose+7):html+slotScript;
+  try{if(out.indexOf('<!--WS_PRODUCTS-->')>-1){out=out.split('<!--WS_PRODUCTS-->').join(wsRenderProducts(window._wsProducts||[]));}}catch(e){}
   f.style.height='4000px';
   f.srcdoc=out;
   // Poll for real content height - CSS may not be applied at onload time
@@ -5404,7 +5406,7 @@ function injectImageIntoSite(dataUrl,action){
   function addRow(p){ var w=$("wsProdRows"); if(w) w.appendChild(makeRow(p)); }
   function readRows(){ var out=[]; var rows=document.querySelectorAll(".wsProdRow"); for(var r=0;r<rows.length;r++){ var ins=rows[r].querySelectorAll("input"); var o={}; for(var n=0;n<ins.length;n++){ o[ins[n].getAttribute("data-k")]=(ins[n].value||"").trim(); } if(o.name) out.push(o); } return out; }
   function doSave(){
-    var products=readRows(); var s=sid(), k=skey();
+    var products=readRows(); try{window._wsProducts=products;}catch(e){} var s=sid(), k=skey();
     if(!s){ tt("Publish or save your site first"); return; }
     tt("Saving products...");
     fetch("/products",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({siteId:s,key:k,products:products})})
@@ -5420,7 +5422,7 @@ function injectImageIntoSite(dataUrl,action){
   function openProducts(){
     buildModal();
     var s=sid(), k=skey(); var w=$("wsProdRows"); if(w) w.innerHTML="";
-    if(s){ fetch("/products?siteId="+encodeURIComponent(s)+"&key="+encodeURIComponent(k)).then(function(r){return r.json();}).then(function(j){ var prods=(j&&j.products&&j.products.length)?j.products:[{}]; for(var n=0;n<prods.length;n++) addRow(prods[n]); }).catch(function(){ addRow({}); }); }
+    if(s){ fetch("/products?siteId="+encodeURIComponent(s)+"&key="+encodeURIComponent(k)).then(function(r){return r.json();}).then(function(j){ try{window._wsProducts=(j&&j.products)?j.products:[];}catch(e){} var prods=(j&&j.products&&j.products.length)?j.products:[{}]; for(var n=0;n<prods.length;n++) addRow(prods[n]); }).catch(function(){ addRow({}); }); }
     else { addRow({}); }
     modal.style.display="flex";
   }
@@ -8028,7 +8030,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r249';
+const BUILD_ID = '2026-06-10-r250';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
