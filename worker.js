@@ -285,8 +285,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r270">
-<script>window._wsBuild="2026-06-10-r270";console.log("%c[Websprout] build 2026-06-10-r270 — 7-day free trial messaging across Pro CTAs and pricing (Stripe-native, card-required, auto-converts)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r272">
+<script>window._wsBuild="2026-06-10-r272";console.log("%c[Websprout] build 2026-06-10-r272 — liveliness: count-up stat, example showcase strip, sprout loader, vibe-tinted builder glow, scroll reveals, breathing CTA, warm accent, bloom burst","color:#4ade80;font-weight:700")</script>
 <style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}</style>
 <script>
 window.wsConfirm=function(opts){
@@ -982,6 +982,34 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
   #signInBtn:not(.is-authed) .auth-name{display:none}
   #signInBtn:not(.is-authed) .auth-ava-guest{display:inline-flex}
 }
+
+/* ===== WS LIVELINESS (r272) ===== */
+.ws-reveal{opacity:0;transform:translateY(24px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+.ws-reveal.ws-in{opacity:1;transform:none}
+#loading .load-icon{animation:wsGrowSway 2.4s ease-in-out infinite;transform-origin:50% 92%}
+@keyframes wsGrowSway{0%{transform:scale(.72) rotate(-7deg)}50%{transform:scale(1.12) rotate(7deg)}100%{transform:scale(.72) rotate(-7deg)}}
+.load-fill{background:linear-gradient(90deg,#2d7a3a,#4ade80)}
+@keyframes wsBreathe{0%{box-shadow:0 6px 22px -4px rgba(34,197,94,.42)}50%{box-shadow:0 12px 36px -2px rgba(34,197,94,.9)}100%{box-shadow:0 6px 22px -4px rgba(34,197,94,.42)}}
+.gen-btn:not(:disabled):not(:hover){animation:wsBreathe 3.6s ease-in-out infinite}
+.hero-stat:last-child .stat-n{background:linear-gradient(120deg,#ffe3b3,#ff9e5e);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+.ws-showcase{padding:48px 5vw 6px;text-align:center;position:relative;overflow:hidden}
+.ws-sc-head{font-family:'Sora',-apple-system,sans-serif;font-size:clamp(1.4rem,3vw,2rem);font-weight:800;letter-spacing:-1px;color:#fff;margin-bottom:8px}
+.ws-sc-sub{color:rgba(255,255,255,.6);font-size:14px;line-height:1.6;max-width:580px;margin:0 auto 26px}
+.ws-sc-viewport{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)}
+.ws-sc-track{display:flex;gap:18px;width:max-content;animation:wsMarquee 48s linear infinite}
+.ws-sc-viewport:hover .ws-sc-track{animation-play-state:paused}
+@keyframes wsMarquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ws-sc-card{width:216px;flex:0 0 auto;background:#0c160a;border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;box-shadow:0 16px 42px -20px rgba(0,0,0,.75)}
+.ws-sc-bar{height:22px;display:flex;align-items:center;gap:5px;padding:0 10px;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.06)}
+.ws-sc-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2)}
+.ws-sc-hero{height:66px;background:linear-gradient(135deg,var(--h,#4ade80),transparent)}
+.ws-sc-body{padding:13px 13px 16px;text-align:left}
+.ws-sc-ln{height:7px;border-radius:4px;background:rgba(255,255,255,.1);margin-bottom:7px}
+.ws-sc-pill{height:16px;width:66px;border-radius:8px;margin-top:11px;background:var(--h,#4ade80)}
+.ws-sc-tag{font-size:11px;font-weight:700;letter-spacing:.4px;color:rgba(255,255,255,.55);text-transform:uppercase;margin-top:11px}
+.ws-petal{position:fixed;z-index:2147483600;pointer-events:none;will-change:transform,opacity;animation:wsPetal 1.5s cubic-bezier(.2,.6,.2,1) forwards}
+@keyframes wsPetal{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}15%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--dx,0px)),calc(-50% + var(--dy,0px))) rotate(var(--dr,0deg)) scale(1)}}
+@media(prefers-reduced-motion:reduce){#loading .load-icon{animation:none}.gen-btn:not(:disabled):not(:hover){animation:none}.ws-sc-track{animation:none}.ws-reveal{opacity:1;transform:none}.ws-petal{display:none}}
 </style>
 <script>try{var _wsDE=document.documentElement;if(localStorage.getItem('ws_rm')==='1')_wsDE.classList.add('ws-rm');if(localStorage.getItem('ws_focus')==='1')_wsDE.classList.add('ws-focus');}catch(_e){}
 window.wsClearSiteState=function(){try{var _keep={ws_rm:1,ws_focus:1,ws_theme:1,ws_edhint:1};var _rm=[];for(var _i=0;_i<localStorage.length;_i++){var _k=localStorage.key(_i);if(_k&&_k.indexOf('ws')===0&&!_keep[_k])_rm.push(_k);}for(var _j=0;_j<_rm.length;_j++)localStorage.removeItem(_rm[_j]);}catch(_e2){}try{sessionStorage.clear();}catch(_e3){}};</script>
@@ -1112,6 +1140,13 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   <div class="trust-item"><span class="trust-icon">&#9989;</span> 4 real pages generated</div>
   <div class="trust-item"><span class="trust-icon">&#9989;</span> Download the source code</div>
   <div class="trust-item"><span class="trust-icon">&#9989;</span> Deploy anywhere free</div>
+</div>
+
+<!-- SHOWCASE -->
+<div class="ws-showcase ws-reveal" id="showcase" aria-label="Example website styles">
+  <div class="ws-sc-head">Built for every kind of business</div>
+  <div class="ws-sc-sub">A peek at the styles Websprout grows. Yours is generated from scratch to match your own words &mdash; these are just examples.</div>
+  <div class="ws-sc-viewport"><div class="ws-sc-track" id="wsScTrack"></div></div>
 </div>
 
 <!-- HOW IT WORKS -->
@@ -2693,7 +2728,7 @@ function autoSetDevice(){
         fetch('/me').then(function(r){return r.json();}).then(function(me){
           window._wsUser=me;
           if(me&&me.pro){clearInterval(iv);unlocked=true;try{applyUnlock();}catch(e){}toast('\u2705 You are Pro \u2014 everything is unlocked!',6000);}
-          else if(tries>=8){clearInterval(iv);toast('Payment received \u2014 if it does not unlock shortly, refresh the page.',7000);}
+          else if(tries>=8){clearInterval(iv);toast('All set \u2014 if it does not unlock shortly, refresh the page.',7000);}
         }).catch(function(){if(tries>=8)clearInterval(iv);});
       },2000);
     }
@@ -3986,7 +4021,7 @@ function doGenerate(){
       }
       var _sk=document.getElementById('skelWrap');if(_sk)_sk.classList.remove('show');var _st=document.getElementById('studio');if(_st)_st.classList.remove('on');document.body.style.overflow='';try{console.error('[Websprout] /generate failed:',r.d.error);}catch(e3){}toast('🌱 '+(r.d.error||'Please try again'),12000);return;
     }
-    gHTML=r.d.html;window._wsPrompt=(typeof prompt==="string"?prompt:(window._wsPrompt||""));localStorage.setItem('wsh',gHTML);try{if(window._wsUser&&window._wsUser.email)localStorage.setItem('ws_owner',window._wsUser.email);}catch(_o){}undoStack=[gHTML];redoStack=[];editCount=0;try{sessionStorage.setItem('ws_freshgen','1');}catch(_fg){}var ec=document.getElementById('editCounter');if(ec)ec.style.display='none';refreshHistoryBtns();document.querySelectorAll('.font-btn.sel').forEach(function(b){b.classList.remove('sel');});var sp=document.getElementById('secPick');if(sp)sp.classList.remove('on');openStudio(gHTML);setTimeout(populateLiveColors,1200);try{if(r.d.siteId){window._wsSite=r.d.siteId;window._wsKey=r.d.formKey;localStorage.setItem('ws_site',r.d.siteId);localStorage.setItem('ws_key',r.d.formKey||'');}if(r.d.inboxUrl){window._wsInbox=r.d.inboxUrl;localStorage.setItem('ws_inbox',r.d.inboxUrl);console.log('%c[Websprout] Form inbox for this site -> '+r.d.inboxUrl,'color:#2d7a3a;font-weight:700');setTimeout(function(){var tl=document.getElementById('toast');if(tl){tl.innerHTML='📬 Form inbox ready — <u style="cursor:pointer">click to open &amp; save the link</u>';tl.classList.add('on');tl.onclick=function(){window.open(r.d.inboxUrl,'_blank');};setTimeout(function(){tl.classList.remove('on');tl.onclick=null;},10000);}},2600);}}catch(e4){}
+    gHTML=r.d.html;window._wsPrompt=(typeof prompt==="string"?prompt:(window._wsPrompt||""));localStorage.setItem('wsh',gHTML);try{if(window._wsUser&&window._wsUser.email)localStorage.setItem('ws_owner',window._wsUser.email);}catch(_o){}undoStack=[gHTML];redoStack=[];editCount=0;try{sessionStorage.setItem('ws_freshgen','1');if(window.wsBloom){try{wsBloom();}catch(_wb){}}}catch(_fg){}var ec=document.getElementById('editCounter');if(ec)ec.style.display='none';refreshHistoryBtns();document.querySelectorAll('.font-btn.sel').forEach(function(b){b.classList.remove('sel');});var sp=document.getElementById('secPick');if(sp)sp.classList.remove('on');openStudio(gHTML);setTimeout(populateLiveColors,1200);try{if(r.d.siteId){window._wsSite=r.d.siteId;window._wsKey=r.d.formKey;localStorage.setItem('ws_site',r.d.siteId);localStorage.setItem('ws_key',r.d.formKey||'');}if(r.d.inboxUrl){window._wsInbox=r.d.inboxUrl;localStorage.setItem('ws_inbox',r.d.inboxUrl);console.log('%c[Websprout] Form inbox for this site -> '+r.d.inboxUrl,'color:#2d7a3a;font-weight:700');setTimeout(function(){var tl=document.getElementById('toast');if(tl){tl.innerHTML='📬 Form inbox ready — <u style="cursor:pointer">click to open &amp; save the link</u>';tl.classList.add('on');tl.onclick=function(){window.open(r.d.inboxUrl,'_blank');};setTimeout(function(){tl.classList.remove('on');tl.onclick=null;},10000);}},2600);}}catch(e4){}
   })
   .catch(function(e){
     clearInterval(iv);clearTimeout(_to);ld.classList.remove('on');lb.style.display='none';
@@ -5462,6 +5497,93 @@ function injectImageIntoSite(dataUrl,action){
   }
   function gate(){ build(); m.style.display="flex"; }
   window.wsDownloadGate=gate;
+})();
+</script>
+<script>
+(function(){
+  try{
+    var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+    /* #1 count up the live site total */
+    (function(){
+      var el=document.getElementById('liveCount'); if(!el)return;
+      var t=el.textContent||''; var n=''; for(var i=0;i<t.length;i++){var ch=t.charAt(i); if(ch>='0'&&ch<='9')n+=ch;}
+      var target=parseInt(n,10); if(!target||target<1||reduce)return;
+      function fmt(x){x=String(x);var o='';var c=0;for(var i=x.length-1;i>=0;i--){o=x.charAt(i)+o;c++;if(c%3===0&&i>0)o=','+o;}return o;}
+      var done=false;
+      function run(){ if(done)return; done=true; var start=null,dur=1300;
+        function step(ts){ if(start===null)start=ts; var pr=Math.min(1,(ts-start)/dur); var e=1-Math.pow(1-pr,3); el.textContent=fmt(Math.round(target*e)); if(pr<1)requestAnimationFrame(step); else el.textContent=fmt(target);}
+        requestAnimationFrame(step); }
+      if('IntersectionObserver' in window){ var io=new IntersectionObserver(function(es){ for(var k=0;k<es.length;k++){ if(es[k].isIntersecting){ run(); io.disconnect(); break; } } }); io.observe(el); }
+      else run();
+    })();
+
+    /* #4 vibe chips tint the builder card glow */
+    (function(){
+      var card=document.querySelector('.builder-card'); if(!card)return;
+      var vibe={'modern and minimal':'#4ade80','bold and colorful':'#ec4899','warm and friendly':'#f59e0b','dark and premium':'#8b5cf6','clean and professional':'#38bdf8','fun and playful':'#f472b6'};
+      var base=''; try{ base=getComputedStyle(card).boxShadow; if(base==='none')base=''; }catch(e){}
+      var chips=document.querySelectorAll('.vibe-chip');
+      function tint(c){ var col=vibe[c.getAttribute('data-style')]||'#4ade80'; card.style.transition='box-shadow .45s ease'; card.style.boxShadow=(base?base+', ':'')+'0 0 52px -8px '+col; }
+      for(var i=0;i<chips.length;i++){ (function(c){ c.addEventListener('mouseenter',function(){tint(c);}); c.addEventListener('click',function(){tint(c);}); })(chips[i]); }
+    })();
+
+    /* #2 build the showcase strip (illustrative examples, not real customers) */
+    (function(){
+      var track=document.getElementById('wsScTrack'); if(!track)return;
+      var items=[['Coffee shop','#c8872f'],['Yoga studio','#8b5cf6'],['Barber','#38bdf8'],['Photographer','#ef4444'],['Boutique','#ec4899'],['Law firm','#0ea5e9'],['Bakery','#f59e0b'],['Fitness gym','#22c55e'],['Florist','#f472b6'],['Realtor','#14b8a6']];
+      function mk(name,hue){
+        var c=document.createElement('div'); c.className='ws-sc-card'; c.style.setProperty('--h',hue);
+        var bar=document.createElement('div'); bar.className='ws-sc-bar';
+        for(var d=0;d<3;d++){var dot=document.createElement('span');dot.className='ws-sc-dot';bar.appendChild(dot);}
+        var hero=document.createElement('div'); hero.className='ws-sc-hero';
+        var body=document.createElement('div'); body.className='ws-sc-body';
+        var w=[86,64,72];
+        for(var l=0;l<3;l++){var ln=document.createElement('div');ln.className='ws-sc-ln';ln.style.width=w[l]+'%';body.appendChild(ln);}
+        var pill=document.createElement('div'); pill.className='ws-sc-pill';
+        var tag=document.createElement('div'); tag.className='ws-sc-tag'; tag.textContent=name;
+        body.appendChild(pill); body.appendChild(tag);
+        c.appendChild(bar); c.appendChild(hero); c.appendChild(body); return c;
+      }
+      function fill(){ for(var i=0;i<items.length;i++)track.appendChild(mk(items[i][0],items[i][1])); }
+      fill(); fill();
+    })();
+
+    /* #5 scroll reveal (only hide what is below the fold, so no flash) */
+    (function(){
+      var sels=['#showcase','.how','.pricing','.cta-band','.compare','.faq'];
+      var vh=window.innerHeight||800;
+      for(var s2=0;s2<sels.length;s2++){ var list=document.querySelectorAll(sels[s2]);
+        for(var i=0;i<list.length;i++){ var el=list[i];
+          if(el.classList.contains('ws-reveal'))continue;
+          var r=el.getBoundingClientRect();
+          if(r.top>vh*0.85)el.classList.add('ws-reveal');
+        } }
+      var revEls=document.querySelectorAll('.ws-reveal');
+      if(!revEls.length)return;
+      if(reduce||!('IntersectionObserver' in window)){ for(var j=0;j<revEls.length;j++)revEls[j].classList.add('ws-in'); return; }
+      var io=new IntersectionObserver(function(es){ for(var k=0;k<es.length;k++){ if(es[k].isIntersecting){ es[k].target.classList.add('ws-in'); io.unobserve(es[k].target); } } },{threshold:.12,rootMargin:'0px 0px -40px 0px'});
+      for(var m=0;m<revEls.length;m++)io.observe(revEls[m]);
+    })();
+
+    /* #8 bloom burst, fired on a successful fresh generation */
+    window.wsBloom=function(){
+      try{
+        if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+        var g=['🌸','🌿','🍃','✨','🌱','🌼']; var n=16;
+        for(var i=0;i<n;i++){
+          var sp=document.createElement('div'); sp.className='ws-petal'; sp.textContent=g[i%g.length];
+          var dx=(Math.random()*2-1)*240; var dy=-(130+Math.random()*230); var dr=(Math.random()*2-1)*160;
+          sp.style.left='50%'; sp.style.top='44%'; sp.style.fontSize=(14+Math.random()*16).toFixed(0)+'px';
+          sp.style.setProperty('--dx',dx.toFixed(0)+'px'); sp.style.setProperty('--dy',dy.toFixed(0)+'px'); sp.style.setProperty('--dr',dr.toFixed(0)+'deg');
+          sp.style.animationDelay=(Math.random()*140).toFixed(0)+'ms';
+          document.body.appendChild(sp);
+          (function(node){ setTimeout(function(){ if(node&&node.parentNode)node.parentNode.removeChild(node); },1800); })(sp);
+        }
+      }catch(e){}
+    };
+
+  }catch(e){}
 })();
 </script>
 </body>
@@ -8038,7 +8160,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r270';
+const BUILD_ID = '2026-06-10-r272';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
