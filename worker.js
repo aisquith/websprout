@@ -279,14 +279,14 @@ const PAGE = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Websprout: AI Website Builder | Make a Website in Seconds, Free</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
-<meta name="description" content="Websprout is an AI website builder that turns one sentence into a complete, professional website in about 90 seconds. Build and publish your site live for free. Go Pro for $10/month to remove the badge, connect your own domain, and download the code — cancel anytime.">
+<meta name="description" content="Websprout is an AI website builder that turns one sentence into a complete, professional website in about 90 seconds. Build and publish your site live for free. Try Pro free for 7 days — remove the badge, connect your own domain, download the code. Then $10/month, cancel anytime.">
 <link rel="canonical" href="https://websprout.app/">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r269">
-<script>window._wsBuild="2026-06-10-r269";console.log("%c[Websprout] build 2026-06-10-r269 — nav contrast now measures each header element background individually (per-element)","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r270">
+<script>window._wsBuild="2026-06-10-r270";console.log("%c[Websprout] build 2026-06-10-r270 — 7-day free trial messaging across Pro CTAs and pricing (Stripe-native, card-required, auto-converts)","color:#4ade80;font-weight:700")</script>
 <style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}</style>
 <script>
 window.wsConfirm=function(opts){
@@ -1133,7 +1133,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <div class="how-card">
         <div class="how-step-num">3</div>
         <h3>Launch your sites</h3>
-        <p>Publish your site live for free at name.websprout.app. Go Pro to remove the badge, connect your own domain, and download the code. Cancel anytime.</p>
+        <p>Publish your site live for free at name.websprout.app. Try Pro free for 7 days to remove the badge and connect your own domain. Cancel anytime.</p>
       </div>
     </div>
   </div>
@@ -1150,7 +1150,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         <ul class="cmp-list">
           <li class="cmp-item">4-page site built in under 20 seconds</li>
           <li class="cmp-item">Publish it live, free</li>
-          <li class="cmp-item">$10/month - cancel anytime</li>
+          <li class="cmp-item">7-day free trial, then $10/mo</li>
           <li class="cmp-item">No badge &amp; your own domain on Pro</li>
           <li class="cmp-item">Hosted free on websprout.app</li>
           <li class="cmp-item">Chat with AI to change anything</li>
@@ -1176,7 +1176,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   <div class="pricing-inner">
     <div class="section-eyebrow">Pricing</div>
     <div class="section-title">Plant for free. Own it for $10.</div>
-    <p style="color:rgba(255,255,255,.6);font-size:15px">Build and launch your site live for free. Go Pro to make it fully yours &mdash; your domain, no badge, the code.</p>
+    <p style="color:rgba(255,255,255,.6);font-size:15px">Build and launch your site live for free. Start a 7-day free trial of Pro to make it fully yours &mdash; your domain, no badge, the code.</p>
     <div class="price-grid">
       <div class="price-card">
         <div class="price-name">Free</div>
@@ -1193,7 +1193,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <div class="price-card pick">
         <div class="price-name">Pro</div>
         <div class="price-amt"><sup>$</sup>10</div>
-        <div class="price-freq">per month &middot; unlimited</div>
+        <div class="price-freq">7 days free, then $10/mo</div>
         <ul class="price-list">
           <li class="price-item">No Websprout badge</li>
           <li class="price-item">Connect your own domain</li>
@@ -1209,7 +1209,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
 <!-- CTA BAND -->
 <div class="cta-band">
   <h2>Your website is one<br>seed away.</h2>
-  <p>Free to build and launch. $10/month to make it yours.</p>
+  <p>Free to build and launch. Start a 7-day free trial to make it yours.</p>
   <button class="btn-white" id="ctaBtn">Plant my website free &#127807;</button>
 </div>
 
@@ -1308,7 +1308,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
           <button class="gs-item" data-act="share">&#128279; Share preview link<span class="gs-sub">Private link to show someone first</span></button>
         </div>
       </span>
-      <button class="s-btn s-purple" id="unlockBtn">&#10024; Go Pro &middot; $10/mo</button>
+      <button class="s-btn s-purple" id="unlockBtn">&#10024; Start free trial</button>
     </div>
   </div>
   <!-- Deploy CTA banner (shown after purchase) -->
@@ -1347,13 +1347,13 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
           <a id="pubReviews" href="#" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:11px;font-size:13px;font-weight:600;text-decoration:none;font-family:inherit;box-sizing:border-box">&#11088; Manage reviews</a>
           <div id="pubBadgeNudge" style="display:none;background:linear-gradient(180deg,rgba(45,122,58,.14),rgba(45,122,58,.04));border:1px solid rgba(74,222,128,.22);border-radius:12px;padding:14px 16px;margin-top:14px">
             <div style="font-size:13.5px;color:#fff;font-weight:700;margin-bottom:3px">&#127793; Your site is live &mdash; with a small Websprout badge</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.72);line-height:1.5;margin-bottom:11px">Go Pro to remove the badge, connect your own domain, and download the code.</div>
-            <button id="pubBadgeGoPro" class="s-btn s-purple" style="width:100%;padding:10px;border-radius:9px;font-size:13.5px;font-weight:700;cursor:pointer">&#10024; Go Pro &mdash; remove the badge</button>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.72);line-height:1.5;margin-bottom:11px">Try Pro free for 7 days to remove the badge and connect your own domain. Then $10/mo, cancel anytime.</div>
+            <button id="pubBadgeGoPro" class="s-btn s-purple" style="width:100%;padding:10px;border-radius:9px;font-size:13.5px;font-weight:700;cursor:pointer">&#10024; Start free trial &mdash; remove the badge</button>
           </div>
           <div id="pubDomainLocked" style="display:none;border-top:1px solid rgba(255,255,255,.07);margin-top:18px;padding-top:18px">
             <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px">&#128274; Use your own domain</div>
             <div style="font-size:12px;color:rgba(255,255,255,.72);margin-bottom:10px">Connecting a custom domain is a Pro feature.</div>
-            <button id="pubDomGoPro" style="width:100%;background:rgba(109,40,217,.18);color:#c4b5fd;border:1px solid rgba(109,40,217,.4);border-radius:9px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Go Pro to use your domain</button>
+            <button id="pubDomGoPro" style="width:100%;background:rgba(109,40,217,.18);color:#c4b5fd;border:1px solid rgba(109,40,217,.4);border-radius:9px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Start free trial to use your domain</button>
           </div>
           <div id="pubDomainPro" style="border-top:1px solid rgba(255,255,255,.07);margin-top:18px;padding-top:18px">
             <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px">Use your own domain</div>
@@ -1557,9 +1557,9 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <div class="drop-overlay" id="dropOverlay"><div class="drop-overlay-txt">🌱 Drop photo to add to site</div></div>
       <div class="lock-badge" id="lkbadge">
         <div class="lock-title">🔒 Love what you see?</div>
-        <div class="lock-sub">Go Pro to remove the Websprout badge, use your own domain, and download the code. Cancel anytime.</div>
+        <div class="lock-sub">Try Pro free for 7 days &mdash; no badge and your own domain. Then $10/mo, cancel anytime.</div>
         <input type="email" id="emailCapture" aria-label="Email address" class="lock-email" placeholder="your@email.com">
-        <button class="s-btn s-purple" style="width:100%;padding:10px;border-radius:8px;font-size:13px" id="lockPayBtn">Go Pro — $10/mo</button>
+        <button class="s-btn s-purple" style="width:100%;padding:10px;border-radius:8px;font-size:13px" id="lockPayBtn">Start 7-day free trial</button>
       </div>
     </div>
 
@@ -1574,7 +1574,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
             <div style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:rgba(234,251,230,.85);margin-bottom:9px"><span style="color:#4ade80">&#10003;</span> Connect your own custom domain</div>
             <div style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:rgba(234,251,230,.85)"><span style="color:#4ade80">&#10003;</span> Leads, edits and updates anytime</div>
           </div>
-          <button id="flmGoPro" class="s-btn s-purple" style="width:100%;padding:13px;border-radius:11px;font-size:15px;font-weight:700;margin-bottom:10px">&#10024; Go Pro &mdash; $10/mo</button>
+          <button id="flmGoPro" class="s-btn s-purple" style="width:100%;padding:13px;border-radius:11px;font-size:15px;font-weight:700;margin-bottom:10px">&#10024; Start my free trial</button>
           <button id="flmKeep" style="width:100%;padding:10px;background:none;border:none;color:rgba(234,251,230,.5);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Keep editing my site</button>
         </div>
       </div>
@@ -2110,7 +2110,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <div id="panePlan" class="pf-pane">
         <div id="pfActions" style="margin-bottom:14px"></div>
         <div class="set-h">What Pro includes</div>
-        <div class="set-note" style="margin-bottom:0">Remove the &ldquo;Made with Websprout&rdquo; badge, connect your own custom domain, download your full source code, and unlock multi-page sites and the built-in store. $10/month, cancel anytime.</div>
+        <div class="set-note" style="margin-bottom:0">Remove the &ldquo;Made with Websprout&rdquo; badge, connect your own custom domain, download your full source code, and unlock multi-page sites and the built-in store. Start with a 7-day free trial, then $10/month. Cancel anytime.</div>
       </div>
       <div id="panePrivacy" class="pf-pane">
         <div class="set-h" style="margin-top:4px">Your data</div>
@@ -2163,7 +2163,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         act.innerHTML='<div style="background:rgba(45,158,74,.12);border:1px solid rgba(45,158,74,.3);border-radius:12px;padding:14px 16px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.55">\u2713 <b style="color:#7fe39a">Pro is active.</b> You can download, deploy, and edit across all of your sites.</div><button id="pfBilling" style="width:100%;margin-top:10px;background:transparent;border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.8);border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Manage billing &amp; cancel plan</button><div style="font-size:11.5px;color:rgba(255,255,255,.5);text-align:center;margin-top:7px;line-height:1.45">Opens Stripe to update payment or cancel your subscription.</div>';
         var pb=$('pfBilling');if(pb)pb.addEventListener('click',openBilling);
       }else{
-        act.innerHTML='<button id="pfGoPro" style="width:100%;background:linear-gradient(135deg,#2d9e4a,#1c6e32);color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(45,158,74,.35)">\u2726 Go Pro \u2014 $10/mo</button><div style="font-size:12px;color:rgba(255,255,255,.72);text-align:center;margin-top:9px;line-height:1.5">Unlock downloads, deploys, and editing across all of your sites.</div>';
+        act.innerHTML='<button id="pfGoPro" style="width:100%;background:linear-gradient(135deg,#2d9e4a,#1c6e32);color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 6px 20px rgba(45,158,74,.35)">\u2726 Start free trial</button><div style="font-size:12px;color:rgba(255,255,255,.72);text-align:center;margin-top:9px;line-height:1.5">7 days free, then $10/mo. Cancel anytime.</div>';
         var gp=$('pfGoPro');if(gp)gp.addEventListener('click',goPro);
       }
       if(me&&me.owner){act.innerHTML+='<a href="/admin" style="display:block;text-align:center;margin-top:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#cfe;border-radius:10px;padding:11px;font-size:14px;font-weight:600;text-decoration:none">\uD83D\uDCCA Admin dashboard</a>';}
@@ -2686,7 +2686,7 @@ function autoSetDevice(){
     var p=new URLSearchParams(window.location.search);
     if(p.get('sub')==='success'){
       window.history.replaceState({},'',window.location.pathname);
-      toast('\uD83C\uDF89 Thanks! Activating your subscription...',6000);
+      toast('\uD83C\uDF89 Thanks! Starting your free trial...',6000);
       var tries=0;
       var iv=setInterval(function(){
         tries++;
@@ -5910,7 +5910,7 @@ footer{border-top:1px solid #e8f0e5;padding:28px 5vw;display:flex;align-items:ce
     </div>
     <div class="faq-item">
       <div class="faq-q">Do I have to pay to put my site online? <span class="faq-icon">+</span></div>
-      <div class="faq-a">No. Publishing live on Websprout is free, with a small badge. You only need Pro ($10/month) to remove the badge, use your own domain, or download and self-host the code.</div>
+      <div class="faq-a">No. Publishing live on Websprout is free, with a small badge. Pro removes the badge, connects your own domain, and lets you download and self-host the code. Pro starts with a 7-day free trial, then $10/month &mdash; cancel anytime.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">Do I need to pay for hosting? <span class="faq-icon">+</span></div>
@@ -8038,7 +8038,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r269';
+const BUILD_ID = '2026-06-10-r270';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
