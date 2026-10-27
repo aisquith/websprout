@@ -286,8 +286,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r273">
-<script>window._wsBuild="2026-06-10-r273";console.log("%c[Websprout] build 2026-06-10-r273 — support-form emails now route to support@websprout.app","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r277">
+<script>window._wsBuild="2026-06-10-r277";console.log("%c[Websprout] build 2026-06-10-r277 — AA fixes (icon aria-hidden, send-button name, preview iframe title) and refreshed Terms (trial disclosure) + Accessibility date","color:#4ade80;font-weight:700")</script>
 <style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}</style>
 <script>
 window.wsConfirm=function(opts){
@@ -1011,7 +1011,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .ws-petal{position:fixed;z-index:2147483600;pointer-events:none;will-change:transform,opacity;animation:wsPetal 1.5s cubic-bezier(.2,.6,.2,1) forwards}
 @keyframes wsPetal{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}15%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--dx,0px)),calc(-50% + var(--dy,0px))) rotate(var(--dr,0deg)) scale(1)}}
 @media(prefers-reduced-motion:reduce){#loading .load-icon{animation:none}.gen-btn:not(:disabled):not(:hover){animation:none}.ws-sc-track{animation:none}.ws-reveal{opacity:1;transform:none}.ws-petal{display:none}}
-</style>
+.ic{width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:5px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.ic-only{margin-right:0}.chat-head-title .ic{margin-right:0}</style>
 <script>try{var _wsDE=document.documentElement;if(localStorage.getItem('ws_rm')==='1')_wsDE.classList.add('ws-rm');if(localStorage.getItem('ws_focus')==='1')_wsDE.classList.add('ws-focus');}catch(_e){}
 window.wsClearSiteState=function(){try{var _keep={ws_rm:1,ws_focus:1,ws_theme:1,ws_edhint:1};var _rm=[];for(var _i=0;_i<localStorage.length;_i++){var _k=localStorage.key(_i);if(_k&&_k.indexOf('ws')===0&&!_keep[_k])_rm.push(_k);}for(var _j=0;_j<_rm.length;_j++)localStorage.removeItem(_rm[_j]);}catch(_e2){}try{sessionStorage.clear();}catch(_e3){}};</script>
 </head>
@@ -1265,7 +1265,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     <a href="mailto:support@websprout.app">Contact</a>
   </div>
 </footer>
-<div class="studio" id="studio">
+<div class="studio" id="studio"><svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden"><symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol><symbol id="i-settings" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="18" r="2"/></symbol><symbol id="i-info" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></symbol><symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></symbol><symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><line x1="6" y1="20" x2="6" y2="14"/><line x1="12" y1="20" x2="12" y2="8"/><line x1="18" y1="20" x2="18" y2="4"/></symbol><symbol id="i-megaphone" viewBox="0 0 24 24"><path d="m3 11 15-5v12L3 13Z"/><path d="M11.6 16.8a3 3 0 1 1-5.6-2"/></symbol><symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></symbol><symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1V2l-2 1-2-1-2 1-2-1-2 1Z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/></symbol><symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></symbol><symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a4 4 0 0 1 0 8h-3"/></symbol><symbol id="i-redo" viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9a4 4 0 0 0 0 8h3"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"/></symbol><symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></symbol><symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18Z"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M5 21h14"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol><symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol><symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol><symbol id="i-rocket" viewBox="0 0 24 24"><path d="M5 16c-1.5 1.3-2 5-2 5s3.7-.5 5-2a2.1 2.1 0 0 0-3-3Z"/><path d="M12 15l-3-3a21 21 0 0 1 2-4A12 12 0 0 1 21 3c0 2.7-.8 7-6 11a21 21 0 0 1-3 1Z"/><path d="M9 12H5s.5-2.8 2-4c1.6-1 4 0 4 0"/><path d="M12 15v4s2.8-.5 4-2c1-1.6 0-4 0-4"/></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></symbol><symbol id="i-palette" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="9" r="1.2"/><circle cx="12" cy="7" r="1.2"/><circle cx="16" cy="9" r="1.2"/><path d="M12 21a3 3 0 0 1 0-6 2 2 0 0 0 0-4"/></symbol><symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-2 8 9-12h-7l2-8Z"/></symbol><symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6L12 3Z"/></symbol></svg>
   <div class="s-header">
     <div class="logo-mark" style="width:24px;height:24px;font-size:12px">🌱</div>
     <div class="s-title" id="stitle">Your site</div>
@@ -1277,9 +1277,9 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
     </div>
     <div class="s-actions">
       <span class="edit-counter" id="editCounter"></span>
-      <button class="s-btn s-ghost edit-mode-btn" id="editModeBtn" data-needs-site="1" title="Click any text to edit it">&#9998; Edit text</button>
+      <button class="s-btn s-ghost edit-mode-btn" id="editModeBtn" data-needs-site="1" title="Click any text to edit it"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-edit"/></svg>Edit text</button>
       <span style="position:relative;display:inline-block">
-        <button class="s-btn s-manage" id="toolsBtn" title="Your info, SEO, leads, payments & more">&#9881;&#65039; Manage &#9662;</button>
+        <button class="s-btn s-manage" id="toolsBtn" title="Your info, SEO, leads, payments & more"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-settings"/></svg>Manage &#9662;</button>
         <div id="toolsMenu" class="s-menu" style="display:none">
           <div class="gs-head">Set up your site</div>
           <button class="gs-item" data-tool="yourInfoBtn">&#128221; Your info<span class="gs-sub">Name, phone, email &amp; hours — everywhere</span></button>
@@ -1299,37 +1299,37 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
         </div>
       </span>
       <span id="editTools" style="display:none">
-        <button class="s-btn s-ghost" id="yourInfoBtn" data-needs-site="1">&#128221; Your info</button>
-        <button class="s-btn s-ghost" id="sectionsBtn" data-needs-site="1">&#9783; Sections</button>
-        <button class="s-btn s-ghost" id="seoBtn" data-needs-site="1">&#128269; SEO</button>
-        <button class="s-btn s-ghost" id="leadsBtn" data-needs-site="1">&#128236; Leads</button>
-        <button class="s-btn s-ghost" id="statsBtn" data-needs-site="1" style="display:none">&#128202; Analytics</button>
-        <button class="s-btn s-ghost" id="postBtn" data-needs-site="1">&#9997; Marketing</button>
-        <button class="s-btn s-ghost" id="payBtn" data-needs-site="1">&#128179; Payments</button>
-        <button class="s-btn s-ghost" id="invoiceBtn" style="display:none">&#129534; Invoice</button>
+        <button class="s-btn s-ghost" id="yourInfoBtn" data-needs-site="1"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-info"/></svg>Your info</button>
+        <button class="s-btn s-ghost" id="sectionsBtn" data-needs-site="1"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-layers"/></svg>Sections</button>
+        <button class="s-btn s-ghost" id="seoBtn" data-needs-site="1"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-search"/></svg>SEO</button>
+        <button class="s-btn s-ghost" id="leadsBtn" data-needs-site="1"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-mail"/></svg>Leads</button>
+        <button class="s-btn s-ghost" id="statsBtn" data-needs-site="1" style="display:none"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-chart"/></svg>Analytics</button>
+        <button class="s-btn s-ghost" id="postBtn" data-needs-site="1"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-megaphone"/></svg>Marketing</button>
+        <button class="s-btn s-ghost" id="payBtn" data-needs-site="1"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-card"/></svg>Payments</button>
+        <button class="s-btn s-ghost" id="invoiceBtn" style="display:none"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-receipt"/></svg>Invoice</button>
         <button class="s-btn s-ghost" id="backBtn">&#8592; Back</button>
-        <button class="s-btn s-ghost" id="regenBtn">&#8635; Regen</button>
+        <button class="s-btn s-ghost" id="regenBtn"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-refresh"/></svg>Regen</button>
       </span>
       <span class="s-sep"></span>
-      <button class="s-btn s-ghost" id="undoBtn" disabled>&#8617; Undo</button>
-      <button class="s-btn s-ghost" id="redoBtn" disabled>&#8618; Redo</button>
-      <button class="s-btn s-ghost" id="fullscreenBtn" data-needs-site="1" title="Full screen preview">&#9974; Preview</button>
+      <button class="s-btn s-ghost" id="undoBtn" disabled><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-undo"/></svg>Undo</button>
+      <button class="s-btn s-ghost" id="redoBtn" disabled><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-redo"/></svg>Redo</button>
+      <button class="s-btn s-ghost" id="fullscreenBtn" data-needs-site="1" title="Full screen preview"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-eye"/></svg>Preview</button>
       <span class="s-sep"></span>
-      <button class="s-btn s-ghost s-icon" id="mySitesBtn" aria-label="Your saved sites" title="Your saved sites">&#128194;</button>
-      <button class="s-btn s-ghost" id="acctBtn" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="Your account">&#128100; Sign in</button>
+      <button class="s-btn s-ghost s-icon" id="mySitesBtn" aria-label="Your saved sites" title="Your saved sites"><svg class="ic ic-only" aria-hidden="true" focusable="false"><use href="#i-folder"/></svg></button>
+      <button class="s-btn s-ghost" id="acctBtn" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="Your account"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-user"/></svg>Sign in</button>
       <span id="outActions" style="display:none">
-      <button class="s-btn s-ghost" id="shareBtn" data-needs-site="1">&#128279; Share</button>
-      <button class="s-btn" id="publishBtn" data-needs-site="1">&#127760; Publish</button>
-      <button class="s-btn s-ghost" id="dlBtn" data-needs-site="1">&#8595; Download</button>
-      <button class="s-btn s-ghost" id="multiBtn" data-needs-site="1" title="Build a full multi-page site (About, Menu, Contact...)">&#43; Add pages</button>
-      <button class="s-btn s-ghost" id="prodBtn" data-needs-site="1" title="Manage your shop products">&#128722; Products</button>
-      <button class="s-btn s-ghost" id="copyBtn" data-needs-site="1" title="Copy full HTML to clipboard">&#128203; Copy code</button>
-      <button class="s-btn s-ghost" id="deployBtn" data-needs-site="1">&#128640; Deploy</button>
+      <button class="s-btn s-ghost" id="shareBtn" data-needs-site="1"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-share"/></svg>Share</button>
+      <button class="s-btn" id="publishBtn" data-needs-site="1"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-globe"/></svg>Publish</button>
+      <button class="s-btn s-ghost" id="dlBtn" data-needs-site="1"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-download"/></svg>Download</button>
+      <button class="s-btn s-ghost" id="multiBtn" data-needs-site="1" title="Build a full multi-page site (About, Menu, Contact...)"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg>Add pages</button>
+      <button class="s-btn s-ghost" id="prodBtn" data-needs-site="1" title="Manage your shop products"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-bag"/></svg>Products</button>
+      <button class="s-btn s-ghost" id="copyBtn" data-needs-site="1" title="Copy full HTML to clipboard"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg>Copy code</button>
+      <button class="s-btn s-ghost" id="deployBtn" data-needs-site="1"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-rocket"/></svg>Deploy</button>
       </span>
       <style>.gs-item{display:block;width:100%;text-align:left;background:none;border:none;color:#fff;padding:10px 12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}.gs-item:hover{background:rgba(45,122,58,.18)}.gs-sub{display:block;font-size:11px;color:rgba(255,255,255,.72);font-weight:400;margin-top:1px}.gs-head{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:rgba(255,255,255,.72);padding:10px 12px 4px}.gs-head:first-child{padding-top:4px}.s-sep{width:1px;height:20px;background:rgba(255,255,255,.1);margin:0 3px;flex-shrink:0;align-self:center}.s-menu{position:absolute;top:calc(100% + 6px);right:0;background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:6px;min-width:218px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:1000}.s-icon{padding:6px 9px}</style>
       <span id="saveStatus" style="font-size:12px;color:rgba(255,255,255,.72);font-weight:600;margin-right:6px;opacity:0;transition:opacity .3s;white-space:nowrap" title="Your work autosaves as you edit">Saved</span>
       <span style="position:relative;display:inline-block">
-        <button class="s-btn" id="getSiteBtn" data-needs-site="1" style="background:#2d7a3a;color:#fff;border-color:#2d7a3a;font-weight:700" title="Publish, download or share your site">&#128640; Get your site &#9662;</button>
+        <button class="s-btn" id="getSiteBtn" data-needs-site="1" style="background:#2d7a3a;color:#fff;border-color:#2d7a3a;font-weight:700" title="Publish, download or share your site"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-rocket"/></svg>Get your site &#9662;</button>
         <div id="getSiteMenu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:12px;padding:6px;min-width:266px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:1000">
           <div id="getSiteHint" style="display:none;background:rgba(45,122,58,.12);border:1px solid rgba(61,186,82,.28);border-radius:9px;padding:10px 11px;margin-bottom:6px;font-size:11.5px;line-height:1.55;color:rgba(234,242,232,.85)">
             <div style="font-weight:700;color:#7fe39a;margin-bottom:5px">New here? Two ways to go live:</div>
@@ -1514,8 +1514,8 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   })();
   </script>
   <div class="s-mobtabs" id="sMobTabs">
-    <button class="s-mobtab active" data-mob="preview">&#128065;&#65039; Preview</button>
-    <button class="s-mobtab" data-mob="chat">&#9998; Edit with AI</button>
+    <button class="s-mobtab active" data-mob="preview"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-eye"/></svg>Preview</button>
+    <button class="s-mobtab" data-mob="chat"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-edit"/></svg>Edit with AI</button>
   </div>
   <script>
   (function(){
@@ -1533,7 +1533,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   </script>
   <div class="s-body">
     <div class="preview-frame-wrap" id="previewWrap">
-      <iframe id="pf" style="width:100%;height:4000px;border:none;display:block;background:#fff"></iframe>
+      <iframe id="pf" title="Live site preview" style="width:100%;height:4000px;border:none;display:block;background:#fff"></iframe>
       <div class="preview-label">live preview</div>
       <!-- Loading skeleton -->
       <div class="skeleton-wrap" id="skelWrap">
@@ -1628,7 +1628,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
 
     <div class="chat">
       <div class="chat-head">
-        <div class="chat-head-title">✨ Edit with AI</div>
+        <div class="chat-head-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-spark"/></svg>Edit with AI</div>
         <div class="chat-head-sub">Describe any change in plain English and I’ll update your site live.</div>
       </div>
       <div class="chat-msgs" id="cms">
@@ -1638,7 +1638,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <!-- Image Library -->
       <div class="img-library collapsed" id="imgLibrary">
         <button class="img-lib-toggle" id="imgLibToggle" type="button">
-          <span class="img-lib-label">📷 Add photos</span>
+          <span class="img-lib-label"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-image"/></svg>Add photos</span>
           <span class="img-lib-caret">▾</span>
         </button>
         <div class="img-lib-body" id="imgLibBody">
@@ -1713,7 +1713,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <!-- Design tools drawer (colors + fonts, collapsed by default) -->
       <div class="design-drawer collapsed" id="designDrawer">
       <button class="dd-toggle" id="ddToggle" type="button">
-        <span class="palette-label" style="margin-bottom:0">🎨 Colors &amp; fonts</span>
+        <span class="palette-label" style="margin-bottom:0"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-palette"/></svg>Colors &amp; fonts</span>
         <span class="dd-caret">&#9660;</span>
       </button>
       <div class="dd-body">
@@ -1779,11 +1779,11 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       </div>
       </div>
       <div id="edFirstHint" class="ed-hint" style="display:none">
-        <span class="ed-hint-txt">👋 New here? <b>Tap a quick change</b> below, <b>type any request</b>, or hit <b>✎ Edit text</b> to edit on the page. For your info, SEO, leads &amp; payments, open <b>&#9881;&#65039; Manage</b> up top.</span>
+        <span class="ed-hint-txt"><b>Tap a quick change</b> below, or <b>type any request</b>. Use <b>Edit text</b> to edit wording on the page, and <b>Manage</b> (top right) for info, SEO, leads &amp; payments.</span>
         <button class="ed-hint-x" id="edHintX" type="button" title="Got it">&times;</button>
       </div>
       <div class="quick-edits">
-        <div class="qe-label">⚡ Tap a quick change — or type your own below</div>
+        <div class="qe-label"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-zap"/></svg>Tap a quick change — or type your own below</div>
         <button class="qe" id="regenSectionBtn" title="Regenerate one section with fresh AI">↻ Redo a section</button>
         <div class="sec-pick" id="secPick">
           <button class="qe" data-sec="hero">Hero</button>
@@ -1807,7 +1807,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
       <div class="chat-input">
         <div class="chat-row">
           <textarea class="chat-ta" id="ci" aria-label="Describe a change" placeholder="Describe a change — e.g. “make it blue” or “add a pricing section”" rows="1"></textarea>
-          <button class="chat-send" id="csb"><svg viewBox="0 0 24 24" fill="white" width="16" height="16"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>
+          <button class="chat-send" id="csb" aria-label="Send message"><svg viewBox="0 0 24 24" fill="white" width="16" height="16" aria-hidden="true" focusable="false"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>
         </div>
         <div class="chat-hint">Press Enter to send · Shift+Enter for a new line</div>
       </div>
@@ -3946,6 +3946,28 @@ function buildPrompt(){
   return pts.join('. ')||'Build a professional business website';
 }
 
+function wsSoftRetry(){
+  window._wsGenTries=(window._wsGenTries||0)+1;
+  var tries=window._wsGenTries;
+  if(tries>4){wsGenGiveUpFriendly();return;}
+  try{var _st=document.getElementById('studio');if(_st)_st.classList.add('on');document.body.style.overflow='hidden';var _sk=document.getElementById('skelWrap');if(_sk)_sk.classList.add('show');}catch(e){}
+  var delays=[0,7,13,20,28];
+  var wait=delays[tries<delays.length?tries:delays.length-1];
+  var msgs=['High demand right now — reserving your spot and trying again','Still growing your site — thanks for hanging on','Almost there — giving it another go','One more try — we are nearly there'];
+  var baseMsg=msgs[(tries-1)<msgs.length?(tries-1):(msgs.length-1)];
+  var secs=wait;
+  var sm=document.getElementById('skelMsg');
+  var tel=document.getElementById('toast');
+  function paint(){var t=baseMsg+(secs>0?(' in '+secs+'s'):'...');if(sm)sm.textContent=t;if(tel){tel.textContent=t;tel.classList.add('on');}}
+  paint();
+  var cd=setInterval(function(){secs--;if(secs<=0){clearInterval(cd);if(tel)tel.classList.remove('on');if(sm)sm.textContent=baseMsg+'...';try{doGenerate();}catch(e){wsGenGiveUpFriendly();}}else{paint();}},1000);
+}
+function wsGenGiveUpFriendly(){
+  window._wsGenTries=0;
+  try{var _sk=document.getElementById('skelWrap');if(_sk)_sk.classList.remove('show');var _st=document.getElementById('studio');if(_st)_st.classList.remove('on');document.body.style.overflow='';}catch(e){}
+  try{var b=document.getElementById('gbtn');if(b)b.disabled=false;var gt=document.getElementById('gbtnTxt');if(gt)gt.textContent='Grow my site';var ga2=document.getElementById('gen-area');if(ga2)ga2.style.display='block';var pf2=document.getElementById('p3foot');if(pf2)pf2.style.display='flex';var ld3=document.getElementById('loading');if(ld3)ld3.classList.remove('on');}catch(e){}
+  try{var tel=document.getElementById('toast');if(tel){tel.innerHTML='🌱 We are growing a lot of sites right now and yours is taking a little longer than usual. Give it a few seconds, then tap <b>Grow my site</b> again.';tel.classList.add('on');setTimeout(function(){tel.classList.remove('on');},13000);}}catch(e){}
+}
 function doGenerate(){
   // Anonymous users get 1 free generation to see the wow moment. Signup prompts happen AFTER they see their site,
   // gated on save/publish/edit actions — not before the first generation.
@@ -3987,7 +4009,7 @@ function doGenerate(){
     if(skelProg)skelProg.style.width=_pct.toFixed(1)+'%';
   },800);
   var _ac=(typeof AbortController!=='undefined')?new AbortController():null;
-  var _to=_ac?setTimeout(function(){try{_ac.abort();}catch(e){}},115000):0;
+  var _to=_ac?setTimeout(function(){try{_ac.abort();}catch(e){}},150000):0;
   fetch('/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt}),signal:_ac?_ac.signal:undefined})
   .then(function(r){return r.text().then(function(t){try{var d=JSON.parse(t);return{ok:r.ok,d:d};}catch(e){return{ok:false,d:{error:'Server error: '+t.slice(0,100)}};}});})
   .then(function(r){
@@ -3995,16 +4017,8 @@ function doGenerate(){
     btn.disabled=false;document.getElementById('gbtnTxt').textContent='Regrow';
     ga.style.display='block';pf.style.display='flex';
     if(!r.ok){
-      if(r.d.error==='RATE_LIMITED_FREE'){
-        var _ka=document.getElementById('skelWrap');if(_ka)_ka.classList.remove('show');var _kb=document.getElementById('studio');if(_kb)_kb.classList.remove('on');document.body.style.overflow='';
-        toast('🌱 This Gemini key hit a FREE-tier quota. If you enabled billing, the key in your Worker may belong to a different Google project than the billed one.',15000);return;
-      }
-      if(r.d.error==='RATE_LIMITED'){
-        var secs=60,tel=document.getElementById('toast');
-        tel.textContent='⏳ High demand - retrying in '+secs+'s...';tel.classList.add('on');
-        var cd=setInterval(function(){secs--;tel.textContent='⏳ High demand - retrying in '+secs+'s...';if(secs<=0){clearInterval(cd);tel.classList.remove('on');doGenerate();}},1000);
-        return;
-      }
+      if(r.d.error==='RATE_LIMITED_FREE'){wsSoftRetry();return;}
+      if(r.d.error==='RATE_LIMITED'){wsSoftRetry();return;}
       if(r.d.error==='FREE_LIMIT_REACHED'){
         var _kw=document.getElementById('skelWrap');if(_kw)_kw.classList.remove('show');
         var _ld2=document.getElementById('loading');if(_ld2)_ld2.classList.remove('on');
@@ -4020,15 +4034,15 @@ function doGenerate(){
         }
         return;
       }
-      var _sk=document.getElementById('skelWrap');if(_sk)_sk.classList.remove('show');var _st=document.getElementById('studio');if(_st)_st.classList.remove('on');document.body.style.overflow='';try{console.error('[Websprout] /generate failed:',r.d.error);}catch(e3){}toast('🌱 '+(r.d.error||'Please try again'),12000);return;
+      try{console.warn('[Websprout] /generate soft-fail:',r.d.error);}catch(e3){}wsSoftRetry();return;
     }
-    gHTML=r.d.html;window._wsPrompt=(typeof prompt==="string"?prompt:(window._wsPrompt||""));localStorage.setItem('wsh',gHTML);try{if(window._wsUser&&window._wsUser.email)localStorage.setItem('ws_owner',window._wsUser.email);}catch(_o){}undoStack=[gHTML];redoStack=[];editCount=0;try{sessionStorage.setItem('ws_freshgen','1');if(window.wsBloom){try{wsBloom();}catch(_wb){}}}catch(_fg){}var ec=document.getElementById('editCounter');if(ec)ec.style.display='none';refreshHistoryBtns();document.querySelectorAll('.font-btn.sel').forEach(function(b){b.classList.remove('sel');});var sp=document.getElementById('secPick');if(sp)sp.classList.remove('on');openStudio(gHTML);setTimeout(populateLiveColors,1200);try{if(r.d.siteId){window._wsSite=r.d.siteId;window._wsKey=r.d.formKey;localStorage.setItem('ws_site',r.d.siteId);localStorage.setItem('ws_key',r.d.formKey||'');}if(r.d.inboxUrl){window._wsInbox=r.d.inboxUrl;localStorage.setItem('ws_inbox',r.d.inboxUrl);console.log('%c[Websprout] Form inbox for this site -> '+r.d.inboxUrl,'color:#2d7a3a;font-weight:700');setTimeout(function(){var tl=document.getElementById('toast');if(tl){tl.innerHTML='📬 Form inbox ready — <u style="cursor:pointer">click to open &amp; save the link</u>';tl.classList.add('on');tl.onclick=function(){window.open(r.d.inboxUrl,'_blank');};setTimeout(function(){tl.classList.remove('on');tl.onclick=null;},10000);}},2600);}}catch(e4){}
+    window._wsGenTries=0;gHTML=r.d.html;window._wsPrompt=(typeof prompt==="string"?prompt:(window._wsPrompt||""));localStorage.setItem('wsh',gHTML);try{if(window._wsUser&&window._wsUser.email)localStorage.setItem('ws_owner',window._wsUser.email);}catch(_o){}undoStack=[gHTML];redoStack=[];editCount=0;try{sessionStorage.setItem('ws_freshgen','1');if(window.wsBloom){try{wsBloom();}catch(_wb){}}}catch(_fg){}var ec=document.getElementById('editCounter');if(ec)ec.style.display='none';refreshHistoryBtns();document.querySelectorAll('.font-btn.sel').forEach(function(b){b.classList.remove('sel');});var sp=document.getElementById('secPick');if(sp)sp.classList.remove('on');openStudio(gHTML);setTimeout(populateLiveColors,1200);try{if(r.d.siteId){window._wsSite=r.d.siteId;window._wsKey=r.d.formKey;localStorage.setItem('ws_site',r.d.siteId);localStorage.setItem('ws_key',r.d.formKey||'');}if(r.d.inboxUrl){window._wsInbox=r.d.inboxUrl;localStorage.setItem('ws_inbox',r.d.inboxUrl);console.log('%c[Websprout] Form inbox for this site -> '+r.d.inboxUrl,'color:#2d7a3a;font-weight:700');setTimeout(function(){var tl=document.getElementById('toast');if(tl){tl.innerHTML='📬 Form inbox ready — <u style="cursor:pointer">click to open &amp; save the link</u>';tl.classList.add('on');tl.onclick=function(){window.open(r.d.inboxUrl,'_blank');};setTimeout(function(){tl.classList.remove('on');tl.onclick=null;},10000);}},2600);}}catch(e4){}
   })
   .catch(function(e){
     clearInterval(iv);clearTimeout(_to);ld.classList.remove('on');lb.style.display='none';
     btn.disabled=false;document.getElementById('gbtnTxt').textContent='Regrow';
     ga.style.display='block';pf.style.display='flex';
-    var _sk=document.getElementById('skelWrap');if(_sk)_sk.classList.remove('show');var _st=document.getElementById('studio');if(_st)_st.classList.remove('on');document.body.style.overflow='';try{console.error('[Websprout] /generate fetch error:',e);}catch(e3){}toast('🌱 '+((e&&e.name==='AbortError')?'Taking longer than expected — please try again':((e&&e.message==='Failed to fetch')?'Could not reach server':((e&&e.message)||'Please try again'))),12000);
+    try{console.warn('[Websprout] /generate fetch soft-fail:',e&&e.message);}catch(e3){}wsSoftRetry();
   });
 }
 
@@ -4791,7 +4805,7 @@ function setStudioReady(ready){
   var intro=document.getElementById('introMsg');
   if(ready){
     studio.classList.remove('studio-loading');
-    if(intro)intro.innerHTML='Your site’s ready 🌱  Tap ✎ Edit text up top to change wording right on the page — or just describe any change below.';
+    if(intro)intro.innerHTML='Your site is ready. Describe any change below in plain English and I will update it live.';
     try{editModeOn=false;var _eb=document.getElementById('editModeBtn');if(_eb)_eb.classList.remove('on');var _ei=document.getElementById('editIndicator');if(_ei)_ei.classList.remove('on');var _pf=document.getElementById('pf');var _em=function(){if(_pf&&_pf.contentWindow)_pf.contentWindow.postMessage({type:'wsSetEditMode',active:false},'*');};setTimeout(_em,300);setTimeout(_em,900);}catch(e){}
     try{ if(!localStorage.getItem('ws_edhint')){ var _efh=document.getElementById('edFirstHint'); if(_efh)_efh.style.display='flex'; } }catch(e){}
   } else {
@@ -5649,7 +5663,7 @@ a{color:#2d7a3a}
 <div class="wrap">
 <a href="/" class="back">← Back to Websprout</a>
 <h1>Terms of Service</h1>
-<p class="meta">Last updated: June 2026</p>
+<p class="meta">Last updated: October 2026</p>
 
 <p>These Terms of Service ("Terms") govern your use of Websprout (the "Service"), operated by Websprout ("we", "us"). By creating an account, building a site, or using any feature, you agree to these Terms. If you do not agree, do not use the Service.</p>
 
@@ -5660,7 +5674,7 @@ a{color:#2d7a3a}
 <p>You are responsible for all activity under your account and for keeping your sign-in access secure. You must provide accurate information and be old enough to form a binding contract where you live. You may not impersonate others or build sites you are not authorized to create.</p>
 
 <h2>3. Subscriptions and payment</h2>
-<p>Paid plans are billed in advance through Stripe at the price shown at checkout and renew automatically until cancelled. You can cancel anytime; cancellation stops future charges, and paid features remain available through the end of the current billing period. Fees are non-refundable except where required by law. We may change pricing with reasonable notice, applied to future billing periods.</p>
+<p>Pro may be offered with a free trial (currently seven days). When you start a trial we collect a payment method but do not charge you during the trial period. Unless you cancel before the trial ends, your paid subscription begins automatically when the trial ends and the then-current plan price is charged to your payment method. You can cancel at any time during the trial to avoid being charged. Paid plans are billed in advance through Stripe at the price shown at checkout and renew automatically until cancelled. You can cancel anytime; cancellation stops future charges, and paid features remain available through the end of the current billing period. Fees are non-refundable except where required by law. We may change pricing with reasonable notice, applied to future billing periods.</p>
 
 <h2>4. Your content and ownership of downloaded code</h2>
 <p>You own the content you provide and the website source code you download while you have an active paid subscription. Downloaded code is the static files of your site (the HTML, CSS, JavaScript and layout we generated for you) and is yours to host and use for any lawful purpose, personal or commercial.</p>
@@ -5726,7 +5740,7 @@ a{color:#2d7a3a}
 <div class="wrap">
 <a href="/" class="back">← Back to Websprout</a>
 <h1>Privacy Policy</h1>
-<p class="meta">Last updated: June 2026</p>
+<p class="meta">Last updated: October 2026</p>
 <h2>What we collect</h2>
 <p>When you sign in, we store your email address and basic account details (your plan, and a payment reference if you upgrade). We use Stripe for payments — we never see or store your card details. When you build with Websprout, we store the sites you create on our servers so your work is saved to your account and your published sites stay live: this includes your drafts and published pages, any products you add, customer reviews, the contact-form messages (leads) your visitors send you, and basic usage counts.</p>
 <p>To operate, secure and improve the service, we also keep a short activity log of visits and key actions (such as signing in, generating a site, and publishing). Each entry includes an approximate location (country, region and city) derived from your IP address, a one-way hashed form of your IP address (we do not store your raw IP address in this log), your browser and device type, and the referring link that brought you to the site. We use this only for our own product analytics, security and understanding how Websprout is used. We do not sell it or share it for advertising.</p>
@@ -5787,7 +5801,7 @@ a{color:#2d7a3a}
 <div class="wrap">
 <a href="/" class="back">← Back to Websprout</a>
 <h1>Accessibility</h1>
-<p class="meta">Last updated: June 2026</p>
+<p class="meta">Last updated: October 2026</p>
 <p>We want Websprout to be usable by as many people as possible, including people who use screen readers, keyboard navigation, or other assistive technology. We aim to meet the Web Content Accessibility Guidelines (WCAG) 2.1 at level AA.</p>
 <h2>What we have done</h2>
 <p>Across the Websprout app we use semantic structure and landmarks, a skip-to-content link, labels on form fields, clearly visible keyboard focus indicators, and text that meets AA color-contrast guidance. We review these as the product changes.</p>
@@ -8161,7 +8175,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r273';
+const BUILD_ID = '2026-06-10-r277';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
