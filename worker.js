@@ -201,7 +201,7 @@ The site MUST be search- and share-ready. Set <html lang="en">. In <head>, in or
 For any business that serves customers at a place or by appointment, include a clear, visible "Visit us" / "Hours & location" block (its own section, or part of the contact band) showing the address as "[Your Address]" and hours as "[Your Hours]", plus a directions link that opens a map: <a href="https://maps.google.com/?q=[Your Address]" target="_blank" rel="noopener">Get directions</a> (keep the [Your Address] token in the href so it works the moment the owner fills it in). Do NOT embed a live map iframe — the address is a placeholder at build time, so the directions link is the right call.
 
 ━━━ TECHNICAL ━━━
-All CSS in one <style> tag. All JS in one <script> tag before </body>. The ONLY permitted external resource is Google Fonts: include ONE <link> in the <head> that loads two complementary font families and actually use them (everything else must be self-contained — no other CDNs, no JS libraries, no remote images). Always include a system fallback in every font-family stack (e.g. ...,system-ui,-apple-system,sans-serif). Never use vh or vw for HEIGHTS (use px or %). opacity:0 is fine as the START of an entrance animation, as long as the element animates to full opacity. End with </body></html>.`;
+All CSS in one <style> tag. All JS in one <script> tag before </body>. The ONLY permitted external resource is Google Fonts: include ONE <link> in the <head> that loads two complementary font families and actually use them (everything else must be self-contained — no other CDNs, no JS libraries, no remote images). Always include a system fallback in every font-family stack (e.g. ...,system-ui,-apple-system,sans-serif). Never use vh or vw for HEIGHTS (use px or %). Write only valid plain CSS: NEVER use preprocessor functions like darken(), lighten(), or mix() (they are not real CSS and silently break the whole declaration), and NEVER put a hex-valued CSS variable inside rgba()/hsla() such as rgba(var(--navy),.9) (also invalid) — use a direct rgba(...) value or a separate --x-rgb:R,G,B variable. opacity:0 is fine as the START of an entrance animation, as long as the element animates to full opacity. End with </body></html>.`;
 
 const MODIFY = `You are an expert front-end developer making precise, surgical edits to a website. The user will describe what they want changed.
 
@@ -286,8 +286,8 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-06-10-r277">
-<script>window._wsBuild="2026-06-10-r277";console.log("%c[Websprout] build 2026-06-10-r277 — AA fixes (icon aria-hidden, send-button name, preview iframe title) and refreshed Terms (trial disclosure) + Accessibility date","color:#4ade80;font-weight:700")</script>
+<meta name="ws-build" content="2026-06-10-r279">
+<script>window._wsBuild="2026-06-10-r279";console.log("%c[Websprout] build 2026-06-10-r279 — invalid CSS repair: darken()/lighten()/mix() and rgba(var(--hex),a) are fixed at generation and on serve, so buttons and nav backgrounds no longer silently break","color:#4ade80;font-weight:700")</script>
 <style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}</style>
 <script>
 window.wsConfirm=function(opts){
@@ -3004,6 +3004,7 @@ function setPreview(html){
   function wsRenderProducts(list){var esc=function(x){x=String(x==null?"":x);return x.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;").split(String.fromCharCode(34)).join("&quot;");};var css='<style>.wsp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:22px;max-width:1100px;margin:0 auto;padding:8px 0}.wsp-card{border:1px solid rgba(128,128,128,.18);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;background:rgba(128,128,128,.04)}.wsp-img{aspect-ratio:4/3;background-size:cover;background-position:center}.wsp-noimg{background:linear-gradient(135deg,rgba(128,128,128,.12),rgba(128,128,128,.05))}.wsp-body{padding:16px;display:flex;flex-direction:column;gap:6px}.wsp-name{font-weight:700;font-size:1.05rem}.wsp-price{font-weight:700;opacity:.85}.wsp-desc{font-size:.9rem;opacity:.7;line-height:1.5}.wsp-buy{margin-top:8px;display:inline-block;text-align:center;padding:10px 16px;border:1px solid currentColor;border-radius:10px;text-decoration:none;color:inherit;font-weight:600}.wsp-tabs{position:relative;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:1100px;margin:0 auto 26px;padding-bottom:12px}.wsp-tab{background:none;border:none;font:inherit;font-weight:700;font-size:.9rem;letter-spacing:.03em;text-transform:uppercase;color:inherit;opacity:.45;cursor:pointer;padding:6px 14px;transition:opacity .2s}.wsp-tab.wsp-tab-on{opacity:1}.wsp-tab-ind{position:absolute;bottom:0;height:2px;background:currentColor;border-radius:2px;transition:left .28s ease,width .28s ease;left:0;width:0}</style>';if(!list||!list.length){return css+'<div style="text-align:center;opacity:.55;padding:44px 0;font-size:1rem">Your products show here - add them from the Manage menu (Products &amp; cart).</div>';}var cards="";for(var i=0;i<list.length;i++){var p=list[i]||{};var img=p.img?('<div class="wsp-img" style="background-image:url('+esc(p.img)+')"></div>'):'<div class="wsp-img wsp-noimg"></div>';var price=p.price?('<div class="wsp-price">'+esc(p.price)+'</div>'):"";var desc=p.desc?('<div class="wsp-desc">'+esc(p.desc)+'</div>'):"";var pu=String(p.payUrl||"");var buy=(pu.indexOf("https://")===0)?('<a class="wsp-buy" href="'+esc(pu)+'" target="_blank" rel="noopener">Buy now</a>'):('<button class="wsp-buy" type="button" onclick="if(window.wsAddToCart)wsAddToCart('+i+')">Add to cart</button>');cards+='<div class="wsp-card" data-category="'+esc(p.category||"")+'">'+img+'<div class="wsp-body"><div class="wsp-name">'+esc(p.name||"Product")+'</div>'+price+desc+buy+'</div></div>';}var _cats=[];for(var _ci=0;_ci<list.length;_ci++){var _cc=String((list[_ci]||{}).category||"").trim();if(_cc&&_cats.indexOf(_cc)<0)_cats.push(_cc);}var _tabs="";if(_cats.length>=2){_tabs='<div class="wsp-tabs"><button type="button" class="wsp-tab wsp-tab-on" data-cat="">All</button>';for(var _ti=0;_ti<_cats.length;_ti++){_tabs+='<button type="button" class="wsp-tab" data-cat="'+esc(_cats[_ti])+'">'+esc(_cats[_ti])+'</button>';}_tabs+='<span class="wsp-tab-ind"></span></div>';}return css+_tabs+'<div class="wsp-grid">'+cards+'</div>';}
   var bodyClose=html.lastIndexOf('</body>');
   var out=bodyClose>-1?html.slice(0,bodyClose)+slotScript+'</body>'+html.slice(bodyClose+7):html+slotScript;
+  try{var _ne=out.indexOf('</nav>'),_he=out.indexOf('</header>'),_bd=-1;if(_ne>=0)_bd=_ne+6;if(_he>=0&&_he+9>_bd)_bd=_he+9;if(_bd>0&&out.slice(0,_bd).indexOf('<!--WS_PRODUCTS-->')>-1){out=out.slice(0,_bd).split('<!--WS_PRODUCTS-->').join('')+out.slice(_bd);if(out.indexOf('<!--WS_PRODUCTS-->')<0){var _ps='<section id="shop" style="padding:64px 24px"><div style="max-width:1100px;margin:0 auto"><h2 style="text-align:center;margin:0 0 28px;font-size:2rem">Shop</h2><!--WS_PRODUCTS--></div></section>';var _pbi=out.lastIndexOf('</body>');out=_pbi>-1?(out.slice(0,_pbi)+_ps+out.slice(_pbi)):(out+_ps);}}}catch(e){}
   try{if(out.indexOf('<!--WS_PRODUCTS-->')>-1){out=out.split('<!--WS_PRODUCTS-->').join(wsRenderProducts(window._wsProducts||[]));}}catch(e){}
   try{ if(window._wsCartHtml){ var _cbi=out.lastIndexOf('</body>'); out=_cbi>-1?(out.slice(0,_cbi)+window._wsCartHtml+out.slice(_cbi)):(out+window._wsCartHtml); } }catch(e){}
   f.style.height='4000px';
@@ -7557,6 +7558,8 @@ async function servePublished(slug, env, path){
       else { return new Response(pubPage404(), { status: 404, headers: { 'Content-Type':'text/html; charset=utf-8' } }); }
     }
   }
+  html = wsFixCss(html);
+  try{var _ne=html.indexOf('</nav>'),_he=html.indexOf('</header>'),_bd=-1;if(_ne>=0)_bd=_ne+6;if(_he>=0&&_he+9>_bd)_bd=_he+9;if(_bd>0&&html.slice(0,_bd).indexOf('<!--WS_PRODUCTS-->')>-1){html=html.slice(0,_bd).split('<!--WS_PRODUCTS-->').join('')+html.slice(_bd);if(html.indexOf('<!--WS_PRODUCTS-->')<0){var _ps='<section id="shop" style="padding:64px 24px"><div style="max-width:1100px;margin:0 auto"><h2 style="text-align:center;margin:0 0 28px;font-size:2rem">Shop</h2><!--WS_PRODUCTS--></div></section>';var _pbi=html.lastIndexOf('</body>');html=_pbi>-1?(html.slice(0,_pbi)+_ps+html.slice(_pbi)):(html+_ps);}}}catch(e){}
   if (html.indexOf('<!--WS_PRODUCTS-->') > -1) {
     try {
       let _sid = ''; const _m0 = await env.KV.get('pubmeta:' + slug); if (_m0) { try { _sid = (JSON.parse(_m0).siteId) || ''; } catch(e){} }
@@ -8175,7 +8178,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-06-10-r277';
+const BUILD_ID = '2026-06-10-r279';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -9060,6 +9063,7 @@ async function doGeneratePage(request, env){
     let html = cleanHTML(result.data);
     html = restoreDataUris(html, ref.map);
     let finalHtml = html.includes('</html>') ? html : html + '\n</body>\n</html>';
+    finalHtml = wsFixCss(finalHtml);
     finalHtml = sanitizeGenerated(finalHtml);
     finalHtml = ensureMobile(finalHtml);
     finalHtml = tidyGenerated(finalHtml);
@@ -9143,6 +9147,7 @@ async function doGenerate(request, env) {
     if (result.error) return fail(result.error);
     const generatedHtml = cleanHTML(result.data);
     let finalHtml = generatedHtml.includes('</html>') ? generatedHtml : generatedHtml + '\n</body>\n</html>';
+    finalHtml = wsFixCss(finalHtml);
     finalHtml = sanitizeGenerated(finalHtml);
     finalHtml = ensureMobile(finalHtml);
     finalHtml = tidyGenerated(finalHtml);
@@ -9429,6 +9434,25 @@ function ensureMobile(html){
     }
   }catch(e){}
   return html;
+}
+
+// Repair invalid CSS the model sometimes emits (SASS/LESS funcs + hex-in-rgba),
+// which silently break whole declarations (e.g. buttons lose their background).
+function wsFixCss(h){
+  try{
+    // darken()/lighten()/mix()/saturate() as 2-arg preprocessor calls are NOT valid CSS -> use the base color
+    h=h.replace(/\b(?:darken|lighten|saturate|desaturate|mix)\s*\(\s*([^,()]+(?:\([^()]*\))?[^,()]*)\s*,[^)]*\)/g,"$1");
+    // rgba(var(--hexvar), a) is invalid -> convert the hex to real rgba channels
+    var _m2={},_re2=/--([\w-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\s*[;}]/g,_mm;
+    while((_mm=_re2.exec(h))){_m2[_mm[1]]=_mm[2];}
+    h=h.replace(/rgba?\(\s*var\(\s*--([\w-]+)\s*\)\s*,\s*([0-9.]+)\s*\)/g,function(_f,_n,_a){
+      var _hx=_m2[_n];if(!_hx)return _f;
+      var _c=_hx.replace("#","");if(_c.length===3)_c=_c[0]+_c[0]+_c[1]+_c[1]+_c[2]+_c[2];
+      var _r=parseInt(_c.slice(0,2),16),_g=parseInt(_c.slice(2,4),16),_b=parseInt(_c.slice(4,6),16);
+      if(_r!==_r||_g!==_g||_b!==_b)return _f;
+      return "rgba("+_r+","+_g+","+_b+","+_a+")";});
+  }catch(e){}
+  return h;
 }
 
 function cleanHTML(apiResponse) {
