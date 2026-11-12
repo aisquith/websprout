@@ -1224,9 +1224,9 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-11-12-r282">
+<meta name="ws-build" content="2026-11-12-r283">
 <script src="/ws-engine.js" defer></script>
-<script>window._wsBuild="2026-11-12-r282";console.log("%c[Websprout] build 2026-11-12-r282 — fully no-AI: deterministic creation + structured visual editor (fields, sections, palette); Gemini generation and chat editing removed","color:#4ade80;font-weight:700")</script>
+<script>window._wsBuild="2026-11-12-r283";console.log("%c[Websprout] build 2026-11-12-r283 — fully no-AI: deterministic creation + structured visual editor (fields, sections, palette); Gemini generation and chat editing removed","color:#4ade80;font-weight:700")</script>
 <style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}</style>
 <script>
 window.wsConfirm=function(opts){
@@ -1991,8 +1991,8 @@ window.wsClearSiteState=function(){try{var _keep={ws_rm:1,ws_focus:1,ws_theme:1,
       <div class="stat-l">Sites grown</div>
     </div>
     <div class="hero-stat">
-      <div class="stat-n">~90s</div>
-      <div class="stat-l">Avg grow time</div>
+      <div class="stat-n">Instant</div>
+      <div class="stat-l">to build</div>
     </div>
     <div class="hero-stat">
       <div class="stat-n">$10</div>
@@ -2006,67 +2006,42 @@ window.wsClearSiteState=function(){try{var _keep={ws_rm:1,ws_focus:1,ws_theme:1,
 
   <!-- BUILDER CARD -->
   <div class="builder-wrap" id="builder">
-    <div class="builder-label">&#8594; Describe your website &mdash; watch it grow</div>
+    <div class="builder-label">&#8594; Tell us about your business</div>
     <div class="builder-card">
-      <div class="step-tabs">
+      <div class="step-tabs" style="display:none">
         <button class="step-tab active" id="tab1"><span class="step-n">1</span>Site type</button>
         <button class="step-tab" id="tab2"><span class="step-n">2</span>Details</button>
         <button class="step-tab" id="tab3"><span class="step-n">3</span>Generate</button>
       </div>
 
       <div class="panel active" id="panel1">
-        <div class="panel-q">Describe your website</div>
-        <textarea id="customPrompt" class="dark-input describe-box" rows="4" placeholder="Tell us about your business in your own words — what you do, who it's for, the vibe you want, and anything you'd like on the site.
-
-e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Show our menu, our story, hours, and a contact form."></textarea>
-        <div class="describe-vibe">
-          <span class="describe-vibe-lbl">Vibe</span>
-          <div class="vibe-row">
-            <button class="vibe-chip" data-style="modern and minimal">Modern</button>
-            <button class="vibe-chip" data-style="bold and colorful">Bold</button>
-            <button class="vibe-chip" data-style="warm and friendly">Warm</button>
-            <button class="vibe-chip" data-style="dark and premium">Premium</button>
-            <button class="vibe-chip" data-style="clean and professional">Professional</button>
-            <button class="vibe-chip" data-style="fun and playful">Playful</button>
-          </div>
-        </div>
-        <div class="panel-foot">
-          <span class="p-hint">Free to generate &amp; preview</span>
-          <button class="gen-btn" id="next1"><span>Grow my site</span><span>&#127807;</span></button>
-        </div>
-      </div>
-
-      <div class="panel" id="panel2">
-        <div class="panel-q">Tell us a bit more <span style="color:rgba(255,255,255,.72);font-weight:400">(all optional)</span></div>
+        <div class="panel-q">Tell us about your business</div>
         <div class="detail-grid">
           <div>
             <div class="field-lbl">Business name</div>
-            <input id="bizName" aria-label="Business name" class="dark-input" type="text" placeholder="Leave blank - AI will create one">
+            <input id="bizName" aria-label="Business name" class="dark-input" type="text" placeholder="e.g. Marguerite Bakery">
           </div>
-          <div>
-            <div class="field-lbl">Specific requests</div>
-            <input id="bizExtra" aria-label="Style or extra details" class="dark-input" type="text" placeholder="Dark theme, add pricing...">
-          </div>
-        </div>
-        <div class="detail-grid" style="margin-top:14px">
           <div>
             <div class="field-lbl">What kind of business?</div>
             <input id="bizType" aria-label="Business type" class="dark-input" type="text" placeholder="Bakery, barber, lawn care...">
           </div>
-          <div>
-            <div class="field-lbl">Online store?</div>
-            <label style="display:flex;align-items:center;gap:8px;color:#fff;font-size:14px;padding:10px 0;cursor:pointer"><input type="checkbox" id="bizEcom" style="width:18px;height:18px;accent-color:#2d7a3a"> Yes, I sell products online</label>
-          </div>
         </div>
-        <div style="margin-top:12px">
-          <div class="field-lbl">Your products or services <span style="color:rgba(255,255,255,.6);font-weight:400">(one per line: Name - $Price - short description)</span></div>
+        <label style="display:flex;align-items:center;gap:8px;color:#fff;font-size:14px;padding:12px 0;cursor:pointer"><input type="checkbox" id="bizEcom" style="width:18px;height:18px;accent-color:#2d7a3a"> I sell products online (adds a shop)</label>
+        <div>
+          <div class="field-lbl">Your products or services <span style="color:rgba(255,255,255,.55);font-weight:400">(one per line: Name - $Price - short description)</span></div>
           <textarea id="bizList" aria-label="Products or services" class="dark-input" rows="4" placeholder="Croissant Box - $24 - Six butter croissants&#10;Sourdough Loaf - $8 - Baked fresh daily"></textarea>
         </div>
+        <div style="margin-top:12px">
+          <div class="field-lbl">One line about your business <span style="color:rgba(255,255,255,.55);font-weight:400">(optional)</span></div>
+          <input id="customPrompt" aria-label="One line about your business" class="dark-input" type="text" placeholder="Naturally leavened bread and very good coffee.">
+        </div>
         <div class="panel-foot">
-          <button class="btn-back" id="back2">&#8592; Back</button>
-          <button class="btn-next on" id="next2">Continue &#8594;</button>
+          <span class="p-hint">Free to build &amp; preview</span>
+          <button class="gen-btn on" id="next1"><span>Grow my site</span><span>&#127807;</span></button>
         </div>
       </div>
+
+      <div class="panel" id="panel2"></div>
 
       <div class="panel" id="panel3">
         <div id="gen-area">
@@ -4043,7 +4018,7 @@ document.addEventListener('DOMContentLoaded',function(){
   try{var _pp=localStorage.getItem('ws_pending_prompt');if(_pp&&cpEl&&!cpEl.value){cpEl.value=_pp;localStorage.removeItem('ws_pending_prompt');selectedType='__c__';var _n1=document.getElementById('next1');if(_n1)_n1.classList.add('on');}}catch(e){}
   if(cpEl)cpEl.addEventListener('input',function(){
     selectedType=cpEl.value.trim()?'__c__':'';
-    document.getElementById('next1').classList.toggle('on',!!cpEl.value.trim());
+    document.getElementById('next1').classList.add('on');
   });
 
   // Vibe chips
@@ -4056,13 +4031,12 @@ document.addEventListener('DOMContentLoaded',function(){
 
   // Navigation
   document.getElementById('next1').addEventListener('click',function(){
-    var txt=cpEl?cpEl.value.trim():'';
-    if(!txt&&!(selectedType&&selectedType!=='__c__')){if(cpEl)cpEl.focus();toast('Describe your website first 🌱');return;}
-    if(txt)selectedType='__c__';
-    doGenerate();
+    var ty=(document.getElementById('bizType')||{}).value||'';
+    if(!ty.trim()){var bt=document.getElementById('bizType');if(bt)bt.focus();toast('What kind of business is it? 🌱');return;}
+    doCreateV3();
   });
-  document.getElementById('next2').addEventListener('click',function(){buildSummary();showPanel(3);});
-  document.getElementById('back2').addEventListener('click',function(){showPanel(1);});
+  var _n2e=document.getElementById('next2');if(_n2e)_n2e.addEventListener('click',function(){buildSummary();showPanel(3);});
+  var _b2e=document.getElementById('back2');if(_b2e)_b2e.addEventListener('click',function(){showPanel(1);});
   document.getElementById('back3').addEventListener('click',function(){showPanel(2);});
 
   // Scroll to builder
@@ -4859,7 +4833,7 @@ document.addEventListener('DOMContentLoaded',function(){
     document.body.insertAdjacentHTML('beforeend','<div style="position:fixed;bottom:10px;left:10px;background:red;color:white;padding:10px;z-index:999999;font-size:12px;max-width:400px;word-break:break-all">JS Error: '+domErr.message+'</div>');
     // Try to bind essential buttons anyway
     try{document.querySelectorAll('.type-btn').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.type-btn').forEach(function(x){x.classList.remove('sel');});b.classList.add('sel');selectedType=b.dataset.type==='OTHER'?'':b.dataset.type;document.getElementById('next1').classList.add('on');});});}catch(e2){}
-    try{document.getElementById('next1').addEventListener('click',function(){if(selectedType||document.getElementById('customPrompt').value.trim())showPanel(2);});}catch(e2){}
+    try{}catch(e2){}
     try{document.getElementById('next2').addEventListener('click',function(){buildSummary();showPanel(3);});}catch(e2){}
     try{document.getElementById('back2').addEventListener('click',function(){showPanel(1);});}catch(e2){}
     try{document.getElementById('back3').addEventListener('click',function(){showPanel(2);});}catch(e2){}
@@ -9266,7 +9240,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-11-12-r282';
+const BUILD_ID = '2026-11-12-r283';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
