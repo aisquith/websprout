@@ -1224,9 +1224,9 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-11-12-r283">
+<meta name="ws-build" content="2026-11-12-r285">
 <script src="/ws-engine.js" defer></script>
-<script>window._wsBuild="2026-11-12-r283";console.log("%c[Websprout] build 2026-11-12-r283 — fully no-AI: deterministic creation + structured visual editor (fields, sections, palette); Gemini generation and chat editing removed","color:#4ade80;font-weight:700")</script>
+<script>window._wsBuild="2026-11-12-r285";console.log("%c[Websprout] build 2026-11-12-r285 — fully no-AI: deterministic creation + structured visual editor (fields, sections, palette); Gemini generation and chat editing removed","color:#4ade80;font-weight:700")</script>
 <style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}</style>
 <script>
 window.wsConfirm=function(opts){
@@ -2026,14 +2026,9 @@ window.wsClearSiteState=function(){try{var _keep={ws_rm:1,ws_focus:1,ws_theme:1,
             <input id="bizType" aria-label="Business type" class="dark-input" type="text" placeholder="Bakery, barber, lawn care...">
           </div>
         </div>
-        <label style="display:flex;align-items:center;gap:8px;color:#fff;font-size:14px;padding:12px 0;cursor:pointer"><input type="checkbox" id="bizEcom" style="width:18px;height:18px;accent-color:#2d7a3a"> I sell products online (adds a shop)</label>
-        <div>
-          <div class="field-lbl">Your products or services <span style="color:rgba(255,255,255,.55);font-weight:400">(one per line: Name - $Price - short description)</span></div>
-          <textarea id="bizList" aria-label="Products or services" class="dark-input" rows="4" placeholder="Croissant Box - $24 - Six butter croissants&#10;Sourdough Loaf - $8 - Baked fresh daily"></textarea>
-        </div>
-        <div style="margin-top:12px">
-          <div class="field-lbl">One line about your business <span style="color:rgba(255,255,255,.55);font-weight:400">(optional)</span></div>
-          <input id="customPrompt" aria-label="One line about your business" class="dark-input" type="text" placeholder="Naturally leavened bread and very good coffee.">
+        <div style="margin-top:14px">
+          <div class="field-lbl">A few details <span style="color:rgba(255,255,255,.55);font-weight:400">(optional)</span></div>
+          <textarea id="customPrompt" aria-label="A few details about your business" class="dark-input" rows="4" placeholder="What you offer, what makes you different, and the feel you want. A sentence or two is plenty."></textarea>
         </div>
         <div class="panel-foot">
           <span class="p-hint">Free to build &amp; preview</span>
@@ -5014,11 +5009,8 @@ function wsBuildPaletteBar(){ wsEdSel = (typeof wsEdSel==='number'?wsEdSel:0); w
 
 function doCreateV3(){
   var val=function(id){var el=document.getElementById(id);return el?(el.value||''):'';};
-  var isShop=!!(document.getElementById('bizEcom')&&document.getElementById('bizEcom').checked);
   var type=val('bizType').trim()||((typeof selectedType!=='undefined'&&selectedType)?selectedType:'');
-  var payload={name:val('bizName').trim(),type:type,tagline:val('customPrompt').trim().slice(0,200),ecommerce:isShop};
-  var items=parseList(val('bizList'));
-  if(isShop)payload.products=items;else payload.services=items;
+  var payload={name:val('bizName').trim(),type:type,about:val('customPrompt').trim().slice(0,400)};
   var btn=document.getElementById('gbtn'),gt=document.getElementById('gbtnTxt'),ld=document.getElementById('loading');
   if(btn)btn.disabled=true;if(gt)gt.textContent='Growing...';if(ld)ld.classList.add('on');
   fetch('/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
@@ -9240,7 +9232,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-11-12-r283';
+const BUILD_ID = '2026-11-12-r285';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
@@ -10143,7 +10135,7 @@ async function doCreate(request, env) {
   let body; try { body = await request.json(); } catch { return fail('Invalid request'); }
   try {
     const d = body || {};
-    const isShop = !!d.ecommerce;
+    const isShop = !!d.ecommerce || /shop|store|boutique|retail|e-?commerce|goods|merch/i.test((d.type || '').toString());
     const biz = {
       name: (d.name || '').toString().trim().slice(0, 80) || 'Your Business',
       type: (d.type || '').toString().trim().slice(0, 60) || 'Local Business',
@@ -10171,7 +10163,7 @@ async function doCreate(request, env) {
     // Only sections we actually have content for — never a placeholder, never fabricated numbers.
     if (d.announce) add('announce', { text: String(d.announce).slice(0, 120), emoji: knownType ? '1f389' : '' });
     add('hero', { variant: 'photo', title: '', tagline: biz.tagline, status: false, emoji: '' });
-    if (isShop && has(d.products)) add('products', { variant: 'grid', title: (d.shopTitle ? String(d.shopTitle).slice(0, 60) : 'Shop'), items: d.products.slice(0, 48).map(function (p) { return { name: (p.name || '').toString().slice(0, 80), price: (p.price || '').toString().slice(0, 20), desc: (p.desc || '').toString().slice(0, 160), emoji: (p.emoji || '').toString().slice(0, 12), photo: '' }; }) });
+    if (isShop) add('products', { variant: 'grid', title: (d.shopTitle ? String(d.shopTitle).slice(0, 60) : 'Shop'), items: (Array.isArray(d.products) ? d.products.slice(0, 48).map(function (p) { return { name: (p.name || '').toString().slice(0, 80), price: (p.price || '').toString().slice(0, 20), desc: (p.desc || '').toString().slice(0, 160), emoji: (p.emoji || '').toString().slice(0, 12), photo: '' }; }) : []) });
     else if (!isShop && has(biz.services)) { add('services', { variant: 'grid' }); if (!knownType) { var _sv = site.sections[site.sections.length - 1]; _sv.items = (_sv.items || []).map(function (it) { it.emoji = ''; return it; }); } }
     if (biz.about) add('intro', { variant: 'center', text: biz.about, emoji: knownType ? WSENGINE.emojiRecsFor(biz.type)[1] : '' });
     if (has(biz.reviews)) add('reviews', { variant: 'wall' });
