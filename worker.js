@@ -1017,9 +1017,9 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="website builder, free website builder, small business website, instant website, no-code website, website maker, make a website, local business website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-11-12-r296">
+<meta name="ws-build" content="2026-11-12-r297">
 <script src="/ws-engine.js" defer></script>
-<script>window._wsBuild="2026-11-12-r296";console.log("%c[Websprout] build 2026-11-12-r296 — fully no-AI: deterministic creation + structured visual editor (fields, sections, palette); Gemini generation and chat editing removed","color:#4ade80;font-weight:700")</script>
+<script>window._wsBuild="2026-11-12-r297";console.log("%c[Websprout] build 2026-11-12-r297 — fully no-AI: deterministic creation + structured visual editor (fields, sections, palette); Gemini generation and chat editing removed","color:#4ade80;font-weight:700")</script>
 <style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}</style>
 <script>
 window.wsConfirm=function(opts){
@@ -1809,7 +1809,58 @@ nav.scrolled{background:rgba(6,12,5,.78)!important;backdrop-filter:blur(16px) sa
 @media(max-width:600px){.acct-menu{position:fixed;top:60px;right:3vw;left:3vw;width:auto}}
 .ws-ed-host{padding:4px 14px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
 .ws-ed-host:empty{display:none}
+.qa-screen{position:fixed;inset:0;z-index:2147483000;display:none;align-items:center;justify-content:center;padding:24px;background:radial-gradient(1200px 720px at 50% -12%,rgba(52,211,153,.16),transparent 60%),radial-gradient(900px 560px at 85% 110%,rgba(34,211,238,.1),transparent 55%),#050a04;opacity:0;transition:opacity .32s ease}
+.qa-screen.on{display:flex;opacity:1}
+.qa-box{width:100%;max-width:400px;text-align:center;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif}
+.qa-logo{display:inline-flex;width:64px;height:64px;align-items:center;justify-content:center;border-radius:19px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.26);box-shadow:0 0 0 7px rgba(52,211,153,.045),0 14px 40px -12px rgba(34,197,94,.5);margin-bottom:22px;animation:qaPulse 2.4s ease-in-out infinite}
+@keyframes qaPulse{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-5px) scale(1.05)}}
+.qa-title{font-size:24px;font-weight:800;color:#fff;letter-spacing:-.5px;margin:0 0 6px}
+.qa-sub{font-size:14px;color:rgba(255,255,255,.52);margin:0 0 30px}
+.qa-steps{list-style:none;margin:0 auto 26px;padding:0;max-width:286px;text-align:left;display:flex;flex-direction:column;gap:2px}
+.qa-step{display:flex;align-items:center;gap:13px;padding:9px 6px;font-size:14px;font-weight:500;color:rgba(255,255,255,.38);transition:color .3s}
+.qa-step.active{color:#fff}
+.qa-step.done{color:rgba(255,255,255,.78)}
+.qa-ic{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.17);position:relative;box-sizing:border-box;transition:border-color .3s,background .3s}
+.qa-step.active .qa-ic{border-color:#4ade80;border-top-color:transparent;animation:qaSpin .7s linear infinite}
+@keyframes qaSpin{to{transform:rotate(360deg)}}
+.qa-step.done .qa-ic{border-color:#34d399;background:#34d399;animation:none}
+.qa-step.done .qa-ic::after{content:"";position:absolute;left:6px;top:2.5px;width:5px;height:9px;border:solid #06210f;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.qa-bar{height:4px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;max-width:286px;margin:0 auto}
+.qa-fill{height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,#34d399,#22d3ee);transition:width .45s cubic-bezier(.3,.7,.3,1)}
+@media(prefers-reduced-motion:reduce){.qa-logo{animation:none}.qa-step.active .qa-ic{animation:none;border-top-color:#4ade80}}
 </style>
+<script id="ws-qa">
+(function(){
+  var START=0, DUR=2500;
+  window.wsQaShow=function(){
+    var sc=document.getElementById('qaScreen');if(!sc)return;
+    var steps=sc.querySelectorAll('.qa-step');var fill=document.getElementById('qaFill');
+    for(var k=0;k<steps.length;k++)steps[k].className='qa-step';
+    if(fill)fill.style.width='0%';
+    sc.classList.add('on');sc.setAttribute('aria-hidden','false');
+    START=Date.now();
+    var n=steps.length;var per=n?Math.max(300,Math.floor(DUR/n)):400;var i=0;
+    (function tick(){
+      if(i>0){steps[i-1].classList.remove('active');steps[i-1].classList.add('done');}
+      if(i<n){steps[i].classList.add('active');if(fill)fill.style.width=Math.round(((i+1)/n)*94)+'%';i++;setTimeout(tick,per);}
+      else{if(fill)fill.style.width='97%';}
+    })();
+  };
+  window.wsQaHide=function(cb){
+    var sc=document.getElementById('qaScreen');
+    if(!sc||!sc.classList.contains('on')){if(typeof cb==='function')cb();return;}
+    var wait=Math.max(0,DUR-(Date.now()-(START||Date.now())));
+    setTimeout(function(){
+      var steps=sc.querySelectorAll('.qa-step');for(var k=0;k<steps.length;k++){steps[k].classList.remove('active');steps[k].classList.add('done');}
+      var fill=document.getElementById('qaFill');if(fill)fill.style.width='100%';
+      setTimeout(function(){
+        sc.classList.remove('on');sc.setAttribute('aria-hidden','true');
+        if(typeof cb==='function')cb();
+      },320);
+    },wait);
+  };
+})();
+</script>
 <script id="ws-acctmenu">
 (function(){
   function dn(me){var n=((me&&me.name)||'').trim();if(n)return n.split(' ')[0];var em=((me&&me.email)||'').trim();if(em){var lp=em.split('@')[0].split(/[._+]/)[0];if(lp)return lp.charAt(0).toUpperCase()+lp.slice(1);}return 'there';}
@@ -1862,6 +1913,22 @@ nav.scrolled{background:rgba(6,12,5,.78)!important;backdrop-filter:blur(16px) sa
 <a class="ws-skip" href="#wsMain">Skip to main content</a>
 
 <div class="toast" id="toast"></div>
+
+<div class="qa-screen" id="qaScreen" aria-hidden="true" role="status" aria-live="polite">
+  <div class="qa-box">
+    <div class="qa-logo"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" aria-hidden="true"><path d="M12 21V12" stroke="#4ade80" stroke-width="2.3" stroke-linecap="round"/><path d="M12 14.5C10.4 9.8 6.2 7.6 3 8.2C3.4 13 7.6 15.5 12 14.5Z" fill="#4ade80"/><path d="M12 13C13.5 8.2 17.8 6 21 6.6C20.6 11.4 16.4 13.9 12 13Z" fill="#34d399"/></svg></div>
+    <div class="qa-title">Growing your site</div>
+    <div class="qa-sub">Running it through our quality checks</div>
+    <ul class="qa-steps" id="qaSteps">
+      <li class="qa-step"><span class="qa-ic"></span><span>Building your layout</span></li>
+      <li class="qa-step"><span class="qa-ic"></span><span>Writing your content</span></li>
+      <li class="qa-step"><span class="qa-ic"></span><span>Checking colour &amp; contrast</span></li>
+      <li class="qa-step"><span class="qa-ic"></span><span>Optimising for mobile</span></li>
+      <li class="qa-step"><span class="qa-ic"></span><span>Final visual quality check</span></li>
+    </ul>
+    <div class="qa-bar"><div class="qa-fill" id="qaFill"></div></div>
+  </div>
+</div>
 
 <nav>
   <a href="/" class="nav-logo">
@@ -4928,19 +4995,21 @@ function doCreateV3(){
   var payload={name:val('bizName').trim(),type:type,about:val('customPrompt').trim().slice(0,400)};
   var btn=document.getElementById('gbtn'),gt=document.getElementById('gbtnTxt'),ld=document.getElementById('loading');
   if(btn)btn.disabled=true;if(gt)gt.textContent='Growing...';if(ld)ld.classList.add('on');
+  if(window.wsQaShow)try{wsQaShow();}catch(e){}
   fetch('/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
     .then(function(x){return x.json().then(function(dd){return {ok:x.ok,d:dd};});})
     .then(function(r){
       if(btn)btn.disabled=false;if(gt)gt.textContent='Regrow';if(ld)ld.classList.remove('on');
-      if(!r.ok||!r.d||r.d.error||!r.d.html){if(typeof toast==='function')toast('Something went wrong - please try again',3000);return;}
+      if(!r.ok||!r.d||r.d.error||!r.d.html){if(window.wsQaHide)wsQaHide();if(typeof toast==='function')toast('Something went wrong - please try again',3000);return;}
       gHTML=r.d.html;window._wsPrompt=payload.tagline||'';window._wsSiteData=r.d.site||null;setTimeout(function(){try{wsBuildPaletteBar();}catch(e){}},400);try{localStorage.setItem('wsh',gHTML);}catch(e){}undoStack=[gHTML];redoStack=[];editCount=0;
       try{window._wsPages=null;window._wsCurPage=0;localStorage.removeItem('ws_pages');var _pt=document.getElementById('wsPageTabs');if(_pt&&_pt.parentNode)_pt.parentNode.removeChild(_pt);}catch(e){}
       try{sessionStorage.setItem('ws_freshgen','1');if(window.wsBloom){try{wsBloom();}catch(_wb){}}}catch(e){}
       var ec=document.getElementById('editCounter');if(ec)ec.style.display='none';if(typeof refreshHistoryBtns==='function')refreshHistoryBtns();
       openStudio(gHTML);setTimeout(populateLiveColors,1200);
       try{if(r.d.siteId){window._wsSite=r.d.siteId;window._wsKey=r.d.formKey;localStorage.setItem('ws_site',r.d.siteId);localStorage.setItem('ws_key',r.d.formKey||'');}if(r.d.inboxUrl){window._wsInbox=r.d.inboxUrl;localStorage.setItem('ws_inbox',r.d.inboxUrl);}}catch(e){}
+      if(window.wsQaHide)wsQaHide();
     })
-    .catch(function(e){if(btn)btn.disabled=false;if(gt)gt.textContent='Regrow';if(ld)ld.classList.remove('on');if(typeof toast==='function')toast('Something went wrong - please try again',3000);});
+    .catch(function(e){if(window.wsQaHide)wsQaHide();if(btn)btn.disabled=false;if(gt)gt.textContent='Regrow';if(ld)ld.classList.remove('on');if(typeof toast==='function')toast('Something went wrong - please try again',3000);});
 }
 function doGenerate(){
   // Anonymous users get 1 free generation to see the wow moment. Signup prompts happen AFTER they see their site,
@@ -9002,7 +9071,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-11-12-r296';
+const BUILD_ID = '2026-11-12-r297';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
