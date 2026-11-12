@@ -1224,9 +1224,9 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="AI website builder, website generator, make a website with AI, free website builder, no-code website, AI web design, build a website fast, website maker, instant website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-11-11-r281">
+<meta name="ws-build" content="2026-11-12-r282">
 <script src="/ws-engine.js" defer></script>
-<script>window._wsBuild="2026-11-11-r281";console.log("%c[Websprout] build 2026-11-11-r281 — v3 structured editor foundation — no-AI creation + live palette switching via the in-browser engine","color:#4ade80;font-weight:700")</script>
+<script>window._wsBuild="2026-11-12-r282";console.log("%c[Websprout] build 2026-11-12-r282 — fully no-AI: deterministic creation + structured visual editor (fields, sections, palette); Gemini generation and chat editing removed","color:#4ade80;font-weight:700")</script>
 <style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}</style>
 <script>
 window.wsConfirm=function(opts){
@@ -2468,7 +2468,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
   </script>
   <div class="s-mobtabs" id="sMobTabs">
     <button class="s-mobtab active" data-mob="preview"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-eye"/></svg>Preview</button>
-    <button class="s-mobtab" data-mob="chat"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-edit"/></svg>Edit with AI</button>
+    <button class="s-mobtab" data-mob="chat"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-edit"/></svg>Edit your site</button>
   </div>
   <script>
   (function(){
@@ -2581,7 +2581,7 @@ e.g. A cozy neighborhood coffee shop and bakery in Austin. Warm and friendly. Sh
 
     <div class="chat">
       <div class="chat-head">
-        <div class="chat-head-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-spark"/></svg>Edit with AI</div>
+        <div class="chat-head-title"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-spark"/></svg>Edit your site</div>
         <div class="chat-head-sub">Describe any change in plain English and I’ll update your site live.</div>
       </div>
       <div class="chat-msgs" id="cms">
@@ -4923,25 +4923,121 @@ function wsGenGiveUpFriendly(){
   try{var tel=document.getElementById('toast');if(tel){tel.innerHTML='🌱 We are growing a lot of sites right now and yours is taking a little longer than usual. Give it a few seconds, then tap <b>Grow my site</b> again.';tel.classList.add('on');setTimeout(function(){tel.classList.remove('on');},13000);}}catch(e){}
 }
 function parseList(txt){var out=[];var NL=String.fromCharCode(10);(txt||'').split(NL).forEach(function(line){line=(line||'').trim();if(line.charAt(0)==='-'||line.charAt(0)==='*')line=line.slice(1).trim();if(!line)return;var parts=line.split(' - ');var name=(parts[0]||'').trim();var price=((parts[1]||'')+'').replace(/[^0-9.]/g,'').trim();var desc=(parts[2]||'').trim();if(name)out.push({name:name.slice(0,80),price:price.slice(0,20),desc:desc.slice(0,160)});});return out;}
-function wsBuildPaletteBar(){
-  if(!window.WS||!window.WS.palettes||!window._wsSiteData)return;
-  var old=document.getElementById('wsPalBar');if(old)old.parentNode.removeChild(old);
-  var bar=document.createElement('div');bar.id='wsPalBar';
-  bar.setAttribute('style','position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99999;display:flex;gap:8px;align-items:center;background:#1a1a1a;padding:10px 14px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.4);max-width:92vw;overflow-x:auto');
-  var lbl=document.createElement('span');lbl.textContent='Palette';lbl.setAttribute('style','color:#fff;font-size:12px;font-weight:700;letter-spacing:.04em;margin-right:4px;white-space:nowrap');bar.appendChild(lbl);
-  window.WS.palettes.forEach(function(p){
-    var sw=document.createElement('button');sw.title=p.name||p.id;sw.setAttribute('aria-label','Use '+(p.name||p.id)+' palette');
-    var sel=window._wsSiteData.palette===p.id;
-    sw.setAttribute('style','width:26px;height:26px;border-radius:50%;border:2px solid '+(sel?'#fff':'rgba(255,255,255,.25)')+';cursor:pointer;flex:none;padding:0;background:linear-gradient(135deg,'+p.base+' 50%,'+p.accent+' 50%)');
-    sw.addEventListener('click',function(){
-      window._wsSiteData.palette=p.id;
-      try{var h=window.WS.renderSite(window._wsSiteData,{mode:'live'});gHTML=h;try{localStorage.setItem('wsh',h);}catch(e){}setPreview(h);if(typeof bumpEditCount==='function')bumpEditCount();if(typeof scheduleSave==='function')scheduleSave();}catch(e){}
-      wsBuildPaletteBar();
-    });
-    bar.appendChild(sw);
-  });
-  document.body.appendChild(bar);
+// v3 structured editor drawer. Edits the in-memory site (window._wsSiteData) and re-renders live.
+// Escape-safe for the PAGE literal: no backticks, no dollar-brace, no backslash escapes.
+var wsEdSel = 0;
+function wsRerender(){
+  try{
+    if(!window.WS||!window._wsSiteData)return;
+    var h=window.WS.renderSite(window._wsSiteData,{mode:'live'});
+    gHTML=h;try{localStorage.setItem('wsh',h);}catch(e){}
+    setPreview(h);
+    if(typeof bumpEditCount==='function')bumpEditCount();
+    if(typeof scheduleSave==='function')scheduleSave();
+  }catch(e){}
 }
+function wsMk(tag,style,txt){var el=document.createElement(tag);if(style)el.setAttribute('style',style);if(txt!=null)el.textContent=txt;return el;}
+function wsFieldDefs(type){try{var s=window.WS.sections[type];return (s&&s.fields)||[];}catch(e){return [];}}
+// Build one control for a field; on change mutate the object key and re-render (no drawer rebuild, keeps focus).
+function wsControl(obj,f){
+  var wrap=wsMk('div','margin:10px 0');
+  if(f.label)wrap.appendChild(wsMk('div','font-size:11px;color:#9aa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px',f.label));
+  var val=obj[f.key];
+  if(f.type==='textarea'){
+    var ta=wsMk('textarea','width:100%;background:#111;color:#fff;border:1px solid #333;border-radius:6px;padding:8px;font:inherit;font-size:13px;min-height:64px');
+    ta.value=(val==null?'':val);ta.addEventListener('input',function(){obj[f.key]=ta.value;wsRerender();});wrap.appendChild(ta);return wrap;
+  }
+  if(f.type==='select'){
+    var sel=wsMk('select','width:100%;background:#111;color:#fff;border:1px solid #333;border-radius:6px;padding:8px;font:inherit;font-size:13px');
+    var opts=typeof f.options==='function'?f.options():(f.options||[]);
+    opts.forEach(function(o){var id=Array.isArray(o)?o[0]:o;var nm=Array.isArray(o)?o[1]:o;var op=wsMk('option',null,nm);op.value=id;if(id===val)op.selected=true;sel.appendChild(op);});
+    sel.addEventListener('change',function(){obj[f.key]=sel.value;wsRerender();});wrap.appendChild(sel);return wrap;
+  }
+  if(f.type==='list'){
+    var items=obj[f.key]||(obj[f.key]=[]);
+    items.forEach(function(it,ix){
+      var card=wsMk('div','border:1px solid #2a2a2a;border-radius:8px;padding:10px;margin:8px 0;background:#161616');
+      (f.item||[]).forEach(function(sf){card.appendChild(wsControl(it,sf));});
+      var rm=wsMk('button','background:none;border:none;color:#e77;cursor:pointer;font-size:12px;padding:4px 0','Remove');
+      rm.addEventListener('click',function(){items.splice(ix,1);wsRerender();wsOpenEditor();});
+      card.appendChild(rm);wrap.appendChild(card);
+    });
+    var addb=wsMk('button','background:#243;border:1px solid #2d7a3a;color:#cfe;border-radius:6px;padding:7px 12px;cursor:pointer;font-size:12px;margin-top:4px',(f.add||'Add item'));
+    addb.addEventListener('click',function(){var blank={};(f.item||[]).forEach(function(sf){blank[sf.key]='';});items.push(blank);wsRerender();wsOpenEditor();});
+    wrap.appendChild(addb);return wrap;
+  }
+  // text / emoji / photo -> plain text input (photo takes an image URL for now)
+  var inp=wsMk('input','width:100%;background:#111;color:#fff;border:1px solid #333;border-radius:6px;padding:8px;font:inherit;font-size:13px');
+  inp.type='text';inp.value=(val==null?'':val);
+  if(f.type==='emoji')inp.placeholder='emoji code, e.g. 1f950';
+  if(f.type==='photo')inp.placeholder='image URL (upload coming soon)';
+  inp.addEventListener('input',function(){obj[f.key]=inp.value;wsRerender();});
+  wrap.appendChild(inp);return wrap;
+}
+function wsOpenEditor(){
+  if(!window.WS||!window.WS.palettes||!window._wsSiteData)return;
+  var old=document.getElementById('wsEd');if(old)old.parentNode.removeChild(old);
+  var dr=wsMk('div','position:fixed;right:0;top:0;bottom:0;width:360px;max-width:90vw;z-index:99999;background:#1a1a1a;color:#fff;overflow-y:auto;box-shadow:-10px 0 40px rgba(0,0,0,.5);font-family:system-ui,sans-serif');dr.id='wsEd';
+  var pad=wsMk('div','padding:16px 18px 40px');dr.appendChild(pad);
+  var head=wsMk('div','display:flex;justify-content:space-between;align-items:center;margin-bottom:16px');
+  head.appendChild(wsMk('div','font-size:15px;font-weight:700','Edit your site'));
+  var cls=wsMk('button','background:none;border:none;color:#888;font-size:20px;cursor:pointer;line-height:1','×');
+  cls.addEventListener('click',function(){dr.style.display='none';var t=document.getElementById('wsEdToggle');if(t)t.style.display='block';});
+  head.appendChild(cls);pad.appendChild(head);
+  // Look: palette swatches + emoji style
+  pad.appendChild(wsMk('div','font-size:11px;color:#9aa;text-transform:uppercase;letter-spacing:.08em;margin:4px 0 8px','Look'));
+  var palRow=wsMk('div','display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px');
+  window.WS.palettes.forEach(function(p){
+    var sel=window._wsSiteData.palette===p.id;
+    var sw=wsMk('button','width:26px;height:26px;border-radius:50%;padding:0;cursor:pointer;flex:none;border:2px solid '+(sel?'#fff':'rgba(255,255,255,.2)')+';background:linear-gradient(135deg,'+p.base+' 50%,'+p.accent+' 50%)');
+    sw.title=p.name||p.id;sw.addEventListener('click',function(){window._wsSiteData.palette=p.id;wsRerender();wsOpenEditor();});
+    palRow.appendChild(sw);
+  });
+  pad.appendChild(palRow);
+  var esSel=wsMk('select','width:100%;background:#111;color:#fff;border:1px solid #333;border-radius:6px;padding:8px;font-size:13px;margin-bottom:16px');
+  [['color','Emoji: full color'],['soft','Emoji: soft'],['mono','Emoji: monochrome'],['badge','Emoji: badge']].forEach(function(o){var op=wsMk('option',null,o[1]);op.value=o[0];if((window._wsSiteData.emojiStyle||'color')===o[0])op.selected=true;esSel.appendChild(op);});
+  esSel.addEventListener('change',function(){window._wsSiteData.emojiStyle=esSel.value;wsRerender();});
+  pad.appendChild(esSel);
+  // Sections
+  pad.appendChild(wsMk('div','font-size:11px;color:#9aa;text-transform:uppercase;letter-spacing:.08em;margin:4px 0 8px','Sections'));
+  var secs=window._wsSiteData.sections||[];
+  secs.forEach(function(sec,i){
+    var row=wsMk('div','border:1px solid #2a2a2a;border-radius:8px;margin-bottom:8px;overflow:hidden');
+    var bar=wsMk('div','display:flex;align-items:center;gap:6px;padding:9px 10px;background:'+(i===wsEdSel?'#222':'#161616'));
+    var def=window.WS.sections[sec.type]||{};
+    var nm=wsMk('button','flex:1;text-align:left;background:none;border:none;color:#fff;cursor:pointer;font-size:13px;font-weight:600',(def.label||sec.type));
+    nm.addEventListener('click',function(){wsEdSel=(wsEdSel===i?-1:i);wsOpenEditor();});
+    bar.appendChild(nm);
+    var up=wsMk('button','background:none;border:none;color:#888;cursor:pointer;font-size:14px;padding:2px 4px','↑');
+    up.addEventListener('click',function(){if(i>0){var t=secs[i-1];secs[i-1]=secs[i];secs[i]=t;if(wsEdSel===i)wsEdSel=i-1;wsRerender();wsOpenEditor();}});
+    var dn=wsMk('button','background:none;border:none;color:#888;cursor:pointer;font-size:14px;padding:2px 4px','↓');
+    dn.addEventListener('click',function(){if(i<secs.length-1){var t=secs[i+1];secs[i+1]=secs[i];secs[i]=t;if(wsEdSel===i)wsEdSel=i+1;wsRerender();wsOpenEditor();}});
+    var dl=wsMk('button','background:none;border:none;color:#e77;cursor:pointer;font-size:14px;padding:2px 4px','×');
+    dl.addEventListener('click',function(){secs.splice(i,1);if(wsEdSel>=secs.length)wsEdSel=secs.length-1;wsRerender();wsOpenEditor();});
+    bar.appendChild(up);bar.appendChild(dn);bar.appendChild(dl);row.appendChild(bar);
+    if(i===wsEdSel){
+      var body=wsMk('div','padding:4px 12px 12px;background:#161616');
+      wsFieldDefs(sec.type).forEach(function(f){body.appendChild(wsControl(sec,f));});
+      row.appendChild(body);
+    }
+    pad.appendChild(row);
+  });
+  // Add section
+  var addRow=wsMk('div','display:flex;gap:6px;margin-top:10px');
+  var addSel=wsMk('select','flex:1;background:#111;color:#fff;border:1px solid #333;border-radius:6px;padding:8px;font-size:13px');
+  Object.keys(window.WS.sections).forEach(function(t){var op=wsMk('option',null,(window.WS.sections[t].label||t));op.value=t;addSel.appendChild(op);});
+  var addBtn=wsMk('button','background:#2d7a3a;border:none;color:#fff;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:13px;font-weight:600','Add');
+  addBtn.addEventListener('click',function(){var t=addSel.value;try{var ns=Object.assign({id:t+'-'+window.WS.uid(),type:t},window.WS.sections[t].create(window._wsSiteData));secs.push(ns);wsEdSel=secs.length-1;wsRerender();wsOpenEditor();}catch(e){}});
+  addRow.appendChild(addSel);addRow.appendChild(addBtn);pad.appendChild(addRow);
+  document.body.appendChild(dr);
+  // toggle tab when closed
+  var tog=document.getElementById('wsEdToggle');
+  if(!tog){tog=wsMk('button','position:fixed;right:0;top:120px;z-index:99998;background:#2d7a3a;color:#fff;border:none;border-radius:8px 0 0 8px;padding:12px 10px;cursor:pointer;font-size:12px;font-weight:700;writing-mode:vertical-rl;display:none','EDIT');tog.id='wsEdToggle';tog.addEventListener('click',function(){tog.style.display='none';wsOpenEditor();});document.body.appendChild(tog);}
+  tog.style.display='none';
+}
+// entry point used by the create flow
+function wsBuildPaletteBar(){ wsEdSel = (typeof wsEdSel==='number'?wsEdSel:0); wsOpenEditor(); }
+
 function doCreateV3(){
   var val=function(id){var el=document.getElementById(id);return el?(el.value||''):'';};
   var isShop=!!(document.getElementById('bizEcom')&&document.getElementById('bizEcom').checked);
@@ -5951,6 +6047,7 @@ function friendlyErr(e){
 }
 
 function doChat(){
+  try{var _c=document.getElementById('ci');if(_c){_c.value='';_c.style.height='auto';}if(window._wsSiteData){wsBuildPaletteBar();addMsg('ai','Editing is now visual — use the Edit panel on the right to change text, sections, colors and photos. Your changes apply live.');}else{addMsg('ai','Editing is now visual. Create a site with the builder to use the new editor.');}}catch(e){}return;
   var ci=document.getElementById('ci'),msg=ci.value.trim();
   if(!msg)return;
   // If no site yet and not a question, prompt them to generate first
@@ -7479,14 +7576,10 @@ export default {
         if (_mapped) { const _r = await servePublished(_mapped, env, url.pathname); if (_r) return _r; }
       }
     }
-    if (url.pathname === '/generate' && request.method === 'POST') return doGenerate(request, env);
     if (url.pathname === '/create' && request.method === 'POST') return doCreate(request, env);
     if (url.pathname === '/ws-engine.js') return new Response(wsEngineJs(), { headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'public, max-age=86400' } });
-    if (url.pathname === '/generate-page' && request.method === 'POST') return doGeneratePage(request, env);
-    if (url.pathname === '/plan-pages' && request.method === 'POST') return doPlanPages(request, env);
     if (url.pathname === '/products') return doProducts(request, env);
     if (url.pathname === '/store-preview') return doStorePreview(request, env);
-    if (url.pathname === '/genimage' && request.method === 'POST') return doGenImage(request, env);
     if (url.pathname === '/api/post' && request.method === 'POST') return doWritePost(request, env);
     if (url.pathname === '/api/invoice' && request.method === 'POST') return doInvoice(request, env);
     if (url.pathname === '/connect/start' && request.method === 'GET') return doConnectStart(request, env);
@@ -7496,8 +7589,6 @@ export default {
     if (url.pathname === '/stats' && request.method === 'GET') return doStats(request, env);
     if (url.pathname === '/preview' && request.method === 'GET') return doPreviewShare(request, env);
     if (url.pathname === '/preview' && request.method === 'POST') return doSavePreview(request, env);
-    if (url.pathname === '/chat' && request.method === 'POST') return doChat(request, env);
-    if (url.pathname === '/modify' && request.method === 'POST') return doModify(request, env);
     if (url.pathname === '/render' && request.method === 'POST') return doRender(request);
     if (url.pathname.startsWith('/api/form/')) {
       if (request.method === 'OPTIONS') return new Response(null, { headers: formCors() });
@@ -9175,7 +9266,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-11-11-r281';
+const BUILD_ID = '2026-11-12-r282';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
