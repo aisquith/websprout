@@ -120,6 +120,9 @@ export default {
     if (url.pathname === '/api/connect-domain' && request.method === 'POST') return doConnectDomain(request, env);
     if (url.pathname === '/api/inbox' && request.method === 'GET') return doInboxData(request, env);
     if (url.pathname === '/api/inbox/notify' && request.method === 'POST') return doInboxNotify(request, env);
+    if (url.pathname === '/api/inbox/autoreply' && request.method === 'POST') return doInboxAutoReply(request, env);
+    // Test servers only: read back mail that wsSendMail recorded instead of sending.
+    if (url.pathname === '/__test/mail' && env.WS_TEST_MODE === '1' && env.KV) return new Response((await env.KV.get('testmail:' + (url.searchParams.get('to') || '').toLowerCase())) || 'null', { headers: { 'Content-Type': 'application/json' } });
     if (url.pathname === '/api/inbox/clear' && request.method === 'POST') return doInboxClear(request, env);
     if (url.pathname === '/api/stripe/webhook' && request.method === 'POST') return doStripeWebhook(request, env);
     if (url.pathname === '/success') return new Response(SUCCESS_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });

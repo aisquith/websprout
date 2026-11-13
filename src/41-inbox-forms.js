@@ -67,6 +67,7 @@ input:focus{outline:none;border-color:#2d7a3a}
     <div class="chartcard"><h3>Visitors &middot; last 7 days</h3><div class="bars" id="chartbars"></div></div>
     <div class="notify">
       <div class="f"><label>Email me the moment a new lead comes in</label><input id="notify" aria-label="Notification email" type="email" placeholder="you@example.com"></div>
+      <label class="arow" style="flex-basis:100%;display:flex;gap:8px;align-items:center;font-size:13px;color:#3d4a3a;order:9"><input type="checkbox" id="autoreply" checked onchange="saveAutoReply()"> Send people an automatic &ldquo;thanks, we got your message&rdquo; email</label>
       <button class="btn" onclick="saveNotify()">Save</button>
     </div>
     <div id="nmsg" class="msg"></div>
@@ -98,7 +99,7 @@ function renderStats(j){
 }
 function load(){fetch('/api/inbox?site='+encodeURIComponent(site)+'&key='+encodeURIComponent(key)).then(function(r){return r.json();}).then(function(j){
   if(j.error){show('app','none');show('gate','block');document.getElementById('g_site').value=site;nmsg(j.error,false);return;}
-  DATA=j.submissions||[];document.getElementById('notify').value=j.notify||'';
+  DATA=j.submissions||[];document.getElementById('notify').value=j.notify||'';document.getElementById('autoreply').checked=j.autoreply!==false;
   renderStats(j);
   document.getElementById('count').textContent=DATA.length+(DATA.length===1?' lead':' leads');
   var L=document.getElementById('list');
@@ -107,6 +108,7 @@ function load(){fetch('/api/inbox?site='+encodeURIComponent(site)+'&key='+encode
   for(var k in s.fields){h+='<div class="row"><div class="k">'+esc(k)+'</div><div class="v">'+esc(s.fields[k])+'</div></div>';}h+='</div>';}
   L.innerHTML=h;
 }).catch(function(){nmsg('Could not load. Check your link and try again.',false);});}
+function saveAutoReply(){var on=document.getElementById('autoreply').checked;fetch('/api/inbox/autoreply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:site,key:key,on:on})}).then(function(r){return r.json();}).then(function(j){nmsg(j.error?j.error:(on?'Auto-reply on':'Auto-reply off'),!j.error);}).catch(function(){nmsg('Could not save',false);});}
 function saveNotify(){var email=document.getElementById('notify').value.trim();fetch('/api/inbox/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:site,key:key,email:email})}).then(function(r){return r.json();}).then(function(j){if(j.error){nmsg(j.error,false);}else{nmsg(email?'Saved! New submissions will be emailed to '+email:'Email notifications turned off.',true);}});}
 function clearAll(){if(!confirm('Delete ALL submissions for this site? This cannot be undone.'))return;fetch('/api/inbox/clear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:site,key:key})}).then(function(r){return r.json();}).then(function(){load();});}
 function exportCsv(){if(!DATA.length)return;var cols={};DATA.forEach(function(s){for(var k in s.fields)cols[k]=1;});var keys=Object.keys(cols);var rows=[['date'].concat(keys)];DATA.forEach(function(s){var r=[new Date(s.ts).toISOString()];keys.forEach(function(k){r.push(s.fields[k]||'');});rows.push(r);});
@@ -213,7 +215,9 @@ async function doFormSubmit(request, env, siteId){
     const ts = Date.now();
     const rec = { ts: ts, fields: fields, ua: (request.headers.get('user-agent')||'').slice(0,180), ref: (request.headers.get('referer')||'').slice(0,180) };
     await env.KV.put('form:' + siteId + ':' + ts + ':' + Math.random().toString(36).slice(2,7), JSON.stringify(rec), { expirationTtl: 60*60*24*120 });
-    try { const notify = await env.KV.get('notify:' + siteId); if (notify && env.RESEND_API_KEY) await sendFormEmail(env, notify, siteId, fields); } catch(e){}
+    let notify = '';
+    try { notify = await env.KV.get('notify:' + siteId) || ''; if (notify && env.RESEND_API_KEY) await sendFormEmail(env, notify, siteId, fields); } catch(e){}
+    try { await sendAutoReply(env, siteId, fields, notify); } catch(e){}
     return jsonR({ ok:true });
   } catch(e){ return jsonR({ ok:false, error:'error' }, 500); }
 }
@@ -273,6 +277,61 @@ async function sendDigestEmail(env, to, siteId, weekViews, weekLeads, totalViews
     + '</div></div>';
   await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer '+env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'\uD83C\uDF31 Your website got ' + weekViews + ' views this week', html: html }) });
 }
+// Business name for emails, from a published page's <title> ("Name | Barber shop in Austin").
+function siteNameFromHtml(html){
+  const t = extractTitle(html).split(' | ')[0].replace(/&amp;/g,'&').replace(/&#39;|&apos;/g,"'").replace(/&quot;/g,'"').replace(/&lt;|&gt;/g,'');
+  return t.replace(/[\r\n<>"]/g,'').trim().slice(0,60);
+}
+// One place to send mail. Test servers (WS_TEST_MODE, never set in production) record it instead.
+async function wsSendMail(env, msg){
+  if (env.WS_TEST_MODE === '1') { try { const k = 'testmail:' + msg.to[0]; const prev = JSON.parse((await env.KV.get(k)) || '{}'); await env.KV.put(k, JSON.stringify(Object.assign({}, msg, { n: (prev.n || 0) + 1 })), { expirationTtl: 600 }); } catch(e){} return true; }
+  if (!env.RESEND_API_KEY) return false;
+  const r = await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify(msg) });
+  return r.ok;
+}
+// "Thanks, we got your message" to the visitor, from the business. On by default; the owner can turn it off
+// in the inbox. Anti-abuse: fixed wording (nothing the visitor typed is echoed except a plain first name),
+// one reply per address per site per day, at most 40 per site per day.
+async function sendAutoReply(env, siteId, fields, ownerEmail){
+  if (!env.KV) return false;
+  let to = '';
+  for (const k in fields){ if (/e-?mail/i.test(k) && isRealEmail(fields[k])) { to = String(fields[k]).trim().toLowerCase(); break; } }
+  if (!to) return false;
+  if ((await env.KV.get('autoreply:' + siteId)) === 'off') return false;
+  if (ownerEmail && to === String(ownerEmail).toLowerCase()) return false;
+  const dk = 'arsent:' + siteId + ':' + to;
+  if (await env.KV.get(dk)) return false;
+  const day = new Date().toISOString().slice(0,10), ck = 'arcount:' + siteId + ':' + day;
+  const cnt = parseInt((await env.KV.get(ck)) || '0', 10) || 0;
+  if (cnt >= 40) return false;
+  let name = '';
+  try { const slug = await env.KV.get('slugof:' + siteId); if (slug) { const m = JSON.parse((await env.KV.get('pubmeta:' + slug)) || '{}'); name = m.name || ''; if (!name) name = siteNameFromHtml(await env.KV.get('pub:' + slug) || ''); } } catch(e){}
+  name = String(name || '').replace(/[\r\n<>"]/g,'').trim().slice(0,60);
+  if (!name) return false; // unpublished or unknown site: no reply rather than a nameless one
+  let first = '';
+  for (const k in fields){ if (/^(first[ _-]?)?name$/i.test(k)) { const w = String(fields[k]).trim().split(/\s+/)[0] || ''; if (/^[A-Za-z\u00C0-\u024F'-]{1,30}$/.test(w)) first = w; break; } }
+  const html = '<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#222;font-size:15px;line-height:1.55">'
+    + '<p style="margin:0 0 14px">' + (first ? 'Hi ' + escHtml(first) + ',' : 'Hi,') + '</p>'
+    + '<p style="margin:0 0 14px">Thanks for getting in touch with ' + escHtml(name) + '. We got your message and will get back to you soon.</p>'
+    + (ownerEmail ? '<p style="margin:0 0 14px">If you need to add anything, just reply to this email.</p>' : '')
+    + '<p style="margin:0">' + escHtml(name) + '</p>'
+    + '<p style="margin:24px 0 0;color:#999;font-size:12px">You are getting this because you sent a message through ' + escHtml(name) + '&#39;s website. Website by Websprout.</p></div>';
+  const msg = { from: name + ' <hello@websprout.app>', to: [to], subject: 'We got your message - ' + name, html: html };
+  if (ownerEmail && isRealEmail(ownerEmail)) msg.reply_to = String(ownerEmail).trim();
+  const ok = await wsSendMail(env, msg);
+  if (ok) { await env.KV.put(dk, '1', { expirationTtl: 86400 }); await env.KV.put(ck, String(cnt + 1), { expirationTtl: 2 * 86400 }); }
+  return ok;
+}
+async function doInboxAutoReply(request, env){
+  try {
+    const b = await request.json();
+    if (!b.site || !env.KV) return fail('Missing site');
+    if (b.key !== (await siteKey(b.site, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{ 'Content-Type':'application/json' } });
+    if (b.on) await env.KV.delete('autoreply:' + b.site); else await env.KV.put('autoreply:' + b.site, 'off');
+    return succeed({ ok:true, autoreply: !!b.on });
+  } catch(e){ return fail('Could not save'); }
+}
+
 async function sendFormEmail(env, to, siteId, fields){
   let rows = '';
   for (const k in fields){ rows += '<tr><td style="padding:7px 12px;font-weight:600;color:#0f1a0d;border-bottom:1px solid #eee;vertical-align:top">' + escHtml(k) + '</td><td style="padding:7px 12px;color:#333;border-bottom:1px solid #eee">' + escHtml(fields[k]).replace(/\n/g,'<br>') + '</td></tr>'; }
@@ -442,7 +501,8 @@ async function doInboxData(request, env){
     const total = parseInt((await env.KV.get('views:'+site+':total'))||'0',10)||0;
     const days = []; const now = Date.now(); let week = 0, today = 0;
     for (let i=6;i>=0;i--){ const ds = new Date(now - i*86400000).toISOString().slice(0,10).replace(/-/g,''); const c = parseInt((await env.KV.get('views:'+site+':'+ds))||'0',10)||0; days.push({ d: ds, c: c }); week += c; if (i===0) today = c; }
-    return succeed({ submissions: subs, notify: notify, count: subs.length, total: total, today: today, week: week, days: days });
+    const autoreply = (await env.KV.get('autoreply:' + site)) !== 'off';
+    return succeed({ submissions: subs, notify: notify, autoreply: autoreply, count: subs.length, total: total, today: today, week: week, days: days });
   } catch(e){ return fail(e.message); }
 }
 

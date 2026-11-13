@@ -53,6 +53,32 @@ module.exports = async function (ctx, t) {
   t.ok(inbox.submissions.some((x) => x.fields && x.fields.email === 'lead@example.com'), 'lead arrives in the inbox');
   r = await post(base, '/api/form/' + s.siteId, { name: 'Spam', _ws_hp: 'x' });
   t.eq(r.status, 200, 'honeypot submissions are accepted silently');
+  // auto-reply to the visitor, from the business
+  const mail = async (to) => (await fetch(base + '/__test/mail?to=' + encodeURIComponent(to))).json();
+  const lead = 'ana.' + Date.now().toString(36) + '@glow.test';
+  r = await post(base, '/api/form/' + s.siteId, { name: 'Ana <b>Ruiz</b>', email: lead, message: 'Buy cheap pills at spam.example' });
+  let m = await mail(lead);
+  t.ok(m && /Glow Salon/.test(m.from) && /Glow Salon/.test(m.subject), 'visitor gets an auto-reply from the business');
+  t.ok(m && /Hi Ana,/.test(m.html) && !/pills|<b>Ruiz/.test(m.html), 'auto-reply greets by first name and never echoes the message');
+  await post(base, '/api/inbox/notify', { site: s.siteId, key: s.formKey, email: 'owner@glow.test' });
+  const lead2 = 'bo.' + Date.now().toString(36) + '@glow.test';
+  await post(base, '/api/form/' + s.siteId, { email: lead2, message: 'Hi' });
+  m = await mail(lead2);
+  t.eq(m && m.reply_to, 'owner@glow.test', 'replies to the auto-reply go to the owner');
+  await post(base, '/api/form/' + s.siteId, { email: lead2, message: 'again' });
+  t.eq((await mail(lead2)).n, 1, 'only one auto-reply per address per day');
+  r = await post(base, '/api/inbox/autoreply', { site: s.siteId, key: 'wrong', on: false });
+  t.eq(r.status, 403, 'auto-reply setting needs the inbox key');
+  r = await post(base, '/api/inbox/autoreply', { site: s.siteId, key: s.formKey, on: false });
+  t.eq(r.status, 200, 'owner can turn auto-replies off');
+  t.eq((await (await fetch(base + '/api/inbox?site=' + s.siteId + '&key=' + s.formKey)).json()).autoreply, false, 'inbox shows auto-reply off');
+  const lead3 = 'cy.' + Date.now().toString(36) + '@glow.test';
+  await post(base, '/api/form/' + s.siteId, { email: lead3, message: 'Hi' });
+  t.eq(await mail(lead3), null, 'no auto-reply once turned off');
+  const unpub = await createSite(base, { name: 'Draft Co', type: 'Bakery' });
+  const lead4 = 'di.' + Date.now().toString(36) + '@glow.test';
+  await post(base, '/api/form/' + unpub.siteId, { email: lead4, message: 'Hi' });
+  t.eq(await mail(lead4), null, 'unpublished sites send no auto-reply');
   // reviews
   r = await post(base, '/api/review', { site: s.siteId, name: 'Ann', rating: 5, text: 'Great!' });
   t.eq(r.status, 200, 'a visitor can leave a review');

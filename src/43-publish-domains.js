@@ -162,7 +162,7 @@ async function doPublish(request, env){
     // Multi-page sites get an index; single-page sites have none (preserves legacy serving).
     if (_paths.length > 1) await env.KV.put('pubpages:' + slug, JSON.stringify(_paths));
     else { try { await env.KV.delete('pubpages:' + slug); } catch(e){} }
-    await env.KV.put('pubmeta:' + slug, JSON.stringify({ siteId: b.siteId, updated: Date.now(), nobadge: _pro, pages: _paths }));
+    await env.KV.put('pubmeta:' + slug, JSON.stringify({ siteId: b.siteId, updated: Date.now(), nobadge: _pro, pages: _paths, name: siteNameFromHtml(b.html) }));
     // Structured shops: keep the published products (name, price) server-side so checkout charges these prices,
     // never whatever a visitor's browser sends.
     try {
