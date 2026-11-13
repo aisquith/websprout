@@ -8,6 +8,8 @@ module.exports = async function (ctx, t) {
   page.on('request', (q) => { if (q.url().endsWith('/save') && q.method() === 'POST') { try { saves.push(JSON.parse(q.postData() || '{}')); } catch (e) {} } });
   t.ok(await openStudioWith(page, base, 'Glow Salon', 'Hair salon', { city: 'Austin', phone: '512-555-0100' }), 'studio opens with a new site');
   t.ok(await page.evaluate(() => (document.getElementById('wsEdHost').innerHTML || '').length > 1000), 'edit panel is built');
+  const gap = await page.evaluate(() => { const f = document.getElementById('pf'); const d = f.contentDocument; const b = Math.max(...[...d.body.children].filter((e) => getComputedStyle(e).position !== 'fixed' && !/SCRIPT|STYLE/.test(e.tagName)).map((e) => e.getBoundingClientRect().bottom)); return Math.round(f.offsetHeight - b); });
+  t.ok(gap >= -1 && gap <= 2, 'preview ends at the footer with no blank strip (' + gap + 'px)');
   t.eq(await page.evaluate(() => window._wsSiteData.biz.city), 'Austin', 'city from the form reaches the site');
 
   // photo into a hero slot is stored in the site data

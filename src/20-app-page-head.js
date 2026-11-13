@@ -1030,6 +1030,9 @@ body.ws-v3 #designDrawer,body.ws-v3 #edFirstHint{display:none!important}
   .s-header{padding:0 8px}
   #unlockBtn,#saveStatus,#panelToggle{display:none!important}
   .chat{width:100%;border-left:none}
+  /* on an actual phone the preview is already phone-sized: no device frame around it */
+  .preview-frame-wrap.mobile,.preview-frame-wrap.tablet{padding:0;background:transparent}
+  .preview-frame-wrap.mobile iframe,.preview-frame-wrap.tablet iframe{border-radius:0!important;box-shadow:none!important;max-width:100%!important}
   .studio.panel-off .chat{display:flex}
   .device-btns{display:none}
 }
