@@ -1,5 +1,5 @@
 name = "websprout"
-main = "worker.js"
+main = "dist/worker.js"
 compatibility_date = "2025-01-01"
 
 # Routes the worker runs on. The first two serve the app; the wildcard
@@ -13,6 +13,12 @@ routes = [
   { pattern = "www.websprout.app/*", zone_name = "websprout.app" },
   { pattern = "*.websprout.app/*", zone_name = "websprout.app" }
 ]
+
+# The worker is assembled from src/ by build.js (dist/ is generated, not committed).
+# Wrangler runs this before every `wrangler dev` and `wrangler deploy`.
+[build]
+command = "node build.js"
+watch_dir = "src"
 
 # Your KV store — you already have one bound in the dashboard: WEBSPROUT_KV.
 # Storage & Databases -> KV -> (your namespace) -> copy the Namespace ID.

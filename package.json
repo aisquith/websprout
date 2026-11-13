@@ -1,0 +1,16 @@
+{
+  "name": "websprout",
+  "private": true,
+  "description": "Websprout: instant websites for local businesses (Cloudflare Worker)",
+  "scripts": {
+    "build": "node build.js",
+    "dev": "wrangler dev --local",
+    "deploy": "wrangler deploy",
+    "test": "node tests/run.js",
+    "test:quick": "node tests/run.js --quick"
+  },
+  "devDependencies": {
+    "puppeteer-core": "23.11.1",
+    "wrangler": "4.95.0"
+  }
+}
