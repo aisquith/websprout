@@ -2,21 +2,23 @@ name = "websprout"
 main = "worker.js"
 compatibility_date = "2025-01-01"
 
-# Your KV store — you already have one bound in the dashboard: WEBSPROUT_KV.
-# Storage & Databases -> KV -> (your namespace) -> copy the Namespace ID.
-[[kv_namespaces]]
-binding = "KV"
-id = "f5def57998654229973b809dd4f3a463"
-
 # Routes the worker runs on. The first two serve the app; the wildcard
 # powers your published name.websprout.app sites.
 # NOTE: you still add the wildcard DNS record ( * CNAME websprout.app, Proxied )
 # in the dashboard — routes and DNS are separate.
+# Keep this ABOVE any [[table]] block: in TOML, keys written after a table
+# header belong to that table, so wrangler would silently ignore the routes.
 routes = [
   { pattern = "websprout.app/*", zone_name = "websprout.app" },
   { pattern = "www.websprout.app/*", zone_name = "websprout.app" },
   { pattern = "*.websprout.app/*", zone_name = "websprout.app" }
 ]
+
+# Your KV store — you already have one bound in the dashboard: WEBSPROUT_KV.
+# Storage & Databases -> KV -> (your namespace) -> copy the Namespace ID.
+[[kv_namespaces]]
+binding = "KV"
+id = "f5def57998654229973b809dd4f3a463"
 
 # Your secrets (GEMINI_API_KEY, RESEND_API_KEY, FORM_SECRET, GODADDY_KEY,
 # GODADDY_SECRET, GODADDY_AFFILIATE) are NOT listed here. Keep them in the
