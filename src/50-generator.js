@@ -395,10 +395,46 @@ async function unsplashPhotos(query, env, n) {
     const out = [];
     for (let i = 0; i < results.length && out.length < (n || 4); i++) {
       const raw = results[i] && results[i].urls && (results[i].urls.regular || results[i].urls.full || results[i].urls.raw);
-      if (raw) out.push(raw + (raw.indexOf('?') > -1 ? '&' : '?') + 'w=1680&q=75&auto=format&fit=crop');
+      if (raw) {
+        const u = results[i].user || {};
+        out.push({ url: raw + (raw.indexOf('?') > -1 ? '&' : '?') + 'w=1680&q=75&auto=format&fit=crop', name: u.name || 'Unsplash', link: (u.links && u.links.html) || 'https://unsplash.com', download: (results[i].links && results[i].links.download_location) || '' });
+      }
     }
     return out;
   } catch (e) { return []; }
+}
+
+// Stock photo search for the editor's photo picker (Unsplash; needs UNSPLASH_ACCESS_KEY).
+async function doPhotoSearch(request, env) {
+  const url = new URL(request.url);
+  const q = (url.searchParams.get('q') || '').trim().slice(0, 80);
+  if (!env.UNSPLASH_ACCESS_KEY) return jsonR({ ok: false, error: 'Photo search is not set up yet.', results: [] });
+  if (!q) return jsonR({ ok: true, results: [] });
+  try {
+    if (env.KV) {
+      const ip = request.headers.get('cf-connecting-ip') || '0'; const k = 'phrate:' + ip;
+      const n = parseInt((await env.KV.get(k)) || '0', 10) || 0;
+      if (n >= 60) return jsonR({ ok: false, error: 'Too many searches. Please wait a few minutes.', results: [] }, 429);
+      await env.KV.put(k, String(n + 1), { expirationTtl: 3600 });
+    }
+    const r = await fetch('https://api.unsplash.com/search/photos?per_page=18&content_filter=high&query=' + encodeURIComponent(q), { headers: { 'Authorization': 'Client-ID ' + env.UNSPLASH_ACCESS_KEY, 'Accept-Version': 'v1' } });
+    if (!r.ok) return jsonR({ ok: false, error: 'Photo search is busy. Try again soon.', results: [] });
+    const j = await r.json();
+    const results = ((j && j.results) || []).map(function (p) {
+      const raw = (p.urls && (p.urls.regular || p.urls.raw)) || ''; const u = p.user || {};
+      return raw ? { thumb: (p.urls && p.urls.small) || raw, url: raw + (raw.indexOf('?') > -1 ? '&' : '?') + 'w=1680&q=75&auto=format&fit=crop', alt: String(p.alt_description || '').slice(0, 120), name: u.name || 'Unsplash', link: (u.links && u.links.html) || 'https://unsplash.com', download: (p.links && p.links.download_location) || '' } : null;
+    }).filter(Boolean);
+    return jsonR({ ok: true, results: results });
+  } catch (e) { return jsonR({ ok: false, error: 'Photo search failed.', results: [] }); }
+}
+// Unsplash asks apps to ping a photo's download_location when someone uses it.
+async function doPhotoUse(request, env) {
+  try {
+    const b = await request.json();
+    const d = String((b && b.download) || '');
+    if (env.UNSPLASH_ACCESS_KEY && /^https:\/\/api\.unsplash\.com\/photos\/[A-Za-z0-9_-]+\/download/.test(d)) await fetch(d, { headers: { 'Authorization': 'Client-ID ' + env.UNSPLASH_ACCESS_KEY } });
+  } catch (e) {}
+  return jsonR({ ok: true });
 }
 
 // Split a finished flat section stack into a real multi-page site (Home + Shop/Menu/Services, About, Contact)
@@ -634,15 +670,17 @@ async function buildV3Site(d, env) {
       const _pics = await unsplashPhotos((PHOTO_QUERY[sc.category] || biz.type || 'small business'), env, 4);
       if (_pics.length) {
         const _h = site.sections.find(function (s) { return s.type === 'hero'; });
-        if (_h) site.photos[_h.id + '.photo'] = _pics[0];
+        site.photoCredits = {};
+        const _cr = function (k, p) { site.photos[k] = p.url; site.photoCredits[k] = { name: p.name, link: p.link }; };
+        if (_h) _cr(_h.id + '.photo', _pics[0]);
         if (_pics.length >= 4) {
           const _g = { id: 'gallery-' + WSENGINE.uid(), type: 'gallery', variant: 'strip', title: '' };
           let _gi = site.sections.findIndex(function (s) { return s.type === 'cta'; });
           if (_gi < 0) _gi = site.sections.findIndex(function (s) { return s.type === 'visit'; });
           site.sections.splice(_gi < 0 ? site.sections.length : _gi, 0, _g);
-          site.photos[_g.id + '.p0'] = _pics[1];
-          site.photos[_g.id + '.p1'] = _pics[2];
-          site.photos[_g.id + '.p2'] = _pics[3];
+          _cr(_g.id + '.p0', _pics[1]);
+          _cr(_g.id + '.p1', _pics[2]);
+          _cr(_g.id + '.p2', _pics[3]);
         }
       }
     } catch (e) {}

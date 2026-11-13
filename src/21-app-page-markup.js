@@ -977,6 +977,12 @@
         <div class="slot-ai-msg" id="slotAiMsg"></div>
       </div>
       <div class="slot-divider" style="display:none"><span>or upload your own</span></div>
+      <div class="slot-search">
+        <div class="slot-search-row"><input type="search" id="slotSearch" aria-label="Search free stock photos" placeholder="Search free photos, e.g. haircut, tacos, garden" autocomplete="off"><button id="slotSearchBtn" type="button">Search</button></div>
+        <div class="slot-search-grid" id="slotSearchGrid"></div>
+        <div class="slot-search-note" id="slotSearchNote">Free photos from Unsplash. The photographer is credited in your site footer.</div>
+      </div>
+      <div class="slot-divider"><span>or use your own</span></div>
       <div class="slot-drop" id="slotDrop">
         <span class="slot-drop-icon">&#128247;</span>
         <div class="slot-drop-text">Drop your photo here</div>

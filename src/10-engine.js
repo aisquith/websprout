@@ -1045,6 +1045,8 @@ figure{margin:0}
 .wsr-sharp .btn,.wsr-sharp .pill{border-radius:0!important}.wsr-sharp :is(input,textarea,select,figure.slot){border-radius:0}
 .wsr-soft .btn,.wsr-soft .pill{border-radius:8px!important}.wsr-soft :is(input,textarea,select){border-radius:8px}.wsr-soft figure.slot{border-radius:14px}
 .wsr-round .btn,.wsr-round .pill{border-radius:999px!important}.wsr-round :is(input,select){border-radius:999px;padding-left:18px}.wsr-round textarea{border-radius:18px}.wsr-round figure.slot{border-radius:26px}
+.mark-logo{display:block;height:44px;width:auto;max-width:200px;object-fit:contain}
+.top.solid .mark-logo{height:36px}
 .credits{margin:0;text-align:center;font:500 11px/1.6 'Work Sans',system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:16px 20px 26px;background:#111;color:rgba(255,255,255,.64)}
 .credits a{text-decoration:none}.credits a:hover{text-decoration:underline}
 
@@ -1290,6 +1292,11 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
     const brand = site.brand || 'Websprout';
     const desc = b.seoDescription || b.tagline || '';
     const pillHref = WS.bookHref(site);
+    // Stock photos (Unsplash) must credit the photographer; only credit photos the site still uses.
+    const _pc = site.photoCredits || {}; const _used = site.photos || {}; const _seenPc = {};
+    const _pcl = Object.keys(_pc).filter((k) => _used[k] && _pc[k] && _pc[k].name && !_seenPc[_pc[k].name] && (_seenPc[_pc[k].name] = 1));
+    const _utm = 'utm_source=websprout&utm_medium=referral';
+    const photoCredit = _pcl.length ? ` &nbsp;·&nbsp; Photos by ${_pcl.slice(0, 6).map((k) => `<a href="${e(String(_pc[k].link || 'https://unsplash.com').split('?')[0] + '?' + _utm)}">${e(_pc[k].name)}</a>`).join(', ')} on <a href="https://unsplash.com/?${_utm}">Unsplash</a>` : '';
     const markHref = multi ? '#/' : '#';
     const routerInit = (multi && activePath != null) ? `window.__wsInitPath=${JSON.stringify(activePath)};` : '';
     const runtime = WS.runtime(site) + (multi ? routerInit + WS.pageRouter : '');
@@ -1343,12 +1350,12 @@ ${ldScript}
 </head>
 <body class="es-${e(site.emojiStyle || 'color')}${ttClass}${/^(sharp|soft|round)$/.test(site.corners || '') ? ' wsr-' + site.corners : ''}${mode === 'edit' ? ' edit' : ''}${multi ? ' multipage' : ''}${top ? ' has-announce' : ''}">
 ${top}
-<header class="top" data-top><a class="mark" href="${markHref}">${e(b.name)}</a><nav aria-label="Main">${nav}</nav><a class="pill" href="${e(pillHref)}">${e(b.bookShort || 'Book')}</a>${multi ? '<button class="navtoggle" type="button" aria-label="Menu" aria-expanded="false"><svg width="23" height="23" viewBox="0 0 23 23" fill="none" aria-hidden="true"><path d="M3 7h17M3 11.5h17M3 16h17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' : ''}</header>
+<header class="top" data-top><a class="mark${b.logo ? ' has-logo' : ''}" href="${markHref}">${/^data:image\/(png|jpe?g|webp|gif|svg\+xml);base64,/.test(b.logo || '') || /^https:\/\//.test(b.logo || '') ? `<img class="mark-logo" src="${e(b.logo)}" alt="${e(b.name)}">` : e(b.name)}</a><nav aria-label="Main">${nav}</nav><a class="pill" href="${e(pillHref)}">${e(b.bookShort || 'Book')}</a>${multi ? '<button class="navtoggle" type="button" aria-label="Menu" aria-expanded="false"><svg width="23" height="23" viewBox="0 0 23 23" fill="none" aria-hidden="true"><path d="M3 7h17M3 11.5h17M3 16h17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' : ''}</header>
 <main>
 ${body}
 </main>
 <footer class="foot"><div class="foot-brand"><b>${e(b.name)}</b>${b.tagline ? `<p>${e(b.tagline)}</p>` : (b.type ? `<p>${e(b.type)}${b.city ? ' in ' + e(b.city) : ''}</p>` : '')}</div>${multi ? `<nav class="foot-col" aria-label="Pages"><h4>Pages</h4>${site.pages.filter((pg) => pg.nav !== false).map((pg) => `<a href="#/${e(pg.path || '')}">${e(pg.title || 'Home')}</a>`).join('')}</nav>` : `<div class="foot-col"></div>`}<div class="foot-col"><h4>Contact</h4>${b.phone ? `<a href="${WS.tel(b.phone)}">${e(b.phone)}</a>` : ''}${b.email ? `<a href="mailto:${e(b.email)}">${e(b.email)}</a>` : ''}${b.address ? `<a href="${WS.map(b.address)}">${e(b.address)}</a>` : (b.city ? `<span>${e(b.city)}</span>` : '')}${b.instagram ? `<a href="https://instagram.com/${e(b.instagram)}">Instagram</a>` : ''}<a href="${e(pillHref)}">${e(b.bookLabel || 'Get in touch')}</a></div></footer>
-<p class="credits"><a href="https://websprout.app/?ref=site">Made with ${e(brand)}</a>${usesEmoji ? ` &nbsp;·&nbsp; Animated emoji: <a href="https://googlefonts.github.io/noto-emoji-animation/">Noto Emoji by Google</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>` : ''}</p>
+<p class="credits"><a href="https://websprout.app/?ref=site">Made with ${e(brand)}</a>${photoCredit}${usesEmoji ? ` &nbsp;·&nbsp; Animated emoji: <a href="https://googlefonts.github.io/noto-emoji-animation/">Noto Emoji by Google</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>` : ''}</p>
 <script>${runtime}${mode === 'edit' ? WS.editBridge : ''}</script>
 </body>
 </html>`;

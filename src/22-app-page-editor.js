@@ -1721,6 +1721,62 @@ function wsShuffleLook(){
   wsRerender();wsOpenEditor();
   try{toast('New look applied. Not keen? Undo brings it back.',3200);}catch(e){}
 }
+// ---- Stock photo search in the photo picker ----
+function wsPhotoSearch(q){
+  var grid=document.getElementById('slotSearchGrid'),note=document.getElementById('slotSearchNote');if(!grid)return;
+  q=String(q||'').trim();if(!q)return;
+  grid.innerHTML='';if(note)note.textContent='Searching...';
+  fetch('/api/photos?q='+encodeURIComponent(q)).then(function(r){return r.json();}).then(function(j){
+    var res=(j&&j.results)||[];
+    if(!res.length){if(note)note.textContent=(j&&j.error)||'No photos found. Try a simpler word.';return;}
+    if(note)note.textContent='Free photos from Unsplash. The photographer is credited in your site footer.';
+    res.forEach(function(p){
+      var b=document.createElement('button');b.type='button';b.title=(p.alt||'Photo')+' by '+p.name;b.setAttribute('aria-label',(p.alt||'Photo')+', by '+p.name);
+      var im=document.createElement('img');im.src=p.thumb;im.alt='';im.loading='lazy';b.appendChild(im);
+      var cr=document.createElement('span');cr.textContent=p.name;b.appendChild(cr);
+      b.addEventListener('click',function(){
+        var key=currentSlotId;
+        try{var sd=window._wsSiteData;if(sd&&key){sd.photoCredits=sd.photoCredits||{};sd.photoCredits[key]={name:p.name,link:p.link};}}catch(e){}
+        try{if(p.download)fetch('/api/photos/use',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({download:p.download})});}catch(e){}
+        fillSlot(p.url);
+      });
+      grid.appendChild(b);
+    });
+  }).catch(function(){if(note)note.textContent='Photo search is unavailable right now.';});
+}
+(function(){
+  function wire(){
+    var inp=document.getElementById('slotSearch'),btn=document.getElementById('slotSearchBtn');if(!inp||!btn)return;
+    btn.addEventListener('click',function(){wsPhotoSearch(inp.value);});
+    inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();wsPhotoSearch(inp.value);}});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire);else wire();
+})();
+// ---- Logo upload (Design tab) ----
+function wsLogoFile(file,done){
+  if(!file||!/^image[/]/.test(file.type))return;
+  var rd=new FileReader();rd.onload=function(){
+    if(file.type==='image/svg+xml'){done(rd.result);return;}
+    var im=new Image();im.onload=function(){
+      var h=Math.min(160,im.height),w=Math.round(im.width*(h/im.height));if(w>640){w=640;h=Math.round(im.height*(w/im.width));}
+      var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);
+      done(c.toDataURL('image/png'));
+    };im.src=rd.result;
+  };rd.readAsDataURL(file);
+}
+function wsRenderLogo(pad){
+  var sd=window._wsSiteData;
+  pad.appendChild(wseEl('div','wse-label','Logo'));
+  var row=wseEl('div','wse-logo');
+  var prev=wseEl('div','wse-logo-prev');if(sd.biz&&sd.biz.logo)prev.style.backgroundImage='url("'+sd.biz.logo+'")';
+  var fi=document.createElement('input');fi.type='file';fi.accept='image/png,image/jpeg,image/webp,image/svg+xml';fi.style.display='none';
+  var up=wseEl('button','wse-link go',sd.biz&&sd.biz.logo?'Replace':'Upload logo');up.type='button';up.addEventListener('click',function(){fi.click();});
+  fi.addEventListener('change',function(){wsLogoFile(fi.files[0],function(url){sd.biz.logo=url;wsRerender();wsOpenEditor();});});
+  row.appendChild(prev);row.appendChild(up);row.appendChild(fi);
+  if(sd.biz&&sd.biz.logo){var rm=wseEl('button','wse-link danger','Remove');rm.type='button';rm.addEventListener('click',function(){delete sd.biz.logo;wsRerender();wsOpenEditor();});row.appendChild(rm);}
+  pad.appendChild(row);
+  pad.appendChild(wseEl('div','wse-hint','PNG with a transparent background looks best. It replaces your name in the header.'));
+}
 function wsRenderDesign(pad){
   var sd=window._wsSiteData;
   var top=wseEl('div','wse-row');
@@ -1740,6 +1796,7 @@ function wsRenderDesign(pad){
     });
     pad.appendChild(row);
   });
+  wsRenderLogo(pad);
   pad.appendChild(wseEl('div','wse-label','Brand color'));
   var bc=wseEl('div','wse-row');
   var ci=document.createElement('input');ci.type='color';ci.className='wse-color';ci.setAttribute('aria-label','Brand color');
@@ -2666,6 +2723,7 @@ window.addEventListener('message',function(e){
 
 function openSlotPicker(slotId,label){
   currentSlotId=slotId;
+  try{var _si=document.getElementById('slotSearch'),_sg=document.getElementById('slotSearchGrid');if(_si&&_sg&&!_sg.children.length){var _bt=(window._wsSiteData&&window._wsSiteData.biz&&window._wsSiteData.biz.type)||'';_si.value=_bt;if(_bt)wsPhotoSearch(_bt);}}catch(e){}
   var title=document.getElementById('slotModalTitle');
   if(title)title.textContent='Add photo to: '+label;
   renderSlotLibGrid();
@@ -2698,6 +2756,7 @@ function fillSlot(dataUrl){
     var _sd=window._wsSiteData;
     if(_sd&&currentSlotId.indexOf('.')>0&&window.WS){
       _sd.photos=_sd.photos||{};_sd.photos[currentSlotId]=dataUrl;
+      if(_sd.photoCredits&&String(dataUrl).indexOf('https://images.unsplash.com/')!==0)delete _sd.photoCredits[currentSlotId];
       wsRerender();toast('Photo added');return;
     }
   }catch(e){}

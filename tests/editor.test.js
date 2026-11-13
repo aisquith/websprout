@@ -45,6 +45,16 @@ module.exports = async function (ctx, t) {
   await page.evaluate(() => { window._wsSiteData.accent = '#ff8800'; window._wsSiteData.corners = 'round'; wsRerender(); }); await sleep(900);
   t.ok(await page.evaluate(() => gHTML.indexOf('--accent:#ff8800') > -1 && gHTML.indexOf('wsr-round') > -1), 'brand color and corners render');
 
+  // logo replaces the name in the header; stock photo credits appear in the footer
+  await page.evaluate((p) => { window._wsSiteData.biz.logo = p; const h = window._wsSiteData.pages[0].sections.find((s) => s.type === 'hero'); window._wsSiteData.photoCredits = {}; window._wsSiteData.photoCredits[h.id + '.photo'] = { name: 'Ada Lens', link: 'https://unsplash.com/@ada' }; wsRerender(); }, px);
+  await sleep(900);
+  t.ok(await page.evaluate(() => /class="mark-logo" src="data:image\/png/.test(gHTML)), 'logo shows in the header');
+  t.ok(await page.evaluate(() => /Photos by <a href="https:\/\/unsplash\.com\/@ada\?utm_source=websprout/.test(gHTML)), 'stock photo credit shows in the footer');
+  await page.evaluate(() => { const h = window._wsSiteData.pages[0].sections.find((s) => s.type === 'hero'); delete window._wsSiteData.photos[h.id + '.photo']; wsRerender(); }); await sleep(900);
+  t.ok(await page.evaluate(() => gHTML.indexOf('Photos by') < 0), 'credit disappears when the photo is removed');
+  const ps = await (await fetch(base + '/api/photos?q=haircut')).json();
+  t.ok(ps && Array.isArray(ps.results), 'photo search answers (results or a friendly "not set up" message)');
+
   // saved HTML is clean
   await page.evaluate(() => { const d = wsPfDoc(); const s = d.createElement('style'); s.id = '_wsES'; d.head.appendChild(s); wsSyncFromFrame(); });
   const g = await page.evaluate(() => gHTML);

@@ -975,6 +975,21 @@ body.ws-v3 #designDrawer,body.ws-v3 #edFirstHint{display:none!important}
 .wse-photo{width:64px;height:48px;border-radius:8px;border:1px dashed rgba(255,255,255,.25);background:rgba(255,255,255,.04) center/cover no-repeat;color:rgba(255,255,255,.6);font:600 11px/1 system-ui,sans-serif;cursor:pointer}
 .wse-photo.has{border-style:solid;border-color:rgba(255,255,255,.18)}
 .wse-photo:hover{border-color:#37c15e;color:#fff}
+.slot-search{margin-bottom:6px}
+.slot-search-row{display:flex;gap:8px}
+.slot-search-row input{flex:1;min-width:0;background:#0b0f0c;border:1px solid rgba(255,255,255,.14);border-radius:9px;color:#fff;padding:10px 12px;font:14px/1.2 inherit;outline:none}
+.slot-search-row input:focus{border-color:#37c15e}
+.slot-search-row button{background:#2f9e4f;color:#fff;border:0;border-radius:9px;padding:0 16px;font-weight:700;cursor:pointer;font-family:inherit}
+.slot-search-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px;max-height:300px;overflow-y:auto}
+.slot-search-grid:empty{display:none}
+.slot-search-grid button{all:unset;cursor:pointer;position:relative;aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:#1c1f1d}
+.slot-search-grid img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s}
+.slot-search-grid button:hover img,.slot-search-grid button:focus-visible img{transform:scale(1.05)}
+.slot-search-grid button:focus-visible{outline:2px solid #37c15e;outline-offset:2px}
+.slot-search-grid span{position:absolute;left:0;right:0;bottom:0;padding:3px 6px;font-size:10px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.7));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot-search-note{font-size:11px;color:rgba(255,255,255,.5);margin-top:8px}
+.wse-logo{display:flex;align-items:center;gap:10px}
+.wse-logo-prev{width:88px;height:44px;border-radius:8px;border:1px dashed rgba(255,255,255,.25);background:#fff center/contain no-repeat;flex:none}
 .wse-card{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:12px}
 .wse-ok{font:700 13px/1.3 system-ui,sans-serif;color:#7fe39a;margin-bottom:6px}
 .wse-ok::before{content:'✓  '}
