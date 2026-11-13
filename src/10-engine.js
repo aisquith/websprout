@@ -1337,7 +1337,7 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${e(b.name)}${b.city ? ' | ' + e(b.type || '') + ' in ' + e(b.city) : ''}</title>
+<title>${b.seoTitle ? e(b.seoTitle) : e(b.name) + (b.city ? ' | ' + e(b.type || '') + ' in ' + e(b.city) : '')}</title>
 <meta name="description" content="${e(desc)}">
 <meta name="theme-color" content="${p.base}">
 ${favicon}

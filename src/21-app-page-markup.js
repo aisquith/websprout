@@ -1382,6 +1382,7 @@
     return '';
   }
   function openYI(){
+    if(window._wsSiteData&&window.wsOpenEditor){window.wsPanelTab='site';window._wsOpenBiz=true;try{document.getElementById('studio').classList.remove('panel-off');}catch(e){}try{var sb=document.querySelector('.s-body');if(sb&&window.innerWidth<=860)sb.classList.add('mob-chat');}catch(e){}window.wsOpenEditor();setTimeout(function(){var d=document.getElementById('wseBizInfo');if(d)d.scrollIntoView({block:'start',behavior:'smooth'});},60);return;}
     var s=stored();
     $('yiBrand').value=s.brand||detectBrand()||'';
     $('yiPhone').value=s.phone||'';$('yiEmail').value=s.email||'';$('yiAddr').value=s.address||'';$('yiHours').value=s.hours||'';

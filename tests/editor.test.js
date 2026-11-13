@@ -55,6 +55,24 @@ module.exports = async function (ctx, t) {
   const ps = await (await fetch(base + '/api/photos?q=haircut')).json();
   t.ok(ps && Array.isArray(ps.results), 'photo search answers (results or a friendly "not set up" message)');
 
+  // Site tab: "Your info" opens structured business info; fields and hours write to site data
+  await page.evaluate(() => document.getElementById('yourInfoBtn').click()); await sleep(400);
+  t.ok(await page.evaluate(() => window.wsPanelTab === 'site' && document.getElementById('wseBizInfo') && document.getElementById('wseBizInfo').open), 'Your info opens Business info in the Site tab');
+  t.ok(await page.evaluate(() => !!document.querySelector('.wse-ring')), 'launch checklist shows a score');
+  await page.evaluate(() => { const i = [...document.querySelectorAll('#wseBizInfo input')].find((x) => x.getAttribute('aria-label') === 'Email'); i.value = 'hi@glow.example'; i.dispatchEvent(new Event('input')); });
+  await sleep(1200);
+  t.eq(await page.evaluate(() => window._wsSiteData.biz.email), 'hi@glow.example', 'email field saves to site data');
+  t.ok(await page.evaluate(() => gHTML.indexOf('mailto:hi@glow.example') > -1), 'email appears on the site');
+  await page.evaluate(() => { const o = document.querySelector('#wseBizInfo input[aria-label="Mon opens"]'); o.value = '08:30'; o.dispatchEvent(new Event('change')); });
+  await sleep(1000);
+  t.ok(await page.evaluate(() => (window._wsSiteData.biz.hours || [])[0].open === '08:30' && /8:30 am/.test(gHTML)), 'opening hours save and render');
+  // SEO tool stores title/description in site data (survives re-renders)
+  await page.evaluate(() => { document.getElementById('seoBtn').click(); document.getElementById('seoTitle').value = 'Glow Salon | Best hair in Austin'; document.getElementById('seoDesc').value = 'Cuts, color and blowouts by friendly stylists in downtown Austin. Book online today.'; document.getElementById('seoSaveBtn').click(); });
+  await sleep(900);
+  await page.evaluate(() => { window._wsSiteData.palette = 'w_rose'; wsRerender(); }); await sleep(900);
+  t.ok(await page.evaluate(() => gHTML.indexOf('<title>Glow Salon | Best hair in Austin</title>') > -1 && gHTML.indexOf('Book online today.') > -1), 'SEO title and description survive a theme change');
+  await page.evaluate(() => { window.wsPanelTab = 'edit'; wsOpenEditor(); });
+
   // saved HTML is clean
   await page.evaluate(() => { const d = wsPfDoc(); const s = d.createElement('style'); s.id = '_wsES'; d.head.appendChild(s); wsSyncFromFrame(); });
   const g = await page.evaluate(() => gHTML);

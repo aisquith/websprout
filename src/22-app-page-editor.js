@@ -670,6 +670,16 @@ document.addEventListener('DOMContentLoaded',function(){
     var title=document.getElementById('seoTitle').value.trim();
     var desc=document.getElementById('seoDesc').value.trim();
     if(!title&&!desc){toast('Enter a title or description first');return;}
+    if(window._wsSiteData&&window.WS){
+      var _b=window._wsSiteData.biz=window._wsSiteData.biz||{};
+      if(title)_b.seoTitle=title.slice(0,90);else delete _b.seoTitle;
+      if(desc)_b.seoDescription=desc.slice(0,300);else delete _b.seoDescription;
+      wsRerender();document.getElementById('seoModal').classList.remove('on');toast('Search settings saved',3000);
+      try{if(window.wsPanelTab==='site')wsOpenEditor();}catch(e){}
+      return;
+    }
+    var _esc=function(s){return String(s).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;').split('"').join('&quot;');};
+    title=_esc(title);desc=_esc(desc);
     var updated=gHTML;
     if(title){
       var tStart=updated.indexOf('<title>');
@@ -1815,6 +1825,93 @@ function wsRestoreVersion(sid,key,ts,btn){
   if(window.wsConfirm)window.wsConfirm({title:'Restore this version?',message:'Your site will go back to how it looked '+wsAgo(ts)+'. You can undo this.',okLabel:'Restore',cancelLabel:'Cancel'}).then(function(ok){if(ok)go();});
   else if(confirm('Restore this version?'))go();
 }
+// ---- Business info (Site tab): the details every page uses ----
+var WS_DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+function wsBizField(box,label,key,ph,type){
+  var sd=window._wsSiteData,b=sd.biz=sd.biz||{};
+  var w=wseEl('div','wse-ctl');w.appendChild(wseEl('div','wse-ctl-label',label));
+  var i=document.createElement('input');i.className='wse-field';i.type=type||'text';i.placeholder=ph||'';i.value=b[key]||'';i.setAttribute('aria-label',label);
+  var tm;i.addEventListener('input',function(){clearTimeout(tm);tm=setTimeout(function(){var v=i.value.trim();if(v)b[key]=v;else delete b[key];wsRerender();},450);});
+  w.appendChild(i);box.appendChild(w);return i;
+}
+function wsRenderBizInfo(pad,open){
+  var sd=window._wsSiteData;var b=sd.biz=sd.biz||{};
+  var det=document.createElement('details');det.className='wse-det';det.id='wseBizInfo';if(open)det.open=true;
+  var sm=document.createElement('summary');sm.textContent='Business info';det.appendChild(sm);
+  var box=wseEl('div','wse-detb');
+  box.appendChild(wseEl('div','wse-hint','Used everywhere on your site: header, footer, contact page, buttons and search results.'));
+  wsBizField(box,'Business name','name','Your business name');
+  wsBizField(box,'Tagline','tagline','One short line about you');
+  wsBizField(box,'Phone','phone','(555) 123-4567','tel');
+  wsBizField(box,'Email','email','hello@yourbusiness.com','email');
+  wsBizField(box,'Street address','address','123 Main St, Your City');
+  wsBizField(box,'City or service area','city','e.g. Austin');
+  wsBizField(box,'Instagram handle','instagram','yourbusiness');
+  wsBizField(box,'Online booking link (optional)','bookingUrl','https://...','url');
+  // Hours
+  var hw=wseEl('div','wse-ctl');hw.appendChild(wseEl('div','wse-ctl-label','Opening hours'));
+  var hours=(Array.isArray(b.hours)&&b.hours.length===7)?b.hours:WS_DAYS.map(function(d){var h=(b.hours||[]).find(function(x){return x&&x.d===d;});return h||{d:d};});
+  var save=function(){b.hours=hours;wsRerender();};
+  var tbl=wseEl('div','wse-hours');
+  hours.forEach(function(h,ix){
+    var row=wseEl('div','wse-hrow');row.appendChild(wseEl('span','wse-hday',h.d));
+    var o=document.createElement('input');o.type='time';o.className='wse-field';o.value=h.open||'';o.setAttribute('aria-label',h.d+' opens');
+    var c=document.createElement('input');c.type='time';c.className='wse-field';c.value=h.close||'';c.setAttribute('aria-label',h.d+' closes');
+    var cl=document.createElement('label');cl.className='wse-hclosed';var cb=document.createElement('input');cb.type='checkbox';cb.checked=!h.open;cl.appendChild(cb);cl.appendChild(document.createTextNode(' Closed'));
+    var sync=function(){o.disabled=c.disabled=cb.checked;};sync();
+    cb.addEventListener('change',function(){if(cb.checked){delete h.open;delete h.close;}else{h.open=o.value||'09:00';h.close=c.value||'17:00';o.value=h.open;c.value=h.close;}sync();save();});
+    o.addEventListener('change',function(){if(o.value){h.open=o.value;if(!h.close){h.close='17:00';c.value=h.close;}}save();});
+    c.addEventListener('change',function(){if(c.value){h.close=c.value;if(!h.open){h.open='09:00';o.value=h.open;}}save();});
+    row.appendChild(o);row.appendChild(c);row.appendChild(cl);tbl.appendChild(row);
+  });
+  hw.appendChild(tbl);
+  var cp=wseEl('button','wse-link go','Copy Monday to Tuesday-Friday');cp.type='button';
+  cp.addEventListener('click',function(){var m=hours[0];for(var k=1;k<5;k++){if(m.open){hours[k].open=m.open;hours[k].close=m.close;}else{delete hours[k].open;delete hours[k].close;}}save();wsOpenEditor();var d2=document.getElementById('wseBizInfo');if(d2)d2.open=true;});
+  hw.appendChild(cp);
+  if(hours.some(function(h){return h.open;})){var ch=wseEl('button','wse-link danger','Clear hours');ch.type='button';ch.style.marginLeft='14px';ch.addEventListener('click',function(){delete b.hours;wsRerender();wsOpenEditor();var d2=document.getElementById('wseBizInfo');if(d2)d2.open=true;});hw.appendChild(ch);}
+  box.appendChild(hw);
+  det.appendChild(box);pad.appendChild(det);
+}
+// ---- Launch checklist + search readiness (Site tab) ----
+function wsSiteChecks(){
+  var sd=window._wsSiteData||{},b=sd.biz||{},secs=wsAllSections();
+  var hero=secs.find(function(s){return s.type==='hero';});
+  var photos=sd.photos||{};
+  var txt='';try{var d=wsPfDoc();txt=(d&&d.body&&d.body.innerText)||'';}catch(e){}
+  var words=txt.split(' ').filter(function(w){return w.length>1;}).length;
+  var slug=window._wsSlug||'';try{slug=slug||localStorage.getItem('ws_slug_'+(window._wsSite||localStorage.getItem('ws_site')||''))||'';}catch(e){}
+  var desc=b.seoDescription||b.tagline||'';
+  var openBiz=function(){window.wsPanelTab='site';wsOpenEditor();var d2=document.getElementById('wseBizInfo');if(d2){d2.open=true;d2.scrollIntoView({block:'start',behavior:'smooth'});}};
+  return [
+    {id:'name',label:'Your business name',ok:!!(b.name&&b.name!=='Your Business'),pts:10,fix:openBiz},
+    {id:'contact',label:'A phone number or email',ok:!!(b.phone||b.email),pts:15,fix:openBiz},
+    {id:'where',label:'Where you are (address or city)',ok:!!(b.address||b.city),pts:15,fix:openBiz},
+    {id:'hours',label:'Opening hours',ok:(b.hours||[]).some(function(h){return h&&h.open;}),pts:10,fix:openBiz,optional:true},
+    {id:'photo',label:'A photo at the top of your home page',ok:!!(hero&&photos[hero.id+'.photo']),pts:10,fix:function(){if(hero){window.wsPanelTab='edit';window._wsPageIdx=0;wsGotoPreviewPage('');openSlotPicker(hero.id+'.photo','your home page');}}},
+    {id:'seo',label:'A search description (50-160 characters)',ok:desc.length>=50&&desc.length<=160,pts:15,fix:function(){var s=document.getElementById('seoBtn');if(s)s.click();}},
+    {id:'words',label:'Enough words on your home page (300+)',ok:words>=300,pts:10,fix:null,info:words+' words now. Add detail to your services and About page.'},
+    {id:'live',label:'Published online',ok:!!slug,pts:15,fix:function(){var p=document.getElementById('publishBtn')||document.getElementById('getSiteBtn');if(p)p.click();}},
+  ];
+}
+function wsRenderChecklist(pad){
+  var checks=wsSiteChecks();var score=0,max=0;checks.forEach(function(c){max+=c.pts;if(c.ok)score+=c.pts;});
+  var pct=Math.round(score*100/max);
+  var done=checks.filter(function(c){return c.ok;}).length;
+  pad.appendChild(wseEl('div','wse-label','Launch checklist'));
+  var box=wseEl('div','wse-card');
+  var head=wseEl('div','wse-score');
+  var ring=wseEl('div','wse-ring');ring.style.setProperty('--p',pct);ring.appendChild(wseEl('b',null,String(pct)));head.appendChild(ring);
+  var ht=wseEl('div');ht.appendChild(wseEl('div','wse-score-t',pct>=85?'Ready to grow':(pct>=60?'Almost there':'A few things to add')));ht.appendChild(wseEl('div','wse-hint',done+' of '+checks.length+' done. Search readiness '+pct+'/100.'));head.appendChild(ht);
+  box.appendChild(head);
+  checks.forEach(function(c){
+    var row=wseEl('div','wse-chk'+(c.ok?' ok':''));
+    row.appendChild(wseEl('span','wse-chk-i',c.ok?'✓':''));
+    var lab=wseEl('div','wse-chk-l',c.label+(c.optional&&!c.ok?' (if you have them)':''));if(c.info&&!c.ok)lab.appendChild(wseEl('div','wse-hint',c.info));row.appendChild(lab);
+    if(!c.ok&&c.fix){var f=wseEl('button','wse-link go','Fix');f.type='button';f.addEventListener('click',c.fix);row.appendChild(f);}
+    box.appendChild(row);
+  });
+  pad.appendChild(box);
+}
 function wsRenderDesign(pad){
   var sd=window._wsSiteData;
   var top=wseEl('div','wse-row');
@@ -1903,7 +2000,7 @@ function wsOpenEditor(){
     b.addEventListener('click',function(){window.wsPanelTab=t[0];wsOpenEditor();});tabs.appendChild(b);
   });
   pad.appendChild(tabs);
-  if(tab==='site'){wsRenderManage(pad);wsRenderPayments(pad);wsRenderVersions(pad);}
+  if(tab==='site'){wsRenderChecklist(pad);wsRenderBizInfo(pad,!!window._wsOpenBiz);window._wsOpenBiz=false;wsRenderPayments(pad);wsRenderVersions(pad);wsRenderManage(pad);}
   if(tab==='design'){wsRenderDesign(pad);}
   if(false){
   pad.appendChild(wseEl('div','wse-label','Theme'));
