@@ -549,7 +549,9 @@ function v3Pages(site, sc, isShop) {
       const svcNames = (((services && services.items) || (prices && prices.items) || [])).map((it) => ({ name: it.name || it.title || '' })).filter((x) => x.name);
       const bsecs = [
         mk('pagehead', { title: bk.head, text: bk.sub, emoji: '' }),
-        mk('booking', { variant: bk.mode, title: '', text: '', button: bk.btn, services: svcNames, success: bk.ok }),
+        (b.bookingUrl && WSENGINE.bookingEmbedOk(b.bookingUrl))
+          ? mk('embed', { title: bk.head, text: '', url: b.bookingUrl, height: '720' })
+          : mk('booking', { variant: bk.mode, title: '', text: '', button: bk.btn, services: svcNames, success: bk.ok }),
       ];
       pages.push({ id: 'pg-book', path: bk.path, title: bk.title, nav: true, sections: bsecs });
       b.bookShort = bk.short;
@@ -626,6 +628,7 @@ async function buildV3Site(d, env) {
       tagline: (d.tagline || '').toString().slice(0, 200),
       phone: (d.phone || '').toString().slice(0, 40),
       instagram: (d.instagram || '').toString().replace(/[^a-zA-Z0-9_.]/g, '').slice(0, 40),
+      bookingUrl: /^https:\/\//.test(String(d.bookingUrl || '')) ? String(d.bookingUrl).slice(0, 300) : '',
       founded: (d.founded || '').toString().slice(0, 8),
       about: (d.about || '').toString().slice(0, 400),
       bookLabel: isShop ? 'Shop now' : 'Get in touch',

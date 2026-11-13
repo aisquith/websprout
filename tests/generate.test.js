@@ -48,6 +48,28 @@ module.exports = async function (ctx, t) {
     }
   }
   t.ok(layouts.size >= (ctx.quick ? 2 : 4), 'home layouts vary (' + layouts.size + ' different)');
+  // a known booking provider link becomes an embedded calendar on the booking page; unknown links do not
+  let j = await createSite(base, { name: 'Zen', type: 'Yoga studio', bookingUrl: 'https://calendly.com/zen/class' });
+  const bookPg = j.site.pages.find((p) => p.path === 'book');
+  t.ok(bookPg && bookPg.sections.some((s) => s.type === 'embed'), 'booking link from Calendly becomes an embedded calendar');
+  t.ok(/<iframe src="https:\/\/calendly\.com\/zen\/class"/.test(j.html), 'calendar iframe renders');
+  j = await createSite(base, { name: 'Zen', type: 'Yoga studio', bookingUrl: 'https://evil.example/x' });
+  t.ok(!/<iframe src="https:\/\/evil/.test(j.html), 'unknown booking sites are never embedded');
+  // new sections can be added and render on a phone without overflow
+  const page = await openPage(browser, { mobile: true });
+  await page.goto(base + '/terms');
+  const html = await page.evaluate(async () => {
+    await new Promise((r) => { const s = document.createElement('script'); s.src = '/ws-engine.js'; s.onload = r; document.head.appendChild(s); });
+    const W = window.WS; const site = { biz: { name: 'Gym', type: 'Gym', hours: [] }, palette: 'w_mono', typeset: 'bold', photos: {}, sections: [] };
+    ['hero', 'plans', 'embed'].forEach((ty) => site.sections.push(Object.assign({ id: ty + '-1', type: ty }, W.sections[ty].create(site))));
+    site.sections[2].url = 'https://calendly.com/gym/intro';
+    return W.renderSite(site, { mode: 'live' });
+  });
+  await page.setContent(html, { waitUntil: 'domcontentloaded' }); await sleep(300);
+  t.eq(await page.evaluate(() => document.querySelectorAll('.plan').length), 3, 'pricing plans render');
+  t.ok(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth <= 1), 'plans and calendar fit a phone screen');
+  await page.close();
+
   // business-type mapping: service businesses with "shop" in the name are not stores
   for (const [type, shop] of [['Barber shop', false], ['Coffee shop', false], ['Body shop', false], ['Gift shop', true]]) {
     const j = await createSite(base, { name: 'T', type });

@@ -547,6 +547,65 @@ const WSENGINE = (function(){
   });
 
   // ---------- FAQ ----------
+  // ---------- Pricing plans ----------
+  R('plans', {
+    label: 'Pricing plans',
+    blurb: 'Packages side by side, with what each includes.',
+    variants: { cards: 'Cards' },
+    fields: [
+      { key: 'title', label: 'Title', type: 'text' },
+      { key: 'text', label: 'Intro (optional)', type: 'textarea' },
+      { key: 'items', label: 'Plans', type: 'list', add: 'Add a plan', item: [
+        { key: 'name', label: 'Plan name', type: 'text' },
+        { key: 'price', label: 'Price', type: 'text' },
+        { key: 'per', label: 'Per (e.g. /month, per visit)', type: 'text' },
+        { key: 'features', label: 'What is included (one per line)', type: 'textarea' },
+        { key: 'button', label: 'Button text', type: 'text' },
+        { key: 'featured', label: 'Highlight as most popular', type: 'select', options: [['', 'No'], ['yes', 'Yes']] },
+      ] },
+    ],
+    create: () => ({ variant: 'cards', title: 'Packages', text: '', items: [
+      { name: 'Essential', price: '$49', per: 'per visit', features: 'The core service\nFriendly, on-time pros\nSatisfaction guaranteed', button: '' },
+      { name: 'Plus', price: '$89', per: 'per visit', features: 'Everything in Essential\nExtra time and attention\nPriority booking', button: '', featured: 'yes' },
+      { name: 'Premium', price: '$149', per: 'per visit', features: 'Everything in Plus\nOur most complete service\nFollow-up check-in', button: '' },
+    ] }),
+    render: (s, c) => {
+      const items = (s.items || []).filter((it) => it && (it.name || it.price));
+      if (!items.length) return '';
+      const cards = items.map((it) => {
+        const feats = String(it.features || '').split('\n').map((x) => x.trim()).filter(Boolean);
+        return `<article class="plan reveal${it.featured === 'yes' ? ' plan-hot' : ''}">${it.featured === 'yes' ? '<span class="plan-tag">Most popular</span>' : ''}<h3 class="plan-n">${e(it.name || '')}</h3><div class="plan-p"><b>${e(it.price || '')}</b>${it.per ? `<span>${e(it.per)}</span>` : ''}</div>${feats.length ? `<ul class="plan-f">${feats.map((f) => `<li>${e(f)}</li>`).join('')}</ul>` : ''}<a class="btn${it.featured === 'yes' ? '' : ' ghost'}" href="${c.book}">${e(it.button || c.biz.bookLabel || 'Get started')}</a></article>`;
+      }).join('');
+      return `<section class="plans on-base" id="plans"><div class="wrap">${head(s, 'Packages')}${s.text ? `<p class="lede">${lines(s.text)}</p>` : ''}<div class="plans-grid">${cards}</div></div></section>`;
+    },
+  });
+
+  // ---------- Booking calendar embed ----------
+  // Only well-known booking providers can be embedded (no arbitrary iframes on customer sites).
+  WS.bookingEmbedOk = (u) => {
+    let h = '';
+    try { const x = new URL(String(u || '')); if (x.protocol !== 'https:') return false; h = x.hostname.toLowerCase(); } catch (_e) { return false; }
+    return /(^|\.)(calendly\.com|squareup\.com|square\.site|acuityscheduling\.com|as\.me|setmore\.com|booksy\.com|vagaro\.com|fresha\.com|youcanbook\.me|tidycal\.com|cal\.com|zcal\.co|opentable\.com|resy\.com|simplybook\.me|schedulicity\.com|mindbodyonline\.com|calendar\.google\.com|outlook\.office365\.com)$/.test(h);
+  };
+  R('embed', {
+    label: 'Booking calendar',
+    blurb: 'Your Calendly, Square, Acuity, Vagaro or similar booking page, right on your site.',
+    variants: { framed: 'Framed' },
+    fields: [
+      { key: 'title', label: 'Title', type: 'text' },
+      { key: 'text', label: 'Short note (optional)', type: 'textarea' },
+      { key: 'url', label: 'Booking page link', type: 'text', hint: 'Paste the link from Calendly, Square, Acuity, Vagaro, Fresha, OpenTable...' },
+      { key: 'height', label: 'Height', type: 'select', options: [['720', 'Standard'], ['560', 'Short'], ['900', 'Tall']] },
+    ],
+    create: () => ({ variant: 'framed', title: 'Book a time', text: '', url: '', height: '720' }),
+    render: (s, c) => {
+      const ok = WS.bookingEmbedOk(s.url);
+      if (!ok) return c.mode === 'edit' ? `<section class="embed on-base" id="calendar"><div class="wrap">${head(s, 'Book a time')}<div class="embed-ph">Paste your booking page link in the editor to show your calendar here.</div></div></section>` : '';
+      const hgt = ['560', '720', '900'].indexOf(String(s.height)) > -1 ? s.height : '720';
+      return `<section class="embed on-base" id="calendar"><div class="wrap">${head(s, 'Book a time')}${s.text ? `<p class="lede">${lines(s.text)}</p>` : ''}<div class="embed-box"><iframe src="${e(s.url)}" title="${e(s.title || 'Booking calendar')}" loading="lazy" style="height:${hgt}px" allow="payment" referrerpolicy="strict-origin-when-cross-origin"></iframe></div><p class="embed-alt"><a href="${e(s.url)}" target="_blank" rel="noopener">Open the booking page in a new tab</a></p></div></section>`;
+    },
+  });
+
   R('faq', {
     label: 'Questions',
     blurb: 'Answer what people always ask.',
@@ -605,7 +664,7 @@ const WSENGINE = (function(){
   });
 
   // Order the "Add section" library is shown in.
-  WS.sectionOrder = ['pagehead', 'hero', 'announce', 'intro', 'stats', 'services', 'steps', 'prices', 'payments', 'events', 'gallery', 'beforeafter', 'team', 'reviews', 'faq', 'booking', 'servicearea', 'cta', 'contact', 'visit'];
+  WS.sectionOrder = ['pagehead', 'hero', 'announce', 'intro', 'stats', 'services', 'steps', 'prices', 'plans', 'embed', 'payments', 'events', 'gallery', 'beforeafter', 'team', 'reviews', 'faq', 'booking', 'servicearea', 'cta', 'contact', 'visit'];
 })(globalThis.WS = globalThis.WS || {});
 
 // Shop / products section for ecommerce sites: a grid of purchasable items + a cart drawer.
@@ -995,6 +1054,19 @@ figure{margin:0}
 .ws-top.on{opacity:1;transform:none;pointer-events:auto}
 .ws-top:hover{background:var(--base-text);color:var(--base)}
 .steps{padding:clamp(72px,10vw,120px) 0}
+.plans-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:22px;margin-top:44px;align-items:stretch}
+.plan{position:relative;display:flex;flex-direction:column;gap:14px;padding:30px 26px;border:1px solid var(--hair);background:color-mix(in srgb,var(--fg),transparent 97%)}
+.plan-hot{border-color:var(--accent);box-shadow:0 18px 44px -26px color-mix(in srgb,var(--accent),transparent 30%)}
+.plan-tag{position:absolute;top:-11px;left:24px;background:var(--accent);color:var(--accent-text);font:600 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:6px 10px}
+.plan-n{font-size:22px;text-transform:var(--h-transform,uppercase)}
+.plan-p b{font:var(--h-weight,800) clamp(34px,4vw,48px)/1 var(--display)}.plan-p span{margin-left:8px;color:color-mix(in srgb,var(--fg),transparent 40%);font-size:14px}
+.plan-f{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;flex:1}
+.plan-f li{padding-left:22px;position:relative;font-size:15px}.plan-f li::before{content:'';position:absolute;left:2px;top:.55em;width:9px;height:5px;border-left:2px solid var(--accent);border-bottom:2px solid var(--accent);transform:rotate(-45deg)}
+.plan .btn{justify-content:center;margin-top:6px}
+.embed-box{margin-top:36px;border:1px solid var(--hair);background:#fff;overflow:hidden}
+.embed-box iframe{display:block;width:100%;border:0}
+.embed-alt{margin:12px 0 0;font-size:13px}.embed-alt a{color:inherit;opacity:.7}
+.embed-ph{margin-top:28px;padding:48px 24px;border:2px dashed var(--hair);text-align:center;opacity:.75}
 .steps-grid{list-style:none;padding:0;margin:48px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:36px}
 .steps .step{display:block}
 .step-n{display:block;width:auto;height:auto;border-radius:0;background:none;color:var(--accent);font-family:var(--display);font-weight:var(--h-weight,800);font-size:clamp(44px,4.4vw,60px);line-height:1;margin-bottom:16px}
