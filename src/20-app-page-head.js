@@ -1013,6 +1013,10 @@ body.ws-v3 #designDrawer,body.ws-v3 #edFirstHint{display:none!important}
 .wse-chk.ok .wse-chk-i{background:#37c15e;border-color:#37c15e}
 .wse-chk.ok .wse-chk-l{color:rgba(255,255,255,.5)}
 .wse-chk-l{flex:1}
+.wse-glist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.wse-gopt{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:2px;padding:9px 10px;border:1px solid rgba(255,255,255,.1);border-radius:9px;font-size:12.5px;color:#fff}
+.wse-gopt span{color:rgba(255,255,255,.55);font-size:11.5px}
+.wse-gopt:hover,.wse-gopt:focus-visible{border-color:#37c15e;background:rgba(55,193,94,.08)}
 .wse-card{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:12px}
 .wse-ok{font:700 13px/1.3 system-ui,sans-serif;color:#7fe39a;margin-bottom:6px}
 .wse-ok::before{content:'✓  '}

@@ -404,6 +404,41 @@ async function unsplashPhotos(query, env, n) {
   } catch (e) { return []; }
 }
 
+// ── Google rating + reviews for published sites (Places API (New); needs GOOGLE_PLACES_KEY) ──
+// Responses are cached for 6 hours so a busy site does not spend API quota on every visit.
+async function doPlace(request, env) {
+  const url = new URL(request.url);
+  const id = (url.searchParams.get('place') || '').trim();
+  const cors = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' };
+  if (!/^[A-Za-z0-9_-]{10,300}$/.test(id)) return new Response(JSON.stringify({ error: 'bad place' }), { status: 400, headers: cors });
+  if (!env.GOOGLE_PLACES_KEY) return new Response(JSON.stringify({ error: 'not configured' }), { status: 503, headers: cors });
+  try {
+    const ck = 'place:' + id;
+    if (env.KV) { const c = await env.KV.get(ck); if (c) return new Response(c, { headers: cors }); }
+    const r = await fetch('https://places.googleapis.com/v1/places/' + encodeURIComponent(id), { headers: { 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY, 'X-Goog-FieldMask': 'displayName,rating,userRatingCount,googleMapsUri,reviews' } });
+    if (!r.ok) return new Response(JSON.stringify({ error: 'google error' }), { status: 502, headers: cors });
+    const p = await r.json();
+    const out = JSON.stringify({
+      name: (p.displayName && p.displayName.text) || '', rating: typeof p.rating === 'number' ? p.rating : null, reviews: typeof p.userRatingCount === 'number' ? p.userRatingCount : null, url: p.googleMapsUri || '',
+      items: (p.reviews || []).slice(0, 5).map(function (v) { return { rating: v.rating || 0, text: String((v.text && v.text.text) || (v.originalText && v.originalText.text) || '').slice(0, 600), name: (v.authorAttribution && v.authorAttribution.displayName) || 'Google user', when: v.relativePublishTimeDescription || '' }; }).filter(function (v) { return v.text; }),
+    });
+    if (env.KV) await env.KV.put(ck, out, { expirationTtl: 6 * 3600 });
+    return new Response(out, { headers: cors });
+  } catch (e) { return new Response(JSON.stringify({ error: 'failed' }), { status: 500, headers: cors }); }
+}
+// Find a business's Google place from its name and city (used once, in the editor).
+async function doPlaceFind(request, env) {
+  const q = (new URL(request.url).searchParams.get('q') || '').trim().slice(0, 120);
+  if (!env.GOOGLE_PLACES_KEY) return jsonR({ ok: false, error: 'Google lookups are not available yet.', results: [] });
+  if (q.length < 3) return jsonR({ ok: true, results: [] });
+  try {
+    if (env.KV) { const ip = request.headers.get('cf-connecting-ip') || '0'; const k = 'pfrate:' + ip; const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= 30) return jsonR({ ok: false, error: 'Too many lookups. Try again later.', results: [] }, 429); await env.KV.put(k, String(n + 1), { expirationTtl: 3600 }); }
+    const r = await fetch('https://places.googleapis.com/v1/places:searchText', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY, 'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount' }, body: JSON.stringify({ textQuery: q, pageSize: 5 }) });
+    const j = await r.json();
+    return jsonR({ ok: true, results: ((j && j.places) || []).map(function (p) { return { id: p.id, name: (p.displayName && p.displayName.text) || '', address: p.formattedAddress || '', rating: p.rating || null, count: p.userRatingCount || 0 }; }) });
+  } catch (e) { return jsonR({ ok: false, error: 'Lookup failed.', results: [] }); }
+}
+
 // Stock photo search for the editor's photo picker (Unsplash; needs UNSPLASH_ACCESS_KEY).
 async function doPhotoSearch(request, env) {
   const url = new URL(request.url);
@@ -645,7 +680,7 @@ async function buildV3Site(d, env) {
     const emojiStyle = (d.emojiStyle || 'color').toString();
     const knownType = /barber|salon|tattoo|groom|nail|spa|beauty|bak|cafe|coffee|food|restaurant|kitchen|donut|truck|lawn|landscap|garden|clean|pressure|pool|window|pest|gutter|handy/i.test(biz.type);
     const has = function (a) { return Array.isArray(a) && a.length; };
-    const site = { biz: biz, palette: palette, typeset: typeset, emojiStyle: emojiStyle, photos: {}, sections: [], statsApi: '' };
+    const site = { biz: biz, palette: palette, typeset: typeset, emojiStyle: emojiStyle, photos: {}, sections: [], statsApi: 'https://websprout.app/api/place' };
     const add = function (type, ov) { site.sections.push(Object.assign({ id: type + '-' + WSENGINE.uid(), type: type }, WSENGINE.sections[type].create(site), ov || {})); };
     // Fill a finished-feeling site from deterministic, type-aware starter content. The owner edits any of it.
     const heroTag = biz.tagline || sc.tagline || '';

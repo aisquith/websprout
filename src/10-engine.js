@@ -521,11 +521,17 @@ const WSENGINE = (function(){
   R('reviews', {
     label: 'Reviews',
     blurb: 'What customers say.',
-    variants: { feature: 'One big quote', wall: 'Wall of quotes' },
-    fields: [{ key: 'items', label: 'Reviews', type: 'list', add: 'Add a review', item: [{ key: 'quote', label: 'Quote', type: 'textarea' }, { key: 'name', label: 'Name', type: 'text' }] }],
+    variants: { feature: 'One big quote', wall: 'Wall of quotes', google: 'Live Google reviews' },
+    fields: [{ key: 'title', label: 'Title (Google layout)', type: 'text', only: ['google'] }, { key: 'items', label: 'Reviews (shown if Google is unavailable)', type: 'list', add: 'Add a review', item: [{ key: 'quote', label: 'Quote', type: 'textarea' }, { key: 'name', label: 'Name', type: 'text' }] }],
     create: (site) => ({ variant: 'feature', items: (site.biz.reviews || []).map((r) => ({ quote: r.quote, name: r.name })) }),
     render: (s, c) => {
       const it = s.items || [];
+      if (s.variant === 'google') {
+        // Typed reviews are the fallback; the runtime swaps in live Google reviews when a place is linked.
+        const fb = it.map((r) => `<blockquote><p>${lines(r.quote)}</p><footer>${e(r.name)}</footer></blockquote>`).join('');
+        if (!c.biz.googlePlaceId && !fb && c.mode !== 'edit') return '';
+        return `<section class="reviews reviews-wall reviews-google on-base" data-greviews><div class="wrap">${head(s, 'What people say')}<div class="gr-sum" hidden></div><div class="rw">${fb || (c.mode === 'edit' ? '<blockquote><p>Your latest Google reviews will appear here once your Google Business Profile is linked.</p></blockquote>' : '')}</div><p class="gr-attr" hidden></p></div></section>`;
+      }
       if (!it.length) return '';
       if (s.variant === 'wall')
         return `<section class="reviews reviews-wall on-base"><div class="wrap"><div class="rw">${it.map((r) => `<blockquote><p>${lines(r.quote)}</p><footer>${e(r.name)}</footer></blockquote>`).join('')}</div></div></section>`;
@@ -1054,6 +1060,10 @@ figure{margin:0}
 .ws-top.on{opacity:1;transform:none;pointer-events:auto}
 .ws-top:hover{background:var(--base-text);color:var(--base)}
 .steps{padding:clamp(72px,10vw,120px) 0}
+.gr-sum{display:flex;align-items:baseline;gap:10px;margin:18px 0 6px;font-size:15px}.gr-sum b{font:var(--h-weight,800) 34px/1 var(--display)}
+.gr-stars{color:#f5b301;letter-spacing:2px}
+.reviews-google .rw blockquote .gr-stars{display:block;margin-bottom:8px}
+.gr-attr{margin:18px 0 0;font-size:13px;opacity:.7}.gr-attr a{color:inherit}
 .plans-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:22px;margin-top:44px;align-items:stretch}
 .plan{position:relative;display:flex;flex-direction:column;gap:14px;padding:30px 26px;border:1px solid var(--hair);background:color-mix(in srgb,var(--fg),transparent 97%)}
 .plan-hot{border-color:var(--accent);box-shadow:0 18px 44px -26px color-mix(in srgb,var(--accent),transparent 30%)}
@@ -1438,7 +1448,7 @@ ${body}
 document.documentElement.classList.add('js');document.body.classList.add('js');
 (function(){
   var HOURS=${JSON.stringify(site.biz.hours || []).replace(/</g, '\\u003c')},WALKIN=${site.biz.walkIns ? 'true' : 'false'},EDIT=document.body.classList.contains('edit');
-  var STATS_API=${JSON.stringify(site.statsApi || '').replace(/</g, '\\u003c')},PLACE=${JSON.stringify(site.biz.googlePlaceId || '').replace(/</g, '\\u003c')};
+  var STATS_API=${JSON.stringify(site.statsApi || (site.biz && site.biz.googlePlaceId ? 'https://websprout.app/api/place' : '')).replace(/</g, '\\u003c')},PLACE=${JSON.stringify(site.biz.googlePlaceId || '').replace(/</g, '\\u003c')};
   var top=document.querySelector('[data-top]'),ann=document.querySelector('.announce');
   function onScroll(){var y=window.scrollY;top.classList.toggle('solid',y>60);if(ann)top.style.setProperty('--top-offset',Math.max(0,ann.offsetHeight-y)+'px')}
   window.addEventListener('scroll',onScroll,{passive:true});window.addEventListener('resize',onScroll);onScroll();
@@ -1467,6 +1477,18 @@ document.documentElement.classList.add('js');document.body.classList.add('js');
       if(j)live.forEach(function(el){var v=el.dataset.src==='google_rating'?j.rating:j.reviews;if(v!=null){el.dataset.count=String(v);el.textContent=fmt(+v,(String(v).split('.')[1]||'').length)}});
     }).catch(function(){}).then(startCounts);
   } else startCounts();
+  // live Google reviews (needs a linked place; falls back to the typed reviews already on the page)
+  (function(){var box=document.querySelector('[data-greviews]');if(!box||!STATS_API||!PLACE||EDIT)return;
+    fetch(STATS_API+'?place='+encodeURIComponent(PLACE)).then(function(r){return r.ok?r.json():null}).then(function(j){
+      if(!j||!j.items||!j.items.length)return;
+      var rw=box.querySelector('.rw'),sum=box.querySelector('.gr-sum'),at=box.querySelector('.gr-attr');
+      function star(n){var o='';for(var i=0;i<5;i++)o+=i<Math.round(n)?'★':'☆';return o}
+      function esc(s){return String(s==null?'':s).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;')}
+      rw.innerHTML=j.items.map(function(v){return '<blockquote><div class="gr-stars" aria-label="'+v.rating+' out of 5 stars">'+star(v.rating)+'</div><p>'+esc(v.text.length>320?v.text.slice(0,317)+'…':v.text)+'</p><footer>'+esc(v.name)+(v.when?' · '+esc(v.when):'')+'</footer></blockquote>'}).join('');
+      if(j.rating&&sum){sum.hidden=false;sum.innerHTML='<b>'+j.rating.toFixed(1)+'</b> <span class="gr-stars">'+star(j.rating)+'</span> <span>'+(j.reviews||0).toLocaleString()+' Google reviews</span>'}
+      if(at){at.hidden=false;at.innerHTML='Reviews from Google'+(j.url?' · <a href="'+esc(j.url)+'" target="_blank" rel="noopener">See all on Google</a>':'')}
+    }).catch(function(){});
+  })();
   // before / after sliders
   document.querySelectorAll('[data-ba]').forEach(function(fr){var r=fr.querySelector('.ba-range');if(r)r.addEventListener('input',function(){fr.style.setProperty('--x',r.value+'%')})});
   // contact form -> POST to the owner's inbox (only on the real published site, not the studio preview iframe)

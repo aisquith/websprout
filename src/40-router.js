@@ -25,6 +25,8 @@ export default {
     if (url.pathname === '/create' && request.method === 'POST') return doCreate(request, env);
     if (url.pathname === '/example' && request.method === 'GET') return doExample(request, env);
     if (url.pathname === '/api/photos' && request.method === 'GET') return doPhotoSearch(request, env);
+    if (url.pathname === '/api/place' && request.method === 'GET') return doPlace(request, env);
+    if (url.pathname === '/api/place/find' && request.method === 'GET') return doPlaceFind(request, env);
     if (url.pathname === '/api/photos/use' && request.method === 'POST') return doPhotoUse(request, env);
     if (url.pathname === '/ws-engine.js') return new Response(wsEngineJs(), { headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'public, max-age=86400' } });
     if (url.pathname === '/products') return doProducts(request, env);

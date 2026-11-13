@@ -1848,6 +1848,32 @@ function wsRenderBizInfo(pad,open){
   wsBizField(box,'City or service area','city','e.g. Austin');
   wsBizField(box,'Instagram handle','instagram','yourbusiness');
   wsBizField(box,'Online booking link (optional)','bookingUrl','https://...','url');
+  // Google Business Profile: link it once to show the live rating and reviews.
+  var gw=wseEl('div','wse-ctl');gw.appendChild(wseEl('div','wse-ctl-label','Google Business Profile'));
+  if(b.googlePlaceId){
+    var lk=wseEl('div','wse-hint','Linked: '+(b.googleName||'your Google listing'));gw.appendChild(lk);
+    var hasG=wsAllSections().some(function(s){return s.type==='reviews'&&s.variant==='google';});
+    if(!hasG){var add=wseEl('button','wse-btn wse-wide','Show my Google reviews');add.type='button';add.style.marginTop='8px';add.addEventListener('click',function(){
+      var home=(sd.pages&&sd.pages[0])?sd.pages[0].sections:sd.sections;var at=home.length;for(var k=0;k<home.length;k++){if(home[k].type==='cta'){at=k;break;}}
+      var rv=home.find(function(s){return s.type==='reviews';});
+      if(rv){rv.variant='google';}else{home.splice(at,0,Object.assign({id:'reviews-'+window.WS.uid(),type:'reviews'},window.WS.sections.reviews.create(sd),{variant:'google',title:'What people say'}));}
+      wsRerender();wsOpenEditor();try{toast('Google reviews added to your home page',3000);}catch(e){}
+    });gw.appendChild(add);}
+    var ul=wseEl('button','wse-link danger','Unlink');ul.type='button';ul.style.marginTop='8px';ul.addEventListener('click',function(){delete b.googlePlaceId;delete b.googleName;wsRerender();wsOpenEditor();var d2=document.getElementById('wseBizInfo');if(d2)d2.open=true;});gw.appendChild(ul);
+  } else {
+    var gr=wseEl('div','wse-row');var gq=document.createElement('input');gq.className='wse-field';gq.placeholder='Business name and city';gq.value=[b.name||'',b.city||''].filter(Boolean).join(' ');gq.setAttribute('aria-label','Find your business on Google');
+    var gb=wseEl('button','wse-btn','Find');gb.type='button';gr.appendChild(gq);gr.appendChild(gb);gw.appendChild(gr);
+    var gl=wseEl('div','wse-glist');gw.appendChild(gl);
+    gw.appendChild(wseEl('div','wse-hint','Shows your live Google rating and recent reviews on your site.'));
+    var find=function(){gl.innerHTML='';gl.appendChild(wseEl('div','wse-hint','Searching Google...'));
+      fetch('/api/place/find?q='+encodeURIComponent(gq.value)).then(function(r){return r.json();}).then(function(j){gl.innerHTML='';
+        var res=(j&&j.results)||[];if(!res.length){gl.appendChild(wseEl('div','wse-hint',(j&&j.error)||'No match. Try the exact name on your Google listing.'));return;}
+        res.forEach(function(p){var o=wseEl('button','wse-gopt');o.type='button';o.appendChild(wseEl('b',null,p.name));o.appendChild(wseEl('span',null,p.address+(p.rating?' · '+p.rating+' stars ('+p.count+')':'')));
+          o.addEventListener('click',function(){b.googlePlaceId=p.id;b.googleName=p.name;wsRerender();wsOpenEditor();var d2=document.getElementById('wseBizInfo');if(d2)d2.open=true;});gl.appendChild(o);});
+      }).catch(function(){gl.innerHTML='';gl.appendChild(wseEl('div','wse-hint','Google lookup is unavailable right now.'));});};
+    gb.addEventListener('click',find);gq.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();find();}});
+  }
+  box.appendChild(gw);
   // Hours
   var hw=wseEl('div','wse-ctl');hw.appendChild(wseEl('div','wse-ctl-label','Opening hours'));
   var hours=(Array.isArray(b.hours)&&b.hours.length===7)?b.hours:WS_DAYS.map(function(d){var h=(b.hours||[]).find(function(x){return x&&x.d===d;});return h||{d:d};});
