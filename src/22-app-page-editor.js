@@ -1,4 +1,4 @@
-<script>
+<script>/*WS_EDITOR_JS*/
 // Websprout v3.1
 var gHTML='',unlocked=false,selectedType='',selectedStyle='';
 // ── Error visibility: report studio JS errors so breakage is seen, not guessed ──

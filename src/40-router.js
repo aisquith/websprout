@@ -1,3 +1,14 @@
+// The editor script (about 220 KB) is served as its own long-cached file instead of being inlined into
+// every page view. It stays a normal blocking <script src> in the same spot, so run order is unchanged.
+const _ED_MARK = '<script>/*WS_EDITOR_JS*/';
+const _edA = PAGE.indexOf(_ED_MARK);
+const _edB = _edA > -1 ? PAGE.indexOf('</script>', _edA) : -1;
+const EDITOR_JS = (_edA > -1 && _edB > -1) ? PAGE.slice(_edA + _ED_MARK.length, _edB) : '';
+const PAGE_SHELL = EDITOR_JS ? PAGE.slice(0, _edA) + '<script src="/app/editor.js?v=__WS_EDV__"></script>' + PAGE.slice(_edB + 9) : PAGE;
+function wsHash(s){ let h = 2166136261; for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
+const EDITOR_VER = wsHash(EDITOR_JS);
+function editorVersion(sub){ return EDITOR_VER + (sub ? '-' + wsHash(sub) : ''); }
+
 export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(runWeeklyDigest(env));
@@ -115,12 +126,19 @@ export default {
     if (url.pathname.startsWith('/for/') && request.method === 'GET') { const _nk = url.pathname.slice(5).replace(/\/+$/,''); const _n = NICHES.find(function(x){ return x.slug === _nk; }); if (_n) return new Response(renderNichePage(_n), { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } }); return new Response(pubPage404(), { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } }); }
     if (url.pathname === '/og.svg') return new Response(OG_IMAGE, { headers: { 'Content-Type': 'image/svg+xml; charset=utf-8', 'Cache-Control': 'public, max-age=86400' } });
     if (url.pathname === '/og.png') { try { const _b = Uint8Array.from(atob(OG_PNG_B64), function(c){ return c.charCodeAt(0); }); return new Response(_b, { headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' } }); } catch(e) { return new Response(OG_IMAGE, { headers: { 'Content-Type': 'image/svg+xml; charset=utf-8' } }); } }
+    if (url.pathname === '/app/editor.js') {
+      const _s0 = (env.STRIPE_SUB_LINK || env.SUB_LINK || '').trim();
+      const _js = _s0 ? EDITOR_JS.split(SUB_LINK).join(_s0) : EDITOR_JS;
+      const _cur = url.searchParams.get('v') === editorVersion(_s0);
+      return new Response(_js, { headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': _cur ? 'public, max-age=31536000, immutable' : 'no-cache' } });
+    }
     if (url.pathname === '/robots.txt') return new Response(ROBOTS, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=86400' } });
-    let _html = PAGE;
+    let _html = PAGE_SHELL;
     // Stripe subscription link comes from an env var so it persists across code updates
     // (a hardcoded link in the file would be overwritten every time worker.js is redeployed).
     const _sub = (env.STRIPE_SUB_LINK || env.SUB_LINK || '').trim();
     if (_sub) _html = _html.split(SUB_LINK).join(_sub);
+    _html = _html.split('__WS_EDV__').join(editorVersion(_sub));
     try { const _sg = await getSitesGrown(env); if (_sg && _sg > 0) _html = _html.split('id="liveCount">&mdash;<').join('id="liveCount">' + fmtThousands(_sg) + '<'); } catch (e) {}
     return new Response(_html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate', 'Pragma': 'no-cache' } });
   }

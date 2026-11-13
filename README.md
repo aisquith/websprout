@@ -36,3 +36,17 @@ Tests need Chrome (or set `CHROME_PATH`). They also run on GitHub on every push 
 **The files are slices of one script, not separate modules.** Files 20-23 are one long template literal split in four, so inside them write `\\` for a backslash and never write `${` unless you mean a server-side value.
 
 Secrets (Stripe, Resend, Google, Unsplash, Gemini...) live in the Cloudflare dashboard, not in this repo.
+
+## Optional setup (features turn on when the key exists)
+
+Add these in Cloudflare → Workers & Pages → websprout → Settings → Variables and Secrets.
+
+| Secret | Turns on |
+|---|---|
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Pro subscriptions, shop checkout, Stripe Connect payouts |
+| `RESEND_API_KEY` | sign-in emails, lead notifications, digests |
+| `UNSPLASH_ACCESS_KEY` | photos on generated sites and the photo search in the editor |
+| `GOOGLE_PLACES_KEY` | live Google rating and reviews (enable "Places API (New)" in Google Cloud) |
+| `CF_API_TOKEN`, `CF_ZONE_ID` | automatic HTTPS for customers' own domains (Cloudflare for SaaS) |
+
+**Custom domains (one-time):** in the websprout.app zone, open SSL/TLS → Custom Hostnames, enable Cloudflare for SaaS and set the fallback origin to `sites.websprout.app`. Then add a Worker route `*/*` for the zone so customer domains reach the Worker. The API token needs the "SSL and Certificates: Edit" permission on the zone.
