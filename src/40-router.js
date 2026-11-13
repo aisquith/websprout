@@ -16,7 +16,8 @@ export default {
   },
   async fetch(request, env) {
     const url = new URL(request.url);
-    const _host = url.hostname.toLowerCase();
+    // The local test server cannot route by Host header; tests (which set WS_TEST_MODE) name the host explicitly.
+    const _host = (((env && env.WS_TEST_MODE === '1') && request.headers.get('x-ws-test-host')) || url.hostname).toLowerCase();
     const _appHosts = ['websprout.app','www.websprout.app'];
     if (url.pathname === '/checkout' && request.method === 'GET') return doCheckout(request, env);
     if (url.pathname === '/cart-checkout' && request.method === 'OPTIONS') return new Response(null, { headers: formCors() });
@@ -25,12 +26,16 @@ export default {
       if (_host.endsWith('.websprout.app')) {
         const _sub = _host.slice(0, _host.length - '.websprout.app'.length);
         if (_sub && _sub.indexOf('.') === -1) {
-          const _r = await servePublished(_sub, env, url.pathname);
+          if (url.pathname === '/sitemap.xml' || url.pathname === '/robots.txt') { const _m = await servePublishedMeta(_sub, env, url.pathname, 'https://' + _host); if (_m) return _m; }
+          const _r = await servePublished(_sub, env, url.pathname, { base: '/', origin: 'https://' + _host });
           return _r || new Response(PUB_404, { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
         }
       } else if (env.KV) {
         const _mapped = await env.KV.get('domain:' + _host);
-        if (_mapped) { const _r = await servePublished(_mapped, env, url.pathname); if (_r) return _r; }
+        if (_mapped) {
+          if (url.pathname === '/sitemap.xml' || url.pathname === '/robots.txt') { const _m = await servePublishedMeta(_mapped, env, url.pathname, 'https://' + _host); if (_m) return _m; }
+          const _r = await servePublished(_mapped, env, url.pathname, { base: '/', origin: 'https://' + _host }); if (_r) return _r;
+        }
       }
     }
     if (url.pathname === '/create' && request.method === 'POST') return doCreate(request, env);
@@ -109,7 +114,7 @@ export default {
     if (url.pathname === '/api/hit' && request.method === 'OPTIONS') return new Response(null, { headers: formCors() });
     if (url.pathname === '/api/views' && request.method === 'GET') return doViews(request, env);
     // Published sites served under the app origin run sandboxed (unique origin), so a site's scripts can never use the visitor's WebSprout session.
-    if (url.pathname.startsWith('/s/')) { const _parts = url.pathname.slice(3).split('/'); const _sl = slugify(_parts[0]); const _pg = _parts.slice(1).join('/'); const _r = await servePublished(_sl, env, _pg); if (_r) { _r.headers.set('Content-Security-Policy', 'sandbox allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads'); return _r; } return new Response(PUB_404, { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } }); }
+    if (url.pathname.startsWith('/s/')) { const _parts = url.pathname.slice(3).split('/'); const _sl = slugify(_parts[0]); const _pg = _parts.slice(1).join('/'); const _r = await servePublished(_sl, env, _pg, { base: '/s/' + _sl + '/', origin: 'https://' + _sl + '.websprout.app' }); if (_r) { _r.headers.set('Content-Security-Policy', 'sandbox allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads'); return _r; } return new Response(PUB_404, { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } }); }
     if (url.pathname === '/api/domain-check' && request.method === 'GET') return doDomainCheck(request, env);
     if (url.pathname === '/api/connect-domain' && request.method === 'POST') return doConnectDomain(request, env);
     if (url.pathname === '/api/inbox' && request.method === 'GET') return doInboxData(request, env);

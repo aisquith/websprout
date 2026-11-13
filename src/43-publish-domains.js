@@ -24,12 +24,47 @@ function pubPage404(){
 }
 // Multi-page aware. A legacy single-page site (no pubpages index) serves its home for ANY path - unchanged behavior.
 // A multi-page site (pubpages index present) resolves pub:slug:path and 404s on unknown pages.
-async function servePublished(slug, env, path){
+// Pages of a structured (v3) multi-page site, read from its published HTML.
+function v3PagePaths(html){
+  const out = []; const re = /<div class="ws-page[^"]*" data-path="([^"]*)" data-title="([^"]*)"/g; let m;
+  while ((m = re.exec(html))) out.push({ path: m[1], title: m[2] });
+  return out;
+}
+function htmlAttr(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+// Per-site sitemap.xml / robots.txt for published sites (served on the site's own host).
+async function servePublishedMeta(slug, env, file, origin){
   if (!env || !env.KV) return null;
+  const home = await env.KV.get('pub:' + slug);
+  if (!home) return null;
+  if (file === '/robots.txt') return new Response('User-agent: *\nAllow: /\nSitemap: ' + origin + '/sitemap.xml\n', { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+  let paths = v3PagePaths(home).map(function(p){ return p.path; });
+  if (!paths.length) { try { const idx = JSON.parse((await env.KV.get('pubpages:' + slug)) || '[]'); paths = Array.isArray(idx) && idx.length ? idx : ['']; } catch(e){ paths = ['']; } }
+  let upd = ''; try { const m = JSON.parse((await env.KV.get('pubmeta:' + slug)) || '{}'); if (m.updated) upd = new Date(m.updated).toISOString().slice(0, 10); } catch(e){}
+  const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + paths.map(function(p){ return '  <url><loc>' + origin + '/' + htmlAttr(p) + '</loc>' + (upd ? '<lastmod>' + upd + '</lastmod>' : '') + '</url>'; }).join('\n') + '\n</urlset>\n';
+  return new Response(xml, { headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+}
+// opts.base: how page links start ('/' on the site's own host, '/s/<slug>/' on websprout.app)
+// opts.origin: the canonical origin (subdomain or custom domain)
+async function servePublished(slug, env, path, opts){
+  if (!env || !env.KV) return null;
+  opts = opts || {};
+  const base = opts.base || '/';
+  const origin = opts.origin || ('https://' + slug + '.websprout.app');
   const home = await env.KV.get('pub:' + slug);
   if (!home) return null;
   let html = home;
   const pg = normalizePagePath(path);
+  // Structured multi-page sites: every page gets its own real address (/about, /contact...) so search
+  // engines can index each one. The page's own content is served; links between pages become real paths.
+  const v3pages = v3PagePaths(home);
+  let v3target = null;
+  if (v3pages.length > 1) {
+    v3target = v3pages.find(function(p){ return p.path === pg; }) || null;
+    if (!v3target) return new Response(pubPage404(), { status: 404, headers: { 'Content-Type':'text/html; charset=utf-8' } });
+    html = html.replace(/window\.__wsInitPath=("(?:[^"\\]|\\.)*");/g, '');
+    const boot = '<script>window.__wsInitPath=' + JSON.stringify(v3target.path) + ';(function(){var h=location.hash||"";if(/^#\\/[a-z0-9-]*$/.test(h)&&h.slice(2)!==window.__wsInitPath){location.replace(' + JSON.stringify(base) + '+h.slice(2));}})();</scr' + 'ipt>';
+    html = html.replace(/<head>/i, '<head>' + boot);
+  }
   if (pg) {
     let pages = null;
     try { const idx = await env.KV.get('pubpages:' + slug); if (idx) { const a = JSON.parse(idx); if (Array.isArray(a)) pages = a; } } catch(e){}
@@ -59,7 +94,18 @@ async function servePublished(slug, env, path){
     } catch(e){}
   }
   let nobadge = false; try { const m = await env.KV.get('pubmeta:' + slug); if (m) nobadge = !!JSON.parse(m).nobadge; } catch(e){}
-  return new Response(nobadge ? html : withBadge(html), { headers: { 'Content-Type':'text/html; charset=utf-8', 'X-Robots-Tag':'all' } });
+  const resp = new Response(nobadge ? html : withBadge(html), { headers: { 'Content-Type':'text/html; charset=utf-8', 'X-Robots-Tag':'all' } });
+  if (!v3target) return resp;
+  const t = v3target;
+  const brand = ((html.match(/<title>([^<]*)<\/title>/) || [])[1] || '').split('|')[0].trim();
+  const canon = origin + '/' + t.path;
+  return new HTMLRewriter()
+    .on('div.ws-page', { element(el){ if ((el.getAttribute('data-path') || '') !== t.path) el.remove(); else el.setAttribute('class', 'ws-page on'); } })
+    .on('a[href^="#/"]', { element(el){ el.setAttribute('href', base + (el.getAttribute('href') || '#/').slice(2)); } })
+    .on('title', { element(el){ if (t.path) el.setInnerContent((t.title || t.path) + (brand ? ' | ' + brand : ''), { html: false }); } })
+    .on('meta[property="og:url"]', { element(el){ el.setAttribute('content', canon); } })
+    .on('head', { element(el){ el.append('<link rel="canonical" href="' + htmlAttr(canon) + '">', { html: true }); } })
+    .transform(resp);
 }
 
 async function doPublish(request, env){

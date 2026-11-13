@@ -20,7 +20,7 @@ async function main() {
   const state = fs.mkdtempSync(path.join(os.tmpdir(), 'ws-test-'));
   const wranglerBin = path.join(ROOT, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
   const cmd = fs.existsSync(wranglerBin) ? [process.execPath, [wranglerBin]] : [process.platform === 'win32' ? 'npx.cmd' : 'npx', ['wrangler']];
-  const server = spawn(cmd[0], cmd[1].concat(['dev', '--local', '--port', String(PORT), '--ip', '127.0.0.1', '--persist-to', state, '--var', 'STRIPE_SECRET_KEY:sk_test_websprout_dummy', '--config', path.join(ROOT, 'wrangler.toml')]), { cwd: ROOT, env: Object.assign({}, process.env, { CI: '1' }), shell: process.platform === 'win32' && !fs.existsSync(wranglerBin) });
+  const server = spawn(cmd[0], cmd[1].concat(['dev', '--local', '--port', String(PORT), '--ip', '127.0.0.1', '--persist-to', state, '--var', 'STRIPE_SECRET_KEY:sk_test_websprout_dummy', '--var', 'WS_TEST_MODE:1', '--config', path.join(ROOT, 'wrangler.toml')]), { cwd: ROOT, env: Object.assign({}, process.env, { CI: '1' }), shell: process.platform === 'win32' && !fs.existsSync(wranglerBin) });
   let log = '';
   server.stdout.on('data', (d) => { log += d; });
   server.stderr.on('data', (d) => { log += d; });
