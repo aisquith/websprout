@@ -769,7 +769,7 @@ const WSENGINE = (function(){
       const cards = items.map((it, i) => {
         const src = c.photo && c.photo('p' + i);
         const img = src
-          ? `<figure class="wsp-ph"><img src="${e(src)}" alt="${e(it.name)}" loading="lazy"></figure>`
+          ? `<figure class="wsp-ph"><img src="${e(src)}"${WS.srcset(src, '(max-width: 760px) 50vw, 300px')} alt="${e(it.name)}" loading="lazy" decoding="async"></figure>`
           : (c.mode === 'edit'
               ? c.slot('p' + i, { hint: 'Product photo', cls: 'wsp-ph' })
               : `<div class="wsp-ph empty" aria-hidden="true">${WS.emoji(it.emoji || '1f4e6', 'emo-big')}</div>`);
@@ -1269,6 +1269,14 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
     return '#visit';
   };
 
+  // Responsive widths for resizable photo hosts (Unsplash), so phones download a ~480px image, not 1680px.
+  WS.srcset = (src, sizes) => {
+    const s = String(src || '');
+    if (!/^https:\/\/images\.unsplash\.com\//.test(s)) return '';
+    const at = (w) => (/[?&]w=\d+/.test(s) ? s.replace(/([?&])w=\d+/, '$1w=' + w) : s + (s.indexOf('?') > -1 ? '&' : '?') + 'w=' + w);
+    return ` srcset="${[480, 800, 1200, 1680].map((w) => e(at(w)) + ' ' + w + 'w').join(', ')}" sizes="${e(sizes || '100vw')}"`;
+  };
+
   function ctxFor(site, sec, mode) {
     const photos = site.photos || {};
     const key = (k) => sec.id + '.' + k;
@@ -1280,7 +1288,7 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
       slot: (k, { hint = 'Add a photo', cls = '', alt = '' } = {}) => {
         const src = photo(k);
         if (!src && mode === 'live') return `<figure class="slot ${cls} empty" hidden></figure>`;
-        return `<figure class="slot ${cls}${src ? '' : ' empty'}" data-slot="${key(k)}">${src ? `<img src="${e(src)}" alt="${e(alt)}" loading="lazy"${mode === 'live' ? ` onerror="var f=this.closest('figure');if(f)f.style.display='none';"` : ''}>` : ''}${
+        return `<figure class="slot ${cls}${src ? '' : ' empty'}" data-slot="${key(k)}">${src ? `<img src="${e(src)}"${WS.srcset(src, '(max-width: 760px) 100vw, 50vw')} alt="${e(alt)}" loading="lazy" decoding="async"${mode === 'live' ? ` onerror="var f=this.closest('figure');if(f)f.style.display='none';"` : ''}>` : ''}${
           mode === 'edit'
             ? `<button class="slot-add" type="button">${camera}<b>${e(hint)}</b><span>Click or drag a photo here</span></button><span class="slot-tools"><button type="button" data-act="replace">Replace</button><button type="button" data-act="remove">Remove</button></span>`
             : ''
@@ -1288,7 +1296,7 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
       },
       bg: (k, { hint = 'a photo', cls = '' } = {}) => {
         const src = photo(k);
-        return `<div class="slot slot-bg ${cls}${src ? '' : ' empty'}" data-slot="${key(k)}">${src ? `<img src="${e(src)}" alt="" onerror="var p=this.parentNode;if(p){p.classList.add('empty');}this.remove();">` : ''}${
+        return `<div class="slot slot-bg ${cls}${src ? '' : ' empty'}" data-slot="${key(k)}">${src ? `<img src="${e(src)}"${WS.srcset(src, '100vw')} alt="" decoding="async" onerror="var p=this.parentNode;if(p){p.classList.add('empty');}this.remove();">` : ''}${
           mode === 'edit' ? `<button class="slot-chip" type="button">${camera}<span>${src ? 'Change' : 'Add'} ${e(hint)}</span></button>` : ''
         }</div>`;
       },

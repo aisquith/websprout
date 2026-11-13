@@ -95,4 +95,27 @@ module.exports = async function (ctx, t) {
     const j3 = await createSite(base, { name: 'Sharp', type: 'Barber shop', servicesText: '<img src=x onerror=alert(1)> - $5' });
     t.ok(!/<img src=x/.test(j3.html), 'setup services: markup in a service name is escaped');
   }
+
+  // photos: phones get a smaller Unsplash size through srcset; other hosts are left alone
+  {
+    const s = await createSite(base, { name: 'Glow', type: 'Hair salon' });
+    const site = s.site; const hero = site.pages[0].sections.find((x) => x.type === 'hero');
+    hero.variant = 'photo'; site.photos[hero.id + '.photo'] = 'https://images.unsplash.com/photo-123?ixid=abc&w=1680&q=75&auto=format&fit=crop';
+    const page = await openPage(browser, { mobile: true });
+    await page.goto(base + '/terms');
+    const html = await page.evaluate(async (sd) => {
+      await new Promise((r) => { const sc = document.createElement('script'); sc.src = '/ws-engine.js'; sc.onload = r; document.head.appendChild(sc); });
+      const out = window.WS.renderSite(sd, { mode: 'live' });
+      sd.photos[Object.keys(sd.photos)[0]] = 'https://cdn.example.com/me.jpg';
+      return [out, window.WS.renderSite(sd, { mode: 'live' })];
+    }, site);
+    t.ok(/srcset="[^"]*w=480[^"]* 480w,[^"]*w=1680[^"]* 1680w"/.test(html[0]) && !/w=1680[^"]*w=1680/.test(html[0]), 'Unsplash photos get a 480-1680px srcset ' + ((html[0].match(/<img[^>]*unsplash[^>]*>/) || [''])[0]).slice(0, 400));
+    t.ok(!/srcset/.test(html[1]), 'photos from other hosts get no srcset');
+    await page.setRequestInterception(true);
+    const got = [];
+    page.on('request', (q) => { const u = q.url(); if (u.includes('images.unsplash.com')) { got.push(u); return q.respond({ status: 200, contentType: 'image/gif', body: Buffer.from('R0lGODlhAQABAAAAACw=', 'base64') }); } q.continue(); });
+    await page.setContent(html[0], { waitUntil: 'networkidle0' });
+    t.ok(got.length && got.every((u) => !/w=1680/.test(u)), 'a phone does not download the 1680px photo ' + got.join(' '));
+    await page.close();
+  }
 };
