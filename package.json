@@ -10,6 +10,7 @@
     "test:quick": "node tests/run.js --quick"
   },
   "devDependencies": {
+    "axe-core": "4.10.2",
     "puppeteer-core": "23.11.1",
     "wrangler": "4.95.0"
   }

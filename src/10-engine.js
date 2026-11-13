@@ -151,9 +151,10 @@ const WSENGINE = (function(){
     { id: 'mono', name: 'Monochrome' },
     { id: 'badge', name: 'In a color badge' },
   ];
+  // Named emoji are announced as images; ones without a known name are decorative and hidden from screen readers.
   WS.emoji = (code, cls = '') =>
     code
-      ? `<span class="emo ${cls}" role="img" aria-label="${WS.esc(WS.emojiName(code))}"><img src="${WS.emojiUrl(code)}" alt="" loading="lazy" decoding="async" onerror="this.replaceWith(document.createTextNode('${WS.emojiChar(code)}'))"></span>`
+      ? `<span class="emo ${cls}" ${WS.emojiName(code) ? `role="img" aria-label="${WS.esc(WS.emojiName(code))}"` : 'aria-hidden="true"'}><img src="${WS.emojiUrl(code)}" alt="" loading="lazy" decoding="async" onerror="this.replaceWith(document.createTextNode('${WS.emojiChar(code)}'))"></span>`
       : '';
   WS.emojiRecsFor = (type = '') => {
     const t = String(type).toLowerCase();
