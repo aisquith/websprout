@@ -401,10 +401,11 @@
           </div>
           <div id="pubDomainPro" style="border-top:1px solid rgba(255,255,255,.07);margin-top:18px;padding-top:18px">
             <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px">Use your own domain</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.72);margin-bottom:10px">Find one, buy it on GoDaddy, then point it here.</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.72);margin-bottom:10px">Already own one? Connect it. Need one? Check if it is available.</div>
             <div style="display:flex;gap:8px">
               <input id="domInput" aria-label="Custom domain" type="text" placeholder="yourbusiness.com" autocomplete="off" style="flex:1;background:#060d05;border:1px solid rgba(45,122,58,.3);border-radius:9px;color:#fff;padding:10px 12px;font-size:14px;outline:none;font-family:inherit;min-width:0">
-              <button id="domCheck" style="background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Check</button>
+              <button id="domConnect" style="background:#2f9e4f;color:#fff;border:1px solid #2f9e4f;border-radius:9px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Connect</button>
+              <button id="domCheck" style="background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Find</button>
             </div>
             <div id="domResult" style="font-size:13px;margin-top:10px;line-height:1.5"></div>
           </div>
@@ -508,6 +509,35 @@
         else if(window.toast)toast((j&&j.error)||'Could not take it offline');
       }).catch(function(){self.textContent='Take this site offline';if(window.toast)toast('Could not take it offline');});
     });
+    // Connect a domain the owner already has: show the two DNS records, then verify with "Check again".
+    function domEsc(s){return String(s==null?'':s).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;').split('"').join('&quot;');}
+    function domRow(label,host,value){return '<div style="display:grid;grid-template-columns:70px 1fr;gap:4px 10px;background:#060d05;border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:10px 12px;margin:8px 0;font-size:12.5px"><span style="color:rgba(255,255,255,.55)">Type</span><b style="color:#fff">'+label+'</b><span style="color:rgba(255,255,255,.55)">Name</span><code style="color:#fff;user-select:all">'+domEsc(host)+'</code><span style="color:rgba(255,255,255,.55)">Value</span><code style="color:#7fe39a;user-select:all;word-break:break-all">'+domEsc(value)+'</code></div>';}
+    function domConnect(){
+      var d=$('domInput').value.trim();var res=$('domResult');if(!d){$('domInput').focus();return;}
+      if(!window._wsSlug){res.innerHTML='<span style="color:#fca5a5">Publish your site first, then connect your domain.</span>';return;}
+      res.innerHTML='<span style="color:rgba(255,255,255,.72)">Checking your domain...</span>';
+      fetch('/api/connect-domain',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domain:d,slug:window._wsSlug,siteId:site(),key:key()})})
+      .then(function(r){return r.json();}).then(function(j){
+        if(!j||j.error){res.innerHTML='<span style="color:#fca5a5">'+domEsc((j&&j.error)||'Could not connect that domain.')+'</span>';return;}
+        var st=j.steps||{};
+        if(!j.verified){
+          res.innerHTML='<div style="color:#fff;font-weight:700;margin-bottom:4px">Add these 2 records where you bought '+domEsc(j.host)+'</div>'
+            +'<div style="font-size:12px;color:rgba(255,255,255,.7)">In the DNS settings at your domain provider (GoDaddy, Namecheap, Squarespace...), add:</div>'
+            +domRow('TXT',st.txtHost,st.txtValue)+domRow('CNAME',st.cnameHost,st.cnameTarget)
+            +'<div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.5">The TXT record proves the domain is yours. Then set your provider to forward <b style="color:#fff">'+domEsc(j.host)+'</b> to <b style="color:#fff">www.'+domEsc(j.host)+'</b>. Changes can take a few minutes to an hour.</div>'
+            +'<button id="domRecheck" style="margin-top:10px;width:100%;background:#2f9e4f;color:#fff;border:none;border-radius:9px;padding:10px;font-weight:700;cursor:pointer;font-family:inherit">I added them. Check again</button>';
+          var rc=$('domRecheck');if(rc)rc.addEventListener('click',domConnect);
+          return;
+        }
+        var msg='<div style="color:#7fe39a;font-weight:700">&#10003; '+domEsc(j.host)+' is verified and connected to your site.</div>';
+        if(!j.pointed)msg+='<div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:6px">Last step: make sure this record exists, then give it up to an hour.</div>'+domRow('CNAME',st.cnameHost,st.cnameTarget);
+        if(j.https==='manual')msg+='<div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:6px">We are finishing the secure (HTTPS) setup on our side. You will get an email when it is live, usually within a business day.</div>';
+        else if(j.https==='error')msg+='<div style="font-size:12px;color:#fca5a5;margin-top:6px">Secure setup hit a snag ('+domEsc(j.httpsError)+'). Email support@websprout.app and we will sort it out.</div>';
+        else msg+='<div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:6px">Your secure certificate is being issued. <a href="'+domEsc(j.url)+'" target="_blank" style="color:#7fe39a">Open '+domEsc('www.'+j.host)+' &#8594;</a></div>';
+        res.innerHTML=msg;
+      }).catch(function(){res.innerHTML='<span style="color:#fca5a5">Could not reach Websprout. Please try again.</span>';});
+    }
+    $('domConnect').addEventListener('click',domConnect);
     $('domCheck').addEventListener('click',function(){
       var d=$('domInput').value.trim();var res=$('domResult');if(!d)return;
       res.innerHTML='<span style="color:rgba(255,255,255,.72)">Checking...</span>';
@@ -516,7 +546,7 @@
         var status='';
         if(j.available===true)status='<span style="color:#4ade80">&#10003; '+j.domain+' is available'+(j.price?(' (about $'+j.price.toFixed(2)+'/yr)'):'')+'</span><br>';
         else if(j.available===false)status='<span style="color:#f87171">'+j.domain+' is taken</span><br>';
-        res.innerHTML=status+buy+'<div style="font-size:12px;color:rgba(255,255,255,.72);margin-top:8px">After buying, add a CNAME record pointing to <b style="color:#fff">'+(window._wsSlug||'your-site')+'.websprout.app</b> to connect it.</div>';
+        res.innerHTML=status+buy+'<div style="font-size:12px;color:rgba(255,255,255,.72);margin-top:8px">After buying it, come back here and press <b style="color:#fff">Connect</b>.</div>';
       }).catch(function(){res.innerHTML='<a href="https://www.godaddy.com/domainsearch/find?domainToCheck='+encodeURIComponent(d)+'" target="_blank" style="color:#4ade80;font-weight:700">Search on GoDaddy &#8594;</a>';});
     });
   })();

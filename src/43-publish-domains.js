@@ -1,7 +1,7 @@
 // ───────────────────────────────────────────────────────────
 // PUBLISH — host generated sites live on websprout.app subdomains
 // ───────────────────────────────────────────────────────────
-const RESERVED_SLUGS = ['www','app','api','inbox','preview','admin','mail','blog','help','support','status','cdn','assets','static','dashboard','login','signup','sign-up','docs','about','terms','privacy','deploy','render','generate','stats','track','chat','modify','publish','unpublish','s','og','robots','sitemap','success'];
+const RESERVED_SLUGS = ['www','sites','app','api','inbox','preview','admin','mail','blog','help','support','status','cdn','assets','static','dashboard','login','signup','sign-up','docs','about','terms','privacy','deploy','render','generate','stats','track','chat','modify','publish','unpublish','s','og','robots','sitemap','success'];
 function slugify(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40); }
 
 const PUB_404 = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Site not found</title><style>body{font-family:-apple-system,Segoe UI,Arial,sans-serif;background:#060d05;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}.b{max-width:420px;padding:24px}.m{font-size:40px;margin-bottom:10px}a{color:#4ade80;font-weight:700;text-decoration:none}</style></head><body><div class="b"><div class="m">🌱</div><h1 style="font-size:22px;margin:0 0 8px">This site isn\'t published yet</h1><p style="color:rgba(255,255,255,.72);line-height:1.6">There\'s no live site at this address. <br>Build your own in seconds at <a href="https://websprout.app">websprout.app</a>.</p></div></body></html>';
@@ -184,6 +184,37 @@ async function doDomainCheck(request, env){
   } catch(e){ return fail(e.message); }
 }
 
+// ── Custom domains ──
+// 1. The owner proves they control the domain with a TXT record (_websprout.<domain> = ws-verify=<token>).
+//    The token is tied to this site and domain, so nobody can claim a domain they do not control.
+// 2. Once verified, the domain is mapped to the site and (when CF_API_TOKEN + CF_ZONE_ID are set) registered
+//    as a Cloudflare for SaaS custom hostname so HTTPS is issued automatically.
+// 3. The owner points www (or the root, if their DNS supports it) at DOMAIN_TARGET with a CNAME.
+const DOMAIN_TARGET = 'sites.websprout.app';
+async function domainToken(siteId, host, env){
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(env.FORM_SECRET || 'websprout-domain'), { name:'HMAC', hash:'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode('domain|' + siteId + '|' + host));
+  return Array.from(new Uint8Array(sig)).map(function(b){ return b.toString(16).padStart(2, '0'); }).join('').slice(0, 32);
+}
+async function dnsLookup(name, type){
+  try {
+    const r = await fetch('https://cloudflare-dns.com/dns-query?name=' + encodeURIComponent(name) + '&type=' + type, { headers:{ 'accept':'application/dns-json' } });
+    const j = await r.json();
+    return ((j && j.Answer) || []).map(function(a){ return String(a.data || '').replace(/^"|"$/g, '').replace(/"\s*"/g, '').replace(/\.$/, '').toLowerCase(); });
+  } catch(e){ return []; }
+}
+function normalizeHost(d){ return String(d || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/[\/?#].*$/, '').replace(/\.$/, '').replace(/^www\./, ''); }
+async function cfAddHostname(env, hostname){
+  if (!env.CF_API_TOKEN || !env.CF_ZONE_ID) return { configured:false };
+  try {
+    const r = await fetch('https://api.cloudflare.com/client/v4/zones/' + env.CF_ZONE_ID + '/custom_hostnames', { method:'POST', headers:{ 'Authorization':'Bearer ' + env.CF_API_TOKEN, 'Content-Type':'application/json' }, body: JSON.stringify({ hostname: hostname, ssl:{ method:'http', type:'dv' } }) });
+    const j = await r.json();
+    if (j && j.success) return { configured:true, ok:true, status: (j.result && j.result.status) || 'pending' };
+    const dup = ((j && j.errors) || []).some(function(e){ return e && (e.code === 1406 || /already exists/i.test(e.message || '')); });
+    return { configured:true, ok:dup, status: dup ? 'exists' : 'error', error: dup ? '' : (((j && j.errors) || [])[0] || {}).message || 'Cloudflare error' };
+  } catch(e){ return { configured:true, ok:false, status:'error', error:e.message }; }
+}
 async function doConnectDomain(request, env){
   try {
     if (!env.KV) return fail('KV not configured');
@@ -192,15 +223,28 @@ async function doConnectDomain(request, env){
     let _dpro = false; try { const _ds = await getSession(request, env); if (_ds) { const _du = JSON.parse((await env.KV.get('user:' + (_ds.email||'').toLowerCase())) || '{}'); _dpro = !!(_du && _du.plan === 'pro') || ((_ds.email||'').toLowerCase() === SUPPORT_EMAIL.toLowerCase()); } } catch(e){}
     if (!_dpro) return fail('Custom domains are a Pro feature.');
     if (b.key !== (await siteKey(b.siteId, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
-    const m = await env.KV.get('pubmeta:' + b.slug);
+    const slug = slugify(b.slug);
+    const m = await env.KV.get('pubmeta:' + slug);
     if (!m) return fail('Publish your site first, then connect the domain');
-    try { if (JSON.parse(m).siteId !== b.siteId) return fail('Not your site'); } catch(e){}
-    const host = b.domain.trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/.*$/,'').replace(/^www\./,'');
-    if (host.indexOf('.') === -1 || !/^[a-z0-9.-]+$/.test(host) || /(^|\.)websprout\.app$/.test(host)) return fail('Enter a valid domain');
-    const _cur = await env.KV.get('domain:' + host);
-    if (_cur && _cur !== b.slug) { let _co = ''; try { _co = JSON.parse((await env.KV.get('pubmeta:' + _cur)) || '{}').siteId || ''; } catch(e){} if (_co && _co !== b.siteId) return fail('That domain is already connected to another WebSprout site. Contact support if it is yours.'); }
-    await env.KV.put('domain:' + host, b.slug);
-    await env.KV.put('domain:www.' + host, b.slug);
-    return succeed({ ok:true, host: host });
+    let _own = ''; try { _own = JSON.parse(m).siteId; } catch(e){}
+    if (_own !== b.siteId) return fail('Not your site');
+    const host = normalizeHost(b.domain);
+    if (host.indexOf('.') === -1 || !/^[a-z0-9.-]+$/.test(host) || /(^|\.)websprout\.app$/.test(host) || host.length > 200) return fail('Enter a valid domain, like yourbusiness.com');
+    const token = await domainToken(b.siteId, host, env);
+    const txtName = '_websprout.' + host, txtValue = 'ws-verify=' + token;
+    const txt = await dnsLookup(txtName, 'TXT');
+    const verified = txt.indexOf(txtValue) > -1;
+    const steps = { txtName: txtName, txtHost: '_websprout', txtValue: txtValue, cnameHost: 'www', cnameTarget: DOMAIN_TARGET };
+    if (!verified) return succeed({ ok:true, verified:false, host: host, steps: steps });
+    // Verified: this owner controls the domain, so it may replace any earlier (unverified or stale) mapping.
+    await env.KV.put('domain:' + host, slug);
+    await env.KV.put('domain:www.' + host, slug);
+    await env.KV.put('domainof:' + b.siteId, host);
+    const cfA = await cfAddHostname(env, 'www.' + host);
+    const cfB = await cfAddHostname(env, host);
+    const www = await dnsLookup('www.' + host, 'CNAME');
+    const pointed = www.indexOf(DOMAIN_TARGET) > -1;
+    if (!cfA.configured) { try { if (env.RESEND_API_KEY) await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[SUPPORT_EMAIL], subject:'Custom domain to finish: ' + host, html:'<p>' + host + ' was verified for ' + slug + '.websprout.app. Add it as a Cloudflare for SaaS custom hostname (or set CF_API_TOKEN + CF_ZONE_ID to automate this).</p>' }) }); } catch(e){} }
+    return succeed({ ok:true, verified:true, host: host, pointed: pointed, https: cfA.configured ? (cfA.ok ? 'pending' : 'error') : 'manual', httpsError: cfA.error || '', steps: steps, url: 'https://www.' + host });
   } catch(e){ return fail(e.message); }
 }
