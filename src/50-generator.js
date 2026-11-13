@@ -439,6 +439,61 @@ async function doPlaceFind(request, env) {
   } catch (e) { return jsonR({ ok: false, error: 'Lookup failed.', results: [] }); }
 }
 
+// Google Places (New) place → setup fields, so a business can start from its Google listing.
+// Pure (no fetch) so tests can feed it a recorded response.
+function placeToSetup(p) {
+  p = p || {};
+  const txt = function (x) { return String((x && (x.text || x)) || '').trim(); };
+  const pad = function (n) { return (n < 10 ? '0' : '') + n; };
+  const comp = function (type) { const c = (p.addressComponents || []).find(function (a) { return (a.types || []).indexOf(type) > -1; }); return c ? String(c.longText || c.shortText || '') : ''; };
+  // Google days: 0 = Sunday. Ours: index 0 = Monday. Split shifts (lunch breaks) → earliest open, latest close.
+  const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const hours = [];
+  const periods = (p.regularOpeningHours && p.regularOpeningHours.periods) || [];
+  if (periods.length) {
+    DAYS.forEach(function (d) { hours.push({ d: d }); });
+    periods.forEach(function (pr) {
+      if (!pr || !pr.open || typeof pr.open.day !== 'number') return;
+      const i = (pr.open.day + 6) % 7;
+      const o = pad(pr.open.hour || 0) + ':' + pad(pr.open.minute || 0);
+      const c = pr.close ? pad(pr.close.hour || 0) + ':' + pad(pr.close.minute || 0) : '';
+      if (!pr.close) { DAYS.forEach(function (d, k) { hours[k] = { d: d, open: '00:00', close: '23:59' }; }); return; }
+      const h = hours[i];
+      if (!h.open || o < h.open) h.open = o;
+      const endsNextDay = pr.close.day !== pr.open.day;
+      if (!h.close || endsNextDay || (h.close >= h.open && c > h.close)) h.close = c;
+    });
+  }
+  const reviews = (p.reviews || []).filter(function (v) { return (v.rating || 0) >= 4; }).map(function (v) {
+    return { quote: txt(v.text || v.originalText).slice(0, 240), name: String((v.authorAttribution && v.authorAttribution.displayName) || '').slice(0, 60) };
+  }).filter(function (v) { return v.quote.length > 15; }).slice(0, 6);
+  const addr = String(p.shortFormattedAddress || p.formattedAddress || '').slice(0, 160);
+  return {
+    googlePlaceId: /^[A-Za-z0-9_-]{10,300}$/.test(String(p.id || '')) ? String(p.id) : '',
+    name: txt(p.displayName).slice(0, 80),
+    type: txt(p.primaryTypeDisplayName).slice(0, 60),
+    address: addr,
+    city: comp('locality') || comp('postal_town') || comp('administrative_area_level_2'),
+    phone: String(p.nationalPhoneNumber || p.internationalPhoneNumber || '').slice(0, 40),
+    about: txt(p.editorialSummary).slice(0, 400),
+    hours: hours,
+    reviews: reviews,
+    rating: typeof p.rating === 'number' ? p.rating : null,
+    count: typeof p.userRatingCount === 'number' ? p.userRatingCount : 0,
+  };
+}
+async function doPlaceDetails(request, env) {
+  const id = (new URL(request.url).searchParams.get('place') || '').trim();
+  if (!/^[A-Za-z0-9_-]{10,300}$/.test(id)) return jsonR({ ok: false, error: 'Bad place.' }, 400);
+  if (!env.GOOGLE_PLACES_KEY) return jsonR({ ok: false, error: 'Google lookups are not available yet.' });
+  try {
+    if (env.KV) { const ip = request.headers.get('cf-connecting-ip') || '0'; const k = 'pdrate:' + ip; const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= 20) return jsonR({ ok: false, error: 'Too many lookups. Try again later.' }, 429); await env.KV.put(k, String(n + 1), { expirationTtl: 3600 }); }
+    const r = await fetch('https://places.googleapis.com/v1/places/' + encodeURIComponent(id), { headers: { 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY, 'X-Goog-FieldMask': 'id,displayName,primaryTypeDisplayName,formattedAddress,shortFormattedAddress,addressComponents,nationalPhoneNumber,internationalPhoneNumber,regularOpeningHours,editorialSummary,rating,userRatingCount,reviews' } });
+    if (!r.ok) return jsonR({ ok: false, error: 'Google could not find that listing.' }, 502);
+    return jsonR(Object.assign({ ok: true }, placeToSetup(await r.json())));
+  } catch (e) { return jsonR({ ok: false, error: 'Lookup failed.' }); }
+}
+
 // Stock photo search for the editor's photo picker (Unsplash; needs UNSPLASH_ACCESS_KEY).
 async function doPhotoSearch(request, env) {
   const url = new URL(request.url);
@@ -697,10 +752,12 @@ async function buildV3Site(d, env) {
       bookingUrl: /^https:\/\//.test(String(d.bookingUrl || '')) ? String(d.bookingUrl).slice(0, 300) : '',
       founded: (d.founded || '').toString().slice(0, 8),
       about: (d.about || '').toString().slice(0, 400),
+      googlePlaceId: /^[A-Za-z0-9_-]{10,300}$/.test(String(d.googlePlaceId || '')) ? String(d.googlePlaceId) : '',
+      googleName: (d.googleName || '').toString().slice(0, 80),
       bookLabel: isShop ? 'Shop now' : 'Get in touch',
       bookShort: isShop ? 'Shop' : 'Contact',
       walkIns: true,
-      hours: Array.isArray(d.hours) ? d.hours.slice(0, 7) : [],
+      hours: Array.isArray(d.hours) ? d.hours.slice(0, 7).map(function (h) { h = h || {}; const tm = function (x) { return /^\d{2}:\d{2}$/.test(String(x || '')) ? String(x) : ''; }; const o = { d: String(h.d || '').slice(0, 3) }; if (tm(h.open) && tm(h.close)) { o.open = tm(h.open); o.close = tm(h.close); } return o; }) : [],
       services: Array.isArray(d.services) ? d.services.slice(0, 12).map(function (s) { return { name: (s.name || '').toString().slice(0, 60), desc: (s.desc || s.specialty || '').toString().slice(0, 160), price: (s.price || '').toString().slice(0, 20) }; }) : [],
       team: Array.isArray(d.team) ? d.team.slice(0, 12).map(function (t) { return { name: (t.name || '').toString().slice(0, 60), specialty: (t.role || t.specialty || '').toString().slice(0, 80) }; }) : [],
       reviews: Array.isArray(d.reviews) ? d.reviews.slice(0, 12).map(function (r) { return { quote: (r.quote || '').toString().slice(0, 240), name: (r.name || '').toString().slice(0, 60) }; }) : [],
@@ -736,7 +793,8 @@ async function buildV3Site(d, env) {
       add('services', { variant: 'grid', title: sc.servicesTitle || 'What we do', items: _items });
     }
     else if (sc.services && sc.services.length) { add('services', { variant: 'grid', title: sc.servicesTitle || 'What we do', items: sc.services.map(function (s) { return { emoji: s[2] || '', name: s[0], text: s[1], from: '' }; }) }); }
-    if (has(biz.reviews)) add('reviews', { variant: 'wall' });
+    if (biz.googlePlaceId) add('reviews', { variant: 'google', title: 'What people say' });
+    else if (has(biz.reviews)) add('reviews', { variant: 'wall' });
     if (has(d.faq)) add('faq', { variant: 'accordion', items: d.faq.slice(0, 10).map(function (q) { return { q: (q.q || '').toString().slice(0, 160), a: (q.a || '').toString().slice(0, 400) }; }) });
     else if (sc.faq && sc.faq.length) add('faq', { variant: 'accordion', items: sc.faq.map(function (x) { return { q: x[0], a: x[1] }; }) });
     add('cta', isShop

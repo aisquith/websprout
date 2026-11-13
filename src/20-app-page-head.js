@@ -162,6 +162,13 @@ html.ws-focus :focus{outline:2px solid #4ade80 !important;outline-offset:2px}
 .type-lbl{font-size:10px;font-weight:600;line-height:1.3}
 #customWrap{display:none;margin-bottom:16px}
 .dark-input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:9px 12px;color:#e8f5e4;font-family:inherit;font-size:14px;outline:none;transition:border .15s}
+.gfill-link{background:none;border:none;padding:0;color:#7ee29a;font:inherit;font-size:13px;text-decoration:underline;cursor:pointer}
+.gfill-go{flex:none;background:#37c15e;color:#fff;border:none;border-radius:9px;padding:0 16px;font:600 14px/1 inherit;cursor:pointer}
+.gfill-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.gfill-opt{text-align:left;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:9px 12px;color:#e8f5e4;font:inherit;font-size:13px;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.gfill-opt:hover,.gfill-opt:focus-visible{border-color:#37c15e}
+.gfill-opt span,.gfill-hint{color:rgba(255,255,255,.65);font-size:12.5px}
+.gfill-done{margin-top:6px;font-size:13px;color:#b9f0c8}
 .dark-input:focus{border-color:rgba(45,122,58,.5)}
 .dark-input::placeholder{color:rgba(255,255,255,.72)}
 textarea.dark-input{resize:vertical;min-height:76px;line-height:1.6}

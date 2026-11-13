@@ -86,6 +86,14 @@
             <input id="bizType" aria-label="Business type" class="dark-input" type="text" placeholder="Bakery, barber, lawn care...">
           </div>
         </div>
+        <div id="gFillWrap" hidden style="margin-top:10px">
+          <button type="button" id="gFillBtn" class="gfill-link">Already on Google? Fill this in from your listing</button>
+          <div id="gFillBox" style="display:none;margin-top:8px">
+            <div style="display:flex;gap:8px"><input id="gFillQ" class="dark-input" type="text" aria-label="Business name and city on Google" placeholder="Business name and city"><button type="button" id="gFillGo" class="gfill-go">Find</button></div>
+            <div id="gFillList" class="gfill-list" aria-live="polite"></div>
+          </div>
+          <div id="gFillDone" class="gfill-done" style="display:none"></div>
+        </div>
         <div style="margin-top:14px">
           <div class="field-lbl">A few details <span style="color:rgba(255,255,255,.55);font-weight:400">(optional)</span></div>
           <textarea id="customPrompt" aria-label="A few details about your business" class="dark-input" rows="3" placeholder="What you offer, what makes you different, and the feel you want. A sentence or two is plenty."></textarea>

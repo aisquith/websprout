@@ -2145,10 +2145,35 @@ function wsOpenEditor(){
 // entry point used by the create flow
 function wsBuildPaletteBar(){ wsEdSel = (typeof wsEdSel==='number'?wsEdSel:0); wsOpenEditor(); }
 
+// Setup: "Already on Google?" fills the form from the business's Google listing (address, hours, reviews too).
+(function(){
+  var btn=document.getElementById('gFillBtn');if(!btn)return;
+  var box=document.getElementById('gFillBox'),q=document.getElementById('gFillQ'),go=document.getElementById('gFillGo'),list=document.getElementById('gFillList'),done=document.getElementById('gFillDone');
+  var msg=function(t){list.innerHTML='';var d=document.createElement('div');d.className='gfill-hint';d.textContent=t;list.appendChild(d);};
+  var setv=function(id,v,force){var el=document.getElementById(id);if(el&&v&&(force||!el.value.trim()))el.value=v;};
+  btn.addEventListener('click',function(){box.style.display='block';var n=document.getElementById('bizName').value.trim(),c=document.getElementById('bizCity').value.trim();if(!q.value)q.value=[n,c].filter(Boolean).join(' ');q.focus();});
+  var pick=function(p){msg('Getting your listing...');
+    fetch('/api/place/details?place='+encodeURIComponent(p.id)).then(function(r){return r.json();}).then(function(j){
+      if(!j||!j.ok){msg((j&&j.error)||'Could not load that listing.');return;}
+      window._wsPlace=j;
+      setv('bizName',j.name,true);setv('bizType',j.type);setv('bizCity',j.city,true);setv('bizPhone',j.phone,true);setv('customPrompt',j.about);
+      list.innerHTML='';box.style.display='none';btn.style.display='none';done.style.display='block';done.innerHTML='';
+      var s=document.createElement('span');s.textContent='Using your Google listing: '+j.name+(j.address?' \u00b7 '+j.address:'')+(j.rating?' \u00b7 '+j.rating+' stars ('+j.count+')':'');done.appendChild(s);
+      var x=document.createElement('button');x.type='button';x.className='gfill-link';x.textContent='Remove';x.style.marginLeft='8px';
+      x.addEventListener('click',function(){window._wsPlace=null;done.style.display='none';btn.style.display='';});done.appendChild(x);
+    }).catch(function(){msg('Google lookup is unavailable right now.');});};
+  var find=function(){if(q.value.trim().length<3){msg('Type your business name and city.');return;}msg('Searching Google...');
+    fetch('/api/place/find?q='+encodeURIComponent(q.value.trim())).then(function(r){return r.json();}).then(function(j){
+      var res=(j&&j.results)||[];if(!res.length){msg((j&&j.error)||'No match. Try the exact name on your Google listing.');return;}
+      list.innerHTML='';res.forEach(function(p){var o=document.createElement('button');o.type='button';o.className='gfill-opt';var b=document.createElement('b');b.textContent=p.name;var sp=document.createElement('span');sp.textContent=p.address+(p.rating?' \u00b7 '+p.rating+' stars':'');o.appendChild(b);o.appendChild(sp);o.addEventListener('click',function(){pick(p);});list.appendChild(o);});
+    }).catch(function(){msg('Google lookup is unavailable right now.');});};
+  go.addEventListener('click',find);q.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();find();}});
+})();
 function doCreateV3(){
   var val=function(id){var el=document.getElementById(id);return el?(el.value||''):'';};
   var type=val('bizType').trim()||((typeof selectedType!=='undefined'&&selectedType)?selectedType:'');
   var payload={name:val('bizName').trim(),type:type,about:val('customPrompt').trim().slice(0,400),city:val('bizCity').trim().slice(0,80),phone:val('bizPhone').trim().slice(0,40),servicesText:val('bizServices').trim().slice(0,1500)};
+  var gp=window._wsPlace;if(gp&&gp.googlePlaceId){payload.googlePlaceId=gp.googlePlaceId;payload.googleName=gp.name||'';payload.address=gp.address||'';payload.hours=gp.hours||[];payload.reviews=gp.reviews||[];}
   var btn=document.getElementById('gbtn'),gt=document.getElementById('gbtnTxt'),ld=document.getElementById('loading');
   if(btn)btn.disabled=true;if(gt)gt.textContent='Growing...';if(ld)ld.classList.add('on');
   if(window.wsQaShow)try{wsQaShow();}catch(e){}

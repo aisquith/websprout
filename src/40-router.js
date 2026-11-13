@@ -43,6 +43,7 @@ export default {
     if (url.pathname === '/api/photos' && request.method === 'GET') return doPhotoSearch(request, env);
     if (url.pathname === '/api/place' && request.method === 'GET') return doPlace(request, env);
     if (url.pathname === '/api/place/find' && request.method === 'GET') return doPlaceFind(request, env);
+    if (url.pathname === '/api/place/details' && request.method === 'GET') return doPlaceDetails(request, env);
     if (url.pathname === '/api/photos/use' && request.method === 'POST') return doPhotoUse(request, env);
     if (url.pathname === '/ws-engine.js') return new Response(wsEngineJs(), { headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'public, max-age=86400' } });
     if (url.pathname === '/products') return doProducts(request, env);
@@ -144,6 +145,7 @@ export default {
     const _sub = (env.STRIPE_SUB_LINK || env.SUB_LINK || '').trim();
     if (_sub) _html = _html.split(SUB_LINK).join(_sub);
     _html = _html.split('__WS_EDV__').join(editorVersion(_sub));
+    if (env.GOOGLE_PLACES_KEY) _html = _html.split('id="gFillWrap" hidden').join('id="gFillWrap"');
     try { const _sg = await getSitesGrown(env); if (_sg && _sg > 0) _html = _html.split('id="liveCount">&mdash;<').join('id="liveCount">' + fmtThousands(_sg) + '<'); } catch (e) {}
     return new Response(_html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate', 'Pragma': 'no-cache' } });
   }
