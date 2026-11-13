@@ -29,6 +29,12 @@ module.exports = async function (ctx, t) {
   r = await post(base, '/api/connect-domain', { domain: 'example.com', slug: 'nope', siteId: s.siteId, key: s.formKey });
   t.ok(r.status >= 400, 'custom domains need a signed-in Pro owner');
 
+  // Sign-in links: opening one never signs in by itself (scanners), bad or used tokens go to "expired"
+  r = await fetch(base + '/auth/verify?token=' + 'ab'.repeat(20), { redirect: 'manual' });
+  t.ok(r.status === 302 && /login=expired/.test(r.headers.get('location') || ''), 'unknown sign-in token redirects to "expired"');
+  r = await fetch(base + '/auth/verify', { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Origin: 'https://evil.example' }, body: 'token=' + 'ab'.repeat(20) });
+  t.ok(r.status === 302 && /login=error/.test(r.headers.get('location') || ''), 'cross-site sign-in POST is refused');
+
   // Pure helpers, loaded from the built worker
   const src = fs.readFileSync(path.join(__dirname, '..', 'dist', 'worker.js'), 'utf8');
   const fnSrc = src.match(/function priceToCents\(v\)\{[\s\S]*?\n\}/)[0];

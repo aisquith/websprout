@@ -56,9 +56,31 @@ async function doEmailStart(request, env){
     return succeed({ ok:true });
   }catch(e){ return fail(e.message); }
 }
+// Opening the emailed link (GET) only shows a "Sign in" button; pressing it (POST) uses the one-time token.
+// Email security scanners open links but do not submit forms, so they can no longer burn the link.
+async function doVerifyPage(request, env){
+  const t=new URL(request.url).searchParams.get('token')||'';
+  if(!/^[a-f0-9]{16,80}$/i.test(t)||!env.KV) return Response.redirect(SITE_ORIGIN+'/?login=error',302);
+  const v=await env.KV.get('magic:'+t);
+  if(!v) return Response.redirect(SITE_ORIGIN+'/?login=expired',302);
+  let m={}; try{ m=JSON.parse(v); }catch(e){}
+  if(!m.exp||m.exp<Date.now()) return Response.redirect(SITE_ORIGIN+'/?login=expired',302);
+  const em=String(m.email||'').replace(/[<>&"]/g,'');
+  const html='<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Sign in to Websprout</title>'
+    +'<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#060d05;color:#eaf2e8;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;padding:20px}'
+    +'.c{max-width:380px;width:100%;background:#0f1a0d;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:30px 26px;text-align:center}'
+    +'h1{font-size:22px;margin:0 0 6px}p{color:rgba(234,242,232,.7);margin:0 0 22px;font-size:14px}'
+    +'button{width:100%;background:#2f9e4f;color:#fff;border:0;border-radius:10px;padding:14px;font:700 15px/1 inherit;cursor:pointer}button:hover{background:#38b25b}</style></head>'
+    +'<body><form class="c" method="POST" action="/auth/verify"><div style="font-size:30px">&#127793;</div><h1>Sign in to Websprout</h1><p>'+(em?'Continue as <b style="color:#fff">'+em+'</b>':'Continue to your account')+'</p>'
+    +'<input type="hidden" name="token" value="'+t+'"><button type="submit">Sign in</button></form></body></html>';
+  return new Response(html, { headers:{ 'Content-Type':'text/html; charset=utf-8', 'Cache-Control':'no-store', 'Referrer-Policy':'no-referrer', 'X-Frame-Options':'DENY' } });
+}
 async function doVerify(request, env){
   try{
-    const t=new URL(request.url).searchParams.get('token');
+    const _o=request.headers.get('origin');
+    if(_o && _o!=='null' && _o!==new URL(request.url).origin) return Response.redirect(SITE_ORIGIN+'/?login=error',302);
+    let t='';
+    try{ const fd=await request.formData(); t=String(fd.get('token')||''); }catch(e){}
     if(!t||!env.KV) return Response.redirect(SITE_ORIGIN+'/?login=error',302);
     const v=await env.KV.get('magic:'+t);
     if(!v) return Response.redirect(SITE_ORIGIN+'/?login=expired',302);

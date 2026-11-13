@@ -76,7 +76,8 @@ export default {
     if (url.pathname === '/auth/google' && request.method === 'GET') return doGoogleStart(request, env);
     if (url.pathname === '/auth/google/callback' && request.method === 'GET') return doGoogleCallback(request, env);
     if (url.pathname === '/auth/email' && request.method === 'POST') return doEmailStart(request, env);
-    if (url.pathname === '/auth/verify' && request.method === 'GET') return doVerify(request, env);
+    if (url.pathname === '/auth/verify' && request.method === 'GET') return doVerifyPage(request, env);
+    if (url.pathname === '/auth/verify' && request.method === 'POST') return doVerify(request, env);
     if (url.pathname === '/me' && request.method === 'GET') return doMe(request, env);
     if (url.pathname === '/auth/logout') return doLogout(request, env);
     if (url.pathname === '/save' && request.method === 'POST') return doSave(request, env);
