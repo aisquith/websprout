@@ -990,6 +990,7 @@ body.ws-v3 #designDrawer,body.ws-v3 #edFirstHint{display:none!important}
 .slot-search-note{font-size:11px;color:rgba(255,255,255,.5);margin-top:8px}
 .wse-logo{display:flex;align-items:center;gap:10px}
 .wse-logo-prev{width:88px;height:44px;border-radius:8px;border:1px dashed rgba(255,255,255,.25);background:#fff center/contain no-repeat;flex:none}
+.wse-ver{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.06);font-size:12.5px;color:rgba(255,255,255,.82)}
 .wse-card{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:12px}
 .wse-ok{font:700 13px/1.3 system-ui,sans-serif;color:#7fe39a;margin-bottom:6px}
 .wse-ok::before{content:'✓  '}

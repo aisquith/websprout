@@ -84,6 +84,7 @@ export default {
     if (url.pathname === '/auth/logout') return doLogout(request, env);
     if (url.pathname === '/save' && request.method === 'POST') return doSave(request, env);
     if (url.pathname === '/load' && request.method === 'GET') return doLoad(request, env);
+    if (url.pathname === '/versions' && request.method === 'GET') return doVersions(request, env);
     if (url.pathname === '/my-sites' && request.method === 'GET') return doMySites(request, env);
     if (url.pathname === '/account/export' && request.method === 'GET') return doAccountExport(request, env);
     if (url.pathname === '/account/billing-portal' && request.method === 'POST') return doBillingPortal(request, env);

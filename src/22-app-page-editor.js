@@ -1777,6 +1777,44 @@ function wsRenderLogo(pad){
   pad.appendChild(row);
   pad.appendChild(wseEl('div','wse-hint','PNG with a transparent background looks best. It replaces your name in the header.'));
 }
+// ---- Version history (Site tab) ----
+function wsAgo(ts){var s=Math.max(0,(Date.now()-ts)/1000);if(s<90)return 'just now';var m=Math.round(s/60);if(m<60)return m+' min ago';var h=Math.round(m/60);if(h<24)return h+' hour'+(h>1?'s':'')+' ago';var d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+', '+d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});}
+function wsRenderVersions(pad){
+  var sid=window._wsSite||localStorage.getItem('ws_site')||'',key=window._wsKey||localStorage.getItem('ws_key')||'';
+  pad.appendChild(wseEl('div','wse-label','Version history'));
+  var box=wseEl('div','wse-card');pad.appendChild(box);
+  if(!sid||!key){box.appendChild(wseEl('div','wse-hint','Versions appear once your site has been saved.'));return;}
+  box.appendChild(wseEl('div','wse-hint','Loading...'));
+  fetch('/versions?site='+encodeURIComponent(sid)+'&key='+encodeURIComponent(key)).then(function(r){return r.json();}).then(function(j){
+    box.innerHTML='';var vs=(j&&j.versions)||[];
+    if(!vs.length){box.appendChild(wseEl('div','wse-hint','No saved versions yet. A snapshot is kept every 10 minutes while you edit.'));return;}
+    box.appendChild(wseEl('div','wse-hint','A snapshot is kept every 10 minutes while you edit, for 60 days.'));
+    vs.slice(0,12).forEach(function(v,i){
+      var row=wseEl('div','wse-ver');
+      row.appendChild(wseEl('span',null,(i===0?'Latest: ':'')+wsAgo(v.ts)+(v.label?' ('+v.label+')':'')));
+      var b=wseEl('button','wse-link go','Restore');b.type='button';
+      b.addEventListener('click',function(){wsRestoreVersion(sid,key,v.ts,b);});
+      row.appendChild(b);box.appendChild(row);
+    });
+  }).catch(function(){box.innerHTML='';box.appendChild(wseEl('div','wse-hint','Could not load versions.'));});
+}
+function wsRestoreVersion(sid,key,ts,btn){
+  var go=function(){
+    if(btn)btn.textContent='Restoring...';
+    // Keep the current state as its own version first, so a restore is never a one-way door.
+    try{if(gHTML&&gHTML.length>100)fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({siteId:sid,key:key,html:gHTML,name:(document.getElementById('stitle')||{}).textContent||'My site',site:window._wsSiteData||undefined,snapshot:true,label:'Before restore'})});}catch(e){}
+    fetch('/versions?site='+encodeURIComponent(sid)+'&key='+encodeURIComponent(key)+'&ts='+ts).then(function(r){return r.json();}).then(function(v){
+      if(!v||!v.html){if(btn)btn.textContent='Restore';try{toast((v&&v.error)||'That version could not be loaded');}catch(e){}return;}
+      try{if(v.site&&v.site.sections){window._wsSiteData=v.site;wsPersistSiteData();}}catch(e){}
+      gHTML=v.html;try{localStorage.setItem('wsh',gHTML);}catch(e){}
+      if(window._wsSiteData&&window.WS){wsRerender();}else{setPreview(gHTML);pushUndo(gHTML);}
+      try{wsOpenEditor();}catch(e){}
+      try{toast('Version restored. Undo takes you back.',3200);}catch(e){}
+    }).catch(function(){if(btn)btn.textContent='Restore';});
+  };
+  if(window.wsConfirm)window.wsConfirm({title:'Restore this version?',message:'Your site will go back to how it looked '+wsAgo(ts)+'. You can undo this.',okLabel:'Restore',cancelLabel:'Cancel'}).then(function(ok){if(ok)go();});
+  else if(confirm('Restore this version?'))go();
+}
 function wsRenderDesign(pad){
   var sd=window._wsSiteData;
   var top=wseEl('div','wse-row');
@@ -1865,7 +1903,7 @@ function wsOpenEditor(){
     b.addEventListener('click',function(){window.wsPanelTab=t[0];wsOpenEditor();});tabs.appendChild(b);
   });
   pad.appendChild(tabs);
-  if(tab==='site'){wsRenderManage(pad);wsRenderPayments(pad);}
+  if(tab==='site'){wsRenderManage(pad);wsRenderPayments(pad);wsRenderVersions(pad);}
   if(tab==='design'){wsRenderDesign(pad);}
   if(false){
   pad.appendChild(wseEl('div','wse-label','Theme'));

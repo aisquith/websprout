@@ -43,6 +43,17 @@ async function doSave(request, env){
       if (_tot <= 12*1024*1024) _dft.pages = _pgs;
     }
     await env.KV.put('draft:' + b.siteId, JSON.stringify(_dft), { expirationTtl: 60*60*24*365 });
+    // Version history: keep a snapshot at most every 10 minutes (30 newest, 60 days each).
+    try {
+      const _last = parseInt((await env.KV.get('verlast:' + b.siteId)) || '0', 10) || 0;
+      if (Date.now() - _last > 10*60*1000 || b.snapshot === true) {
+        const _ts = Date.now();
+        await env.KV.put('ver:' + b.siteId + ':' + _ts, JSON.stringify(_dft), { expirationTtl: 60*60*24*60, metadata: { name: _dft.name, size: _dft.html.length, label: b.snapshot === true ? String(b.label || 'Saved before restore').slice(0, 60) : '' } });
+        await env.KV.put('verlast:' + b.siteId, String(_ts), { expirationTtl: 60*60*24*60 });
+        const _vs = await kvAllKeys(env, 'ver:' + b.siteId + ':', 2);
+        if (_vs.length > 30) { const _old = _vs.map(function(k){ return k.name; }).sort().slice(0, _vs.length - 30); for (const k of _old) await env.KV.delete(k); }
+      }
+    } catch(e){}
     try {
       const s = await getSession(request, env);
       if (s && s.email) {
@@ -57,6 +68,23 @@ async function doSave(request, env){
       }
     } catch(e){}
     return succeed({ ok:true });
+  } catch(e){ return fail(e.message); }
+}
+async function doVersions(request, env){
+  try {
+    if (!env.KV) return fail('KV not configured');
+    const url = new URL(request.url);
+    const site = url.searchParams.get('site') || '', key = url.searchParams.get('key') || '', ts = url.searchParams.get('ts') || '';
+    if (!site || key !== (await siteKey(site, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
+    if (ts) {
+      if (!/^[0-9]{10,16}$/.test(ts)) return fail('Bad version');
+      const v = await env.KV.get('ver:' + site + ':' + ts);
+      if (!v) return fail('That version is no longer available');
+      return new Response(v, { headers:{ 'Content-Type':'application/json', 'Cache-Control':'no-store' } });
+    }
+    const keys = await kvAllKeys(env, 'ver:' + site + ':', 2);
+    const list = keys.map(function(k){ const t = parseInt(k.name.split(':')[2], 10) || 0; const m = k.metadata || {}; return { ts: t, name: m.name || '', size: m.size || 0, label: m.label || '' }; }).sort(function(a, b){ return b.ts - a.ts; });
+    return succeed({ versions: list });
   } catch(e){ return fail(e.message); }
 }
 async function doMySites(request, env){
