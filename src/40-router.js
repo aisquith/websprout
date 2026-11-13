@@ -66,6 +66,7 @@ export default {
     if (url.pathname === '/support' && request.method === 'POST') return doSupport(request, env);
     if (url.pathname === '/admin' && request.method === 'GET') return doAdminPage(request, env);
     if (url.pathname === '/admin/data' && request.method === 'GET') return doAdminData(request, env);
+    if (url.pathname === '/admin/funnel' && request.method === 'GET') return doAdminFunnel(request, env);
     if (url.pathname === '/admin/activity' && request.method === 'GET') return doAdminActivity(request, env);
     if (url.pathname === '/admin/nudge' && request.method === 'GET' && ['same-origin', 'none', ''].indexOf(request.headers.get('sec-fetch-site') || '') > -1) return doAdminNudge(request, env);
     if (url.pathname === '/email-optout' && request.method === 'GET') return doEmailOptout(request, env);

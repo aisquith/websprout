@@ -120,8 +120,10 @@ function wsSnapSiteData(html){try{if(window._wsSiteData&&typeof html==='string')
 function wsRestoreSiteData(html){try{var s=_wsSdSnaps.get(html);if(s){window._wsSiteData=JSON.parse(s);try{wsPersistSiteData();}catch(e){}try{if(document.getElementById('wsEdHost'))wsOpenEditor();}catch(e){}}}catch(e){}}
 function wsPersistSiteData(){try{if(window._wsSiteData)localStorage.setItem('ws_sd',JSON.stringify(window._wsSiteData));}catch(e){}}
 function wsLoadSiteData(sid){try{if(window._wsSiteData)return;var raw=localStorage.getItem('ws_sd');if(!raw)return;var o=JSON.parse(raw);if(o&&o.sections&&(!sid||!o.siteId||o.siteId===sid))window._wsSiteData=o;}catch(e){}}
+function wsTrackOnce(ev,scope){try{var k='ws_tr_'+ev+'_'+(scope||'');if(localStorage.getItem(k))return;localStorage.setItem(k,'1');}catch(e){}try{fetch('/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:ev,url:location.href,ref:document.referrer})});}catch(e){}}
 function pushUndo(html){
   wsSnapSiteData(html);
+  if(undoStack.length>=1)wsTrackOnce('first_edit',window._wsSite||localStorage.getItem('ws_site')||'');
   undoStack.push(html);
   if(undoStack.length>10)undoStack.shift();
   redoStack=[]; // a new edit invalidates the redo history
@@ -3278,6 +3280,7 @@ async function sha1(str){
 
 function doPayment(){
   if(!gHTML){toast('Generate a site first!');return;}
+  try{fetch('/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'upgrade_click',url:location.href})});}catch(e){}
   var me=window._wsUser;
   if(!me||!me.auth){toast('Sign in first so your subscription unlocks all your sites.',5000);try{openAuth();}catch(e){}return;}
   function goStripe(em){

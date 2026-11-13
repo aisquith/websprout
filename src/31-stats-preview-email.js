@@ -20,7 +20,10 @@ async function doTrack(request, env) {
   try {
     if (!env.KV) return succeed({ ok: false });
     const body = await request.json();
-    const event = body.event || 'unknown';
+    // Only events a browser legitimately sends. Server-side steps (create_v3, publish, login, pro_start) are
+    // logged by the server itself, so they cannot be inflated from outside.
+    const event = String(body.event || '');
+    if (['visit', 'share', 'deploy_netlify', 'first_edit', 'upgrade_click'].indexOf(event) === -1) return succeed({ ok: false });
     const key = 'stat:' + event;
     const cur = parseInt(await env.KV.get(key) || '0');
     await env.KV.put(key, String(cur + 1));

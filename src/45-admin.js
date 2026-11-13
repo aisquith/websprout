@@ -38,6 +38,8 @@ a{color:#4ade80;text-decoration:none}.muted{color:rgba(234,242,232,.38)}.err{col
 </style></head><body>
 <div class="top"><div><h1>&#128202; Websprout Admin</h1><div class="sub">Accounts, revenue &amp; insights &middot; owner only</div></div><div style="display:flex;gap:8px"><a class="devlink" href="/dev">&#128736;&#65039; Developer</a><div class="rl" id="refresh">&#8635; Refresh</div></div></div>
 <div id="cards" class="cards"></div>
+<h2>Funnel <span style="font-size:12px;color:rgba(234,242,232,.4);font-weight:400">unique visitors per step &middot; <a href="#" data-fd="7" style="color:#7fe39a">7 days</a> &middot; <a href="#" data-fd="30" style="color:#7fe39a">30 days</a></span></h2>
+<div class="wrap" id="funnel" style="padding:14px 16px"><span class="muted">Loading...</span></div>
 <h2>Accounts</h2>
 <div class="wrap"><table><thead><tr><th>Email</th><th>Name</th><th>Plan</th><th>Builds</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="ubody"><tr><td colspan="6" class="muted" style="padding:18px">Loading&hellip;</td></tr></tbody></table></div>
 <h2>Published sites</h2>
@@ -107,6 +109,18 @@ function load(){
 document.getElementById('ubody').addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('button[data-act]');if(!b)return;var act=b.getAttribute('data-act');if(act==='plan')setPlan(b.getAttribute('data-email'),b.getAttribute('data-v'));else if(act==='dev')setDev(b.getAttribute('data-email'),b.getAttribute('data-v'));});
 document.getElementById('pbody').addEventListener('click',function(e){var fb=e.target.closest&&e.target.closest('button[data-feat]');if(!fb)return;setFeature(fb.getAttribute('data-slug'),fb.getAttribute('data-feat'));});
 document.getElementById('refresh').addEventListener('click',load);
+function loadFunnel(d){
+  fetch('/admin/funnel?days='+(d||30)).then(function(r){return r.json();}).then(function(j){
+    var el=document.getElementById('funnel');if(!el)return;if(j.error){el.innerHTML='<span class="muted">'+esc(j.error)+'</span>';return;}
+    var top=(j.steps[0]&&j.steps[0].n)||0,prev=null,h='';
+    j.steps.forEach(function(s){var pct=top?Math.round(s.n*100/top):0;var step=prev?(prev?Math.round(s.n*100/prev):0)+'% of previous':'';
+      h+='<div style="display:grid;grid-template-columns:180px 1fr 140px;gap:12px;align-items:center;margin:6px 0"><span>'+esc(s.label)+'</span><div style="background:rgba(255,255,255,.06);border-radius:6px;height:22px;overflow:hidden"><div style="width:'+Math.max(pct,s.n?2:0)+'%;height:100%;background:linear-gradient(90deg,#2f9e4f,#4ade80)"></div></div><span><b>'+s.n+'</b> <span class="muted">'+step+'</span></span></div>';prev=s.n||0;});
+    var src=Object.keys(j.sources||{}).sort(function(a,b){return j.sources[b]-j.sources[a];}).slice(0,6).map(function(k){return esc(k)+' '+j.sources[k];}).join(' &middot; ');
+    el.innerHTML=h+'<div class="muted" style="margin-top:10px;font-size:12px">Last '+j.days+' days.'+(src?' Landing visits by source: '+src:'')+'</div>';
+  }).catch(function(){});
+}
+document.querySelectorAll('[data-fd]').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();loadFunnel(a.getAttribute('data-fd'));});});
+loadFunnel(30);
 load();
 var _acts=[];
 function renderActs(){
@@ -240,7 +254,7 @@ async function logEvent(request, env, type, extra){
     const iph = await hashIP(request.headers.get('cf-connecting-ip') || '', env);
     const ev = { t:String(type||'event').slice(0,24), ts:Date.now(), iph:iph, country:(cf.country||'').slice(0,4), region:(cf.region||'').slice(0,40), city:(cf.city||'').slice(0,60), email:extra.email?String(extra.email).toLowerCase().trim().slice(0,120):'', src:extra.src?String(extra.src).slice(0,40):'', ref:extra.ref?String(extra.ref).slice(0,300):'', device:uaShort(request.headers.get('user-agent')||'') };
     const key = 'evt:' + ev.ts + ':' + Math.random().toString(36).slice(2,8);
-    const meta = { t:ev.t, ts:ev.ts, c:ev.country, ci:ev.city, e:ev.email, s:ev.src, d:ev.device };
+    const meta = { t:ev.t, ts:ev.ts, c:ev.country, ci:ev.city, e:ev.email, s:ev.src, d:ev.device, ih:String(iph||'').slice(0,16) };
     await env.KV.put(key, JSON.stringify(ev), { expirationTtl: 60*60*24*60, metadata: meta });
   }catch(e){}
 }
@@ -256,6 +270,32 @@ async function doAdminActivity(request, env){
   } while(cursor && guard<5 && events.length<4000);
   events.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
   return succeed({ events: events.slice(0,2000), total: events.length });
+}
+// Conversion funnel: unique visitors (hashed IP) reaching each step in the last N days.
+const FUNNEL_STEPS = [['visit', 'Visited the landing page'], ['create_v3', 'Built a site'], ['first_edit', 'Edited it'], ['publish', 'Published'], ['upgrade_click', 'Opened Go Pro'], ['pro_start', 'Started Pro']];
+async function doAdminFunnel(request, env){
+  const s = await getSession(request, env);
+  if(!s || (s.email||'').toLowerCase() !== SUPPORT_EMAIL.toLowerCase()) return new Response(JSON.stringify({ error:'Not authorized' }), { status:403, headers:{ 'Content-Type':'application/json' } });
+  const days = Math.max(1, Math.min(60, parseInt(new URL(request.url).searchParams.get('days') || '30', 10) || 30));
+  const since = Date.now() - days * 86400000;
+  const sets = {}; FUNNEL_STEPS.forEach(function(st){ sets[st[0]] = new Set(); });
+  const bySrc = {};
+  try {
+    let cur, g = 0;
+    do {
+      const r = await env.KV.list({ prefix:'evt:', cursor:cur, limit:1000 });
+      for (const k of r.keys) {
+        const m = k.metadata || {}; const ts = m.ts || parseInt(k.name.split(':')[1], 10) || 0;
+        if (ts < since || !sets[m.t]) continue;
+        const who = (m.e || '') || k.name; // events are keyed by hashed IP in the record; metadata keeps email when known
+        sets[m.t].add(m.ih || who);
+        if (m.t === 'visit') { const src = m.s || 'direct'; bySrc[src] = (bySrc[src] || 0) + 1; }
+      }
+      cur = r.list_complete ? null : r.cursor; g++;
+    } while (cur && g < 40);
+  } catch(e){}
+  const steps = FUNNEL_STEPS.map(function(st){ return { id: st[0], label: st[1], n: sets[st[0]].size }; });
+  return succeed({ days: days, steps: steps, sources: bySrc });
 }
 async function doAdminData(request, env){
   const s = await getSession(request, env);

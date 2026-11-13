@@ -14,6 +14,7 @@ async function doStripeWebhook(request, env){
       if(obj.mode!=='subscription') return new Response('{"received":true}', { headers:{ 'Content-Type':'application/json' } });
       const email=(obj.client_reference_id||obj.customer_email||(obj.customer_details&&obj.customer_details.email)||'').toLowerCase();
       if(email) await setUserPlan(env, email, 'pro', cust, obj.subscription||'');
+      try{ await logEvent(request, env, 'pro_start', { email: email }); }catch(e){}
     } else if((ev.type==='invoice.paid'||ev.type==='invoice.payment_succeeded') && obj.subscription){
       const em=cust?await env.KV.get('stripecust:'+cust):''; if(em) await setUserPlan(env, em, 'pro', cust, obj.subscription||'');
     } else if(ev.type==='customer.subscription.deleted'){
