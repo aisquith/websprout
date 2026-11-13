@@ -75,4 +75,24 @@ module.exports = async function (ctx, t) {
     const j = await createSite(base, { name: 'T', type });
     t.eq(j.site.pages.some((p) => p.path === 'shop'), shop, type + (shop ? ' gets' : ' does not get') + ' a Shop page');
   }
+
+  // services typed during setup become the site's services, with prices, on the Services page and the booking form
+  {
+    const j = await createSite(base, { name: 'Sharp', type: 'Barber shop', servicesText: 'Skin fade - $30\nBeard trim: 15\n- Kids cut $20\nHot towel shave\nColor from $85+' });
+    const main = j.site.pages.find((p) => p.path === 'services');
+    const sv = main && main.sections.find((s) => s.type === 'services');
+    t.ok(!!sv, 'setup services: Services page has a services section');
+    const items = (sv && sv.items) || [];
+    t.eq(items.map((x) => x.name).join('|'), 'Skin fade|Beard trim|Kids cut|Hot towel shave|Color', 'setup services: names parsed in order');
+    t.eq(items.map((x) => x.from).join('|'), '$30|$15|$20||$85+', 'setup services: prices parsed');
+    t.ok(/Beard trim/.test(j.html) && /\$85\+/.test(j.html) && !/Pour Over|Espresso/.test(j.html), 'setup services: rendered on the site');
+    t.ok(items.find((x) => x.name === 'Beard trim').text.length > 10, 'setup services: a known service borrows starter wording');
+    const bk = j.site.pages.find((p) => p.path === 'book');
+    const bs = bk && bk.sections.find((s) => s.type === 'booking');
+    t.ok(!!bs && bs.services.some((x) => x.name === 'Kids cut'), 'setup services: offered on the booking form');
+    const j2 = await createSite(base, { name: 'Sharp', type: 'Barber shop', servicesText: 'haircuts, beard trims, fades' });
+    t.eq(j2.site.pages.find((p) => p.path === 'services').sections.find((s) => s.type === 'services').items.length, 3, 'setup services: comma-separated list works');
+    const j3 = await createSite(base, { name: 'Sharp', type: 'Barber shop', servicesText: '<img src=x onerror=alert(1)> - $5' });
+    t.ok(!/<img src=x/.test(j3.html), 'setup services: markup in a service name is escaped');
+  }
 };

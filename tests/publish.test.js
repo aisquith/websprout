@@ -29,7 +29,7 @@ module.exports = async function (ctx, t) {
   await page.goto(base + '/s/' + slug, { waitUntil: 'networkidle2' });
   t.eq(await page.evaluate(() => location.hash || ''), '', 'lands on Home');
   const bookLinks = await page.evaluate(() => [...new Set([...document.querySelectorAll('a')].filter((a) => /book|appointment/i.test(a.textContent)).map((a) => a.getAttribute('href')))]);
-  t.ok(bookLinks.length && bookLinks.every((h) => /^#\/(book|contact)$/.test(h)), 'Book buttons go to the booking page ' + JSON.stringify(bookLinks));
+  t.ok(bookLinks.length && bookLinks.every((h) => new RegExp('^/s/' + slug + '/(book|contact)$').test(h)), 'Book buttons go to the booking page ' + JSON.stringify(bookLinks));
   // phone menu after scrolling covers the screen
   await page.evaluate(() => window.scrollTo(0, 900)); await sleep(400);
   await page.evaluate(() => document.querySelector('.navtoggle').click()); await sleep(300);
@@ -37,7 +37,8 @@ module.exports = async function (ctx, t) {
   t.ok(navH >= 700, 'phone menu opens full screen after scrolling (' + navH + 'px)');
   await page.evaluate(() => document.querySelector('.navtoggle').click());
   // contact form: one POST, visible confirmation, lead in inbox
-  await page.evaluate(() => { location.hash = '/contact'; }); await sleep(500);
+  await page.goto(base + '/s/' + slug + '/contact', { waitUntil: 'networkidle2' });
+  t.ok(/\/contact$/.test(await page.evaluate(() => location.pathname)), 'contact page has its own URL');
   await page.evaluate(() => {
     const f = [...document.forms].find((x) => x.offsetParent);
     [...f.elements].forEach((e) => { if (e.name === '_ws_hp' || e.type === 'hidden') return; if (e.type === 'email') e.value = 'lead@example.com'; else if (e.tagName === 'TEXTAREA') e.value = 'Hello'; else if (e.type === 'text' || e.type === 'tel') e.value = 'Test'; });

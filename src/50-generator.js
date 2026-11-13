@@ -528,7 +528,7 @@ function v3Pages(site, sc, isShop) {
       home.push(hero);
     }
     const mainSrc = products || services;
-    const teaserItems = mainSrc ? (mainSrc.items || []).slice(0, 3).map((it) => ({ emoji: it.emoji || '', name: it.name || it.title || '', text: it.text || it.desc || '', from: it.price || '' })) : [];
+    const teaserItems = mainSrc ? (mainSrc.items || []).slice(0, 3).map((it) => ({ emoji: it.emoji || '', name: it.name || it.title || '', text: it.text || it.desc || '', from: it.price || it.from || '' })) : [];
     const teaser = teaserItems.length ? mk('services', { variant: v3Pick(['grid', 'grid', 'list']), title: v3FlavorPick(products ? V3_COPY.featured : V3_COPY.whatWeDo), items: teaserItems }) : null;
     // A short story band for home, using a different line than the About page will (no repeated paragraph).
     let homeUsedIntro = false;
@@ -656,7 +656,33 @@ async function doExample(request, env) {
   } catch (e) { return new Response('Example unavailable', { status: 500 }); }
 }
 
+// Setup's "services & prices" box: one per line (or comma-separated). A trailing price is optional:
+// "Skin fade - $30", "Beard trim: 15", "Color from $85+", "Consultation".
+function parseServicesText(txt) {
+  const raw = String(txt || '').slice(0, 1500);
+  const parts = raw.indexOf('\n') > -1 ? raw.split(/\r?\n/) : raw.split(/;|,(?=\s*[^\d\s])/);
+  const out = [];
+  parts.forEach(function (line) {
+    let s = line.replace(/^\s*(?:[-*\u2022\u00b7]|\d+[.)])\s+/, '').replace(/\s+/g, ' ').trim();
+    if (!s) return;
+    let price = '';
+    const m = s.match(/^(.*?)[\s:=|\u2013\u2014-]*(?:from\s+|starting\s+at\s+)?(\$\s?\d[\d,]*(?:\.\d{1,2})?\+?|\d[\d,]*(?:\.\d{1,2})?\+?\s?(?:\$|dollars?|usd)?)\s*(?:\/\s?\w+|per\s+\w+|each|ea)?\s*$/i);
+    if (m && m[1].trim() && /[a-z]/i.test(m[1])) {
+      s = m[1].replace(/[\s:=|\u2013\u2014-]+$/, '').replace(/\s+(?:from|starting at)$/i, '').trim();
+      let p = m[2].replace(/\s+/g, '').replace(/(?:dollars?|usd)$/i, '').replace(/\$$/, '');
+      p = p.charAt(0) === '$' ? p : '$' + p;
+      price = (/^(?:from|starting)/i.test(m[0].slice(m[1].length).trim()) || /\+$/.test(p)) ? p.replace(/\+$/, '') + '+' : p;
+    }
+    s = s.replace(/^[\s:=|\u2013\u2014-]+/, '').slice(0, 60).trim();
+    if (s && /[a-z0-9]/i.test(s)) out.push({ name: s.charAt(0).toUpperCase() + s.slice(1), desc: '', price: price.slice(0, 20) });
+  });
+  return out.slice(0, 12);
+}
+
 async function buildV3Site(d, env) {
+  if (d && !Array.isArray(d.services) && typeof d.servicesText === 'string' && d.servicesText.trim()) {
+    d = Object.assign({}, d, { services: parseServicesText(d.servicesText) });
+  }
   {
     const _cat0 = v3StarterBase((d.type || '').toString()).category;
     const isShop = !!d.ecommerce || (/shop|store|boutique|retail|e-?commerce|goods|merch/i.test((d.type || '').toString()) && (_cat0 === 'retail' || _cat0 === 'generic'));
@@ -698,7 +724,17 @@ async function buildV3Site(d, env) {
       if (_prods.length) add('products', { variant: 'grid', title: (d.shopTitle ? String(d.shopTitle).slice(0, 60) : 'Shop'), items: _prods });
       else if (sc.services && sc.services.length) add('services', { variant: 'grid', title: sc.servicesTitle || 'Why shop with us', items: sc.services.map(function (s) { return { emoji: s[2] || '', name: s[0], text: s[1], from: '' }; }) });
     }
-    else if (has(biz.services)) { add('services', { variant: 'grid' }); if (!knownType) { var _sv = site.sections[site.sections.length - 1]; _sv.items = (_sv.items || []).map(function (it) { it.emoji = ''; return it; }); } }
+    else if (has(biz.services)) {
+      const _norm = function (x) { return String(x || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/s\b/g, '').trim(); };
+      const _starter = (sc.services || []).map(function (s) { return { k: _norm(s[0]), text: s[1], emoji: s[2] || '' }; });
+      let _recs = []; try { _recs = WSENGINE.emojiRecsFor(biz.type) || []; } catch (e) {}
+      const _items = biz.services.filter(function (x) { return x.name; }).map(function (x, i) {
+        const k = _norm(x.name);
+        const hit = _starter.find(function (s) { return s.k && (s.k === k || (k.length > 3 && (s.k.indexOf(k) > -1 || k.indexOf(s.k) > -1))); });
+        return { emoji: knownType ? ((hit && hit.emoji) || _recs[(i + 2) % (_recs.length || 1)] || '') : '', name: x.name, text: x.desc || (hit ? hit.text : ''), from: x.price || '' };
+      });
+      add('services', { variant: 'grid', title: sc.servicesTitle || 'What we do', items: _items });
+    }
     else if (sc.services && sc.services.length) { add('services', { variant: 'grid', title: sc.servicesTitle || 'What we do', items: sc.services.map(function (s) { return { emoji: s[2] || '', name: s[0], text: s[1], from: '' }; }) }); }
     if (has(biz.reviews)) add('reviews', { variant: 'wall' });
     if (has(d.faq)) add('faq', { variant: 'accordion', items: d.faq.slice(0, 10).map(function (q) { return { q: (q.q || '').toString().slice(0, 160), a: (q.a || '').toString().slice(0, 400) }; }) });
