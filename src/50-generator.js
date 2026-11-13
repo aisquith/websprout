@@ -645,8 +645,13 @@ const EXAMPLE_SITES = [
 async function doExample(request, env) {
   const url = new URL(request.url);
   const i = Math.max(0, Math.min(EXAMPLE_SITES.length - 1, parseInt(url.searchParams.get('i') || '0', 10) || 0));
+  // /example?n=<niche slug>: a sample for one of the /for/ business types
+  const nk = (url.searchParams.get('n') || '').toLowerCase();
+  const niche = nk ? NICHES.find(function (x) { return x.slug === nk; }) : null;
+  if (nk && !niche) return new Response('Unknown example', { status: 404 });
+  const input = niche ? { name: 'Maple Street ' + niche.name, type: niche.name, city: 'Springfield', phone: '(555) 010-0123' } : Object.assign({}, EXAMPLE_SITES[i]);
   try {
-    const r = await buildV3Site(Object.assign({}, EXAMPLE_SITES[i]), env);
+    const r = await buildV3Site(input, env);
     return new Response(r.html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600', 'X-Robots-Tag': 'noindex', 'Content-Security-Policy': 'sandbox allow-scripts allow-popups allow-same-origin' } });
   } catch (e) { return new Response('Example unavailable', { status: 500 }); }
 }

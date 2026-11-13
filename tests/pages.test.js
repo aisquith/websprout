@@ -35,6 +35,14 @@ module.exports = async function (ctx, t) {
   const locs = (sm.match(/<loc>[^<]+/g) || []).map((s) => s.slice(5).replace('https://websprout.app', ''));
   t.ok(locs.length > 10, 'sitemap lists pages');
   for (const l of locs) { const r = await fetch(base + l); t.ok(r.status === 200, 'sitemap url ' + l + ' is 200'); }
+  // Every /for/ page shows a working sample site
+  const niches = locs.filter((l) => /^\/for\/[a-z-]+$/.test(l));
+  for (const l of niches) {
+    const slug = l.slice(5);
+    const r = await fetch(base + '/example?n=' + slug);
+    const html = await r.text();
+    t.ok(r.status === 200 && /Maple Street/.test(html), 'sample site for ' + slug + ' builds');
+  }
   // Status codes of key routes
   const expect = { '/admin': 403, '/dev': 403, '/s/no-such-site': 404, '/load': 400, '/robots.txt': 200, '/ws-engine.js': 200, '/og.png': 200, '/example?i=0': 200 };
   for (const [p, code] of Object.entries(expect)) { const r = await fetch(base + p); t.eq(r.status, code, 'GET ' + p); }
