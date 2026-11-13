@@ -86,7 +86,7 @@ function autoSyncLive(){
       var html=(typeof gHTML==='string'&&gHTML)||localStorage.getItem('wsh')||'';
       if(!html)return;
       var k=window._wsKey||localStorage.getItem('ws_key')||'';
-      fetch('/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html:html,slug:slug,siteId:sid,key:k,pages:(window._wsPages&&window._wsPages.length>1)?(window.wsSyncPages&&window.wsSyncPages(),window._wsPages.map(function(p){return{path:p.path,html:p.html};})):undefined})}).then(function(r){return r.json();}).then(function(j){
+      fetch('/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:window._wsSiteData||undefined,html:html,slug:slug,siteId:sid,key:k,pages:(window._wsPages&&window._wsPages.length>1)?(window.wsSyncPages&&window.wsSyncPages(),window._wsPages.map(function(p){return{path:p.path,html:p.html};})):undefined})}).then(function(r){return r.json();}).then(function(j){
         if(j&&!j.error){var n=Date.now();if(n-_wsSyncToastAt>7000){_wsSyncToastAt=n;if(window.toast)toast('\u2713 Live site updated',1600);}}
         else{var n2=Date.now();if(n2-_wsSyncErrAt>20000){_wsSyncErrAt=n2;if(window.toast)toast('Could not update your live site \u2014 use Update in the publish panel',2800);}}
       }).catch(function(){var n3=Date.now();if(n3-_wsSyncErrAt>20000){_wsSyncErrAt=n3;if(window.toast)toast('Could not update your live site \u2014 use Update in the publish panel',2800);}});
@@ -1767,6 +1767,26 @@ function wsRenderDesign(pad){
   esSel.addEventListener('change',function(){sd.emojiStyle=esSel.value;wsRerender();});
   pad.appendChild(esSel);
 }
+function wsHasShop(){return wsAllSections().some(function(s){return s&&s.type==='products'&&(s.items||[]).length;});}
+// Site tab: whether visitors can pay online, and the one next step to get there.
+function wsRenderPayments(pad){
+  if(!wsHasShop())return;
+  pad.appendChild(wseEl('div','wse-label','Online payments'));
+  var box=wseEl('div','wse-card');box.appendChild(wseEl('div','wse-hint','Checking your payment setup...'));pad.appendChild(box);
+  var now=Date.now();
+  var got=function(me){
+    box.innerHTML='';
+    var line=function(txt){box.appendChild(wseEl('div','wse-hint',txt));};
+    var act=function(label,fn){var b=wseEl('button','wse-btn wse-wide',label);b.type='button';b.style.marginTop='10px';b.addEventListener('click',fn);box.appendChild(b);};
+    if(!me||!me.auth){line('Sign in so customers can pay you online. Until then, the cart asks visitors to contact you to order.');act('Sign in',function(){var a=document.getElementById('acctBtn');if(a)a.click();});return;}
+    if(me.owner||(me.pro&&me.connectReady)){box.appendChild(wseEl('div','wse-ok','Payments are on'));line('Visitors check out securely with Stripe on your published site. Money goes to your Stripe account (Websprout keeps a 2% fee).');return;}
+    if(!me.pro){line('Online checkout comes with Pro. Until then, the cart asks visitors to contact you to order.');act('Go Pro',function(){var u=document.getElementById('unlockBtn');if(u)u.click();});return;}
+    line(me.connectStarted?'Finish setting up your Stripe account so payments can go through.':'Connect a Stripe account to get paid. It takes a few minutes.');
+    act(me.connectStarted?'Finish Stripe setup':'Connect Stripe',function(){location.href='/connect/start';});
+  };
+  if(window._wsMeCache&&now-window._wsMeCache.t<30000){got(window._wsMeCache.me);return;}
+  fetch('/me',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(me){window._wsMeCache={t:Date.now(),me:me};got(me);}).catch(function(){got(null);});
+}
 function wsSlotKeysFor(sec){var out=[];try{var d=wsPfDoc();if(!d)return out;var el=d.querySelector('[data-sec="'+sec.id+'"]');if(!el)return out;el.querySelectorAll('[data-slot]').forEach(function(s){var k=s.getAttribute('data-slot');if(k&&out.indexOf(k)<0)out.push(k);});}catch(e){}return out;}
 function wsOpenEditor(){
   if(!window.WS||!window.WS.palettes||!window._wsSiteData)return;
@@ -1788,7 +1808,7 @@ function wsOpenEditor(){
     b.addEventListener('click',function(){window.wsPanelTab=t[0];wsOpenEditor();});tabs.appendChild(b);
   });
   pad.appendChild(tabs);
-  if(tab==='site'){wsRenderManage(pad);}
+  if(tab==='site'){wsRenderManage(pad);wsRenderPayments(pad);}
   if(tab==='design'){wsRenderDesign(pad);}
   if(false){
   pad.appendChild(wseEl('div','wse-label','Theme'));

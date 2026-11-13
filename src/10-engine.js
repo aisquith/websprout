@@ -645,9 +645,29 @@ const WSENGINE = (function(){
 
   const CART_JS = `<script>(function(){
   var cart=[];
-  function money(n){var p=parseFloat(String(n).replace(/[^0-9.]/g,''));return isNaN(p)?String(n):('$'+(p%1?p.toFixed(2):p));}
+  // Price as a number: the first amount after a currency sign, else the first number ("2 for $10" is 10, "$15 - $25" is 15).
+  function num(s){s=String(s==null?'':s).split(',').join('');var at=s.search(/[$£€]/);var m=(at>-1?s.slice(at):s).match(/[0-9]+([.][0-9]{1,2})?/);return m?parseFloat(m[0]):NaN;}
+  function money(n){var s=String(n==null?'':n).trim();if(/^[$£€]?[ ]?[0-9]+([.][0-9]{1,2})?$/.test(s.split(',').join(''))){var p=num(s);return '$'+(p%1?p.toFixed(2):p);}return s;}
   var pill=document.querySelector('.wsp-cart'),draw=document.querySelector('.wsp-draw');
-  function total(){var t=0;cart.forEach(function(i){var p=parseFloat(String(i.price).replace(/[^0-9.]/g,''));if(!isNaN(p))t+=p;});return t;}
+  function note(msg){var pn=draw&&draw.querySelector('.wsp-panel');if(!pn)return;var nt=pn.querySelector('.wsp-note');if(!nt){nt=document.createElement('p');nt.className='wsp-note';nt.setAttribute('role','status');nt.style.cssText='margin:14px 0 0;opacity:.85;line-height:1.5';pn.appendChild(nt);}nt.textContent=msg;}
+  function contactLine(){var ca=document.querySelector('a[href^="tel:"]');return ca?' at '+decodeURIComponent(ca.getAttribute('href').slice(4)):'';}
+  function checkout(btn){
+    if(!cart.length)return;
+    var site=(draw&&draw.getAttribute('data-site'))||'';
+    var inPreview=(location.protocol==='about:')||(window.parent!==window&&/websprout/.test(document.referrer||''));
+    if(inPreview||!site){note('Checkout opens on your published site. Visitors pay securely with Stripe.');return;}
+    var q={};cart.forEach(function(i){q[i.name]=(q[i.name]||0)+1;});
+    var items=Object.keys(q).map(function(n){return {n:n,qty:q[n]};});
+    var label=btn.textContent;btn.disabled=true;btn.textContent='Opening checkout…';
+    fetch('/cart-checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:site,items:items})})
+      .then(function(r){return r.json();}).then(function(j){
+        if(j&&j.url){location.href=j.url;return;}
+        btn.disabled=false;btn.textContent=label;
+        note((j&&j.error?j.error+'. ':'')+'You can still order by contacting us'+contactLine()+'.');
+      }).catch(function(){btn.disabled=false;btn.textContent=label;note('Could not reach checkout. Please try again, or contact us'+contactLine()+'.');});
+  }
+  try{if(/[?&]ws_paid=1/.test(location.search)){var ok=document.createElement('div');ok.setAttribute('role','status');ok.style.cssText='position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:9100;background:#16a34a;color:#fff;padding:12px 18px;border-radius:10px;font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,.25)';ok.textContent='Thank you! Your order is confirmed. A receipt is on its way to your email.';document.body.appendChild(ok);setTimeout(function(){ok.remove();},9000);}}catch(e){}
+  function total(){var t=0;cart.forEach(function(i){var p=num(i.price);if(!isNaN(p))t+=p;});return t;}
   function paint(){
     if(pill){pill.classList.toggle('on',cart.length>0);var c=pill.querySelector('b');if(c)c.textContent=cart.length;}
     var box=draw&&draw.querySelector('[data-lines]');if(box)box.innerHTML=cart.length?cart.map(function(i,ix){return '<div class="wsp-line"><span>'+String(i.name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span><span>'+money(i.price)+' <button class="wsp-x" data-rm="'+ix+'" aria-label="Remove">&times;</button></span></div>';}).join(''):'<p style="opacity:.6">Your cart is empty.</p>';
@@ -658,7 +678,7 @@ const WSENGINE = (function(){
     if(ev.target.closest('.wsp-cart')){if(draw){draw.classList.add('on');paint();}return;}
     if(ev.target.closest('.wsp-close')||ev.target.classList.contains('wsp-draw')){if(draw)draw.classList.remove('on');return;}
     var rm=ev.target.closest('[data-rm]');if(rm){cart.splice(+rm.getAttribute('data-rm'),1);paint();return;}
-    if(ev.target.closest('.wsp-co')){var pn=draw&&draw.querySelector('.wsp-panel');if(pn&&!pn.querySelector('.wsp-note')){var nt=document.createElement('p');nt.className='wsp-note';nt.style.cssText='margin:14px 0 0;opacity:.8;line-height:1.5';var ca=document.querySelector('a[href^="tel:"]');nt.textContent='Online checkout is not available yet. To order, please contact us'+(ca?' at '+decodeURIComponent(ca.getAttribute('href').slice(4)):'')+'.';pn.appendChild(nt);}return;}
+    if(ev.target.closest('.wsp-co')){checkout(ev.target.closest('.wsp-co'));return;}
   });
   paint();
 })();</script>`;
@@ -691,7 +711,7 @@ const WSENGINE = (function(){
         return `<article class="wsp-card">${img}<div class="wsp-b"><h3 class="wsp-n">${e(it.name)}</h3>${it.desc ? `<p class="wsp-d">${e(it.desc)}</p>` : ''}<div class="wsp-r"><span class="wsp-pr">${money(it.price)}</span><button class="wsp-buy" type="button" data-n="${e(it.name)}" data-p="${e(it.price)}">Add to cart</button></div></div></article>`;
       }).join('');
       const cart = c.mode === 'edit' ? '' :
-        `<button class="wsp-cart" type="button" aria-label="Open cart">Cart &middot; <b>0</b></button><div class="wsp-draw"><div class="wsp-panel"><button class="wsp-close" type="button" aria-label="Close cart">&times;</button><h3>Your cart</h3><div data-lines></div><div class="wsp-tot"><span>Total</span><span data-total>$0.00</span></div><button class="wsp-co" type="button">Checkout</button></div></div>` + CART_JS;
+        `<button class="wsp-cart" type="button" aria-label="Open cart">Cart &middot; <b>0</b></button><div class="wsp-draw" data-site="${e(c.site.siteId || '')}"><div class="wsp-panel"><button class="wsp-close" type="button" aria-label="Close cart">&times;</button><h3>Your cart</h3><div data-lines></div><div class="wsp-tot"><span>Total</span><span data-total>$0.00</span></div><button class="wsp-co" type="button">Checkout</button></div></div>` + CART_JS;
       return `<section id="shop" class="shop on-base">${SHOP_CSS}<div class="wrap"><h2 class="h2">${e(s.title || 'Shop')}</h2><div class="wsp-grid">${cards}</div></div></section>${cart}`;
     },
   });

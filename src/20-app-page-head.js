@@ -975,6 +975,9 @@ body.ws-v3 #designDrawer,body.ws-v3 #edFirstHint{display:none!important}
 .wse-photo{width:64px;height:48px;border-radius:8px;border:1px dashed rgba(255,255,255,.25);background:rgba(255,255,255,.04) center/cover no-repeat;color:rgba(255,255,255,.6);font:600 11px/1 system-ui,sans-serif;cursor:pointer}
 .wse-photo.has{border-style:solid;border-color:rgba(255,255,255,.18)}
 .wse-photo:hover{border-color:#37c15e;color:#fff}
+.wse-card{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:12px}
+.wse-ok{font:700 13px/1.3 system-ui,sans-serif;color:#7fe39a;margin-bottom:6px}
+.wse-ok::before{content:'✓  '}
 /* Pro upsell: a small pill in the corner instead of a card over the site */
 .lock-badge{position:fixed!important;left:14px!important;right:auto!important;bottom:14px!important;padding:0!important;background:transparent!important;border:none!important;box-shadow:none!important;max-width:280px;z-index:20}
 .lock-badge .lock-title{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;background:#1b1530;color:#ddd6fe;border:1px solid rgba(167,139,250,.35);border-radius:999px;padding:8px 13px;font:600 12px/1 system-ui,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.25)}

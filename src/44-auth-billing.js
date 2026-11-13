@@ -80,7 +80,7 @@ async function doMe(request, env){
     try{ await setUserPlan(env, s.email, 'pro', '', ''); u=JSON.parse(await env.KV.get('user:'+s.email)||'null'); }catch(e){}
   }
   const _owner = (s.email||'').toLowerCase() === SUPPORT_EMAIL.toLowerCase();
-  return succeed({ auth:true, email:s.email, name:(u&&u.name)||'', plan:(u&&u.plan)||'free', pro:!!(u&&u.plan==='pro'), owner:_owner, connectReady:!!(u&&u.stripeConnectReady) });
+  return succeed({ auth:true, email:s.email, name:(u&&u.name)||'', plan:(u&&u.plan)||'free', pro:!!(u&&u.plan==='pro'), owner:_owner, connectReady:!!(u&&u.stripeConnectReady), connectStarted:!!(u&&u.stripeConnect) });
 }
 async function doLogout(request, env){
   const t=parseCookies(request)['ws_sess'];

@@ -154,6 +154,7 @@ async function doCartCheckout(request, env){
     if(!sk) return fail('Payments are not configured yet');
     var products = [];
     try{ var raw = await env.KV.get('products:'+siteId); if(raw){ products = JSON.parse(raw); } }catch(e){}
+    if(!products.length){ try{ var raw3 = await env.KV.get('v3products:'+siteId); if(raw3){ products = JSON.parse(raw3); } }catch(e){} }
     if(!products.length) return fail('This store has no products');
     var owner = '';
     try{ owner = ((await env.KV.get('notify:'+siteId))||'').toLowerCase(); }catch(e){}
@@ -171,6 +172,8 @@ async function doCartCheckout(request, env){
     var lines = []; var total = 0;
     for(var i=0;i<items.length;i++){
       var idx = parseInt(items[i].p,10);
+      // Structured shops send the product name; look it up in the stored list (prices always come from the server).
+      if(isNaN(idx) && items[i].n){ var nm=String(items[i].n); for(var pi=0;pi<products.length;pi++){ if(products[pi] && String(products[pi].name)===nm){ idx=pi; break; } } }
       var qty = parseInt(items[i].qty,10)||1; if(qty<1){ qty=1; } if(qty>99){ qty=99; }
       if(isNaN(idx)||idx<0||idx>=products.length) continue;
       var prod = products[idx]; if(!prod) continue;

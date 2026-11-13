@@ -117,6 +117,17 @@ async function doPublish(request, env){
     if (_paths.length > 1) await env.KV.put('pubpages:' + slug, JSON.stringify(_paths));
     else { try { await env.KV.delete('pubpages:' + slug); } catch(e){} }
     await env.KV.put('pubmeta:' + slug, JSON.stringify({ siteId: b.siteId, updated: Date.now(), nobadge: _pro, pages: _paths }));
+    // Structured shops: keep the published products (name, price) server-side so checkout charges these prices,
+    // never whatever a visitor's browser sends.
+    try {
+      if (b.site && typeof b.site === 'object') {
+        const _prods = [];
+        const _secs = [].concat.apply([], (Array.isArray(b.site.pages) ? b.site.pages : []).map(function(p){ return (p && p.sections) || []; })).concat(Array.isArray(b.site.sections) ? b.site.sections : []);
+        const _seen = new Set();
+        _secs.forEach(function(s){ if (s && s.type === 'products' && Array.isArray(s.items) && !_seen.has(s.id)) { _seen.add(s.id); s.items.forEach(function(it){ if (it && it.name && _prods.length < 200) _prods.push({ name: String(it.name).slice(0, 120), price: String(it.price || '').slice(0, 40), desc: String(it.desc || '').slice(0, 200) }); }); } });
+        if (_prods.length) await env.KV.put('v3products:' + b.siteId, JSON.stringify(_prods)); else await env.KV.delete('v3products:' + b.siteId);
+      }
+    } catch(e){}
     try { await env.KV.put('slugof:' + b.siteId, slug); } catch(e){}
     return succeed({ ok:true, slug: slug, url: 'https://' + slug + '.websprout.app', pathUrl: 'https://websprout.app/s/' + slug, nobadge: _pro, pages: _paths });
   } catch(e){ return fail(e.message); }
