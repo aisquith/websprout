@@ -51,12 +51,13 @@ a{color:#4ade80;text-decoration:none}.muted{color:rgba(234,242,232,.38)}.err{col
 <h2>Activity log <span id="actCount" style="font-size:12px;color:rgba(234,242,232,.4);font-weight:400"></span></h2>
 <input id="actSearch" placeholder="Search email, country, city, event, source" style="width:100%;box-sizing:border-box;background:#0c1218;border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#eaf2e8;padding:9px 12px;font-size:13px;margin-bottom:8px;font-family:inherit"/>
 <div class="wrap"><table><thead><tr><th>When</th><th>Event</th><th>Location</th><th>User</th><th>Source</th><th>Device</th></tr></thead><tbody id="abody"><tr><td colspan="6" class="muted" style="padding:18px">Loading&hellip;</td></tr></tbody></table></div>
-<h2>Recent errors <span id="errCount" style="font-size:12px;color:rgba(234,242,232,.4);font-weight:400"></span></h2>
-<div class="wrap"><table><thead><tr><th>When</th><th>Where</th><th>Message</th><th>Build</th></tr></thead><tbody id="ebody"><tr><td colspan="4" class="muted" style="padding:18px">Loading&hellip;</td></tr></tbody></table></div>
+<h2>Errors on sites <span id="errCount" style="font-size:12px;color:rgba(234,242,232,.4);font-weight:400"></span> <button id="errClear" onclick="clearErrors()" style="display:none;margin-left:8px;background:none;border:1px solid rgba(255,255,255,.2);color:#eaf2e8;border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer">Clear all</button></h2>
+<div class="wrap"><table><thead><tr><th>Last seen</th><th>Where</th><th>Error and affected sites</th><th>Hits (24h / total)</th></tr></thead><tbody id="ebody"><tr><td colspan="4" class="muted" style="padding:18px">Loading&hellip;</td></tr></tbody></table></div>
 <script>
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function dt(ms){if(!ms)return '<span class="muted">&mdash;</span>';var d=new Date(ms);return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
 function card(n,l,cls){return '<div class="card '+(cls||'')+'"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>';}
+function clearErrors(){if(!confirm('Clear all logged errors?'))return;fetch('/admin/errors/clear',{method:'POST'}).then(function(r){return r.json();}).then(function(){load();});}
 function setPlan(email,plan){
   if(plan==='free'&&!confirm('Revoke Pro from '+email+'?'))return;
   fetch('/admin/grant?email='+encodeURIComponent(email)+'&plan='+plan).then(function(r){return r.text();}).then(function(){load();}).catch(function(){alert('Failed \u2014 try again');});
@@ -98,12 +99,13 @@ function load(){
       ib+='<tr><td class="muted" style="white-space:nowrap">'+dt(iv.ts)+'</td><td>'+(iv.desc?esc(iv.desc):'<span class="muted">&mdash;</span>')+'</td><td>'+icur+' '+((iv.amount||0)/100).toFixed(2)+'</td><td'+(iv.fee?' style="color:#4ade80"':' class="muted"')+'>'+(iv.fee?('$'+((iv.fee||0)/100).toFixed(2)):'&mdash;')+'</td><td class="muted">'+(iv.client?esc(iv.client):'&mdash;')+'</td></tr>';}
     document.getElementById('ibody').innerHTML=ib;
     var isub=document.getElementById('invSub');if(isub)isub.textContent=(t.invoices||0)+' created \u00b7 '+(t.feesOk?('$'+((t.feesCollected||0)/100).toFixed(2)+' collected'):('$'+((t.feeBilled||0)/100).toFixed(2)+' billed'));
-    var es=j.errors||[],eb='';
-    if(!es.length)eb='<tr><td colspan="4" class="muted" style="padding:18px">No errors reported \uD83C\uDF89</td></tr>';
-    for(var x=0;x<es.length;x++){var er=es[x];
-      eb+='<tr><td class="muted" style="white-space:nowrap">'+dt(er.ts)+'</td><td>'+esc(er.where||'')+'</td><td style="max-width:440px"><div style="color:#fca5a5;font-size:12px;word-break:break-word">'+esc(er.msg||'')+'</div>'+(er.url?'<div class="muted" style="font-size:11px;word-break:break-all">'+esc(er.url)+'</div>':'')+'</td><td class="muted" style="font-size:11px">'+esc(String(er.build||'').replace('2026-06-10-',''))+'</td></tr>';}
+    var gs=j.errorGroups||[],eb='';
+    if(!gs.length)eb='<tr><td colspan="4" class="muted" style="padding:18px">No errors reported \uD83C\uDF89</td></tr>';
+    for(var x=0;x<gs.length;x++){var er=gs[x];
+      eb+='<tr><td class="muted" style="white-space:nowrap">'+dt(er.last)+'</td><td>'+esc(er.where||'')+'</td><td style="max-width:480px"><div style="color:#fca5a5;font-size:12px;word-break:break-word">'+esc(er.msg||'')+(er.line?' <span class="muted">(line '+er.line+')</span>':'')+'</div>'+(er.sites&&er.sites.length?'<div class="muted" style="font-size:11px;word-break:break-all">'+er.sites.map(esc).join(', ')+'</div>':(er.url?'<div class="muted" style="font-size:11px;word-break:break-all">'+esc(er.url)+'</div>':''))+'</td><td style="white-space:nowrap'+(er.last24?';color:#fca5a5;font-weight:700':'')+'">'+er.last24+' / '+er.count+'</td></tr>';}
     document.getElementById('ebody').innerHTML=eb;
-    var ec=document.getElementById('errCount');if(ec)ec.textContent=es.length?('('+es.length+' most recent)'):'';
+    var ec=document.getElementById('errCount');if(ec)ec.textContent=gs.length?('('+gs.length+' distinct, '+((j.totals&&j.totals.errors24)||0)+' in the last 24h)'):'';
+    var cb=document.getElementById('errClear');if(cb)cb.style.display=gs.length?'':'none';
   }).catch(function(){document.getElementById('cards').innerHTML='<div class="err">Could not load \u2014 make sure you are signed in as the owner.</div>';});
 }
 document.getElementById('ubody').addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('button[data-act]');if(!b)return;var act=b.getAttribute('data-act');if(act==='plan')setPlan(b.getAttribute('data-email'),b.getAttribute('data-v'));else if(act==='dev')setDev(b.getAttribute('data-email'),b.getAttribute('data-v'));});
@@ -297,6 +299,46 @@ async function doAdminFunnel(request, env){
   const steps = FUNNEL_STEPS.map(function(st){ return { id: st[0], label: st[1], n: sets[st[0]].size }; });
   return succeed({ days: days, steps: steps, sources: bySrc });
 }
+// Client errors grouped by what went wrong, so one broken script on 30 sites reads as one row with 30 hits.
+function groupClientErrors(errors){
+  const now=Date.now(), map={};
+  (errors||[]).forEach(function(er){
+    if(!er||!er.msg) return;
+    const sig=(er.where||'')+'|'+String(er.msg).replace(/\d+/g,'#').slice(0,160);
+    let g=map[sig];
+    if(!g){ g=map[sig]={ msg:er.msg, where:er.where||'', count:0, last24:0, first:er.ts||0, last:er.ts||0, sites:[], url:er.url||'', src:er.src||'', line:er.line||0 }; }
+    g.count++; if(er.ts>now-86400000) g.last24++;
+    if(er.ts<g.first) g.first=er.ts; if(er.ts>g.last){ g.last=er.ts; g.url=er.url||g.url; }
+    let host=''; try{ const u=new URL(er.url); host=u.hostname+(u.hostname==='websprout.app'&&/^\/s\//.test(u.pathname)?u.pathname.split('/').slice(0,3).join('/'):''); }catch(e){}
+    if(host && g.sites.indexOf(host)===-1 && g.sites.length<8) g.sites.push(host);
+  });
+  return Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){ return (b.last24-a.last24)||(b.last-a.last); });
+}
+async function doAdminErrorsClear(request, env){
+  const s = await getSession(request, env);
+  if(!s || (s.email||'').toLowerCase() !== SUPPORT_EMAIL.toLowerCase()) return new Response(JSON.stringify({ error:'Not authorized' }), { status:403, headers:{ 'Content-Type':'application/json' } });
+  let n=0;
+  try{ let cur, g=0; do{ const r=await env.KV.list({ prefix:'clienterr:', cursor:cur, limit:1000 }); for(const k of r.keys){ await env.KV.delete(k.name); n++; } cur=r.list_complete?null:r.cursor; g++; }while(cur && g<10); }catch(e){}
+  return succeed({ ok:true, cleared:n });
+}
+// Daily: email the owner when errors appeared that were not there at the last alert.
+async function runErrorAlert(env){
+  try{
+    if(!env.KV || !env.RESEND_API_KEY) return;
+    const last=parseInt((await env.KV.get('erralert:last'))||'0',10)||0;
+    if(Date.now()-last < 20*3600000) return;
+    const r=await env.KV.list({ prefix:'clienterr:', limit:1000 });
+    const names=r.keys.map(function(k){return k.name;}).filter(function(nm){ return (parseInt(nm.split(':')[1],10)||0) > last; }).sort().reverse().slice(0,200);
+    await env.KV.put('erralert:last', String(Date.now()));
+    if(!names.length) return;
+    const errs=[]; for(const nm of names){ try{ errs.push(JSON.parse(await env.KV.get(nm)||'{}')); }catch(e){} }
+    const groups=groupClientErrors(errs);
+    const rows=groups.slice(0,10).map(function(g){ return '<tr><td style="padding:6px 10px;border-bottom:1px solid #eee;font-weight:700">'+g.count+'x</td><td style="padding:6px 10px;border-bottom:1px solid #eee">'+escHtml(g.msg)+'<div style="color:#888;font-size:12px">'+escHtml(g.where)+' &middot; '+escHtml(g.sites.join(', '))+'</div></td></tr>'; }).join('');
+    const html='<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:600px"><p>'+errs.length+' JavaScript error'+(errs.length===1?'':'s')+' were reported since the last alert ('+groups.length+' distinct):</p><table style="border-collapse:collapse;font-size:14px">'+rows+'</table><p><a href="https://websprout.app/admin">Open the admin dashboard</a></p></div>';
+    await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer '+env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[SUPPORT_EMAIL], subject:'Websprout: '+groups.length+' new error'+(groups.length===1?'':'s')+' on sites', html: html }) });
+  }catch(e){}
+}
+
 async function doAdminData(request, env){
   const s = await getSession(request, env);
   if(!s || (s.email||'').toLowerCase() !== SUPPORT_EMAIL.toLowerCase()) return new Response(JSON.stringify({ error:'Not authorized' }), { status:403, headers:{ 'Content-Type':'application/json' } });
@@ -337,9 +379,10 @@ async function doAdminData(request, env){
   users.sort((a,b)=>(b.created||0)-(a.created||0));
   pub.sort((a,b)=>(b.updated||0)-(a.updated||0));
   const errors=[];
-  try{ const r3=await env.KV.list({ prefix:'clienterr:', limit:1000 }); const names=r3.keys.map(function(k){return k.name;}).sort().reverse().slice(0,60); for(const nm of names){ try{ errors.push(JSON.parse(await env.KV.get(nm)||'{}')); }catch(e){} } }catch(e){}
+  try{ const r3=await env.KV.list({ prefix:'clienterr:', limit:1000 }); const names=r3.keys.map(function(k){return k.name;}).sort().reverse().slice(0,300); for(const nm of names){ try{ errors.push(JSON.parse(await env.KV.get(nm)||'{}')); }catch(e){} } }catch(e){}
+  const errorGroups=groupClientErrors(errors);
   let visits=0; try{ visits=parseInt(await env.KV.get('stat:visit')||'0',10)||0; }catch(e){}
-  return succeed({ totals:{ visits, visitConv: visits?Math.round(buildTotal/visits*1000)/10:0, accounts:users.length, paid, comped, pro:paid+comped, free, conversion: users.length?Math.round(paid/users.length*1000)/10:0, mrr: paid*10, published:pub.length, generations:buildTotal, leads:leadTotal, domains:domains.length, devs, signups7, errors:errors.length, invoices:invoices.length, invoiced:invTotal, feeBilled, feesCollected, feesCount, feesOk }, users, published:pub, errors, domains, invoices: invoices.slice(0,40) });
+  return succeed({ totals:{ visits, visitConv: visits?Math.round(buildTotal/visits*1000)/10:0, accounts:users.length, paid, comped, pro:paid+comped, free, conversion: users.length?Math.round(paid/users.length*1000)/10:0, mrr: paid*10, published:pub.length, generations:buildTotal, leads:leadTotal, domains:domains.length, devs, signups7, errors:errors.length, errors24: errorGroups.reduce(function(a,g){return a+g.last24;},0), invoices:invoices.length, invoiced:invTotal, feeBilled, feesCollected, feesCount, feesOk }, users, published:pub, errors: errors.slice(0,60), errorGroups: errorGroups.slice(0,40), domains, invoices: invoices.slice(0,40) });
 }
 async function doAdminPage(request, env){
   const s = await getSession(request, env);

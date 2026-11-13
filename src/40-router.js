@@ -13,6 +13,7 @@ export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(runWeeklyDigest(env));
     ctx.waitUntil(runNudges(env, false));
+    ctx.waitUntil(runErrorAlert(env));
   },
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -90,6 +91,7 @@ export default {
     // State-changing admin links: refuse requests triggered from another page (e.g. an <img> on a published *.websprout.app site)
     if ((url.pathname === '/admin/grant' || url.pathname === '/admin/feature' || url.pathname === '/admin/nudge') && ['same-origin', 'none', ''].indexOf(request.headers.get('sec-fetch-site') || '') === -1) return new Response('Forbidden', { status: 403 });
     if (url.pathname === '/admin/grant') return doAdminGrant(request, env);
+    if (url.pathname === '/admin/errors/clear' && request.method === 'POST') { if (['same-origin', 'none', ''].indexOf(request.headers.get('sec-fetch-site') || '') === -1) return new Response('Forbidden', { status: 403 }); return doAdminErrorsClear(request, env); }
     if (url.pathname === '/admin/feature') return doAdminFeature(request, env);
     if (url.pathname === '/showcase') return doShowcasePage(request, env);
     if (url.pathname === '/showcase/data') return doShowcaseData(env);

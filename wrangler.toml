@@ -30,3 +30,7 @@ id = "f5def57998654229973b809dd4f3a463"
 # GODADDY_SECRET, GODADDY_AFFILIATE) are NOT listed here. Keep them in the
 # Cloudflare dashboard (Settings -> Variables and Secrets) — they persist
 # across deploys and stay encrypted.
+
+[triggers]
+# Daily: weekly lead digest (self-limits to once every 6 days), sign-up nudges, error alert to the owner.
+crons = ["0 15 * * *"]
