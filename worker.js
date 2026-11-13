@@ -1377,9 +1377,9 @@ const PAGE = `<!DOCTYPE html>
 <meta name="keywords" content="website builder, free website builder, small business website, instant website, no-code website, website maker, make a website, local business website">
 <meta name="author" content="Websprout">
 <meta name="theme-color" content="#060d05">
-<meta name="ws-build" content="2026-11-12-r314">
+<meta name="ws-build" content="2026-11-12-r315">
 <script src="/ws-engine.js" defer></script>
-<script>window._wsBuild="2026-11-12-r314";console.log("%c[Websprout] build 2026-11-12-r314 — fully no-AI: deterministic creation + structured visual editor (fields, sections, palette); Gemini generation and chat editing removed","color:#4ade80;font-weight:700")</script>
+<script>window._wsBuild="2026-11-12-r315";console.log("%c[Websprout] build 2026-11-12-r315 — fully no-AI: deterministic creation + structured visual editor (fields, sections, palette); Gemini generation and chat editing removed","color:#4ade80;font-weight:700")</script>
 <style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}</style>
 <script>
 window.wsConfirm=function(opts){
@@ -4103,6 +4103,27 @@ function bumpEditCount(){
   if(el){el.textContent=editCount+' edit'+(editCount===1?'':'s');el.style.display='inline';}
 }
 
+// True content height of a preview document: the lowest bottom edge among the body's own children,
+// ignoring scripts/styles and position:fixed chrome. Immune to the iframe's placeholder height.
+function wsFrameContentH(d){
+  try{
+    var max=0,kids=d.body.children;
+    for(var i=0;i<kids.length;i++){
+      var el=kids[i];var tn=el.tagName;
+      if(tn==='SCRIPT'||tn==='STYLE'||tn==='LINK')continue;
+      var cs=el.ownerDocument.defaultView.getComputedStyle(el);
+      if(cs&&cs.position==='fixed')continue;
+      var r=el.getBoundingClientRect();
+      if(r.height>0&&r.bottom>max)max=r.bottom;
+    }
+    return Math.ceil(max)||d.body.scrollHeight||0;
+  }catch(e){return (d&&d.body&&d.body.scrollHeight)||0;}
+}
+// Continuous resize: the preview posts its height on any layout change (edits, page switches); fit to it.
+if(!window._wsHWired){window._wsHWired=true;window.addEventListener('message',function(ev){
+  var m=ev&&ev.data;if(!m||typeof m.wsH!=='number')return;
+  var f=document.getElementById('pf');if(f&&m.wsH>80)f.style.height=(m.wsH+24)+'px';
+});}
 function setPreview(html){
   var f=document.getElementById('pf');if(!f||!html)return;
   // Keep the studio top-bar title in sync with the site's current <title> (renames, edits, etc.)
@@ -4254,6 +4275,13 @@ function setPreview(html){
     // Never let a form submission navigate the preview away (it was loading the whole app inside the preview)
     'document.addEventListener(\"submit\",function(e){e.preventDefault();},true);'+
 
+    // Auto-resize: report true content height to the parent on any layout change (edits, page switches).
+    'function wsCH(){try{var max=0,kids=document.body.children;for(var i=0;i<kids.length;i++){var el=kids[i],tn=el.tagName;if(tn===\"SCRIPT\"||tn===\"STYLE\"||tn===\"LINK\")continue;var cs=getComputedStyle(el);if(cs&&cs.position===\"fixed\")continue;var r=el.getBoundingClientRect();if(r.height>0&&r.bottom>max)max=r.bottom;}return Math.ceil(max)||document.body.scrollHeight||0;}catch(e){return document.body.scrollHeight||0;}}'+
+    'var _wsLH=0;function wsPostH(){try{var h=wsCH();if(h>60&&Math.abs(h-_wsLH)>1){_wsLH=h;parent.postMessage({wsH:h},\"*\");}}catch(e){}}'+
+    'if(window.ResizeObserver){try{new ResizeObserver(wsPostH).observe(document.body);}catch(e){}}'+
+    'window.addEventListener(\"load\",wsPostH);window.addEventListener(\"hashchange\",function(){setTimeout(wsPostH,60);setTimeout(wsPostH,450);});'+
+    'setTimeout(wsPostH,80);setTimeout(wsPostH,400);setTimeout(wsPostH,1000);setTimeout(wsPostH,2200);'+
+
   '</sc'+'ript>';
   // Use lastIndexOf to find the REAL </body> — not one inside a JS string
   function wsRenderProducts(list){var esc=function(x){x=String(x==null?"":x);return x.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;").split(String.fromCharCode(34)).join("&quot;");};var css='<style>.wsp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:22px;max-width:1100px;margin:0 auto;padding:8px 0}.wsp-card{border:1px solid rgba(128,128,128,.18);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;background:rgba(128,128,128,.04)}.wsp-img{aspect-ratio:4/3;background-size:cover;background-position:center}.wsp-noimg{background:linear-gradient(135deg,rgba(128,128,128,.12),rgba(128,128,128,.05))}.wsp-body{padding:16px;display:flex;flex-direction:column;gap:6px}.wsp-name{font-weight:700;font-size:1.05rem}.wsp-price{font-weight:700;opacity:.85}.wsp-desc{font-size:.9rem;opacity:.7;line-height:1.5}.wsp-buy{margin-top:8px;display:inline-block;text-align:center;padding:10px 16px;border:1px solid currentColor;border-radius:10px;text-decoration:none;color:inherit;font-weight:600}.wsp-tabs{position:relative;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:1100px;margin:0 auto 26px;padding-bottom:12px}.wsp-tab{background:none;border:none;font:inherit;font-weight:700;font-size:.9rem;letter-spacing:.03em;text-transform:uppercase;color:inherit;opacity:.45;cursor:pointer;padding:6px 14px;transition:opacity .2s}.wsp-tab.wsp-tab-on{opacity:1}.wsp-tab-ind{position:absolute;bottom:0;height:2px;background:currentColor;border-radius:2px;transition:left .28s ease,width .28s ease;left:0;width:0}</style>';if(!list||!list.length){return css+'<div style="text-align:center;opacity:.55;padding:44px 0;font-size:1rem">Your products show here - add them from the Manage menu (Products &amp; cart).</div>';}var cards="";for(var i=0;i<list.length;i++){var p=list[i]||{};var img=p.img?('<div class="wsp-img" style="background-image:url('+esc(p.img)+')"></div>'):'<div class="wsp-img wsp-noimg"></div>';var price=p.price?('<div class="wsp-price">'+esc(p.price)+'</div>'):"";var desc=p.desc?('<div class="wsp-desc">'+esc(p.desc)+'</div>'):"";var pu=String(p.payUrl||"");var buy=(pu.indexOf("https://")===0)?('<a class="wsp-buy" href="'+esc(pu)+'" target="_blank" rel="noopener">Buy now</a>'):('<button class="wsp-buy" type="button" onclick="if(window.wsAddToCart)wsAddToCart('+i+')">Add to cart</button>');cards+='<div class="wsp-card" data-category="'+esc(p.category||"")+'">'+img+'<div class="wsp-body"><div class="wsp-name">'+esc(p.name||"Product")+'</div>'+price+desc+buy+'</div></div>';}var _cats=[];for(var _ci=0;_ci<list.length;_ci++){var _cc=String((list[_ci]||{}).category||"").trim();if(_cc&&_cats.indexOf(_cc)<0)_cats.push(_cc);}var _tabs="";if(_cats.length>=2){_tabs='<div class="wsp-tabs"><button type="button" class="wsp-tab wsp-tab-on" data-cat="">All</button>';for(var _ti=0;_ti<_cats.length;_ti++){_tabs+='<button type="button" class="wsp-tab" data-cat="'+esc(_cats[_ti])+'">'+esc(_cats[_ti])+'</button>';}_tabs+='<span class="wsp-tab-ind"></span></div>';}return css+_tabs+'<div class="wsp-grid">'+cards+'</div>';}
@@ -4272,16 +4300,14 @@ function setPreview(html){
     try{
       var d=f.contentDocument||f.contentWindow.document;
       if(d&&d.body){
-        var sh=Math.max(d.documentElement.scrollHeight,d.body.scrollHeight);
-        var lb=0,kids=d.body.children;
-        for(var ki=kids.length-1;ki>=0;ki--){var kr=kids[ki].getBoundingClientRect();if(kr.height>0){lb=Math.ceil(kr.bottom);break;}}
-        var h=(lb>200&&lb<=sh)?lb:sh;
-        if(h>200){
-          // Hide skeleton once content is ready
+        // Measure the true content height from the bottom edge of the body's own children. This is
+        // immune to the 4000px placeholder inflating documentElement.scrollHeight on short pages.
+        var h=wsFrameContentH(d);
+        if(h>120){
           var skel=document.getElementById('skelWrap');
           if(skel){skel.classList.remove('show');setStudioReady(true);}
         }
-        if(h>200&&h!==lastH){
+        if(h>80&&h!==lastH){
           lastH=h;
           f.style.height=(h+24)+'px';
         }
@@ -9579,7 +9605,7 @@ async function doAdminGrant(request, env){
   const body = '\u2713 ' + target + ' is now ' + (plan==='pro' ? 'PRO \uD83C\uDF89' : 'Free') + '.\n\nRefresh Websprout (or sign out and back in) to see it.\n\nTo revoke: add &plan=free to this URL.';
   return new Response(body, { headers:{ 'Content-Type':'text/plain; charset=utf-8' } });
 }
-const BUILD_ID = '2026-11-12-r314';
+const BUILD_ID = '2026-11-12-r315';
 const DEV_PANEL = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Websprout Developer</title>
