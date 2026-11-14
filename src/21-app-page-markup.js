@@ -98,10 +98,6 @@
           <div class="field-lbl">A few details <span style="color:rgba(255,255,255,.55);font-weight:400">(optional)</span></div>
           <textarea id="customPrompt" aria-label="A few details about your business" class="dark-input" rows="3" placeholder="What you offer, what makes you different, and the feel you want. A sentence or two is plenty."></textarea>
         </div>
-        <div style="margin-top:14px">
-          <div class="field-lbl">Services &amp; prices <span style="color:rgba(255,255,255,.55);font-weight:400">(optional, one per line)</span></div>
-          <textarea id="bizServices" aria-label="Your services and prices, one per line" class="dark-input" rows="3" placeholder="Skin fade - $30&#10;Beard trim - $15&#10;Kids cut - $20"></textarea>
-        </div>
         <div class="detail-grid" style="margin-top:14px">
           <div>
             <div class="field-lbl">City <span style="color:rgba(255,255,255,.55);font-weight:400">(optional)</span></div>
