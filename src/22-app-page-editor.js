@@ -666,7 +666,8 @@ document.addEventListener('DOMContentLoaded',function(){
   });
 
   // -- SEO Editor ------------------------------------------------
-  document.getElementById('seoBtn').addEventListener('click',function(){
+  document.getElementById('seoBtn').addEventListener('click',function(e){
+    if(window._wsSiteData&&window.wsOpenSiteSection){e.stopImmediatePropagation();wsOpenSiteSection('wseSeo','#wseSeoDesc');return;}
     if(!gHTML){toast('Generate a site first!');return;}
     // Extract title using string search
     var tStart=gHTML.indexOf('<title>'),tEnd=gHTML.indexOf('</title>');
@@ -1600,30 +1601,102 @@ function wsAddPagePicker(anchor){
 }
 // Manage toolbar inside the editor — mirrors the (now-removed) top-bar "Manage" menu by triggering the
 // same hidden handler buttons, so site-wide tools live in the edit bar instead of a separate top dropdown.
-function wsRenderManage(pad){
-  var menu=document.getElementById('toolsMenu');if(!menu)return;
-  var shortMap={yourInfoBtn:'Your info',seoBtn:'SEO',leadsBtn:'Leads',statsBtn:'Analytics',postBtn:'Marketing',payBtn:'Payments',invoiceBtn:'Invoice',regenBtn:'Redesign',backBtn:'Start over'};
-  var items=menu.querySelectorAll('.gs-item');var list=[];
-  for(var i=0;i<items.length;i++){
-    var it=items[i];
-    if(it.style.display==='none')continue;
-    var tool=it.getAttribute('data-tool')||'';
-    if(tool==='sectionsBtn')continue; // sections are edited inline below
-    var raw=((it.firstChild&&it.firstChild.textContent)||'').replace(/\\s+/g,' ').trim();
-    var sp=raw.indexOf(' ');var emoji=sp>0?raw.slice(0,sp):'';var rest=sp>0?raw.slice(sp+1):raw;
-    var name=shortMap[tool]||((/Products/.test(rest))?'Products':rest);
-    list.push({it:it,tool:tool,label:(emoji?emoji+' ':'')+name,danger:(tool==='backBtn')});
-  }
-  if(!list.length)return;
-  pad.appendChild(wseEl('div','wse-label','Manage'));
-  var g=wseEl('div','wse-manage');
-  list.forEach(function(o){
-    var b=wseEl('button','wse-mbtn'+(o.danger?' danger':''),o.label);b.type='button';
-    // Trigger the hidden handler button directly (data-tool target), or the menu item's own onclick.
-    b.addEventListener('click',function(){try{var t=o.tool&&document.getElementById(o.tool);if(t)t.click();else o.it.click();}catch(e){}});
-    g.appendChild(b);
-  });
-  pad.appendChild(g);
+// ---- Site tab sections ------------------------------------------------------------------------------
+// Everything about the site as a whole lives here, in the panel, in one consistent style: collapsible
+// sections whose header shows their status, so owners can see at a glance what's done and what isn't.
+window._wsDetOpen=window._wsDetOpen||{};
+function wsDet(pad,id,title,status,kind){
+  var det=document.createElement('details');det.className='wse-det';det.id=id;if(window._wsDetOpen[id])det.open=true;
+  var sm=document.createElement('summary');sm.appendChild(wseEl('span','wse-sum-t',title));
+  if(status){var st=wseEl('span','wse-st'+(kind?' '+kind:''),status);st.setAttribute('data-st','1');sm.appendChild(st);}
+  det.appendChild(sm);var box=wseEl('div','wse-detb');det.appendChild(box);
+  det.addEventListener('toggle',function(){window._wsDetOpen[id]=det.open;});
+  pad.appendChild(det);return {det:det,box:box,sum:sm};
+}
+function wsSetDetStatus(d,text,kind){var st=d.sum.querySelector('[data-st]');if(!st){st=wseEl('span','wse-st');st.setAttribute('data-st','1');d.sum.appendChild(st);}st.className='wse-st'+(kind?' '+kind:'');st.textContent=text;}
+// Open a Site tab section from anywhere (checklist "Fix", tools) and bring it into view.
+window.wsOpenSiteSection=function(id,focusSel){window.wsPanelTab='site';window._wsDetOpen[id]=true;wsOpenEditor();setTimeout(function(){var d=document.getElementById(id);if(d){d.open=true;d.scrollIntoView({block:'start',behavior:'smooth'});var f=focusSel&&d.querySelector(focusSel);if(f)try{f.focus({preventScroll:true});}catch(e){f.focus();}}},60);};
+function wsSiteUrl(){var slug=window._wsSlug||'';try{slug=slug||localStorage.getItem('ws_slug_'+(window._wsSite||localStorage.getItem('ws_site')||''))||'';}catch(e){}return slug?(slug+'.websprout.app'):'yourname.websprout.app';}
+function wsDefaultSeoTitle(b){return (b.name||'Your business')+(b.city?' | '+(b.type||'Local business')+' in '+b.city:'');}
+// A first draft of the search description, written from what the owner has already filled in.
+function wsDraftSeoDesc(){
+  var sd=window._wsSiteData||{},b=sd.biz||{};var name=b.name||'We';var type=String(b.type||'local business').toLowerCase();
+  var svc=[];wsAllSections().forEach(function(s){if(s.type==='services'&&!svc.length)(s.items||[]).forEach(function(it){if(it&&it.name&&svc.length<3)svc.push(String(it.name).toLowerCase());});});
+  var first=name+' is '+(/^[aeiou]/.test(type)?'an ':'a ')+type+(b.city?' in '+b.city:'')+(svc.length?', offering '+(svc.length>1?svc.slice(0,-1).join(', ')+' and '+svc[svc.length-1]:svc[0]):'')+'.';
+  var act=b.phone?' Book online or call '+b.phone+'.':' Get in touch or book online today.';
+  var out=first+act;if(out.length>160)out=first;if(out.length>160)out=first.slice(0,157).replace(/[ ,]+[^ ]*$/,'')+'...';return out;
+}
+function wsRenderSeo(pad){
+  var sd=window._wsSiteData,b=sd.biz=sd.biz||{};
+  var di=null;var descNow=function(){return (di&&di.value.trim())||b.seoDescription||b.tagline||'';};
+  var stat=function(){var n=descNow().length;return n>=50&&n<=160?['Ready','ok']:(n?['Description too '+(n<50?'short':'long'),'warn']:['Needs a description','warn']);};
+  var s0=stat();var d=wsDet(pad,'wseSeo','Search & sharing',s0[0],s0[1]);var box=d.box;
+  box.appendChild(wseEl('div','wse-hint','How your site appears on Google, and when someone shares your link in a text or on social media.'));
+  var counter=function(input,lo,hi){var c=wseEl('div','wse-count');var up=function(){var n=input.value.length||input.placeholder.length;c.textContent=(input.value?n:0)+' characters'+(lo?' (aim for '+lo+' to '+hi+')':' (aim for under '+hi+')');c.className='wse-count'+(input.value&&((lo&&n<lo)||n>hi)?' warn':'');};input.addEventListener('input',up);up();return c;};
+  // Title
+  var w1=wseEl('div','wse-ctl');w1.appendChild(wseEl('div','wse-ctl-label','Search title'));
+  var ti=document.createElement('input');ti.className='wse-field';ti.id='wseSeoTitle';ti.value=b.seoTitle||'';ti.placeholder=wsDefaultSeoTitle(b);ti.setAttribute('aria-label','Search title');w1.appendChild(ti);w1.appendChild(counter(ti,0,60));box.appendChild(w1);
+  // Description
+  var w2=wseEl('div','wse-ctl');var lr=wseEl('div','wse-ctl-row');lr.appendChild(wseEl('div','wse-ctl-label','Search description'));
+  var wr=wseEl('button','wse-link go','Write it for me');wr.type='button';lr.appendChild(wr);w2.appendChild(lr);
+  di=document.createElement('textarea');di.className='wse-field';di.id='wseSeoDesc';di.rows=5;di.value=b.seoDescription||'';di.placeholder=b.tagline||'One or two sentences about what you do and where.';di.setAttribute('aria-label','Search description');w2.appendChild(di);w2.appendChild(counter(di,50,160));box.appendChild(w2);
+  // Previews
+  box.appendChild(wseEl('div','wse-ctl-label','Google preview'));
+  var g=wseEl('div','wse-gprev');var gu=wseEl('div','wse-gprev-url',wsSiteUrl());var gt=wseEl('div','wse-gprev-t');var gd=wseEl('div','wse-gprev-d');g.appendChild(gu);g.appendChild(gt);g.appendChild(gd);box.appendChild(g);
+  box.appendChild(wseEl('div','wse-ctl-label','Shared link preview'));
+  var hero=null;wsAllSections().some(function(s){if(s.type==='hero'){hero=s;return true;}return false;});var img=hero&&(sd.photos||{})[hero.id+'.photo'];
+  var sp=wseEl('div','wse-sprev');var spi=wseEl('div','wse-sprev-img');if(img)spi.style.backgroundImage='url("'+String(img).split('"').join('%22')+'")';else spi.appendChild(wseEl('span',null,'Add a photo to the top of your home page to show it here'));
+  var spb=wseEl('div','wse-sprev-b');var spu=wseEl('div','wse-sprev-u',wsSiteUrl());var spt=wseEl('div','wse-sprev-t');var spd=wseEl('div','wse-sprev-d');spb.appendChild(spu);spb.appendChild(spt);spb.appendChild(spd);sp.appendChild(spi);sp.appendChild(spb);box.appendChild(sp);
+  var paint=function(){var T=ti.value.trim()||ti.placeholder;var D=di.value.trim()||b.tagline||'Add a description so people know what you do before they click.';gt.textContent=T.length>60?T.slice(0,59)+'...':T;gd.textContent=D.length>160?D.slice(0,159)+'...':D;spt.textContent=T;spd.textContent=D.length>110?D.slice(0,109)+'...':D;var s=stat();wsSetDetStatus(d,s[0],s[1]);};
+  var tm;var save=function(){clearTimeout(tm);tm=setTimeout(function(){var T=ti.value.trim(),D=di.value.trim();if(T)b.seoTitle=T.slice(0,90);else delete b.seoTitle;if(D)b.seoDescription=D.slice(0,300);else delete b.seoDescription;wsRerender();},450);paint();};
+  ti.addEventListener('input',save);di.addEventListener('input',save);
+  wr.addEventListener('click',function(){di.value=wsDraftSeoDesc();di.dispatchEvent(new Event('input'));di.focus();});
+  paint();
+  box.appendChild(wseEl('div','wse-hint wse-tip','Tip: mention what you do and where, the way a customer would search for it. Each page also gets its own title automatically.'));
+}
+function wsRenderLeadsCard(pad){
+  var sid=window._wsSite||localStorage.getItem('ws_site')||'',key=window._wsKey||localStorage.getItem('ws_key')||'';
+  var d=wsDet(pad,'wseLeads','Leads & visitors','','');var box=d.box;
+  if(!sid||!key){wsSetDetStatus(d,'After saving','');box.appendChild(wseEl('div','wse-hint','Messages from your contact and booking forms, and visitor numbers, appear here once your site is saved and published.'));return;}
+  box.appendChild(wseEl('div','wse-hint','Loading...'));
+  fetch('/api/inbox?site='+encodeURIComponent(sid)+'&key='+encodeURIComponent(key)).then(function(r){return r.json();}).then(function(j){
+    box.innerHTML='';if(!j||j.error){box.appendChild(wseEl('div','wse-hint','Leads aren’t available right now.'));return;}
+    var subs=j.submissions||[];var fresh=subs.filter(function(s){return !s.status||s.status==='new';}).length;
+    wsSetDetStatus(d,fresh?fresh+' new':(subs.length?subs.length+' total':'None yet'),fresh?'new':'');
+    var tiles=wseEl('div','wse-tiles');[[j.week||0,'Visits this week'],[j.total||0,'Total visits'],[subs.length,'Leads']].forEach(function(x){var tl=wseEl('div','wse-tile');tl.appendChild(wseEl('b',null,String(x[0])));tl.appendChild(wseEl('span',null,x[1]));tiles.appendChild(tl);});box.appendChild(tiles);
+    if(subs.length){box.appendChild(wseEl('div','wse-ctl-label','Latest'));var ul=wseEl('div','wse-recent');subs.slice(0,3).forEach(function(s){var f=s.fields||{};var who='';for(var k in f){if(/name/i.test(k)&&f[k]){who=f[k];break;}}if(!who)for(var k2 in f){if(/mail|phone/i.test(k2)&&f[k2]){who=f[k2];break;}}var row=wseEl('div','wse-recent-r');row.appendChild(wseEl('span',null,String(who||'New message').slice(0,40)));var ago=Math.round((Date.now()-(s.ts||0))/86400000);row.appendChild(wseEl('span','wse-recent-t',ago<1?'today':ago===1?'yesterday':ago+' days ago'));ul.appendChild(row);});box.appendChild(ul);}
+    else box.appendChild(wseEl('div','wse-hint','No messages yet. Once your site is live, every form your visitors send lands here.'));
+    var me=window._wsUser||{};
+    var open=wseEl('button','wse-btn wse-wide',me.auth?'Open Leads inbox':'Sign in to reply to leads');open.type='button';open.style.marginTop='12px';
+    open.addEventListener('click',function(){if(me.auth)window.open('/leads','_blank','noopener');else{var a=document.getElementById('acctBtn');if(a)a.click();}});box.appendChild(open);
+    box.appendChild(wseEl('div','wse-hint wse-tip',me.auth?'Reply from your own email or phone, and see leads from all your sites in one place.':'Your Leads inbox lets you reply from your own email or phone.'));
+    // Alerts and auto-reply
+    var w=wseEl('div','wse-ctl');w.appendChild(wseEl('div','wse-ctl-label','Email me when a lead arrives'));var r=wseEl('div','wse-row');var ni=document.createElement('input');ni.className='wse-field';ni.type='email';ni.placeholder='you@example.com';ni.value=j.notify||'';ni.setAttribute('aria-label','Email for new lead alerts');var nb=wseEl('button','wse-savebtn','Save');nb.type='button';r.appendChild(ni);r.appendChild(nb);w.appendChild(r);box.appendChild(w);
+    nb.addEventListener('click',function(){fetch('/api/inbox/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:sid,key:key,email:ni.value.trim()})}).then(function(x){return x.json();}).then(function(z){try{toast(z&&z.error?z.error:(ni.value.trim()?'Lead alerts will go to '+ni.value.trim():'Lead alerts turned off'),2600);}catch(e){}});});
+    var ar=document.createElement('label');ar.className='wse-check';var cb=document.createElement('input');cb.type='checkbox';cb.checked=j.autoreply!==false;ar.appendChild(cb);ar.appendChild(document.createTextNode(' Send people an automatic “thanks, we got your message” email'));box.appendChild(ar);
+    cb.addEventListener('change',function(){fetch('/api/inbox/autoreply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:sid,key:key,on:cb.checked})}).then(function(){try{toast(cb.checked?'Auto-reply on':'Auto-reply off',2000);}catch(e){}});});
+  }).catch(function(){box.innerHTML='';box.appendChild(wseEl('div','wse-hint','Leads aren’t available right now.'));});
+}
+// Tool rows: one consistent style for actions that open a tool.
+function wsToolRow(box,o){var b=wseEl('button','wse-trow'+(o.danger?' danger':''));b.type='button';var ic=wseEl('span','wse-trow-ic');ic.innerHTML=o.icon;b.appendChild(ic);var tx=wseEl('span','wse-trow-tx');tx.appendChild(wseEl('b',null,o.title));tx.appendChild(wseEl('span',null,o.desc));b.appendChild(tx);b.appendChild(wseEl('span','wse-trow-go','›'));b.addEventListener('click',o.run);box.appendChild(b);return b;}
+var WS_TI={
+  pen:'<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
+  cart:'<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2.5l2.4 11.2a1.5 1.5 0 0 0 1.5 1.2h8.4a1.5 1.5 0 0 0 1.5-1.2L21 8H6.3"/></svg>',
+  inv:'<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>',
+  shuffle:'<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3a5 5 0 0 1 4 2l4 6a5 5 0 0 0 4 2h3"/><path d="M3 17h3a5 5 0 0 0 4-2"/><path d="M17 4l3 3-3 3M17 14l3 3-3 3"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'
+};
+function wsRenderGrow(pad){
+  var menu=document.getElementById('toolsMenu');var vis=function(tool){var it=menu&&menu.querySelector('[data-tool="'+tool+'"]');return !it||it.style.display!=='none';};
+  pad.appendChild(wseEl('div','wse-label','Grow your business'));var box=wseEl('div','wse-tools');pad.appendChild(box);
+  wsToolRow(box,{icon:WS_TI.pen,title:'Marketing copy',desc:'Social posts, promos and emails written from your site',run:function(){if(window.openPost)window.openPost();}});
+  if(window.wsOpenProducts)wsToolRow(box,{icon:WS_TI.cart,title:'Products & cart',desc:'Sell products with a cart and online checkout',run:function(){window.wsOpenProducts();}});
+  var inv=document.getElementById('invoiceMenuItem');if(inv&&inv.style.display!=='none')wsToolRow(box,{icon:WS_TI.inv,title:'Send an invoice',desc:'Email a customer a secure payment link',run:function(){var x=document.getElementById('invoiceBtn');if(x)x.click();}});
+}
+function wsRenderStartFresh(pad){
+  pad.appendChild(wseEl('div','wse-label','Start fresh'));var box=wseEl('div','wse-tools');pad.appendChild(box);
+  wsToolRow(box,{icon:WS_TI.shuffle,title:'New look',desc:'New colors and fonts. Your words and photos stay.',run:function(){var x=document.getElementById('regenBtn');if(x)x.click();}});
+  wsToolRow(box,{icon:WS_TI.plus,title:'Start a new site',desc:'This one stays saved in My sites.',danger:true,run:function(){if(window.wsStartNewSite)wsStartNewSite();}});
 }
 // ---- Click-to-edit in the preview (structured sites) ---------------------------------------------
 // Text you click in the preview is edited in place and written straight back to the site data, so it
@@ -1868,8 +1941,8 @@ function wsBizField(box,label,key,ph,type){
 }
 function wsRenderBizInfo(pad,open){
   var sd=window._wsSiteData;var b=sd.biz=sd.biz||{};
-  var det=document.createElement('details');det.className='wse-det';det.id='wseBizInfo';if(open)det.open=true;
-  var sm=document.createElement('summary');sm.textContent='Business info';det.appendChild(sm);
+  var det=document.createElement('details');det.className='wse-det';det.id='wseBizInfo';if(open)det.open=true;det.addEventListener('toggle',function(){window._wsDetOpen.wseBizInfo=det.open;});
+  var sm=document.createElement('summary');sm.appendChild(wseEl('span','wse-sum-t','Business info'));var _bst=(b.phone||b.email)&&(b.address||b.city);var _bse=wseEl('span','wse-st'+(_bst?' ok':' warn'),_bst?'Done':'Add contact details');_bse.setAttribute('data-st','1');sm.appendChild(_bse);det.appendChild(sm);
   var box=wseEl('div','wse-detb');
   box.appendChild(wseEl('div','wse-hint','Used everywhere on your site: header, footer, contact page, buttons and search results.'));
   wsBizField(box,'Business name','name','Your business name');
@@ -1946,7 +2019,7 @@ function wsSiteChecks(){
     {id:'where',label:'Where you are (address or city)',ok:!!(b.address||b.city),pts:15,fix:openBiz},
     {id:'hours',label:'Opening hours',ok:(b.hours||[]).some(function(h){return h&&h.open;}),pts:10,fix:openBiz,optional:true},
     {id:'photo',label:'A photo at the top of your home page',ok:!!(hero&&photos[hero.id+'.photo']),pts:10,fix:function(){if(hero){window.wsPanelTab='edit';window._wsPageIdx=0;wsGotoPreviewPage('');openSlotPicker(hero.id+'.photo','your home page');}}},
-    {id:'seo',label:'A search description (50-160 characters)',ok:desc.length>=50&&desc.length<=160,pts:15,fix:function(){var s=document.getElementById('seoBtn');if(s)s.click();}},
+    {id:'seo',label:'A search description (50-160 characters)',ok:desc.length>=50&&desc.length<=160,pts:15,fix:function(){wsOpenSiteSection('wseSeo','#wseSeoDesc');}},
     {id:'words',label:'Enough words on your home page (300+)',ok:words>=300,pts:10,fix:null,info:words+' words now. Add detail to your services and About page.'},
     {id:'live',label:'Published online',ok:!!slug,pts:15,fix:function(){var p=document.getElementById('publishBtn')||document.getElementById('getSiteBtn');if(p)p.click();}},
   ];
@@ -2058,7 +2131,7 @@ function wsOpenEditor(){
     b.addEventListener('click',function(){window.wsPanelTab=t[0];wsOpenEditor();});tabs.appendChild(b);
   });
   pad.appendChild(tabs);
-  if(tab==='site'){wsRenderChecklist(pad);wsRenderBizInfo(pad,!!window._wsOpenBiz);window._wsOpenBiz=false;wsRenderPayments(pad);wsRenderVersions(pad);wsRenderManage(pad);}
+  if(tab==='site'){wsRenderChecklist(pad);wsRenderBizInfo(pad,!!window._wsOpenBiz||!!window._wsDetOpen.wseBizInfo);window._wsOpenBiz=false;wsRenderSeo(pad);wsRenderLeadsCard(pad);wsRenderGrow(pad);wsRenderPayments(pad);wsRenderVersions(pad);wsRenderStartFresh(pad);}
   if(tab==='design'){wsRenderDesign(pad);}
   if(false){
   pad.appendChild(wseEl('div','wse-label','Theme'));

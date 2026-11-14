@@ -137,6 +137,42 @@ module.exports = async function (ctx, t) {
     await h.close();
   }
 
+  // Site tab: settings, search, leads and tools live in the panel, in one style, with clear status
+  {
+    const s = await openPage(browser, {}); await s.setViewport({ width: 1440, height: 1000 });
+    await openStudioWith(s, base, 'Glow Salon', 'Hair salon', { city: 'Austin', phone: '(512) 555-0100' });
+    await waitFor(async () => s.evaluate(() => !document.getElementById('qaScreen').classList.contains('on')), 8000);
+    await s.evaluate(() => { window.wsPanelTab = 'site'; wsOpenEditor(); }); await sleep(600);
+    const layout = await s.evaluate(() => ({
+      dets: [...document.querySelectorAll('details.wse-det')].map((d) => d.id + ':' + (d.querySelector('[data-st]') || { textContent: '' }).textContent),
+      labels: [...document.querySelectorAll('.wse-label')].map((l) => l.textContent),
+      tools: [...document.querySelectorAll('.wse-trow b')].map((b) => b.textContent),
+      oldPills: document.querySelectorAll('.wse-mbtn').length,
+    }));
+    t.ok(/^wseBizInfo:Done,wseSeo:Needs a description,wseLeads:/.test(layout.dets.join(',')), 'Site tab: Business info, Search & sharing and Leads sections show their status ' + layout.dets.join(','));
+    t.ok(layout.tools.includes('Marketing copy') && layout.tools.includes('New look') && layout.tools.includes('Start a new site') && layout.oldPills === 0, 'tools are clear labelled rows, not a grid of emoji buttons ' + layout.tools.join(','));
+    t.ok(layout.labels.indexOf('Grow your business') > -1 && layout.labels.indexOf('Start fresh') === layout.labels.length - 1, 'Start fresh sits apart, at the bottom ' + layout.labels.join(','));
+    // checklist "Fix" opens the search section in the panel, ready to type
+    await s.evaluate(() => { const row = [...document.querySelectorAll('.wse-ck, [class*=check] li, .wse-cl-row, div')].find((x) => /A search description/.test(x.textContent) && x.querySelector && [...x.querySelectorAll('button')].some((b) => /Fix/.test(b.textContent)) && x.textContent.length < 120); [...row.querySelectorAll('button')].find((b) => /Fix/.test(b.textContent)).click(); }); await sleep(500);
+    t.ok(await s.evaluate(() => document.getElementById('wseSeo').open && document.activeElement && document.activeElement.id === 'wseSeoDesc' && !document.querySelector('#seoModal.on')), 'checklist Fix opens Search & sharing in the panel with the description focused (no pop-up)');
+    await s.type('#wseSeoDesc', 'Relaxed hair salon in Austin for cuts, color and balayage. Book online or call us today.'); await sleep(700);
+    const seo = await s.evaluate(() => ({ data: window._wsSiteData.biz.seoDescription, st: document.querySelector('#wseSeo [data-st]').textContent, prev: document.querySelector('.wse-gprev-d').textContent, html: /<meta name="description" content="Relaxed hair salon/.test(gHTML) }));
+    t.ok(/^Relaxed hair salon/.test(seo.data || '') && seo.st === 'Ready' && /^Relaxed hair salon/.test(seo.prev) && seo.html, 'typing a description saves it, updates the Google preview and the status ' + JSON.stringify(seo));
+    await s.evaluate(() => { const d = document.getElementById('wseSeoDesc'); d.value = ''; d.dispatchEvent(new Event('input')); [...document.querySelectorAll('#wseSeo .wse-link')].find((b) => /Write it/.test(b.textContent)).click(); }); await sleep(700);
+    const draft = await s.evaluate(() => document.getElementById('wseSeoDesc').value);
+    t.ok(draft.length >= 50 && draft.length <= 160 && /Glow Salon/.test(draft) && /Austin/.test(draft) && /\(512\) 555-0100/.test(draft), 'Write it for me drafts a description from the business details: ' + draft);
+    // leads section: numbers, alerts, auto-reply, and a way to the inbox
+    await s.evaluate(() => { document.getElementById('wseLeads').open = true; }); await sleep(800);
+    t.ok(await s.evaluate(() => document.querySelectorAll('#wseLeads .wse-tile').length === 3 && !!document.querySelector('#wseLeads input[type=email]') && !!document.querySelector('#wseLeads input[type=checkbox]') && /Leads inbox|reply to leads/.test(document.getElementById('wseLeads').innerText)), 'Leads & visitors shows visits, leads, alerts, auto-reply and the inbox link');
+    // the open sections survive a panel refresh
+    await s.evaluate(() => wsOpenEditor()); await sleep(400);
+    t.ok(await s.evaluate(() => document.getElementById('wseSeo').open && document.getElementById('wseLeads').open), 'open sections stay open when the panel refreshes');
+    await s.evaluate(() => [...document.querySelectorAll('.wse-trow')].find((b) => /Marketing copy/.test(b.textContent)).click()); await sleep(400);
+    t.ok(await s.evaluate(() => [...document.querySelectorAll('[id*=post i], [id*=Post]')].some((m) => m.offsetParent !== null || getComputedStyle(m).display === 'flex' || m.classList.contains('on'))), 'Marketing copy opens its tool');
+    t.eq(s._wsErrors.length, 0, 'Site tab has no JS errors ' + s._wsErrors.join('; '));
+    await s.close();
+  }
+
   // Dropdown options (drawn by the OS when opened) are readable: solid dark background, light text
   {
     const d = await openPage(browser, {});
