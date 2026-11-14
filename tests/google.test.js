@@ -84,8 +84,8 @@ module.exports = async function (ctx, t) {
   });
   await up.goto(base + '/', { waitUntil: 'networkidle2' });
   await up.evaluate(() => { document.getElementById('gFillWrap').hidden = false; });
-  await up.click('#gFillBtn'); await up.type('#gFillQ', 'Glow Salon Austin'); await up.click('#gFillGo'); await sleep(400);
-  await up.click('.gfill-opt'); await sleep(500);
+  await up.evaluate(() => document.getElementById('gFillBtn').click()); await up.type('#gFillQ', 'Glow Salon Austin'); await up.evaluate(() => document.getElementById('gFillGo').click()); await sleep(400);
+  await up.evaluate(() => document.querySelector('.gfill-opt').click()); await sleep(500);
   const filled = await up.evaluate(() => ['bizName', 'bizType', 'bizCity', 'bizPhone'].map((id) => document.getElementById(id).value).join('|') + '|' + document.getElementById('gFillDone').textContent);
   t.ok(/^Glow Salon\|Hair salon\|Austin\|\(512\) 555-0142\|Using your Google listing/.test(filled), 'picking a listing fills the setup form ' + filled);
   await up.evaluate(() => doCreateV3()); await sleep(1500);

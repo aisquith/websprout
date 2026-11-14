@@ -495,11 +495,39 @@ document.addEventListener('DOMContentLoaded',function(){
   });
 
   // Studio controls
-  document.getElementById('backBtn').addEventListener('click',function(){
-    document.getElementById('studio').classList.remove('on');
-    document.body.style.overflow='';
-    sessionStorage.removeItem('ws_studio');
-  });
+  // Leaving the editor never loses the site: it autosaves to My sites, and the home page offers to reopen it.
+  window.wsLeaveStudio=function(){var s=document.getElementById('studio');if(s.classList.contains('on'))window._wsStudioLeft=true;s.classList.remove('on');document.body.style.overflow='';try{sessionStorage.removeItem('ws_studio');}catch(e){}};
+  function wsSiteName(){try{var sd=window._wsSiteData;if(sd&&sd.biz&&sd.biz.name)return String(sd.biz.name);}catch(e){}try{var m=String(gHTML||'').match(/<title>([^<|]+)/);if(m)return m[1].trim();}catch(e){}return 'your site';}
+  window.wsHideResume=function(){var p=document.getElementById('wsResume');if(p&&p.parentNode)p.parentNode.removeChild(p);};
+  window.wsShowResume=function(){
+    if(!gHTML||String(gHTML).length<100||document.getElementById('studio').classList.contains('on'))return;
+    wsHideResume();var p=document.createElement('div');p.id='wsResume';p.className='ws-resume';p.setAttribute('role','region');p.setAttribute('aria-label','Site in progress');
+    var go=document.createElement('button');go.type='button';go.className='ws-resume-go';go.textContent='Continue editing '+wsSiteName().slice(0,40)+' \u2192';
+    go.addEventListener('click',function(){wsHideResume();if(window._wsStudioLeft){document.getElementById('studio').classList.add('on');document.body.style.overflow='hidden';try{sessionStorage.setItem('ws_studio','1');}catch(e){}}else{openStudio(gHTML);try{_wsRecoverDraft();}catch(e){}}});
+    var x=document.createElement('button');x.type='button';x.className='ws-resume-x';x.setAttribute('aria-label','Dismiss');x.textContent='\u00d7';x.addEventListener('click',wsHideResume);
+    p.appendChild(go);p.appendChild(x);document.body.appendChild(p);
+  };
+  window.wsGoHome=function(){wsLeaveStudio();window.scrollTo(0,0);wsShowResume();};
+  // New site: blank setup form, ready to type. The current site stays saved in My sites.
+  window.wsStartNewSite=async function(){
+    var ok=true;
+    if(window.wsConfirm)ok=await wsConfirm({title:'Start a new site?',message:'Your current site is saved in My sites, so you can come back to it anytime.',okLabel:'Start a new site',cancelLabel:'Keep editing'});
+    if(!ok)return;
+    wsLeaveStudio();
+    ['bizName','bizType','customPrompt','bizCity','bizPhone','gFillQ'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+    try{window._wsPlace=null;var gd=document.getElementById('gFillDone'),gb=document.getElementById('gFillBtn'),gx=document.getElementById('gFillBox'),gl=document.getElementById('gFillList');if(gd)gd.style.display='none';if(gb)gb.style.display='';if(gx)gx.style.display='none';if(gl)gl.innerHTML='';}catch(e){}
+    try{selectedType='';}catch(e){}
+    var b=document.getElementById('builder');if(b)b.scrollIntoView({behavior:'smooth',block:'center'});
+    setTimeout(function(){var n=document.getElementById('bizName');if(n){try{n.focus({preventScroll:true});}catch(e){n.focus();}}},450);
+    wsShowResume();
+  };
+  document.getElementById('backBtn').addEventListener('click',function(){wsStartNewSite();});
+  document.getElementById('newSiteBtn').addEventListener('click',function(){wsStartNewSite();});
+  document.getElementById('homeBtn').addEventListener('click',function(){wsGoHome();});
+  // Typing a new business into the setup form means they have moved on: the pill gets out of the way.
+  document.addEventListener('input',function(e){if(e.target&&e.target.closest&&e.target.closest('#builder'))wsHideResume();});
+  // Back on the home page with a site in progress (e.g. after a reload): offer to reopen it.
+  setTimeout(function(){try{if(sessionStorage.getItem('ws_studio')!=='1')wsShowResume();}catch(e){}},1200);
   document.getElementById('regenBtn').addEventListener('click',function(){
     var sd=window._wsSiteData;
     if(sd&&window.WS&&window.WS.palettes){wsShuffleLook();return;}

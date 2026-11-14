@@ -100,6 +100,43 @@ module.exports = async function (ctx, t) {
   t.ok(await m.evaluate(() => document.documentElement.scrollWidth - innerWidth <= 1), 'phone: studio has no sideways scroll');
   await m.close();
 
+  // Getting home and starting over: Home leaves the editor with a "Continue editing" pill; New site asks,
+  // then opens a blank setup form; the old site is never lost.
+  {
+    const h = await openPage(browser, {});
+    await openStudioWith(h, base, 'Glow Salon', 'Hair salon', { city: 'Austin' });
+    const studioOn = () => h.evaluate(() => document.getElementById('studio').classList.contains('on'));
+    await waitFor(async () => h.evaluate(() => !document.getElementById('qaScreen').classList.contains('on')), 8000);
+    t.ok(await h.evaluate(() => { const b = document.getElementById('homeBtn'); const r = b.getBoundingClientRect(); return r.width > 20 && r.top < 60 && /Home/.test(b.textContent); }), 'editor shows a Home button top left');
+    t.ok(await h.evaluate(() => { const b = document.getElementById('newSiteBtn'); return b && b.offsetParent !== null && /New site/.test(b.textContent); }), 'editor shows a New site button');
+    await h.click('#homeBtn'); await sleep(300);
+    const home = await h.evaluate(() => { const p = document.getElementById('wsResume'); return { pill: p ? p.innerText : '', top: window.scrollY }; });
+    t.ok(!(await studioOn()) && /Continue editing Glow Salon/.test(home.pill) && home.top === 0, 'Home goes to the top of the home page and offers to continue editing ' + JSON.stringify(home));
+    await h.evaluate(() => document.querySelector('.ws-resume-go').click()); await sleep(400);
+    t.ok((await studioOn()) && !(await h.evaluate(() => document.getElementById('wsResume'))), 'Continue editing reopens the editor');
+    t.ok(await h.evaluate(() => /Glow Salon/.test(gHTML)), 'the same site is still there');
+    // New site: cancel keeps you in the editor
+    await h.click('#newSiteBtn'); await sleep(300);
+    t.ok(await h.evaluate(() => /Start a new site\?/.test((document.querySelector('.wsCfm-box') || {}).innerText || '') && /saved in My sites/.test(document.querySelector('.wsCfm-box').innerText)), 'New site asks first and says the current site is saved');
+    await h.evaluate(() => [...document.querySelectorAll('.wsCfm-btn')].find((b) => b.textContent === 'Keep editing').click()); await sleep(300);
+    t.ok(await studioOn(), 'Keep editing stays in the editor');
+    // confirm: blank, focused setup form
+    await h.click('#newSiteBtn'); await sleep(300);
+    await h.evaluate(() => [...document.querySelectorAll('.wsCfm-btn')].find((b) => b.textContent === 'Start a new site').click()); await sleep(900);
+    const fresh = await h.evaluate(() => ({ vals: ['bizName', 'bizType', 'customPrompt', 'bizCity', 'bizPhone'].map((id) => document.getElementById(id).value).join(''), focus: document.activeElement && document.activeElement.id, inView: (() => { const r = document.getElementById('bizName').getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; })(), pill: !!document.getElementById('wsResume') }));
+    t.ok(!(await studioOn()) && fresh.vals === '' && fresh.focus === 'bizName' && fresh.inView && fresh.pill, 'New site opens an empty setup form, ready to type, and the old site can still be reopened ' + JSON.stringify(fresh));
+    await h.type('#bizName', 'B'); await sleep(100);
+    t.ok(await h.evaluate(() => !document.getElementById('wsResume')), 'typing a new business hides the pill so it never covers the form');
+    await h.evaluate(() => { document.getElementById('bizName').value = ''; wsShowResume(); });
+    // Start over in the tools menu does the same
+    await h.evaluate(() => document.querySelector('.ws-resume-go').click()); await sleep(400);
+    await h.evaluate(() => document.getElementById('backBtn').click()); await sleep(300);
+    t.ok(await h.evaluate(() => !!document.querySelector('.wsCfm-box')), 'Start over in the menu asks the same question');
+    await h.evaluate(() => [...document.querySelectorAll('.wsCfm-btn')].find((b) => b.textContent === 'Keep editing').click());
+    t.eq(h._wsErrors.length, 0, 'no JS errors going home and starting over ' + h._wsErrors.join('; '));
+    await h.close();
+  }
+
   // Dropdown options (drawn by the OS when opened) are readable: solid dark background, light text
   {
     const d = await openPage(browser, {});

@@ -162,6 +162,15 @@ html.ws-focus :focus{outline:2px solid #4ade80 !important;outline-offset:2px}
 .type-lbl{font-size:10px;font-weight:600;line-height:1.3}
 #customWrap{display:none;margin-bottom:16px}
 select option,select optgroup{background-color:#1b1d21;color:#f2f2f4}
+.s-home{display:inline-flex;align-items:center;gap:7px;background:none;border:1px solid transparent;border-radius:9px;padding:4px 9px 4px 4px;color:#eaf2e8;font-weight:600;font-size:13px;line-height:1;font-family:inherit;cursor:pointer;flex:none}
+.s-home:hover,.s-home:focus-visible{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.05)}
+.s-home-mark{width:24px;height:24px;border-radius:7px;background:linear-gradient(145deg,#3ea04e,#22692e);display:inline-flex;align-items:center;justify-content:center}
+.ws-resume{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:9000;display:flex;align-items:center;gap:4px;background:#13210f;border:1px solid rgba(74,222,128,.35);border-radius:999px;padding:5px;box-shadow:0 12px 34px rgba(0,0,0,.45);max-width:calc(100vw - 24px)}
+.ws-resume-go{background:#2d7a3a;color:#fff;border:0;border-radius:999px;padding:10px 16px;font-weight:700;font-size:14px;font-family:inherit;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100vw - 80px)}
+.ws-resume-go:hover,.ws-resume-go:focus-visible{background:#36924a}
+.ws-resume-x{background:none;border:0;color:rgba(234,242,232,.7);font-size:20px;line-height:1;width:34px;height:34px;border-radius:50%;cursor:pointer}
+.ws-resume-x:hover{background:rgba(255,255,255,.08);color:#fff}
+@media(max-width:600px){.s-home-lbl,.ns-lbl{display:none}.s-home{padding:4px}}
 .dark-input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:9px 12px;color:#e8f5e4;font-family:inherit;font-size:14px;outline:none;transition:border .15s}
 .gfill-link{background:none;border:none;padding:0;color:#7ee29a;font:inherit;font-size:13px;text-decoration:underline;cursor:pointer}
 .gfill-go{flex:none;background:#37c15e;color:#fff;border:none;border-radius:9px;padding:0 16px;font:600 14px/1 inherit;cursor:pointer}
