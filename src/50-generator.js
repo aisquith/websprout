@@ -819,6 +819,13 @@ async function buildV3Site(d, env) {
           _cr(_g.id + '.p1', _pics[2]);
           _cr(_g.id + '.p2', _pics[3]);
         }
+        // Unsplash API guidelines: report each photo actually used (their "download" event). Bounded wait.
+        const _used = _pics.slice(0, _pics.length >= 4 ? 4 : 1).map(function (p) { return p.download; }).filter(function (d) { return /^https:\/\/api\.unsplash\.com\/photos\/[A-Za-z0-9_-]+\/download/.test(String(d || '')); });
+        if (_used.length) {
+          const _ac = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+          const _tm = _ac ? setTimeout(function () { try { _ac.abort(); } catch (e) {} }, 1500) : 0;
+          try { await Promise.all(_used.map(function (d) { return fetch(d, { headers: { 'Authorization': 'Client-ID ' + env.UNSPLASH_ACCESS_KEY }, signal: _ac ? _ac.signal : undefined }).catch(function () {}); })); } finally { if (_tm) clearTimeout(_tm); }
+        }
       }
     } catch (e) {}
     // Assign the site id up front so the contact form can bake its /api/form/<siteId> action.
