@@ -61,17 +61,42 @@ module.exports = async function (ctx, t) {
     await page.goto(base + '/leads', { waitUntil: 'networkidle2' });
     const info = await page.evaluate(() => {
       const cards = [...document.querySelectorAll('.lead')];
-      const mail = document.querySelector('a[href^="mailto:"]'); const sms = document.querySelector('a[href^="sms:"]'); const tel = document.querySelector('a[href^="tel:"]');
-      return { n: cards.length, mail: mail && mail.getAttribute('href'), sms: sms && sms.getAttribute('href'), tel: tel && tel.getAttribute('href'), txt: document.body.innerText, ov: document.documentElement.scrollWidth - innerWidth };
+      const sms = document.querySelector('a[href^="sms:"]'); const tel = document.querySelector('a[href^="tel:"]');
+      return { n: cards.length, sms: sms && sms.getAttribute('href'), tel: tel && tel.getAttribute('href'), ov: document.documentElement.scrollWidth - innerWidth };
     });
     const tag = mobile ? 'phone: ' : '';
     t.eq(info.n, 2, tag + 'leads page lists both new leads');
-    const mu = decodeURIComponent(info.mail || '');
-    t.ok(/^mailto:ana\./.test(mu) && /subject=Re: your message to Glow Salon/.test(mu) && /Hi Ana,/.test(mu) && /> Can I book a cut Friday\?\n> Around 3pm\./.test(mu), tag + 'Reply by email opens their email app, addressed, with a greeting and the quoted message');
-    t.ok(/^sms:\(?\+?[0-9]/.test(info.sms || 'x') && /^sms:[0-9+]+\?&body=/.test(info.sms) && /^tel:[0-9+]+$/.test(info.tel || ''), tag + 'Text and Call open the phone with the number ' + info.sms + ' ' + info.tel);
+    t.ok(/^sms:[0-9+]+\?&body=/.test(info.sms || '') && /^tel:[0-9+]+$/.test(info.tel || ''), tag + 'Text and Call open the phone with the number ' + info.sms + ' ' + info.tel);
+    // Reply by email asks which email service to use first
+    await page.evaluate(() => { window.__opened = []; window.open = (u) => { window.__opened.push(u); return null; }; });
+    const replyAna = () => page.evaluate(() => { const all = [...document.querySelectorAll('.tab')].find((x) => /^All/.test(x.textContent)); if (all && !all.classList.contains('on')) all.click(); const c = [...document.querySelectorAll('.lead')].find((x) => /Ana Ruiz/.test(x.innerText)); [...c.querySelectorAll('button')].find((x) => x.textContent === 'Reply by email').click(); });
+    await replyAna(); await sleep(200);
+    const pick = await page.evaluate(() => { const p = document.getElementById('mailPick'); const r = p && p.querySelector('.pick').getBoundingClientRect(); return p ? { opts: [...p.querySelectorAll('[data-svc]')].map((b) => b.getAttribute('data-svc')), copy: !!p.querySelector('.pick-copy'), inView: r.top >= 0 && r.bottom <= innerHeight + 1 && r.left >= 0 && r.right <= innerWidth + 1, opened: window.__opened.length } : null; });
+    t.ok(pick && pick.opts.join(',') === 'gmail,outlook,office,yahoo,app' && pick.copy && pick.inView && pick.opened === 0, tag + 'Reply by email shows a choice of email services before opening anything ' + JSON.stringify(pick));
+    await page.keyboard.press('Escape'); await sleep(100);
+    t.ok(await page.evaluate(() => !document.getElementById('mailPick') && window.__opened.length === 0), tag + 'Escape closes the choice without opening anything');
+    await replyAna(); await sleep(150);
+    await page.evaluate(() => document.querySelector('#mailPick [data-svc="gmail"]').click()); await sleep(300);
+    const gu = await page.evaluate(() => window.__opened[0] || '');
+    const gq = new URL(gu || 'https://x/').searchParams;
+    t.ok(/^https:\/\/mail\.google\.com\/mail\//.test(gu) && /^ana\./.test(gq.get('to') || '') && gq.get('su') === 'Re: your message to Glow Salon' && /^Hi Ana,/.test(gq.get('body') || '') && /> Can I book a cut Friday\?\n> Around 3pm\./.test(gq.get('body') || ''), tag + 'Gmail opens a filled-in reply: address, subject, greeting, quoted message');
+    // remember the choice: next time it opens straight away, and it can be changed
+    await api(base, '/api/leads/status', sess, { id: ana.id, status: 'new' });
+    await page.reload({ waitUntil: 'networkidle2' });
+    await page.evaluate(() => { window.__opened = []; window.open = (u) => { window.__opened.push(u); return null; }; });
+    await replyAna(); await sleep(150);
+    await page.evaluate(() => { document.getElementById('pickRem').click(); document.querySelector('#mailPick [data-svc="outlook"]').click(); }); await sleep(300);
+    await replyAna(); await sleep(300);
+    const rem = await page.evaluate(() => ({ opened: window.__opened, pick: !!document.getElementById('mailPick'), note: document.body.innerText.includes('Email replies open in Outlook.com') }));
+    t.ok(rem.opened.length === 2 && rem.opened.every((u) => /^https:\/\/outlook\.live\.com\/mail\/0\/deeplink\/compose\?to=ana\./.test(u)) && !rem.pick && rem.note, tag + 'Remember my choice opens Outlook directly next time, and says so');
+    await page.evaluate(() => [...document.querySelectorAll('button')].find((x) => x.textContent === 'Change email app').click()); await sleep(150);
+    await replyAna(); await sleep(150);
+    t.ok(await page.evaluate(() => !!document.getElementById('mailPick')), tag + 'Change email app brings the choice back');
+    await page.keyboard.press('Escape');
     t.ok(info.ov <= 1, tag + 'no sideways scroll');
     t.eq(page._wsErrors.length, 0, tag + 'no JS errors ' + page._wsErrors.join('; '));
     await page.close();
+    await api(base, '/api/leads/status', sess, { id: ana.id, status: 'new' });
   }
   // archive from the page; it leaves the New tab and stays archived after reload
   const page = await openPage(browser, {});

@@ -108,6 +108,16 @@ input[type=search]{flex:1;min-width:160px}
 .btn:hover,.btn:focus-visible{border-color:var(--acc)}
 .btn.pri{background:var(--acc2);border-color:var(--acc2);color:#fff}
 .btn.ghost{background:none}
+.linkbtn{background:none;border:0;padding:0;color:var(--acc);font:inherit;text-decoration:underline;cursor:pointer}
+.pick-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.pick{background:#121c11;border:1px solid var(--line);border-radius:16px;width:360px;max-width:100%;padding:10px;box-shadow:0 30px 70px rgba(0,0,0,.6)}
+.pick-h{font-size:13px;color:var(--mut);padding:8px 10px 10px}
+.pick-o{display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:10px;padding:10px 12px;color:var(--fg);font-family:inherit;font-size:14px;cursor:pointer}
+.pick-o span{font-size:12px;color:var(--mut)}
+.pick-o:hover,.pick-o:focus-visible{background:rgba(255,255,255,.06);border-color:rgba(74,222,128,.4);outline:none}
+.pick-copy{border-top:1px solid var(--line);border-radius:0 0 10px 10px;margin-top:4px}
+.pick-rem{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);padding:10px 12px 6px;cursor:pointer}
+@media(max-width:560px){.pick-ov{align-items:flex-end;padding:0}.pick{width:100%;border-radius:16px 16px 0 0;padding-bottom:18px}}
 .empty{text-align:center;color:var(--mut);padding:50px 16px;border:1px dashed var(--line);border-radius:14px}
 .gate{max-width:420px;margin:70px auto;text-align:center}
 .msg{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1d2a1b;border:1px solid var(--line);color:var(--fg);padding:10px 16px;border-radius:10px;font-size:14px;display:none;z-index:9}
@@ -125,9 +135,35 @@ input[type=search]{flex:1;min-width:160px}
   function first(n){return String(n||'').trim().split(' ')[0]||'';}
   function msgText(f){var keys=Object.keys(f||{});for(var i=0;i<keys.length;i++){if(/message|details|notes|comment|request|job|about/i.test(keys[i]))return String(f[keys[i]]);}return '';}
   function digits(p){var d=String(p||'').replace(/[^0-9+]/g,'');return d;}
-  function mailto(L){var c=L.contact,hi=first(c.name);var orig=msgText(L.fields);
-    var body=(hi?'Hi '+hi+',':'Hi,')+'\\n\\nThanks for reaching out to '+L.site+'. \\n\\n\\n'+L.site+(orig?'\\n\\n> '+orig.split('\\n').join('\\n> '):'');
-    return 'mailto:'+encodeURIComponent(c.email)+'?subject='+encodeURIComponent('Re: your message to '+L.site)+'&body='+encodeURIComponent(body);}
+  function draft(L){var c=L.contact,hi=first(c.name);var orig=msgText(L.fields);
+    return {to:c.email,subject:'Re: your message to '+L.site,body:(hi?'Hi '+hi+',':'Hi,')+'\\n\\nThanks for reaching out to '+L.site+'. \\n\\n\\n'+L.site+(orig?'\\n\\n> '+orig.split('\\n').join('\\n> '):'')};}
+  function mailto(L){var d=draft(L);return 'mailto:'+encodeURIComponent(d.to)+'?subject='+encodeURIComponent(d.subject)+'&body='+encodeURIComponent(d.body);}
+  // Where "Reply by email" can open. Web services open a filled-in compose window in a new tab.
+  var MAIL=[
+    {id:'gmail',label:'Gmail',url:function(d){return 'https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(d.to)+'&su='+encodeURIComponent(d.subject)+'&body='+encodeURIComponent(d.body);}},
+    {id:'outlook',label:'Outlook.com',hint:'Hotmail, Live, Outlook.com',url:function(d){return 'https://outlook.live.com/mail/0/deeplink/compose?to='+encodeURIComponent(d.to)+'&subject='+encodeURIComponent(d.subject)+'&body='+encodeURIComponent(d.body);}},
+    {id:'office',label:'Outlook for work or school',hint:'Microsoft 365',url:function(d){return 'https://outlook.office.com/mail/deeplink/compose?to='+encodeURIComponent(d.to)+'&subject='+encodeURIComponent(d.subject)+'&body='+encodeURIComponent(d.body);}},
+    {id:'yahoo',label:'Yahoo Mail',url:function(d){return 'https://compose.mail.yahoo.com/?to='+encodeURIComponent(d.to)+'&subject='+encodeURIComponent(d.subject)+'&body='+encodeURIComponent(d.body);}},
+    {id:'app',label:'Email app on this device',hint:'Mail, Outlook desktop, Apple Mail',app:true,url:function(d,L){return mailto(L);}}
+  ];
+  function pref(v){try{if(v===undefined)return localStorage.getItem('ws_mail_app')||'';if(v)localStorage.setItem('ws_mail_app',v);else localStorage.removeItem('ws_mail_app');}catch(e){}return '';}
+  function svcById(id){for(var i=0;i<MAIL.length;i++)if(MAIL[i].id===id)return MAIL[i];return null;}
+  function openWith(svc,L){var u=svc.url(draft(L),L);if(svc.app){location.href=u;}else{window.open(u,'_blank','noopener');}if(L.status==='new')setStatus(L,'replied',true);}
+  function closePicker(){var o=document.getElementById('mailPick');if(o&&o.parentNode)o.parentNode.removeChild(o);document.removeEventListener('keydown',pickKey,true);}
+  function pickKey(e){if(e.key==='Escape')closePicker();}
+  function pickMail(L){
+    closePicker();var last=pref();
+    var ov=el('div','pick-ov');ov.id='mailPick';var box=el('div','pick');box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');box.setAttribute('aria-label','Reply by email with');
+    box.appendChild(el('div','pick-h','Reply to '+(L.contact.name||L.contact.email)+' with'));
+    var rem=el('input');rem.type='checkbox';rem.id='pickRem';
+    MAIL.forEach(function(svc){var b=el('button','pick-o');b.type='button';b.setAttribute('data-svc',svc.id);b.appendChild(el('b',null,svc.label));if(svc.hint)b.appendChild(el('span',null,svc.hint));
+      b.addEventListener('click',function(){if(rem.checked)pref(svc.id);closePicker();openWith(svc,L);if(rem.checked)render();});box.appendChild(b);});
+    var cp=el('button','pick-o pick-copy');cp.type='button';cp.appendChild(el('b',null,'Copy email address'));cp.appendChild(el('span',null,L.contact.email));
+    cp.addEventListener('click',function(){try{navigator.clipboard.writeText(L.contact.email);toast('Email address copied');}catch(e){toast(L.contact.email);}closePicker();});box.appendChild(cp);
+    var rl=el('label','pick-rem');rl.appendChild(rem);rl.appendChild(document.createTextNode(' Remember my choice'));box.appendChild(rl);
+    ov.appendChild(box);ov.addEventListener('click',function(e){if(e.target===ov)closePicker();});document.body.appendChild(ov);document.addEventListener('keydown',pickKey,true);
+    var f=box.querySelector('.pick-o');if(f)f.focus();}
+  function replyEmail(L){var svc=svcById(pref());if(svc)openWith(svc,L);else pickMail(L);}
   function smsto(L){var hi=first(L.contact.name);return 'sms:'+digits(L.contact.phone)+'?&body='+encodeURIComponent((hi?'Hi '+hi+', ':'Hi, ')+'this is '+L.site+' replying to your message. ');}
   function setStatus(L,st,quiet){var prev=L.status;L.status=st;render();
     fetch('/api/leads/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:L.id,status:st})}).then(function(r){return r.json();}).then(function(j){if(!j.ok){L.status=prev;render();toast(j.error||'Could not save');}else if(!quiet){toast(st==='archived'?'Archived':st==='replied'?'Marked as replied':'Moved back to New');}}).catch(function(){L.status=prev;render();toast('Could not save');});}
@@ -141,7 +177,7 @@ input[type=search]{flex:1;min-width:160px}
     h.appendChild(el('span','when',ago(L.ts)));c.appendChild(h);
     var dl=el('dl','fields');Object.keys(L.fields).forEach(function(k){dl.appendChild(el('dt',null,k.replace(/[_-]+/g,' ')));dl.appendChild(el('dd',null,L.fields[k]));});c.appendChild(dl);
     var a=el('div','acts');
-    if(L.contact.email){var m=el('a','btn pri','Reply by email');m.href=mailto(L);m.addEventListener('click',function(){if(L.status==='new')setStatus(L,'replied',true);});a.appendChild(m);}
+    if(L.contact.email){var m=el('button','btn pri','Reply by email');m.type='button';m.setAttribute('aria-haspopup','dialog');m.addEventListener('click',function(){replyEmail(L);});a.appendChild(m);}
     if(L.contact.phone){var s=el('a','btn'+(L.contact.email?'':' pri'),'Text');s.href=smsto(L);s.addEventListener('click',function(){if(L.status==='new')setStatus(L,'replied',true);});a.appendChild(s);
       var t=el('a','btn','Call');t.href='tel:'+digits(L.contact.phone);t.addEventListener('click',function(){if(L.status==='new')setStatus(L,'replied',true);});a.appendChild(t);}
     if(!L.contact.email&&!L.contact.phone)a.appendChild(el('span','chip','No email or phone given'));
@@ -153,6 +189,7 @@ input[type=search]{flex:1;min-width:160px}
     app.innerHTML='';var cn=counts();
     app.appendChild(el('h1',null,'Leads'));
     app.appendChild(el('p','sub',cn.new?(cn.new+' new '+(cn.new===1?'lead':'leads')+' waiting for a reply. Replies open your own email app or phone, so customers see your real address and number.'):'Every message from your sites\\u2019 contact, booking and quote forms. Replies open your own email app or phone.'));
+    var sv=svcById(pref());if(sv){var ch=el('p','sub');ch.appendChild(document.createTextNode('Email replies open in '+sv.label+'. '));var cl=el('button','linkbtn','Change email app');cl.type='button';cl.addEventListener('click',function(){pref('');render();toast('You will be asked next time');});ch.appendChild(cl);app.appendChild(ch);}
     var bar=el('div','bar');var tabs=el('div','tabs');tabs.setAttribute('role','tablist');
     [['new','New'],['replied','Replied'],['archived','Archived'],['all','All']].forEach(function(p){var b=el('button','tab'+(F.status===p[0]?' on':''),p[1]);b.type='button';b.setAttribute('role','tab');b.setAttribute('aria-selected',F.status===p[0]?'true':'false');var k=el('b',null,String(cn[p[0]]||0));b.appendChild(k);b.addEventListener('click',function(){F.status=p[0];render();});tabs.appendChild(b);});
     bar.appendChild(tabs);
