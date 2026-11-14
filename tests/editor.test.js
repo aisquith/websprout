@@ -99,4 +99,25 @@ module.exports = async function (ctx, t) {
   t.ok(await m.evaluate(() => getComputedStyle(document.querySelector('.chat')).display !== 'none' && document.querySelector('.chat').getBoundingClientRect().width > 350), 'phone: Edit opens the full-width panel');
   t.ok(await m.evaluate(() => document.documentElement.scrollWidth - innerWidth <= 1), 'phone: studio has no sideways scroll');
   await m.close();
+
+  // Signed in, mid-edit: the account button in the editor opens the account menu on top of the editor
+  for (const mobile of [false, true]) {
+    const a = await openPage(browser, { mobile });
+    await a.setRequestInterception(true);
+    a.on('request', (q) => { if (new URL(q.url()).pathname === '/me') return q.respond({ status: 200, contentType: 'application/json', body: JSON.stringify({ auth: true, email: 'owner@glow.test', pro: false }) }); q.continue(); });
+    await openStudioWith(a, base, 'Glow Salon', 'Hair salon', {});
+    await waitFor(async () => a.evaluate(() => document.getElementById('acctBtn').classList.contains('is-authed')), 8000);
+    await a.evaluate(() => document.getElementById('acctBtn').click()); await sleep(450);
+    const vis = await a.evaluate(() => {
+      const m = document.getElementById('acctMenu'); const r = m.getBoundingClientRect();
+      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + Math.min(40, r.height / 2));
+      return { open: m.classList.contains('open'), onTop: !!(hit && m.contains(hit)), inView: r.top >= 0 && r.bottom <= innerHeight + 1 && r.left >= 0 && r.right <= innerWidth + 1, items: m.querySelectorAll('[data-act]').length };
+    });
+    const tag = mobile ? 'phone: ' : '';
+    t.ok(vis.open && vis.onTop && vis.inView && vis.items >= 3, tag + 'editor account button opens the account menu on top of the editor ' + JSON.stringify(vis));
+    await a.evaluate(() => document.querySelector('.chat, .preview-frame-wrap, body').click()); await sleep(300);
+    t.ok(await a.evaluate(() => !document.getElementById('acctMenu').classList.contains('open')), tag + 'clicking elsewhere closes it');
+    t.eq(a._wsErrors.length, 0, tag + 'no JS errors ' + a._wsErrors.join('; '));
+    await a.close();
+  }
 };

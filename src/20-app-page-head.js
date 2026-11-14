@@ -804,6 +804,7 @@ nav.scrolled{background:rgba(6,12,5,.78)!important;backdrop-filter:blur(16px) sa
 .acct-wrap{position:relative;display:inline-flex}
 .acct-menu{position:absolute;top:calc(100% + 12px);right:0;width:304px;background:linear-gradient(180deg,rgba(16,27,14,.98),rgba(9,16,8,.98));border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 30px 70px -20px rgba(0,0,0,.75),0 0 0 1px rgba(52,211,153,.08),inset 0 1px 0 rgba(255,255,255,.05);padding:7px;opacity:0;transform:translateY(-8px) scale(.97);transform-origin:top right;pointer-events:none;transition:opacity .18s ease,transform .18s cubic-bezier(.2,.8,.2,1);z-index:300;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
 .acct-menu.open{opacity:1;transform:none;pointer-events:auto}
+.acct-menu.acct-float{position:fixed;left:auto;z-index:10002}
 .acct-head{display:flex;align-items:center;gap:11px;padding:11px 10px 12px}
 .acct-ava-lg{width:42px;height:42px;flex:none;border-radius:12px;background:linear-gradient(135deg,#4ade80,#16a34a);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#06210f;box-shadow:0 4px 14px -4px rgba(34,197,94,.6)}
 .acct-id{min-width:0;flex:1}
@@ -831,7 +832,7 @@ nav.scrolled{background:rgba(6,12,5,.78)!important;backdrop-filter:blur(16px) sa
 .cmp-card.highlight{border-color:rgba(52,211,153,.4)!important;box-shadow:0 0 56px -22px rgba(34,197,94,.4)!important}
 .how-step-num{background:linear-gradient(135deg,rgba(52,211,153,.22),rgba(34,197,94,.08))!important;border:1px solid rgba(52,211,153,.35)!important;color:#7ef2b8!important;box-shadow:0 6px 18px -8px rgba(34,197,94,.4)}
 .trust-bar{background:#050a04!important;border-top:1px solid rgba(255,255,255,.06)}
-@media(max-width:600px){.acct-menu{position:fixed;top:60px;right:3vw;left:3vw;width:auto}}
+@media(max-width:600px){.acct-menu{position:fixed;top:60px;right:3vw;left:3vw;width:auto}.acct-menu.acct-float{left:3vw;right:3vw !important;width:auto}}
 .ws-ed-host{padding:4px 14px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
 .ws-ed-host:empty{display:none}
 .qa-screen{position:fixed;inset:0;z-index:2147483000;display:none;align-items:center;justify-content:center;padding:24px;background:radial-gradient(1200px 720px at 50% -12%,rgba(52,211,153,.16),transparent 60%),radial-gradient(900px 560px at 85% 110%,rgba(34,211,238,.1),transparent 55%),#050a04;opacity:0;transition:opacity .32s ease}
@@ -909,9 +910,15 @@ nav.scrolled{background:rgba(6,12,5,.78)!important;backdrop-filter:blur(16px) sa
     h+='<button class="acct-item danger" data-act="signout" role="menuitem">'+ic('<path d="M15 17l5-5-5-5"/><path d="M20 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>')+'<span>Sign out</span></button>';
     el.innerHTML=h;
   }
-  function close(){var el=document.getElementById('acctMenu');if(el){el.classList.remove('open');el.setAttribute('aria-hidden','true');}var b=document.getElementById('signInBtn');if(b)b.setAttribute('aria-expanded','false');}
+  // The menu lives in the landing nav. Opened from the editor's account button (the editor covers the nav),
+  // it floats on top of the editor, right under that button.
+  function place(anchor){var el=document.getElementById('acctMenu'),home=document.getElementById('acctWrap');if(!el)return;
+    if(anchor&&anchor.id!=='signInBtn'){if(el.parentNode!==document.body)document.body.appendChild(el);var r=anchor.getBoundingClientRect();el.classList.add('acct-float');el.style.top=Math.round(r.bottom+8)+'px';el.style.right=Math.max(8,Math.round(window.innerWidth-r.right))+'px';}
+    else{if(home&&el.parentNode!==home)home.appendChild(el);el.classList.remove('acct-float');el.style.top='';el.style.right='';}}
+  var lastAnchor=null;
+  function close(){var el=document.getElementById('acctMenu');if(el){el.classList.remove('open');el.setAttribute('aria-hidden','true');}var b=document.getElementById('signInBtn');if(b)b.setAttribute('aria-expanded','false');if(lastAnchor)lastAnchor.setAttribute('aria-expanded','false');}
   window.wsCloseAcctMenu=close;
-  window.wsToggleAcctMenu=function(me){var el=document.getElementById('acctMenu');if(!el)return;if(el.classList.contains('open')){close();return;}build(me||window._wsUser||{});el.classList.add('open');el.setAttribute('aria-hidden','false');var b=document.getElementById('signInBtn');if(b)b.setAttribute('aria-expanded','true');};
+  window.wsToggleAcctMenu=function(me,anchor){var el=document.getElementById('acctMenu');if(!el)return;if(el.classList.contains('open')){close();return;}build(me||window._wsUser||{});place(anchor);lastAnchor=anchor||null;if(anchor)anchor.setAttribute('aria-expanded','true');el.classList.add('open');el.setAttribute('aria-hidden','false');var b=document.getElementById('signInBtn');if(b)b.setAttribute('aria-expanded','true');};
   function act(a){
     close();
     if(a==='sites'){if(window.openMySites)window.openMySites();else{var ml=document.getElementById('mySitesLink');if(ml)ml.click();}}
@@ -928,7 +935,7 @@ nav.scrolled{background:rgba(6,12,5,.78)!important;backdrop-filter:blur(16px) sa
     var t=e.target;
     var item=(t&&t.closest)?t.closest('[data-act]'):null;
     if(item&&el.contains(item)){e.preventDefault();act(item.getAttribute('data-act'));return;}
-    if(el.classList.contains('open')){var wrap=document.getElementById('acctWrap');if(wrap&&!wrap.contains(t))close();}
+    if(el.classList.contains('open')){var wrap=document.getElementById('acctWrap');if(!el.contains(t)&&!(wrap&&wrap.contains(t))&&!(lastAnchor&&lastAnchor.contains(t)))close();}
   });
   document.addEventListener('keydown',function(e){if(e.key==='Escape'||e.keyCode===27)close();});
 })();
