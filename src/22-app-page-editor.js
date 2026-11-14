@@ -515,6 +515,7 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!ok)return;
     wsLeaveStudio();
     ['bizName','bizType','customPrompt','bizCity','bizPhone','gFillQ'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+    try{window._wsLook='';document.querySelectorAll('#lookPick .look-opt').forEach(function(b){b.setAttribute('aria-checked','false');});}catch(e){}
     try{window._wsPlace=null;var gd=document.getElementById('gFillDone'),gb=document.getElementById('gFillBtn'),gx=document.getElementById('gFillBox'),gl=document.getElementById('gFillList');if(gd)gd.style.display='none';if(gb)gb.style.display='';if(gx)gx.style.display='none';if(gl)gl.innerHTML='';}catch(e){}
     try{selectedType='';}catch(e){}
     var b=document.getElementById('builder');if(b)b.scrollIntoView({behavior:'smooth',block:'center'});
@@ -2272,10 +2273,22 @@ function wsBuildPaletteBar(){ wsEdSel = (typeof wsEdSel==='number'?wsEdSel:0); w
     }).catch(function(){msg('Google lookup is unavailable right now.');});};
   go.addEventListener('click',find);q.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();find();}});
 })();
+// Look picker on the first step: Light, Dark or Colorful. Click again to clear (then we pick).
+(function(){
+  var box=document.getElementById('lookPick');if(!box)return;
+  box.addEventListener('click',function(e){
+    var b=e.target.closest('.look-opt');if(!b)return;
+    var on=b.getAttribute('aria-checked')==='true';
+    box.querySelectorAll('.look-opt').forEach(function(x){x.setAttribute('aria-checked','false');});
+    if(!on)b.setAttribute('aria-checked','true');
+    window._wsLook=on?'':b.getAttribute('data-look');
+  });
+})();
 function doCreateV3(){
   var val=function(id){var el=document.getElementById(id);return el?(el.value||''):'';};
   var type=val('bizType').trim()||((typeof selectedType!=='undefined'&&selectedType)?selectedType:'');
   var payload={name:val('bizName').trim(),type:type,about:val('customPrompt').trim().slice(0,400),city:val('bizCity').trim().slice(0,80),phone:val('bizPhone').trim().slice(0,40)};
+  if(window._wsLook)payload.look=window._wsLook;
   var gp=window._wsPlace;if(gp&&gp.googlePlaceId){payload.googlePlaceId=gp.googlePlaceId;payload.googleName=gp.name||'';payload.address=gp.address||'';payload.hours=gp.hours||[];payload.reviews=gp.reviews||[];}
   var btn=document.getElementById('gbtn'),gt=document.getElementById('gbtnTxt'),ld=document.getElementById('loading');
   if(btn)btn.disabled=true;if(gt)gt.textContent='Growing...';if(ld)ld.classList.add('on');

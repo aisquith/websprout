@@ -193,6 +193,18 @@ const V3_STEPS_BY_KIND = {
   // projects and professional services
   project: V3_COPY.stepsSets.slice(0, 3),
 };
+// "Colorful" look: richer two-color themes that suit each category.
+const V3_COLORFUL = {
+  barber: ['royal', 'midnight', 'graphite'], salon: ['blush', 'plum', 'linen'], spa: ['sage', 'mint', 'harbor'],
+  tattoo: ['oxblood', 'graphite', 'ember'], bakery: ['butter', 'blush', 'citrus'], cafe: ['espresso', 'desert', 'butter'],
+  restaurant: ['ember', 'oxblood', 'citrus'], lawn: ['forest', 'sage', 'bottle'], cleaning: ['sky', 'mint', 'harbor'],
+  marine: ['harbor', 'sky', 'midnight'], auto: ['graphite', 'ember', 'royal'], fitness: ['ember', 'royal', 'graphite'],
+  pet: ['mint', 'sky', 'citrus'], photo: ['concrete', 'plum', 'midnight'], retail: ['blush', 'citrus', 'plum'],
+  home: ['concrete', 'slate', 'desert'], generic: ['royal', 'sky', 'citrus'], legal: ['midnight', 'bottle', 'slate'],
+  dental: ['sky', 'mint', 'harbor'], health: ['sage', 'mint', 'sky'], finance: ['midnight', 'bottle', 'royal'],
+  realestate: ['desert', 'bottle', 'linen'], education: ['royal', 'citrus', 'sky'], events: ['blush', 'plum', 'butter'],
+  moving: ['sky', 'citrus', 'ember'], studio: ['ember', 'plum', 'royal'],
+};
 function v3StepsKind(cat) {
   if (['barber', 'salon', 'spa', 'tattoo', 'fitness', 'pet', 'dental', 'health', 'education'].indexOf(cat) > -1) return 'visit';
   if (['lawn', 'cleaning', 'home', 'moving'].indexOf(cat) > -1) return 'onsite';
@@ -657,7 +669,15 @@ async function buildV3Site(d, env) {
       reviews: Array.isArray(d.reviews) ? d.reviews.slice(0, 12).map(function (r) { return { quote: (r.quote || '').toString().slice(0, 240), name: (r.name || '').toString().slice(0, 60) }; }) : [],
     };
     const sc = v3Starter(biz.type);
-    const palette = (d.palette || '').toString() || sc.palette || 'w_mono';
+    // Look picked on the first step: Light, Dark or Colorful (otherwise the category default).
+    const look = /^(light|dark|colorful)$/.test(String(d.look || '')) ? String(d.look) : '';
+    let lookPal = '';
+    const scKey = /^[wb]_/.test(sc.palette || '') ? sc.palette.slice(2) : 'mono';
+    if (look === 'light') lookPal = 'w_' + scKey;
+    else if (look === 'dark') lookPal = 'b_' + scKey;
+    else if (look === 'colorful') lookPal = v3FlavorPick(V3_COLORFUL[sc.category] || V3_COLORFUL.generic);
+    if (lookPal && !WSENGINE.palettes.some((p) => p.id === lookPal)) lookPal = '';
+    const palette = (d.palette || '').toString() || lookPal || sc.palette || 'w_mono';
     const typeset = (d.typeset || '').toString() || sc.typeset || 'bold';
     const emojiStyle = (d.emojiStyle || 'color').toString();
     const knownType = /barber|salon|tattoo|groom|nail|spa|beauty|bak|cafe|coffee|food|restaurant|kitchen|donut|truck|lawn|landscap|garden|clean|pressure|pool|window|pest|gutter|handy/i.test(biz.type);

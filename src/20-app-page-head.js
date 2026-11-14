@@ -194,6 +194,15 @@ textarea.dark-input{resize:vertical;min-height:76px;line-height:1.6}
 .btn-back:hover{color:rgba(255,255,255,.7);background:rgba(255,255,255,.08)}
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
 .detail-grid .span2{grid-column:1/-1}
+.look-pick{display:flex;gap:6px}
+.look-opt{flex:1;min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:5px;padding:6px 6px 7px;border-radius:9px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.05);color:#e8f5e4;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:border .15s,background .15s}
+.look-opt:hover{border-color:rgba(255,255,255,.25)}
+.look-opt[aria-checked=true]{border-color:#4ade80;background:rgba(74,222,128,.12);color:#fff}
+.look-opt:focus-visible{outline:2px solid #4ade80;outline-offset:2px}
+.look-sw{display:block;height:14px;border-radius:4px}
+.lk-light{background:linear-gradient(90deg,#FAFBFC 68%,#3B46C7 68%)}
+.lk-dark{background:linear-gradient(90deg,#131315 68%,#8E97FF 68%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.lk-color{background:linear-gradient(90deg,#F4B740 0 34%,#E2553D 34% 67%,#2F6FB3 67%)}
 .field-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.72);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
 .vibe-row{display:flex;flex-wrap:wrap;gap:6px}
 .vibe-chip{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.72);border-radius:100px;padding:5px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}

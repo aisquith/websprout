@@ -104,8 +104,13 @@
             <input id="bizCity" aria-label="City" class="dark-input" type="text" autocomplete="address-level2" placeholder="e.g. Austin">
           </div>
           <div>
-            <div class="field-lbl">Phone <span style="color:rgba(255,255,255,.55);font-weight:400">(optional)</span></div>
-            <input id="bizPhone" aria-label="Phone number" class="dark-input" type="tel" autocomplete="tel" placeholder="e.g. (512) 555-0100">
+            <div class="field-lbl">Look <span style="color:rgba(255,255,255,.55);font-weight:400">(optional)</span></div>
+            <div class="look-pick" id="lookPick" role="radiogroup" aria-label="Site look">
+              <button type="button" class="look-opt" data-look="light" role="radio" aria-checked="false"><span class="look-sw lk-light" aria-hidden="true"></span>Light</button>
+              <button type="button" class="look-opt" data-look="dark" role="radio" aria-checked="false"><span class="look-sw lk-dark" aria-hidden="true"></span>Dark</button>
+              <button type="button" class="look-opt" data-look="colorful" role="radio" aria-checked="false"><span class="look-sw lk-color" aria-hidden="true"></span>Colorful</button>
+            </div>
+            <input id="bizPhone" type="hidden">
           </div>
         </div>
         <div class="panel-foot">

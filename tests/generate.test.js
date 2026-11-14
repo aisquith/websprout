@@ -140,4 +140,16 @@ module.exports = async function (ctx, t) {
     t.ok(got.length && got.every((u) => !/w=1680/.test(u)), 'a phone does not download the 1680px photo ' + got.join(' '));
     await page.close();
   }
+
+  // The Light / Dark / Colorful look picked on the first step decides the theme family.
+  for (const type of ['Barber shop', 'Bakery', 'Law firm', 'Plumber']) {
+    for (let k = 0; k < 3; k++) {
+      const L = (await createSite(base, { name: 'Look Co', type, look: 'light' })).site.palette;
+      const D = (await createSite(base, { name: 'Look Co', type, look: 'dark' })).site.palette;
+      const C = (await createSite(base, { name: 'Look Co', type, look: 'colorful' })).site.palette;
+      t.ok(/^w_/.test(L) && /^b_/.test(D) && C && !/^[wb]_/.test(C), type + ' look picks light / dark / colorful themes: ' + [L, D, C].join(' '));
+    }
+  }
+  const bogus = (await createSite(base, { name: 'Look Co', type: 'Gym', look: 'neon' })).site.palette;
+  t.ok(/^[wb]_/.test(bogus), 'an unknown look falls back to the default theme ' + bogus);
 };
