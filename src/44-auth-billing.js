@@ -40,7 +40,7 @@ async function doGoogleCallback(request, env){
 async function doEmailStart(request, env){
   try{
     if(!env.KV) return fail('Not configured');
-    if(!env.RESEND_API_KEY) return fail('Email sign-in is not configured yet');
+    if(!env.RESEND_API_KEY && env.WS_TEST_MODE!=='1') return fail('Email sign-in is not configured yet');
     const b=await request.json();
     const email=String(b.email||'').trim().toLowerCase();
     if(!email||email.indexOf('@')<1||email.indexOf('.')<0) return fail('Enter a valid email');
@@ -52,7 +52,7 @@ async function doEmailStart(request, env){
     await env.KV.put('magic:'+t, JSON.stringify({ email:email, exp:Date.now()+1000*60*15 }), { expirationTtl:60*15 });
     const link=SITE_ORIGIN+'/auth/verify?token='+t;
     const html='<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:460px;margin:0 auto;padding:24px"><div style="font-size:22px;font-weight:800;color:#2d7a3a;margin-bottom:8px">🌱 Sign in to Websprout</div><p style="color:#444;line-height:1.6">Click the button below to sign in. This link works once and expires in 15 minutes.</p><p style="margin:24px 0"><a href="'+link+'" style="background:#2d7a3a;color:#fff;padding:13px 26px;border-radius:9px;text-decoration:none;font-weight:700;display:inline-block">Sign in to Websprout</a></p><p style="color:#999;font-size:12px">If you didn\'t request this, you can safely ignore this email.</p></div>';
-    await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer '+env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[email], subject:'Your Websprout sign-in link', html:html }) });
+    await wsSendMail(env, { from:'Websprout <hello@websprout.app>', to:[email], subject:'Your Websprout sign-in link', html:html });
     return succeed({ ok:true });
   }catch(e){ return fail(e.message); }
 }

@@ -73,6 +73,9 @@ export default {
       if (request.method === 'POST') return doClientLog(request, env);
     }
     if (url.pathname === '/inbox') return new Response(INBOX_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    if (url.pathname === '/leads') return new Response(LEADS_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
+    if (url.pathname === '/api/leads' && request.method === 'GET') return doLeadsData(request, env);
+    if (url.pathname === '/api/leads/status' && request.method === 'POST') { if (['same-origin', 'none', ''].indexOf(request.headers.get('sec-fetch-site') || '') === -1) return new Response('Forbidden', { status: 403 }); return doLeadsUpdate(request, env); }
     if (url.pathname === '/reviews' && request.method === 'GET') return doReviewsPage(request, env);
     if (url.pathname === '/api/reviews/manage') {
       if (request.method === 'OPTIONS') return new Response(null, { headers: formCors() });

@@ -902,6 +902,7 @@ nav.scrolled{background:rgba(6,12,5,.78)!important;backdrop-filter:blur(16px) sa
     if(!pro)h+='<button class="acct-upsell" data-act="billing"><span><b>Upgrade to Pro</b><span class="acct-upsell-sub">Your domain, no badge, the code</span></span><span class="acct-upsell-arrow">&#8594;</span></button>';
     h+='<div class="acct-sep"></div>';
     h+='<button class="acct-item" data-act="sites" role="menuitem">'+ic('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>')+'<span>My sites</span>'+(sites?'<span class="acct-count">'+sites+'</span>':'')+'</button>';
+    h+='<a class="acct-item" href="/leads" role="menuitem">'+ic('<path d="M4 4h16v12H5.2L4 17.2Z"/><path d="M8 9h8M8 12h5"/>')+'<span>Leads</span></a>';
     h+='<button class="acct-item" data-act="account" role="menuitem">'+ic('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>')+'<span>Account &amp; settings</span></button>';
     h+='<button class="acct-item" data-act="billing" role="menuitem">'+ic('<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>')+'<span>'+(pro?'Billing &amp; plan':'Plans &amp; pricing')+'</span></button>';
     h+='<a class="acct-item" href="/deploy-guide" target="_blank" rel="noopener" role="menuitem">'+ic('<path d="M12 3v13"/><path d="m7 12 5 5 5-5"/><path d="M5 21h14"/>')+'<span>Deploy guide</span></a>';

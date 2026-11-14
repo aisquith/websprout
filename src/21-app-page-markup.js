@@ -1306,6 +1306,7 @@
   function $(id){return document.getElementById(id);}
   var modal=$('authModal');
   function openAuth(){if(modal){$('authMsg').textContent='';modal.style.display='flex';}}
+  try{if(new URLSearchParams(location.search).get('signin')==='1'){history.replaceState(null,'',location.pathname);setTimeout(openAuth,300);}}catch(e){}
   window.openAuth=openAuth;
   if($('authClose'))$('authClose').addEventListener('click',function(){modal.style.display='none';});
   if(modal)modal.addEventListener('click',function(e){if(e.target===modal)modal.style.display='none';});

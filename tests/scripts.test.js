@@ -13,7 +13,7 @@ module.exports = async function (ctx, t) {
   }
   // Owner-only panels can't be fetched without signing in, so check their templates straight from the build
   const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'dist', 'worker.js'), 'utf8');
-  for (const name of ['ADMIN_PANEL', 'DEV_PANEL', 'INBOX_PAGE', 'REVIEWS_PAGE']) {
+  for (const name of ['ADMIN_PANEL', 'DEV_PANEL', 'INBOX_PAGE', 'REVIEWS_PAGE', 'LEADS_PAGE']) {
     const st = src.indexOf('const ' + name + ' = `'); const en = src.indexOf('</html>`;', st);
     if (st < 0 || en < 0) { t.fail(name + ' template not found'); continue; }
     const tpl = src.slice(st + ('const ' + name + ' = `').length, en + 7);
