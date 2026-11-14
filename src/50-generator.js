@@ -137,139 +137,58 @@ function v3StarterBase(type) {
 // Per-category default palette + a few editable FAQ entries (generic, never fabricated specifics).
 // Copy variation pools — one line is picked at random per site so two businesses in the same
 // category never read identically. The base v3StarterBase value is kept as the first option.
-const V3_FLAVORS = {
-  barber: {
-    tagline: ['A sharp cut, every time.', 'Look sharp. Feel sharper.', 'Clean fades, no fuss.', 'Where the regulars send their friends.', 'Your chair is waiting.', 'Fresh cut, fresh start.', 'Precision from the first snip.', 'The cut that makes the week.', 'Bad hair days end at this chair.', 'Walk in rough, walk out royalty.'],
-    about: ['Walk in for a classic cut or a modern fade. We take our time, line things up right, and send you out looking your best.', 'No rushed cuts, no guesswork. We listen to what you want, sweat the details, and make sure you leave looking exactly how you pictured.', 'Old-school attention, modern styles. Pull up a chair, relax, and let us dial in a cut that holds up all week.'],
-    ctaTitle: ['Ready for a fresh cut?', 'Need a line-up?', 'Time for a trim?', 'Grab a chair.', 'Looking sharp starts here.'],
-    ctaText: ['Book a chair or walk in — we will take care of the rest.', 'Reserve a time or just stop by. The chair is warm.', 'Pick a time that works and leave the rest to us.'],
-  },
-  salon: {
-    tagline: ['Hair you will want to show off.', 'Your best hair day, on repeat.', 'Cut, color, confidence.', 'Hair that fits your life.', 'Walk out feeling brand new.', 'Great hair starts with great listening.', 'Where your hair goals happen.', 'Come in flat, leave fabulous.', 'Your hair, main-character edition.'],
-    about: ['From a trim to a full transformation, we listen first and cut to suit you — your hair, your face, your routine.', 'We treat your hair like it is ours: honest advice, careful work, and a look you can actually recreate at home.', 'Color, cuts and care that start with a real conversation. Tell us the goal and we will get you there, step by step.'],
-    ctaTitle: ['Let us find your look.', 'Ready for a change?', 'Dreaming of new hair?', 'Let us talk hair.'],
-    ctaText: ['Book a chair and tell us what you have in mind.', 'Reserve a time and bring your inspiration — we will make it real.', 'Tell us your goal and we will map out how to get there.'],
-  },
-  spa: {
-    tagline: ['An hour that is just for you.', 'Exhale. You are here now.', 'Rest, restore, repeat.', 'Your calm, on the calendar.', 'Self-care, done right.', 'Leave lighter than you came.', 'A little quiet goes a long way.', 'Stress called. We did not pick up.', 'The reset button you can book.'],
-    about: ['Step away from the noise. Our treatments are about taking care of yourself, done properly, in a space made to relax in.', 'A calm room, skilled hands, and time that is entirely yours. Come as you are and leave a little lighter.', 'We built this place to be the pause in your week — thoughtful treatments, no rush, all about how you feel when you leave.'],
-    ctaTitle: ['Treat yourself.', 'Ready to unwind?', 'You have earned this.', 'Book your reset.'],
-    ctaText: ['Book a time that works and leave the rest to us.', 'Reserve your spot and let the day melt away.', 'Pick a time — we will have everything ready.'],
-  },
-  tattoo: {
-    tagline: ['Art that stays with you.', 'Your story, in ink.', 'Clean lines, real art.', 'Made to last, made for you.', 'Ink you will be proud of.', 'From idea to forever.', 'Custom work, done right.', 'Commitment, but make it art.', 'No regerts — we double-check the spelling.'],
-    about: ['Custom work, clean lines and a studio that takes aftercare seriously. Bring an idea or a reference and we will make it yours.', 'We design around you — your idea, your placement, your style. Sterile, careful, and never off a flash sheet unless you want it.', 'Good tattoos start with a real conversation. Share the concept and we will sketch something you will want to wear for life.'],
-    ctaTitle: ['Have an idea?', 'Ready to get inked?', 'Got a concept?', 'Let us make it real.'],
-    ctaText: ['Send us your concept and we will set up a consult.', 'Share your idea and we will sketch a plan.', 'Tell us the vision — size, placement, style — and we will take it from there.'],
-  },
-  bakery: {
-    tagline: ['Baked fresh every morning.', 'Still warm from the oven.', 'Made by hand, early.', 'Real butter, real time.', 'The good stuff, baked daily.', 'Small batches, big flavor.', 'Mornings are better here.', 'Carbs are a love language.', 'We rise early so you do not have to.'],
-    about: ['Everything is made by hand, early, in small batches. Real butter, real time, and nothing sitting around until tomorrow.', 'We are up before the sun so you do not have to be. Everything is scratch-made, small-batch, and best the day it is baked.', 'No shortcuts, no day-olds pretending to be fresh. Just honest baking, done every morning, the way it should be.'],
-    ctaTitle: ['Come by while it is warm.', 'Fresh out of the oven.', 'Get it while it lasts.', 'Treat yourself this morning.'],
-    ctaText: ['Stop in this morning or order ahead for pickup.', 'Swing by early or reserve your favorites.', 'Order ahead for pickup — the good stuff goes fast.'],
-  },
-  cafe: {
-    tagline: ['Your new regular spot.', 'Good coffee, better company.', 'Where your morning slows down.', 'Pull up and stay a while.', 'The cup that starts the day.', 'Coffee worth the trip.', 'Your corner for a good cup.', 'The third place between home and work.', 'Powered by caffeine and good company.'],
-    about: ['Good coffee, a calm room and a welcome that makes you want to stay. Whether it is a quick cup or a slow afternoon, you are in the right place.', 'We care about the cup and the room it is served in. Come for the coffee, stay because it feels like yours.', 'A proper espresso, a comfortable seat, and no one rushing you out the door. That is the whole idea.'],
-    ctaTitle: ['See you in the morning.', 'Coffee is on.', 'First cup is calling.', 'Swing by.'],
-    ctaText: ['Swing by or order ahead and skip the line.', 'Grab a seat or order to go — either way, see you soon.', 'Order ahead and your cup is ready when you are.'],
-  },
-  restaurant: {
-    tagline: ['Food worth coming back for.', 'Cooked like it matters.', 'Your table is ready.', 'Honest food, made to order.', 'Flavor you can taste the care in.', 'Come hungry, leave happy.', 'The kind of meal you tell people about.', 'Good food, good people, good night.', 'Eat like you mean it.', 'Reservations optional, cravings mandatory.'],
-    about: ['Honest cooking made from good ingredients, served by people who are glad you came in. Pull up a seat — we saved you one.', 'We cook the way we would for family: fresh, from scratch, and with the kind of care you can taste. Come see for yourself.', 'Real ingredients, real cooking, and a room that feels like a welcome. No fuss — just food you will want again.'],
-    ctaTitle: ['Hungry yet?', 'Pull up a chair.', 'Let us eat.', 'Come sit with us.', 'Save me a seat.'],
-    ctaText: ['Reserve a table or order ahead for pickup.', 'Book a table or swing by — we will take it from there.', 'Call ahead, order online, or just walk in. We are glad you are here.'],
-  },
-  lawn: {
-    tagline: ['A yard you will be proud of.', 'Green, tidy, done.', 'We mow, you relax.', 'Curb appeal, handled.', 'Your weekend back, your lawn handled.', 'The best-looking yard on the block.', 'Lawn care without the hassle.', 'The grass really is greener here.', 'We bring the mower, you bring the lemonade.'],
-    ctaTitle: ['Want a tidier yard?', 'Ready for a greener lawn?', 'Tired of mowing?', 'Let us handle the yard.'],
-    ctaText: ['Tell us your address and we will put together a fair price.', 'Send your details and we will quote it fast.', 'Get a quick quote and reclaim your weekends.'],
-  },
-  cleaning: {
-    tagline: ['A cleaner space, less stress.', 'Come home to clean.', 'Spotless, every time.', 'The clean you do not have time for.', 'We sweat the details.', 'Clean you can feel.', 'Your place, at its best.', 'Dust does not stand a chance.', 'We make clean look easy. It is not.'],
-    ctaTitle: ['Want it spotless?', 'Ready for a cleaner space?', 'Let us handle the mess.', 'Reclaim your time.'],
-    ctaText: ['Tell us about your space for a fast, fair quote.', 'Send the details and we will quote it quick.', 'Get a quote and cross cleaning off your list.'],
-  },
-  marine: {
-    tagline: ['Your day on the water starts here.', 'Built for the water, backed by us.', 'More time on the water.', 'From our dock to yours.', 'The boat you have been waiting for.', 'Sales and service you can trust.', 'Less dock time, more water time.', 'The boat you have been picturing.'],
-    ctaTitle: ['Ready to get on the water?', 'Looking for your next boat?', 'Let us find your fit.'],
-    ctaText: ['Tell us how you will use it and we will point you to the right boat.', 'Reach out and we will match you to the right rig.', 'Stop by or message us — we will help you find the one.'],
-  },
-  auto: {
-    tagline: ['Honest work, fair prices.', 'Back on the road, done right.', 'Repairs you can trust.', 'We fix it right the first time.', 'Straight talk, solid work.', 'Your car is in good hands.', 'We speak fluent check-engine light.', 'That weird noise? We have heard it before.'],
-    ctaTitle: ['Car acting up?', 'Need a look under the hood?', 'Time for service?', 'Let us get you rolling.'],
-    ctaText: ['Tell us what is going on and we will get you a straight quote.', 'Describe the issue and we will take it from there.', 'Book a time and we will have you back on the road.'],
-  },
-  fitness: {
-    tagline: ['Stronger starts here.', 'Show up — we will handle the rest.', 'Your goals, our game plan.', 'Progress you can feel.', 'Train with people who get it.', 'The work pays off here.', 'Sweat now, shine later.', 'Showing up is the hard part — we handle the rest.'],
-    ctaTitle: ['Ready to start?', 'Let us get to work.', 'Time to level up?', 'Your first session awaits.'],
-    ctaText: ['Reach out and we will build a plan around your goals.', 'Tell us where you are at and we will map the path.', 'Book a session and let us get moving.'],
-  },
-  pet: {
-    tagline: ['Care your pet will love.', 'Where tails wag.', 'Treated like family.', 'Happy pets, happy you.', 'Gentle hands, happy pets.', 'The care they deserve.', 'Belly rubs included, always.', 'Your best friend, in the best hands.'],
-    ctaTitle: ['Give your pet the best.', 'Ready to book?', 'Spoil your best friend.'],
-    ctaText: ['Tell us about your companion and we will set things up.', 'Reach out and we will find the right time.', 'Book a visit — we cannot wait to meet them.'],
-  },
-  photo: {
-    tagline: ['Moments worth keeping.', 'Your story, beautifully told.', 'Real moments, real photos.', 'Memories made to last.', 'Pictures that feel like you.', 'The day, remembered right.', 'Say cheese, mean it.', 'Memories you will not have to describe.'],
-    ctaTitle: ['Let us capture it.', 'Ready for your shoot?', 'Let us make something.', 'Got a date in mind?'],
-    ctaText: ['Tell us about your shoot and we will check our dates.', 'Share your vision and we will plan the session.', 'Reach out and let us find your date.'],
-  },
-  retail: {
-    tagline: ['Finds you will actually love.', 'Curated, not crowded.', 'Treasures worth the trip.', 'Something special, always.', 'Picked with you in mind.', 'The good stuff, in one place.', 'Window shopping, dangerously good.', 'You did not know you needed it. Now you do.'],
-    about: ['A carefully chosen selection, not a warehouse. Everything here earned its place — come see what we picked out for you.', 'We shop so you do not have to sift. Every piece is chosen by hand, with you and this town in mind.', 'Small, thoughtful and always a little surprising. Stop in and find something you did not know you needed.'],
-    ctaTitle: ['Come take a look.', 'Ready to browse?', 'Find your next favorite.', 'Stop in and see.'],
-    ctaText: ['Browse in store or reach out and we will hold something for you.', 'Come see what is new, or message us to set something aside.', 'Shop with us — we will help you find it.'],
-  },
-  home: {
-    tagline: ['Done right, done once.', 'Built to last, done to impress.', 'Your project, in good hands.', 'Quality work, no surprises.', 'We treat your home like ours.', 'Craft you can count on.', 'Measure twice, impress once.', 'The contractor who actually calls back.'],
-    about: ['Licensed, tidy and on time. We treat your home with respect and leave it better than we found it — no surprises on the bill.', 'Straight quotes, clean work, and a crew that shows up when it says it will. We build it like it is our own place.', 'No cut corners, no vanishing acts. Just honest craftsmanship, clear communication, and work that holds up for years.'],
-    ctaTitle: ['Got a project?', 'Ready to get started?', 'Need an estimate?', 'Let us build it.'],
-    ctaText: ['Describe the job and we will get you a straight quote.', 'Tell us what you are planning and we will quote it honestly.', 'Send the details and we will map out the work.'],
-  },
-  generic: {
-    tagline: ['Proud to serve our community.', 'Local, dependable, here for you.', 'Your neighbors, at your service.', 'Doing right by our community.', 'Here when you need us.', 'Service you can count on.', 'The local name people actually recommend.', 'Big-city service, hometown heart.'],
-    ctaTitle: ['Let us get started.', 'Ready when you are.', 'How can we help?', 'Reach out anytime.'],
-    ctaText: ['Reach out and we will take it from here.', 'Get in touch and we will help you out.', 'Send us a note — we would love to help.'],
-  },
-};
+// Copy pools live in 49-copy.js (V3_COPYBOOK, refined by V3_SUBTYPES).
+const V3_FLAVORS = V3_COPYBOOK;
 function v3FlavorPick(arr) { return (arr && arr.length) ? arr[Math.floor(Math.random() * arr.length)] : ''; }
 
 // Structural copy pools used across every generated site (steps, page CTAs, pageheads, forms).
 // These are the lines that used to be identical on every site — now each one is picked fresh.
 const V3_COPY = {
-  featured: ['Featured', 'A few favorites', 'Fan favorites', 'Popular picks', 'Pick of the bunch', 'Start here', 'Worth a look', 'The highlights'],
-  whatWeDo: ['What we do', 'What we offer', 'How we help', 'The short list', 'What we are good at', 'Where we shine', 'How we can help'],
-  stepsTitle: ['How it works', 'Getting started is easy', 'Three simple steps', 'How we work', 'From hello to done', 'Easy as one, two, three'],
+  featured: ['Popular right now', 'A few favorites', 'Customer favorites', 'Where to start', 'Most requested', 'Our most popular'],
+  whatWeDo: ['What we do', 'What we offer', 'How we can help', 'Our services', 'What we’re known for', 'Ways we can help'],
+  stepsTitle: ['How it works', 'What to expect', 'Getting started', 'How we work', 'From first message to finished', 'Simple from start to finish'],
   stepsSets: [
-    [['Reach out', 'Tell us what you need and when works for you.'], ['We plan it', 'We confirm the details and give you a clear, honest price.'], ['We deliver', 'We do the work and make sure you are happy with it.']],
-    [['Tell us the goal', 'Share what you are after — no detail is too small.'], ['Get a clear plan', 'We map it out and quote it straight, no surprises.'], ['Sit back', 'We handle the work and keep you posted the whole way.']],
-    [['Say hello', 'Send a message or give us a call to get the ball rolling.'], ['We figure it out together', 'We listen, ask good questions, and make a plan that fits.'], ['We make it happen', 'You get it done right — and done when we said.']],
-    [['Book a time', 'Pick a slot that works for you, online or by phone.'], ['We show up ready', 'On time, prepared, and respectful of your space.'], ['You are all set', 'Great work, no loose ends, and a smile on the way out.']],
+    [['Get in touch', 'Tell us what you need and when suits you.'], ['Get a clear plan', 'We confirm the details and give you an honest price.'], ['Consider it done', 'We do the work and check you’re happy with it.']],
+    [['Tell us your goal', 'Share what you’re after. No detail is too small.'], ['We plan it together', 'A clear plan and price, with no surprises later.'], ['We get to work', 'You’ll hear from us at every stage until it’s finished.']],
+    [['Start with a conversation', 'A quick call or message is all it takes.'], ['Agree the details', 'We listen, ask good questions and propose a plan.'], ['See it through', 'We deliver what we agreed, when we said we would.']],
   ],
-  shopCta: { title: ['Ready to order?', 'See something you like?', 'Treat yourself.', 'Fill that cart.', 'Go on, you deserve it.'], text: ['Add your favorites to the cart and check out in seconds.', 'Fill your cart and check out — quick and painless.', 'Found something? Checkout takes about ten seconds.'] },
-  serviceCta: { title: ['Ready to get started?', 'Let us take it from here.', 'Got a project in mind?', 'Let us make it easy.', 'Say the word.'], text: ['Book a time or send us a message — we will take it from there.', 'Tell us what you need and we will handle the rest.', 'Reach out and we will get the ball rolling today.'] },
-  aboutCta: { title: ['Let us work together.', 'Nice to meet you.', 'Let us make something good.', 'Come say hi.', 'This is the start of something.'], text: ['Have a question or ready to start? We are one message away.', 'Like what you see? Let us talk about what you need.', 'We would love to help — reach out any time.'] },
-  contactHead: { title: ['Visit & contact', 'Get in touch', 'Say hello', 'Let us talk', 'Come find us', 'Reach out'], textCity: ['Find us in CITY.', 'We are right here in CITY — come by.', 'Based in CITY and glad to help.', 'Proudly serving CITY and nearby.'], textNoCity: ['We would love to hear from you.', 'Questions, bookings, or just saying hi — we are here.', 'Drop us a line and we will get right back to you.'] },
-  formTitle: ['Get in touch', 'Send us a message', 'Drop us a line', 'Say hello', 'Let us help'],
-  formText: ['Send us a message and we will get right back to you.', 'Tell us what you need — we usually reply within a day.', 'Questions or ready to book? Fill this out and we will be in touch.', 'Leave your details and we will reach out fast.'],
-  formSuccess: ['Thanks! Your message is on its way — we will be in touch soon.', 'Got it — thanks for reaching out. We will reply shortly.', 'Message sent! We will get back to you as soon as we can.', 'Thanks for reaching out — talk soon.'],
-  shopHead: ['Browse the collection and order online.', 'Everything we make, in one place.', 'Have a look around — order whenever you are ready.', 'The full lineup, ready when you are.'],
-  menuHead: ['Everything we make, fresh to order.', 'The full menu, made the way you like it.', 'Dig in — it is all made fresh.', 'Everything good, in one place.'],
-  servicesHead: ['Everything we offer, at a glance.', 'What we can do for you.', 'The full list of what we handle.', 'Here is how we can help.'],
+  shopCta: { title: ['Ready to order?', 'Found something you like?', 'Shop the full range.', 'Ready to check out?'], text: ['Add your favorites to the cart and check out in a minute.', 'Checkout is quick, and we’ll confirm your order by email.', 'Have a question about a product? Send us a message before you order.'] },
+  // Calls to action that fit the kind of business: somewhere you eat, somewhere you visit, someone who comes
+  // to you, or a professional service.
+  pageCta: {
+    food: { title: ['Hungry yet?', 'Join us soon.', 'Book a table.', 'Come and eat with us.', 'Order ahead.'], text: ['Reserve a table, or order ahead for pickup.', 'Book online, call us, or just walk in.', 'Planning a group meal? Get in touch and we’ll help you arrange it.'] },
+    visit: { title: ['Book your visit.', 'Ready when you are.', 'Find a time that suits you.', 'Come and see us.', 'Book your appointment.'], text: ['Choose a time online, or call us and we’ll find one together.', 'Book ahead to get the time you want.', 'Not sure what to book? Send us a message and we’ll help you choose.'] },
+    onsite: { title: ['Get a free quote.', 'Tell us about the job.', 'Need a hand?', 'Book a visit.', 'Let’s get it sorted.'], text: ['Send a few details, and photos if you have them, and we’ll reply with a clear price.', 'Tell us what you need and when, and we’ll arrange the rest.', 'Get in touch for a no-obligation quote.'] },
+    project: { title: ['Let’s talk.', 'Book a consultation.', 'Have a question?', 'Get in touch.', 'Start the conversation.'], text: ['Tell us a little about what you need and we’ll suggest the next steps.', 'Book a short call and we’ll talk through your options.', 'Send us a message. We usually reply within one business day.'] },
+  },
+  aboutCtaBy: {
+    food: { title: ['Come and visit.', 'See you soon.', 'Pull up a chair.', 'Join us for a meal.'], text: ['We’d love to cook for you. Book a table or just drop in.', 'Have a question about the menu or a booking? Get in touch.', 'Find us, book a table or order ahead.'] },
+    visit: { title: ['Come and meet us.', 'We’d love to see you.', 'Say hello.', 'Book your first visit.'], text: ['Book a visit, or send us a message with any questions first.', 'New here? Tell us what you’re looking for and we’ll help you choose.', 'Call, message or stop by. We’re happy to help.'] },
+    onsite: { title: ['Let’s work together.', 'Ready when you are.', 'Talk to us.', 'Get a quote.'], text: ['Tell us about your job and we’ll get back to you with a clear price.', 'Questions before you book? We’re a message away.', 'Send us a few details and we’ll take it from there.'] },
+    project: { title: ['Let’s work together.', 'Talk to us.', 'Get in touch.', 'Questions? Just ask.'], text: ['Tell us a little about what you need and we’ll explain how we can help.', 'Book a call or send us a message, whichever suits you.', 'We’re happy to answer questions before you commit to anything.'] },
+  },
+  serviceCta: { title: ['Ready to get started?', 'Let’s talk about what you need.', 'Have a question?', 'Book with us.', 'Get in touch today.'], text: ['Book a time or send us a message, and we’ll take it from there.', 'Tell us what you need and we’ll get back to you with next steps.', 'Message us with any questions. We’re happy to help you choose.'] },
+  aboutCta: { title: ['Let’s work together.', 'We’d love to hear from you.', 'Come and say hello.', 'Get to know us.', 'Questions? Just ask.'], text: ['Have a question or ready to book? We’re a message away.', 'Tell us a little about what you need and we’ll take it from there.', 'Call, message or stop by. We’re always happy to help.'] },
+  contactHead: { title: ['Contact us', 'Get in touch', 'Visit or contact us', 'We’d love to hear from you', 'Say hello'], textCity: ['Find us in CITY.', 'Based in CITY and serving the surrounding area.', 'Proudly local to CITY.', 'Visit us in CITY, or send a message below.'], textNoCity: ['Send us a message and we’ll get back to you soon.', 'Questions, bookings or quotes: we’re happy to help.', 'Call, email or use the form below.'] },
+  formTitle: ['Send us a message', 'Get in touch', 'Ask us anything', 'Request a call back', 'How can we help?'],
+  formText: ['Leave your details and we’ll get back to you soon.', 'Tell us what you need. We usually reply within one business day.', 'Questions, bookings or quotes: send us a note and we’ll be in touch.', 'Fill in the form below and we’ll reply as soon as we can.'],
+  formSuccess: ['Thanks for your message. We’ll be in touch soon.', 'Got it, thank you. We’ll reply as soon as we can.', 'Message sent. We’ll get back to you shortly.', 'Thanks for getting in touch. We’ll reply within one business day.'],
+  shopHead: ['Browse the full range and order online.', 'Everything we stock, in one place.', 'Order online, or visit us in store.', 'Take your time and have a look around.'],
+  menuHead: ['Fresh, seasonal and made in house.', 'Everything on our menu, made to order.', 'Have a look at what we’re cooking.', 'Our full menu, made fresh every day.'],
+  servicesHead: ['Everything we offer, at a glance.', 'Find the right service for you.', 'Here’s how we can help.', 'Not sure what you need? Ask us.'],
 };
 const V3_STEPS_BY_KIND = {
   // people come to you (chair, table, studio, gym)
   visit: [
-    [['Book a time', 'Pick a slot online or give us a call, whatever is easier.'], ['Come on in', 'Grab a seat. We talk it through before we start.'], ['Leave happy', 'You walk out looking and feeling the way you wanted.']],
-    [['Reserve your spot', 'Choose a day and time that fits your week.'], ['We get to know you', 'Tell us what you like. We listen first.'], ['Enjoy the result', 'Relax and let us take care of the details.']],
-    [['Say hi', 'Book online, call, or just stop by.'], ['Settle in', 'We make you comfortable and get to work.'], ['See you next time', 'Most of our clients become regulars.']],
+    [['Book a time', 'Choose a time online or give us a call.'], ['Come in and relax', 'We talk it through before we start.'], ['Leave happy', 'You walk out feeling the way you hoped.']],
+    [['Choose your appointment', 'Pick a service and a time that suits your week.'], ['Tell us what you like', 'We listen first, then get to work.'], ['Enjoy the result', 'Most of our clients book their next visit before they leave.']],
+    [['Get in touch', 'Book online, call, or just stop by.'], ['Make yourself comfortable', 'We’ll look after you from the moment you arrive.'], ['See you next time', 'We’ll remember how you like it.']],
   ],
   // you go to them (lawn, cleaning, trades)
   onsite: [
-    [['Book a time', 'Pick a slot that works for you, online or by phone.'], ['We show up ready', 'On time, prepared, and respectful of your space.'], ['You are all set', 'Great work, no loose ends, and a smile on the way out.']],
-    [['Get a free quote', 'Tell us about the job and we reply fast with a clear price.'], ['Pick a date', 'We work around your schedule, not the other way around.'], ['Done right', 'We do the work, clean up, and make sure you are happy.']],
-    [['Tell us what you need', 'A quick message or call is all it takes.'], ['We plan it out', 'A straight answer on price and timing, no surprises.'], ['We get it done', 'Quality work, finished when we said it would be.']],
+    [['Ask for a quote', 'Tell us about the job and we’ll send a clear price.'], ['Choose a date', 'We work around your schedule.'], ['Job done', 'We finish properly, tidy up and check you’re happy.']],
+    [['Tell us what you need', 'A quick message or call, with photos if you have them.'], ['We plan the work', 'A straight answer on price and timing.'], ['We get it done', 'Quality work, finished when we said it would be.']],
+    [['Book a visit', 'We’ll come and take a look if the job needs it.'], ['Agree the price', 'You approve the quote before any work begins.'], ['Sit back', 'We handle everything and keep you updated.']],
   ],
   // projects and professional services
   project: V3_COPY.stepsSets.slice(0, 3),
@@ -284,14 +203,15 @@ function v3Pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 function v3Starter(type) {
   const r = v3StarterBase(type);
-  // Freshen the copy: pick a random tagline / CTA (and about, where we have variations) per site.
-  const F = V3_FLAVORS[r.category];
-  if (F) {
-    if (F.tagline) r.tagline = v3FlavorPick(F.tagline) || r.tagline;
-    if (F.about) r.about = v3FlavorPick(F.about) || r.about;
-    if (F.ctaTitle) r.ctaTitle = v3FlavorPick(F.ctaTitle) || r.ctaTitle;
-    if (F.ctaText) r.ctaText = v3FlavorPick(F.ctaText) || r.ctaText;
-  }
+  // Each site draws its own mix from the copy book: the category's pools, refined by sub-type (pizza, plumber...).
+  const C = v3CopyFor(type, r.category);
+  if (C.tagline) r.tagline = v3FlavorPick(C.tagline) || r.tagline;
+  if (C.about) { r.about = v3FlavorPick(C.about) || r.about; r.aboutPool = C.about; }
+  if (C.ctaTitle) r.ctaTitle = v3FlavorPick(C.ctaTitle) || r.ctaTitle;
+  if (C.ctaText) r.ctaText = v3FlavorPick(C.ctaText) || r.ctaText;
+  if (C.servicesTitle) r.servicesTitle = v3FlavorPick(C.servicesTitle) || r.servicesTitle;
+  if (C.services && C.services.length) { r.services = v3PickSome(C.services, 4, 2); r.servicePool = C.services; }
+  if (C.photo) r.photoQuery = C.photo;
   // Clean single-accent themes (white + one color). A few fitting options per category → picked at
   // random per site for variety, never a clashing two-hue scheme. Owners can switch to a Noir (black +
   // color) twin or any other theme in the editor.
@@ -332,40 +252,12 @@ function v3Starter(type) {
   };
   // A second type style that also suits each category, used some of the time for variety.
   const TYPE_ALT = { bold: 'clean', editorial: 'clean', clean: 'editorial' };
-  const FAQ = {
-    barber: [['Do I need an appointment?', 'Walk-ins are always welcome, and you can book ahead if you would rather lock in a time.'], ['How long does a cut take?', 'Most cuts run about 30 to 45 minutes, a little longer with a beard or a shave.'], ['Not sure what to ask for?', 'Tell us the look you are going for and we will guide you to the right cut.']],
-    salon: [['How do I book?', 'Reach out by phone or message and we will find a time that works for you.'], ['Can you match a photo I bring in?', 'Absolutely. Bring a reference and we will tell you honestly what will work with your hair.'], ['Do you do color corrections?', 'Yes. Book a consultation first so we can plan the safest path to your goal.']],
-    spa: [['Should I arrive early?', 'Arrive a few minutes ahead so you can settle in and start relaxed.'], ['What if I need to reschedule?', 'Just give us a heads up and we will happily move your appointment.'], ['Are treatments customizable?', 'Every treatment is tailored to you — tell us your preferences when you arrive.']],
-    tattoo: [['How do I get a quote?', 'Send us your idea, size and placement and we will give you an honest estimate.'], ['Do you take walk-ins?', 'Some days, yes — but booking ahead guarantees your spot and your artist.'], ['How should I prepare?', 'Eat beforehand, stay hydrated, and wear something that gives us easy access to the area.']],
-    bakery: [['Do you take custom orders?', 'Yes — reach out a few days ahead for cakes and large orders.'], ['When are you freshest?', 'Everything comes out through the morning, so earlier is better for the full case.'], ['Do you have options for dietary needs?', 'Ask us about the day\'s options — we usually have something for most needs.']],
-    cafe: [['Do you have non-dairy milk?', 'Yes, just let us know your preference when you order.'], ['Can I work here for a while?', 'Of course — grab a seat, we are happy to have you stay.'], ['Do you take orders ahead?', 'Reach out and we will let you know the easiest way to order ahead.']],
-    restaurant: [['Do you take reservations?', 'Yes — reach out to book a table, especially for larger groups.'], ['Do you offer takeout?', 'We do. Call ahead and we will have it ready.'], ['Can you handle dietary restrictions?', 'Let us know when you order and the kitchen will do its best to accommodate.']],
-    lawn: [['How do I get a quote?', 'Tell us your address and what you need, and we will put together a fair price.'], ['Do you offer regular service?', 'Yes — weekly or biweekly schedules are our most popular option.'], ['What areas do you cover?', 'Reach out with your location and we will confirm we serve your area.']],
-    cleaning: [['How do you price a clean?', 'Pricing depends on size and scope — tell us about your space for a fast quote.'], ['Do I need to be home?', 'That is up to you. Many clients give us access and go about their day.'], ['Do you bring supplies?', 'Yes, we arrive with everything needed unless you prefer we use yours.']],
-    marine: [['Do you take trade-ins?', 'Yes — tell us about your current boat and we will work out a fair value.'], ['Do you service what you sell?', 'We do. Our shop keeps you running long after the sale.'], ['Can you help me choose?', 'Tell us how you plan to use it and we will point you to the right fit.']],
-    auto: [['Do I need an appointment?', 'Appointments keep things quick, but reach out and we will fit you in.'], ['Will you tell me before any work?', 'Always. You approve the price before we touch anything.'], ['Do you offer a warranty?', 'Yes — ask us about the warranty on parts and labor for your repair.']],
-    fitness: [['Can I try before I join?', 'Yes — come in for a first session and see if we are the right fit.'], ['Do I need to be in shape already?', 'Not at all. We meet you where you are and build from there.'], ['What should I bring?', 'Just comfortable clothes, shoes and water — we have the rest.']],
-    pet: [['How do I book?', 'Reach out with your pet\'s details and we will set up a time.'], ['Is my pet safe with you?', 'Always. Your pet is supervised and cared for like our own.'], ['What do I need to bring?', 'Food, any medications, and anything that keeps them comfortable.']],
-    photo: [['How do we book a session?', 'Reach out with your dates and what you have in mind and we will check availability.'], ['When do we get our photos?', 'We will give you a clear timeline when we book — quality takes a little time.'], ['What should we wear?', 'We are happy to help you plan outfits so everything looks cohesive.']],
-    retail: [['Can you hold an item for me?', 'Reach out and we will set it aside while you decide.'], ['Do you restock sold-out items?', 'Sometimes — message us and we will let you know.'], ['Do you ship?', 'Ask us about shipping options for the pieces you love.']],
-    legal: [['Is the first consultation free?', 'Reach out and we will tell you exactly how the first meeting works and what it costs, before you commit to anything.'], ['What should I bring?', 'Any documents, letters or dates related to your situation. If you are not sure, bring it.'], ['How quickly will I hear back?', 'We aim to reply within one business day.']],
-    dental: [['Are you taking new patients?', 'Yes. Request an appointment and we will get you scheduled.'], ['I am nervous about the dentist. Can you help?', 'Absolutely. Tell us, and we will go at your pace and explain everything first.'], ['Do you take insurance?', 'Reach out with your plan and we will check your coverage for you.']],
-    health: [['Do I need a referral?', 'Usually not. Get in touch and we will let you know for your situation.'], ['What should I bring to my first visit?', 'Any relevant records, a list of medications, and your questions.'], ['How soon can I be seen?', 'Request an appointment and we will offer the earliest time that works.']],
-    finance: [['How much does it cost?', 'It depends on what you need. We give you a clear quote up front, with no surprises.'], ['Can you work with my existing records?', 'Yes. We will tidy things up and get you on track.'], ['Do you work with small businesses?', 'Absolutely. Most of our clients are individuals and small businesses.']],
-    realestate: [['How much is my home worth?', 'Request a free valuation and we will give you an honest, local estimate.'], ['How long does it take to sell?', 'It depends on price and season. We will give you a realistic timeline up front.'], ['Do you help first-time buyers?', 'Yes, and we will walk you through every step.']],
-    education: [['What ages do you teach?', 'Reach out with a little about the student and we will let you know if we are the right fit.'], ['Can we do a trial lesson?', 'Yes. A first session is the best way to see how we work together.'], ['Do you offer online lessons?', 'We do, with the same care and structure as in person.']],
-    events: [['How far ahead should we book?', 'As early as you can, especially for popular dates. Reach out and we will check availability.'], ['Can you work with our budget?', 'Yes. Tell us what you have in mind and we will make the most of it.'], ['Do you travel?', 'Often. Let us know where your event is.']],
-    moving: [['How do you price a move?', 'Based on size, distance and timing. Tell us the details for a free quote.'], ['Are my things insured?', 'Ask us about coverage when you book. We will explain your options.'], ['Do you supply boxes?', 'We can, along with all the packing materials you need.']],
-    studio: [['How does a project start?', 'With a short call to understand your goals. Then we send a clear proposal.'], ['How long does it take?', 'It depends on scope. You will get a realistic timeline before we begin.'], ['Do you work with small businesses?', 'Yes. Many of our favorite clients are small, local teams.']],
-    generic: [['How do I get started?', 'Send us a message or give us a call and we will take it from there.'], ['How much does it cost?', 'Every job is a little different. Reach out and we will give you a clear answer.'], ['How quickly do you reply?', 'We usually get back to you within one business day.']],
-    home: [['How do I get an estimate?', 'Tell us about the project and we will give you a clear, no-pressure quote.'], ['Are you licensed and insured?', 'Yes — we are happy to share details before any work begins.'], ['How soon can you start?', 'Reach out with your timeline and we will tell you our soonest availability.']],
-  };
   const _tb = TYPE_BY_CAT[r.category] || 'bold';
   r.typeset = Math.random() < 0.7 ? _tb : TYPE_ALT[_tb];
   r.palette = v3FlavorPick(PAL_SETS[r.category] || ['w_mono', 'w_slate', 'w_charcoal']);
   // Now and then use the dark (Noir) twin of the chosen light theme, when it exists.
   try { if (Math.random() < 0.2) { const _dk = 'b_' + r.palette.slice(2); if (WSENGINE.palettes.some((p) => p.id === _dk)) r.palette = _dk; } } catch (e) {}
-  r.faq = FAQ[r.category] || FAQ.generic || [];
+  r.faq = v3PickSome(C.faq || V3_COPYBOOK.generic.faq, 3, 1);
   return r;
 }
 
@@ -564,9 +456,9 @@ function v3Pages(site, sc, isShop) {
     const quoteCats = ['lawn', 'cleaning', 'home', 'marine', 'auto', 'moving', 'events', 'studio', 'finance'];
     let bk = null;
     if (isShop) bk = null;
-    else if (isFood) bk = { mode: 'reservation', path: 'reserve', title: 'Reserve', short: 'Reserve', head: 'Reserve a table', btn: 'Reserve a table', sub: 'Tell us when you are coming and we will confirm your table.', ok: 'Reservation request sent! We will confirm shortly.' };
-    else if (quoteCats.indexOf(cat) >= 0) bk = { mode: 'quote', path: 'quote', title: 'Get a Quote', short: 'Quote', head: 'Get a free quote', btn: 'Request a quote', sub: 'Tell us about the job and we will send over a fair price.', ok: 'Thanks! We will review it and get you a quote soon.' };
-    else bk = { mode: 'appointment', path: 'book', title: 'Book', short: 'Book', head: 'Book an appointment', btn: 'Request appointment', sub: 'Pick a time that works and we will confirm by text or email.', ok: 'Request received! We will confirm your appointment shortly.' };
+    else if (isFood) bk = { mode: 'reservation', path: 'reserve', title: 'Reserve', short: 'Reserve', head: 'Reserve a table', btn: 'Reserve a table', sub: 'Tell us when you’d like to come and we’ll confirm your table.', ok: 'Thanks. Your request is in and we’ll confirm your table shortly.' };
+    else if (quoteCats.indexOf(cat) >= 0) bk = { mode: 'quote', path: 'quote', title: 'Get a Quote', short: 'Quote', head: 'Get a free quote', btn: 'Request a quote', sub: 'Tell us about the job and we’ll send you a clear price.', ok: 'Thanks. We’ll look at the details and send you a quote soon.' };
+    else bk = { mode: 'appointment', path: 'book', title: 'Book', short: 'Book', head: 'Book an appointment', btn: 'Request appointment', sub: 'Choose a time that suits you and we’ll confirm by text or email.', ok: 'Thanks. We’ll confirm your appointment shortly.' };
 
     const pages = [];
 
@@ -589,11 +481,11 @@ function v3Pages(site, sc, isShop) {
     let homeUsedIntro = false;
     let homeIntro = null;
     const V3_PROMISE = {
-      visit: ['Every visit starts with a real conversation about what you want.', 'Come as you are. We take our time and do it properly.', 'Friendly people, good work, and a space you will look forward to coming back to.'],
-      onsite: ['We show up when we say, do the job right, and leave the place better than we found it.', 'Honest prices, careful work and clear communication from start to finish.', 'Local, reliable and proud of every job we finish.'],
-      project: ['Straight answers, fair prices and work we are proud to put our name on.', 'We listen first, keep you in the loop, and deliver what we promised.', 'Small enough to care, experienced enough to get it right.'],
+      visit: ['Every visit starts with a conversation about what you want.', 'We take our time, do it properly and make you feel welcome.', 'Friendly people, careful work and a place you’ll look forward to coming back to.'],
+      onsite: ['We arrive when we say we will, do the job properly and leave everything tidy.', 'Clear prices, careful work and good communication from start to finish.', 'A local team that takes pride in every job.'],
+      project: ['Clear answers, fair prices and work we’re proud to put our name on.', 'We listen first, keep you informed and deliver what we promised.', 'Small enough to care, experienced enough to get it right.'],
     };
-    const aboutPool = (((V3_FLAVORS[cat] && V3_FLAVORS[cat].about) || []).concat(isShop || isFood ? [] : V3_PROMISE[v3StepsKind(cat)])).filter((t) => t && t !== (intro && intro.text));
+    const aboutPool = (((sc && sc.aboutPool) || (V3_FLAVORS[cat] && V3_FLAVORS[cat].about) || []).concat(isShop || isFood ? [] : V3_PROMISE[v3StepsKind(cat)])).filter((t) => t && t !== (intro && intro.text));
     if (!teaser && intro) { homeIntro = intro; homeUsedIntro = true; }
     else if (aboutPool.length) homeIntro = mk('intro', { variant: 'center', text: v3Pick(aboutPool), emoji: '' });
     const steps = (!isShop && !isFood && (services || prices)) ? mk('steps', { title: v3FlavorPick(V3_COPY.stepsTitle), items: v3StepsItems(cat) }) : null;
@@ -629,7 +521,8 @@ function v3Pages(site, sc, isShop) {
       if (mainSection.type === 'services') mainSection.variant = v3Pick(['grid', 'list']);
       mainSecs.push(mainSection);
       if (prices && prices !== mainSection) mainSecs.push(prices);
-      const mcta = isShop ? V3_COPY.shopCta : V3_COPY.serviceCta;
+      const ctaKind = isFood ? 'food' : (['auto', 'marine'].indexOf(cat) > -1 ? 'onsite' : v3StepsKind(cat));
+      const mcta = isShop ? V3_COPY.shopCta : (V3_COPY.pageCta[ctaKind] || V3_COPY.serviceCta);
       mainSecs.push(mk('cta', { variant: 'band', title: v3FlavorPick(mcta.title), text: v3FlavorPick(mcta.text), button: b.bookLabel || 'Get in touch', link: bk ? ('#/' + bk.path) : '#/contact', emoji: '' }));
       pages.push({ id: 'pg-main', path: mainPath, title: mainLabel, nav: true, sections: mainSecs });
     }
@@ -652,12 +545,13 @@ function v3Pages(site, sc, isShop) {
     const aboutSecs = [mk('pagehead', { title: 'About ' + (b.name || 'us'), text: (sc && sc.tagline) || b.tagline || '', emoji: '' })];
     // Use the generated intro here only if the home page didn't already claim it (no shared section objects / duplicate ids).
     if (intro && !homeUsedIntro) aboutSecs.push(intro);
-    else aboutSecs.push(mk('intro', { variant: 'center', text: b.about || (sc && sc.about) || ('A little about ' + (b.name || 'us') + ' and what we do.'), emoji: '' }));
+    else aboutSecs.push(mk('intro', { variant: 'center', text: b.about || (sc && sc.about) || ('About ' + (b.name || 'us') + ' and what we do.'), emoji: '' }));
     stats.forEach((s) => aboutSecs.push(s));
     team.forEach((s) => aboutSecs.push(s));
     gallery.forEach((s) => aboutSecs.push(s));
     beforeafter.forEach((s) => aboutSecs.push(s));
-    aboutSecs.push(mk('cta', { variant: 'band', title: v3FlavorPick(V3_COPY.aboutCta.title), text: v3FlavorPick(V3_COPY.aboutCta.text), button: b.bookLabel || 'Get in touch', link: '#/contact', emoji: '' }));
+    const _ac = (!isShop && V3_COPY.aboutCtaBy[isFood ? 'food' : (['auto', 'marine'].indexOf(cat) > -1 ? 'onsite' : v3StepsKind(cat))]) || V3_COPY.aboutCta;
+    aboutSecs.push(mk('cta', { variant: 'band', title: v3FlavorPick(_ac.title), text: v3FlavorPick(_ac.text), button: b.bookLabel || 'Get in touch', link: '#/contact', emoji: '' }));
     pages.push({ id: 'pg-about', path: 'about', title: 'About', nav: true, sections: aboutSecs });
 
     // ----- CONTACT: form (to inbox), visit (hours/map), faq -----
@@ -783,7 +677,7 @@ async function buildV3Site(d, env) {
     }
     else if (has(biz.services)) {
       const _norm = function (x) { return String(x || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/s\b/g, '').trim(); };
-      const _starter = (sc.services || []).map(function (s) { return { k: _norm(s[0]), text: s[1], emoji: s[2] || '' }; });
+      const _starter = (sc.servicePool || sc.services || []).map(function (s) { return { k: _norm(s[0]), text: s[1], emoji: s[2] || '' }; });
       let _recs = []; try { _recs = WSENGINE.emojiRecsFor(biz.type) || []; } catch (e) {}
       const _items = biz.services.filter(function (x) { return x.name; }).map(function (x, i) {
         const k = _norm(x.name);
@@ -804,7 +698,7 @@ async function buildV3Site(d, env) {
     // Topical photography (graceful: no key or any failure → designed gradient hero, no gallery).
     // One API call fills the hero plus a photo gallery, so sites read image-led, not template-flat.
     try {
-      const _pics = await unsplashPhotos((PHOTO_QUERY[sc.category] || biz.type || 'small business'), env, 4);
+      const _pics = await unsplashPhotos((sc.photoQuery || PHOTO_QUERY[sc.category] || biz.type || 'small business'), env, 4);
       if (_pics.length) {
         const _h = site.sections.find(function (s) { return s.type === 'hero'; });
         site.photoCredits = {};

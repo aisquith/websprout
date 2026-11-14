@@ -188,7 +188,7 @@ const WSENGINE = (function(){
     blurb: 'A thin banner for news, a special or holiday hours.',
     variants: { bar: 'Bar' },
     fields: [{ key: 'text', label: 'Message', type: 'text' }, { key: 'emoji', label: 'Emoji', type: 'emoji' }],
-    create: () => ({ variant: 'bar', text: 'Now booking Saturdays two weeks out.', emoji: '1f389' }),
+    create: () => ({ variant: 'bar', text: 'Now taking bookings for this month.', emoji: '1f389' }),
     render: (s) => `<div class="announce on-pop">${WS.emoji(s.emoji)}<span>${e(s.text)}</span></div>`,
   });
 
@@ -254,7 +254,7 @@ const WSENGINE = (function(){
       { key: 'success', label: 'Success message', type: 'text' },
       { key: 'showPhone', label: 'Ask for a phone number', type: 'toggle' },
     ],
-    create: (site) => ({ variant: 'simple', title: 'Get in touch', text: 'Send us a message and we will get right back to you.', button: 'Send message', success: 'Thanks! Your message is on its way — we will be in touch soon.', showPhone: true }),
+    create: (site) => ({ variant: 'simple', title: 'Get in touch', text: 'Send us a message and we’ll get back to you soon.', button: 'Send message', success: 'Thanks for your message. We’ll be in touch soon.', showPhone: true }),
     render: (s, c) => {
       const action = (c.site && c.site.siteId) ? ('https://websprout.app/api/form/' + e(c.site.siteId)) : '';
       const phone = s.showPhone ? `<label class="wf-l">Phone<input class="wf-i" type="tel" name="phone" autocomplete="tel"></label>` : '';
@@ -274,7 +274,7 @@ const WSENGINE = (function(){
       { key: 'button', label: 'Button text', type: 'text' },
       { key: 'success', label: 'Success message', type: 'text' },
     ],
-    create: (site) => ({ variant: 'appointment', title: 'Book an appointment', text: 'Pick a time that works and we will confirm by text or email.', services: (site.biz.services || []).map((x) => ({ name: x.name })).filter((x) => x.name), button: 'Request appointment', success: 'Request received! We will confirm your appointment shortly.' }),
+    create: (site) => ({ variant: 'appointment', title: 'Book an appointment', text: 'Choose a time that suits you and we’ll confirm by text or email.', services: (site.biz.services || []).map((x) => ({ name: x.name })).filter((x) => x.name), button: 'Request appointment', success: 'Thanks. We’ll confirm your appointment shortly.' }),
     render: (s, c) => {
       const action = (c.site && c.site.siteId) ? ('https://websprout.app/api/form/' + e(c.site.siteId)) : '';
       const mode = s.variant || 'appointment';
@@ -312,7 +312,7 @@ const WSENGINE = (function(){
       { key: 'yes', label: 'In-area message', type: 'text' },
       { key: 'no', label: 'Out-of-area message', type: 'text' },
     ],
-    create: (site) => ({ variant: 'check', title: 'Do we serve your area?', note: 'Enter your ZIP code to find out.', zips: '', yes: 'Good news — we cover your area! Reach out and we will get you scheduled.', no: 'We are not in your area just yet — send us a message and we will see what we can do.' }),
+    create: (site) => ({ variant: 'check', title: 'Do we serve your area?', note: 'Enter your ZIP code to find out.', zips: '', yes: 'Good news: we cover your area. Get in touch and we’ll get you booked in.', no: 'We don’t cover your area yet, but send us a message and we’ll see what we can do.' }),
     render: (s, c) => {
       const zips = String(s.zips || '').match(/\d{5}/g) || [];
       const hd = s.title === '' ? '' : head(s, 'Do we serve your area?');
@@ -397,7 +397,7 @@ const WSENGINE = (function(){
     blurb: 'A simple numbered walkthrough of your process.',
     variants: { grid: 'Numbered steps' },
     fields: [{ key: 'title', label: 'Title', type: 'text' }, { key: 'items', label: 'Steps', type: 'list', add: 'Add step', item: [{ key: 'name', label: 'Step title', type: 'text' }, { key: 'text', label: 'Detail', type: 'textarea' }] }],
-    create: (site) => ({ variant: 'grid', title: 'How it works', items: [{ name: 'Reach out', text: 'Tell us what you need and when works for you.' }, { name: 'We plan it', text: 'We confirm the details and give you a clear, honest price.' }, { name: 'We deliver', text: 'We do the work and make sure you are happy with it.' }] }),
+    create: (site) => ({ variant: 'grid', title: 'How it works', items: [{ name: 'Reach out', text: 'Tell us what you need and when works for you.' }, { name: 'We plan it', text: 'We confirm the details and give you a clear, honest price.' }, { name: 'We deliver', text: 'We do the work and check you’re happy with it.' }] }),
     render: (s, c) => {
       const items = (s.items || []).map((it, i) => `<li class="step reveal"><span class="step-n">${i + 1}</span><div><h3 class="step-t">${e(it.name || '')}</h3><p class="step-d">${lines(it.text || '')}</p></div></li>`).join('');
       return `<section class="steps on-base" id="steps"><div class="wrap">${head(s, 'How it works')}<ol class="steps-grid">${items}</ol></div></section>`;
@@ -456,7 +456,7 @@ const WSENGINE = (function(){
       { key: 'note', label: 'Note under the title', type: 'textarea' },
       { key: 'items', label: 'Services', type: 'list', add: 'Add a service', item: [{ key: 'name', label: 'Name', type: 'text' }, { key: 'price', label: 'Price', type: 'text' }, { key: 'meta', label: 'Details', type: 'text' }] },
     ],
-    create: (site) => ({ variant: 'menu', title: 'No surprises at the register.', note: '', items: (site.biz.services || []).map((x) => ({ name: x.name, price: x.price, meta: [x.time, x.note].filter(Boolean).join(', ') })) }),
+    create: (site) => ({ variant: 'menu', title: 'Prices', note: '', items: (site.biz.services || []).map((x) => ({ name: x.name, price: x.price, meta: [x.time, x.note].filter(Boolean).join(', ') })) }),
     render: (s, c) => {
       const list = `<ul class="plist">${(s.items || []).map((it) => `<li><span class="svc">${e(it.name)}</span><span class="lead" aria-hidden="true"></span><span class="price">${WS.money(isNaN(+it.price) || it.price === '' ? it.price : +it.price)}</span><a class="pl-book" href="${c.book}">${e(c.biz.bookLabel || 'Book')}</a>${it.meta ? `<span class="meta">${e(it.meta)}</span>` : ''}</li>`).join('')}</ul>`;
       const top = `${head(s, 'Prices')}${s.note ? `<p class="lede">${lines(s.note)}</p>` : ''}`;
@@ -546,7 +546,7 @@ const WSENGINE = (function(){
     blurb: 'Drag a slider between two photos. Great for transformations.',
     variants: { slider: 'Slider' },
     fields: [{ key: 'title', label: 'Title', type: 'text' }, { key: 'text', label: 'Caption', type: 'textarea' }],
-    create: () => ({ variant: 'slider', title: 'Same chair, 40 minutes later.', text: 'Drag to see the difference.' }),
+    create: () => ({ variant: 'slider', title: 'Before and after.', text: 'Drag to see the difference.' }),
     render: (s, c) => {
       if (c.mode === 'live' && !(c.photo('before') && c.photo('after'))) return '';
       return `<section class="ba on-base"><div class="wrap ba-grid"><div>${head(s, 'Before and after')}<p class="lede">${lines(s.text)}</p></div><div class="ba-frame" data-ba style="--x:50%">${c.slot('after', { hint: 'The after photo', cls: 'ba-after' })}${c.slot('before', { hint: 'The before photo', cls: 'ba-before' })}<span class="ba-tag ba-tag-l">Before</span><span class="ba-tag ba-tag-r">After</span><input class="ba-range" type="range" min="0" max="100" value="50" aria-label="Compare before and after"></div></div></section>`;
@@ -638,7 +638,7 @@ const WSENGINE = (function(){
     blurb: 'A loud band that asks people to book or call.',
     variants: { band: 'Color band', split: 'With a photo' },
     fields: [{ key: 'title', label: 'Title', type: 'text' }, { key: 'text', label: 'Text', type: 'textarea' }, { key: 'button', label: 'Button text', type: 'text' }, { key: 'link', label: 'Button link (optional)', type: 'text' }, { key: 'emoji', label: 'Emoji', type: 'emoji' }],
-    create: (site) => ({ variant: 'band', title: 'Your chair is waiting.', text: 'Book online in under a minute.', button: site.biz.bookLabel || 'Book now', link: '', emoji: WS.emojiRecsFor(site.biz.type)[0] }),
+    create: (site) => ({ variant: 'band', title: 'We’d love to see you.', text: 'Book online in under a minute.', button: site.biz.bookLabel || 'Book now', link: '', emoji: WS.emojiRecsFor(site.biz.type)[0] }),
     render: (s, c) =>
       s.variant === 'split'
         ? `<section class="cta cta-split on-alt">${c.slot('photo', { hint: 'A welcoming photo', cls: 'cta-img reveal' })}<div class="cta-body"><h2 class="h2">${s.emoji ? WS.emoji(s.emoji) + ' ' : ''}${e(s.title)}</h2><p>${lines(s.text)}</p><a class="btn btn-ink" href="${s.link ? e(s.link) : c.book}">${e(s.button || 'Book now')}</a></div></section>`

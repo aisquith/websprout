@@ -96,6 +96,28 @@ module.exports = async function (ctx, t) {
     t.ok(!/<img src=x/.test(j3.html), 'setup services: markup in a service name is escaped');
   }
 
+  // starter copy: enough variety per type, one voice, American spelling, sub-types match what owners type
+  {
+    const src = require('fs').readFileSync(require('path').join(__dirname, '../src/49-copy.js'), 'utf8');
+    const { BOOK, SUBS, copyFor } = new Function(src + ';return { BOOK: V3_COPYBOOK, SUBS: V3_SUBTYPES, copyFor: v3CopyFor };')();
+    const thin = Object.keys(BOOK).filter((k) => { const c = BOOK[k]; return !(c.tagline.length >= 8 && c.about.length >= 3 && c.services.length >= 4 && c.ctaTitle.length >= 4 && c.ctaText.length >= 3 && c.faq.length >= 4 && c.photo); });
+    t.eq(thin.join(','), '', 'every business type has plenty of starter copy to draw from');
+    const strings = []; const walk = (v) => { if (typeof v === 'string') strings.push(v); else if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === 'object' && !(v instanceof RegExp)) Object.values(v).forEach(walk); };
+    walk(BOOK); walk(SUBS);
+    const bad = (re) => strings.filter((s) => re.test(s)).slice(0, 3);
+    t.eq(bad(/!/).join(' | '), '', 'starter copy has no exclamation marks');
+    t.eq(bad(/\b(we will|you are|it is|we are|do not|does not|you will|that is|there is|you would|we would|can not|cannot)\b(?!\s*(too\b|[.,;]))/i).join(' | '), '', 'starter copy uses natural contractions');
+    t.eq(bad(/\b(colour|favourite|neighbour|organis|personalis|speciali[sz]e?s?\b(?<=ise)|tyre|jewellery|queue|whilst|fortnight|labour|maths|practise|licence|centre|flavour)/i).join(' | '), '', 'starter copy uses American spelling');
+    t.eq(bad(/'/).join(' | '), '', 'apostrophes are typographic');
+    t.eq(strings.filter((s) => /^[0-9a-f]{4,5}$/.test(s) === false && /^1f|^2[0-9a-f]{3}$/.test(s)).length, 0, 'emoji codes are well formed');
+    const cases = [['Pizza restaurant', 'restaurant', 'wood fired pizza'], ['Taqueria', 'restaurant', 'mexican tacos food'], ['Plumber', 'home', 'plumber repair sink'], ['Electrician', 'home', 'electrician wiring'], ['Dog grooming', 'pet', 'dog grooming salon'], ['Yoga studio', 'fitness', 'yoga class studio'], ['Nail salon', 'spa', 'nail salon manicure'], ['Wedding photographer', 'photo', 'wedding photographer'], ['Piano lessons', 'education', 'music lesson piano'], ['Florist', 'events', 'florist flower arrangement']];
+    t.eq(cases.filter(([ty, cat, ph]) => copyFor(ty, cat).photo !== ph).map((x) => x[0]).join(','), '', 'sub-types match the business types owners type');
+    const sa = await createSite(base, { name: 'Slice', type: 'Pizza restaurant' });
+    const menu = sa.site.pages.find((p) => p.path === 'menu');
+    t.ok(menu && /pizza|Margherita/i.test(JSON.stringify(menu.sections)) && !/Made to Order|Local Ingredients/.test(sa.html), 'a pizza place gets pizza services, not generic restaurant values');
+    t.ok(!/next steps|Let’s work together/.test(JSON.stringify(menu.sections.filter((s) => s.type === 'cta'))), 'a restaurant menu page ends with a food call to action');
+  }
+
   // photos: phones get a smaller Unsplash size through srcset; other hosts are left alone
   {
     const s = await createSite(base, { name: 'Glow', type: 'Hair salon' });
