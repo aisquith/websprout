@@ -100,6 +100,26 @@ module.exports = async function (ctx, t) {
   t.ok(await m.evaluate(() => document.documentElement.scrollWidth - innerWidth <= 1), 'phone: studio has no sideways scroll');
   await m.close();
 
+  // Dropdown options (drawn by the OS when opened) are readable: solid dark background, light text
+  {
+    const d = await openPage(browser, {});
+    await openStudioWith(d, base, 'Glow Salon', 'Hair salon', {});
+    const bad = await d.evaluate(() => {
+      const rgb = (s) => (String(s).match(/\d+(\.\d+)?/g) || []).map(Number);
+      const lum = (c) => { const f = c.slice(0, 3).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * f[0] + 0.7152 * f[1] + 0.0722 * f[2]; };
+      const out = []; let n = 0;
+      document.querySelectorAll('select option').forEach((o) => {
+        n++; const cs = getComputedStyle(o); const bg = rgb(cs.backgroundColor), fg = rgb(cs.color);
+        const opaque = bg.length === 3 || bg[3] === 1;
+        const a = lum(fg), b = lum(bg); const ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+        if (!opaque || ratio < 4.5) out.push((o.parentNode.getAttribute('aria-label') || o.parentNode.className) + ': ' + o.textContent + ' ' + cs.color + ' on ' + cs.backgroundColor);
+      });
+      return { n, bad: out.slice(0, 3) };
+    });
+    t.ok(bad.n > 0 && bad.bad.length === 0, 'editor dropdown options are readable (' + bad.n + ' checked) ' + bad.bad.join(' | '));
+    await d.close();
+  }
+
   // Signed in, mid-edit: the account button in the editor opens the account menu on top of the editor
   for (const mobile of [false, true]) {
     const a = await openPage(browser, { mobile });

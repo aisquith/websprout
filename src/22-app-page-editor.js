@@ -1378,6 +1378,8 @@ function wseEl(tag,cls,txt){var el=document.createElement(tag);if(cls)el.classNa
 function wsEditorCss(){
   if(document.getElementById('wse-css'))return;
   var css=".wse{color:#e9e9ec;font:13px/1.45 system-ui,-apple-system,sans-serif;color-scheme:dark}"
+   // Open dropdown lists are drawn by the OS: options get a solid dark background so light text stays readable
+   +"select.wse-field{background-color:#1b1d21}.wse-field option,.wse-field optgroup{background-color:#1b1d21;color:#f2f2f4}"
    +".wse-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}"
    +".wse-title{font-size:13px;font-weight:700;letter-spacing:.02em;color:#fff}"
    +".wse-label{font-size:10px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:rgba(255,255,255,.38);margin:14px 2px 8px}"

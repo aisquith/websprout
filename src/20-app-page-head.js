@@ -161,6 +161,7 @@ html.ws-focus :focus{outline:2px solid #4ade80 !important;outline-offset:2px}
 .type-icon{font-size:20px;display:block;margin-bottom:4px}
 .type-lbl{font-size:10px;font-weight:600;line-height:1.3}
 #customWrap{display:none;margin-bottom:16px}
+select option,select optgroup{background-color:#1b1d21;color:#f2f2f4}
 .dark-input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:9px 12px;color:#e8f5e4;font-family:inherit;font-size:14px;outline:none;transition:border .15s}
 .gfill-link{background:none;border:none;padding:0;color:#7ee29a;font:inherit;font-size:13px;text-decoration:underline;cursor:pointer}
 .gfill-go{flex:none;background:#37c15e;color:#fff;border:none;border-radius:9px;padding:0 16px;font:600 14px/1 inherit;cursor:pointer}
