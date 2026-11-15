@@ -79,6 +79,24 @@ function v3PagePaths(html){
   return out;
 }
 function htmlAttr(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+// Structured data on published pages: the business's JSON-LD (rendered by the engine) gets the site's canonical
+// URL, and sub-pages add a BreadcrumbList (Home > Page). '<' stays escaped so it can never close the script tag.
+function pubLdJson(o){ return '<script type="application/ld+json">' + JSON.stringify(o).replace(/</g, String.fromCharCode(92) + 'u003c') + '</scr' + 'ipt>'; }
+function pubStructuredData(html, origin, page){
+  try {
+    const m = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+    if (!m) return html;
+    const ld = JSON.parse(m[1]);
+    if (!ld || typeof ld !== 'object' || !/schema\.org/.test(String(ld['@context'] || ''))) return html;
+    ld['@id'] = origin + '/#business'; ld.url = origin + '/';
+    let extra = '';
+    if (page && page.path) {
+      const nm = String(page.title || '').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim() || pubTitleCase(page.path);
+      extra = pubLdJson({ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Home', item: origin + '/' }, { '@type': 'ListItem', position: 2, name: nm, item: origin + '/' + page.path }] });
+    }
+    return html.replace(m[0], function(){ return pubLdJson(ld) + extra; });
+  } catch(e){ return html; }
+}
 // Per-site sitemap.xml / robots.txt for published sites (served on the site's own host).
 async function servePublishedMeta(slug, env, file, origin){
   if (!env || !env.KV) return null;
@@ -130,6 +148,7 @@ async function servePublished(slug, env, path, opts){
     html = (await env.KV.get('pub:' + slug + ':' + pg)) || home;
   }
   html = wsFixCss(html);
+  html = pubStructuredData(html, origin, v3target || (pg ? { path: pg, title: '' } : null));
   try{var _ne=html.indexOf('</nav>'),_he=html.indexOf('</header>'),_bd=-1;if(_ne>=0)_bd=_ne+6;if(_he>=0&&_he+9>_bd)_bd=_he+9;if(_bd>0&&html.slice(0,_bd).indexOf('<!--WS_PRODUCTS-->')>-1){html=html.slice(0,_bd).split('<!--WS_PRODUCTS-->').join('')+html.slice(_bd);if(html.indexOf('<!--WS_PRODUCTS-->')<0){var _ps='<section id="shop" style="padding:64px 24px"><div style="max-width:1100px;margin:0 auto"><h2 style="text-align:center;margin:0 0 28px;font-size:2rem">Shop</h2><!--WS_PRODUCTS--></div></section>';var _pbi=html.lastIndexOf('</body>');html=_pbi>-1?(html.slice(0,_pbi)+_ps+html.slice(_pbi)):(html+_ps);}}}catch(e){}
   if (html.indexOf('<!--WS_PRODUCTS-->') > -1) {
     try {

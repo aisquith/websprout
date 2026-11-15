@@ -1,7 +1,7 @@
 // Site generation is complete and safe for many business types and awkward inputs, on desktop and phone.
 const { createSite, openPage, renderHtml, sleep } = require('./lib');
 
-const TYPES = ['Barber shop', 'Hair salon', 'Nail spa', 'Tattoo studio', 'Bakery', 'Coffee shop', 'Mexican restaurant', 'Food truck', 'Lawn care', 'House cleaning', 'Handyman', 'Plumber', 'Roofing', 'Auto repair', 'Boat dealer', 'Gym', 'Yoga studio', 'Dog grooming', 'Wedding photographer', 'Gift shop', 'Clothing boutique', 'Law firm', 'Dentist', 'Chiropractor', 'Accountant', 'Real estate agent', 'Piano lessons', 'Wedding planner', 'Moving company', 'Web design agency', 'Church', '', 'Pink Bakery', 'Spanish tapas bar'];
+const TYPES = ['Barber shop', 'Hair salon', 'Nail spa', 'Tattoo studio', 'Bakery', 'Coffee shop', 'Mexican restaurant', 'Food truck', 'Lawn care', 'House cleaning', 'Handyman', 'Plumber', 'Roofing', 'Auto repair', 'Boat dealer', 'Gym', 'Yoga studio', 'Dog grooming', 'Wedding photographer', 'Gift shop', 'Clothing boutique', 'Law firm', 'Dentist', 'Chiropractor', 'Accountant', 'Real estate agent', 'Piano lessons', 'Wedding planner', 'Moving company', 'Web design agency', 'Church', '', 'Pink Bakery', 'Spanish tapas bar', 'Locksmith', 'Daycare', 'Appliance repair', 'Tailor shop', 'Car wash', 'Junk removal', 'Nail salon', 'Kitchen remodeling', 'Electrician', 'Massage therapist'];
 const QUICK = ['Barber shop', 'Mexican restaurant', 'House cleaning', 'Law firm', 'Clothing boutique', ''];
 const ODD = [
   { name: '', type: '' },

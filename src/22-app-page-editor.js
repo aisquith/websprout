@@ -62,8 +62,10 @@ function autoSetDevice(){
   }catch(e){}
 })();
 
-function toast(m,d){var t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('on');if(t._wsTo)clearTimeout(t._wsTo);t._wsTo=setTimeout(function(){t.classList.remove('on');t._wsTo=null;},d||4000);}
+function toast(m,d){var t=document.getElementById('toast');if(!t)return;t.textContent=m;t.style.pointerEvents='';t.classList.add('on');if(t._wsTo)clearTimeout(t._wsTo);t._wsTo=setTimeout(function(){t.classList.remove('on');t._wsTo=null;},d||4000);}
 
+// A toast with one action button (e.g. Undo). Clickable while it shows; a plain toast() replaces it.
+function wsToastAction(m,label,fn,d){var t=document.getElementById('toast');if(!t)return;toast(m,d||7000);t.appendChild(document.createTextNode(' · '));var b=document.createElement('button');b.type='button';b.className='toast-act';b.textContent=label;b.addEventListener('click',function(){t.classList.remove('on');t.style.pointerEvents='';try{fn();}catch(e){}});t.appendChild(b);t.style.pointerEvents='auto';}
 // Derive a clean download filename from the site's <title>
 function siteFilename(){
   var name='';
@@ -2066,6 +2068,59 @@ function wsLogoFile(file,done){
     };im.src=rd.result;
   };rd.readAsDataURL(file);
 }
+// Brand color from the logo: downscale on a canvas, skip transparent / near-white / near-black / greyish pixels and
+// take the most common saturated hue (averaged within that hue). '' when the logo has no clear color, or the canvas
+// cannot be read (a tainted canvas throws on getImageData).
+function wsLogoColor(src,done){
+  var fin=function(v){var f=done;done=function(){};f(v||'');};
+  try{
+    var im=new Image();im.onerror=function(){fin('');};
+    im.onload=function(){
+      try{
+        var W=im.naturalWidth||im.width||64,H=im.naturalHeight||im.height||64,k=Math.min(1,64/Math.max(W,H)),w=Math.max(1,Math.round(W*k)),h=Math.max(1,Math.round(H*k));
+        var c=document.createElement('canvas');c.width=w;c.height=h;var x=c.getContext('2d');x.drawImage(im,0,0,w,h);
+        var d=x.getImageData(0,0,w,h).data,bins=[],opaque=0,i,b;
+        for(i=0;i<24;i++)bins.push({n:0,r:0,g:0,b:0});
+        for(i=0;i<d.length;i+=4){
+          if(d[i+3]<128)continue;opaque++;
+          var r=d[i]/255,g=d[i+1]/255,bl=d[i+2]/255,mx=Math.max(r,g,bl),mn=Math.min(r,g,bl),l=(mx+mn)/2,df=mx-mn;
+          if(l>0.92||l<0.08||!df)continue;
+          var s=df/(1-Math.abs(2*l-1));if(s<0.28)continue;
+          var hu=mx===r?((g-bl)/df+(g<bl?6:0)):mx===g?(bl-r)/df+2:(r-g)/df+4;
+          b=bins[Math.floor(hu*4)%24];var wt=s;b.n+=wt;b.r+=d[i]*wt;b.g+=d[i+1]*wt;b.b+=d[i+2]*wt;
+        }
+        var best=bins.reduce(function(a,z){return z.n>a.n?z:a;},bins[0]);
+        if(!opaque||best.n<opaque*0.03){fin('');return;}
+        fin('#'+[best.r,best.g,best.b].map(function(v){return ('0'+Math.round(v/best.n).toString(16)).slice(-2);}).join('').toUpperCase());
+      }catch(e){fin('');}
+    };
+    im.src=src;
+  }catch(e){fin('');}
+}
+// On logo upload only: use its brand color as the accent (made readable on the current theme), with a one-click Undo.
+// A color the owner picked by hand is never replaced.
+function wsLogoAccent(url){
+  var sd=window._wsSiteData;if(!sd||!window.WS||!window.WS.withAccent)return;
+  if(sd.accent&&!sd.accentLogo)return;
+  wsLogoColor(url,function(hex){
+    try{
+      if(!hex||window._wsSiteData!==sd||!sd.biz||sd.biz.logo!==url)return;
+      if(sd.accent&&!sd.accentLogo)return;
+      var W=window.WS,pal=W.palette(sd.palette),fit=W.withAccent(pal,W.fitContrast(hex,pal.base,3)).accent;
+      var prev=sd.accent,prevLogo=sd.accentLogo;
+      if(prev&&prev.toUpperCase()===fit.toUpperCase())return;
+      sd.accent=fit;sd.accentLogo=1;wsRerender(true);wsOpenEditor();
+      var mine=gHTML;
+      wsToastAction('Matched your colors to your logo','Undo',function(){
+        if(undoStack.length>1&&undoStack[undoStack.length-1]===mine){doUndo();return;}
+        var s2=window._wsSiteData;if(!s2)return;
+        if(prev)s2.accent=prev;else delete s2.accent;
+        if(prevLogo)s2.accentLogo=1;else delete s2.accentLogo;
+        wsRerender(true);wsOpenEditor();
+      });
+    }catch(e){}
+  });
+}
 function wsRenderLogo(pad){
   var sd=window._wsSiteData;
   pad.appendChild(wseEl('div','wse-label','Logo'));
@@ -2073,7 +2128,7 @@ function wsRenderLogo(pad){
   var prev=wseEl('div','wse-logo-prev');if(sd.biz&&sd.biz.logo)prev.style.backgroundImage='url("'+sd.biz.logo+'")';
   var fi=document.createElement('input');fi.type='file';fi.accept='image/png,image/jpeg,image/webp,image/svg+xml';fi.style.display='none';
   var up=wseEl('button','wse-link go',sd.biz&&sd.biz.logo?'Replace':'Upload logo');up.type='button';up.addEventListener('click',function(){fi.click();});
-  fi.addEventListener('change',function(){wsLogoFile(fi.files[0],function(url){sd.biz.logo=url;wsRerender();wsOpenEditor();});});
+  fi.addEventListener('change',function(){wsLogoFile(fi.files[0],function(url){sd.biz.logo=url;wsRerender(true);wsOpenEditor();wsLogoAccent(url);});});
   row.appendChild(prev);row.appendChild(up);row.appendChild(fi);
   if(sd.biz&&sd.biz.logo){var rm=wseEl('button','wse-link danger','Remove');rm.type='button';rm.addEventListener('click',function(){delete sd.biz.logo;wsRerender();wsOpenEditor();});row.appendChild(rm);}
   pad.appendChild(row);
@@ -2321,10 +2376,10 @@ function wsRenderDesign(pad){
   var bc=wseEl('div','wse-row');
   var ci=document.createElement('input');ci.type='color';ci.className='wse-color';ci.setAttribute('aria-label','Brand color');
   ci.value=(/^#[0-9a-fA-F]{6}$/.test(sd.accent||'')?sd.accent:((cur&&cur.accent)||'#37c15e')).toLowerCase();
-  var ct;ci.addEventListener('input',function(){sd.accent=ci.value;clearTimeout(ct);ct=setTimeout(wsRerender,120);});
+  var ct;ci.addEventListener('input',function(){sd.accent=ci.value;delete sd.accentLogo;clearTimeout(ct);ct=setTimeout(wsRerender,120);});
   bc.appendChild(ci);
   var bcl=wseEl('div','wse-hint',sd.accent?'Your color is used for buttons and highlights.':'Using the theme color. Pick your own to match your logo.');bc.appendChild(bcl);
-  if(sd.accent){var rs=wseEl('button','wse-link','Reset');rs.type='button';rs.addEventListener('click',function(){delete sd.accent;wsRerender();wsOpenEditor();});bc.appendChild(rs);}
+  if(sd.accent){var rs=wseEl('button','wse-link','Reset');rs.type='button';rs.addEventListener('click',function(){delete sd.accent;delete sd.accentLogo;wsRerender();wsOpenEditor();});bc.appendChild(rs);}
   pad.appendChild(bc);
   pad.appendChild(wseEl('div','wse-label','Fonts'));
   var tsSel=wseEl('select','wse-field');tsSel.setAttribute('aria-label','Fonts');

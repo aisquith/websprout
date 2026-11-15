@@ -118,13 +118,39 @@ const WSENGINE = (function(){
   // A custom brand color replaces the theme's accent (buttons, highlights, color bands); text on it
   // switches between near-black and white for contrast.
   WS.lum = (hex) => { const h = String(hex || '').replace('#', ''); if (h.length !== 6) return 0.5; const c = [0, 2, 4].map((i) => { const v = parseInt(h.slice(i, i + 2), 16) / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  WS.contrast = (a, b) => { const x = WS.lum(a), y = WS.lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  WS.hexToHsl = (hex) => {
+    const h = String(hex || '').replace('#', ''); const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+    if (!d) return [0, 0, l];
+    const s = d / (1 - Math.abs(2 * l - 1));
+    const hue = mx === r ? ((g - b) / d + (g < b ? 6 : 0)) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return [hue * 60, s, l];
+  };
+  WS.hslToHex = (hh, s, l) => {
+    const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs(((hh / 60) % 2) - 1)), m = l - c / 2;
+    const [r, g, b] = hh < 60 ? [c, x, 0] : hh < 120 ? [x, c, 0] : hh < 180 ? [0, c, x] : hh < 240 ? [0, x, c] : hh < 300 ? [x, 0, c] : [c, 0, x];
+    return '#' + [r, g, b].map((v) => ('0' + Math.round(Math.min(1, Math.max(0, v + m)) * 255).toString(16)).slice(-2)).join('').toUpperCase();
+  };
+  // Same hue, lightness nudged (darker on light backgrounds, lighter on dark ones) until it reaches `min` contrast.
+  WS.fitContrast = (hex, bg, min) => {
+    if (!/^#[0-9a-fA-F]{6}$/.test(String(hex || '')) || !/^#[0-9a-fA-F]{6}$/.test(String(bg || '')) || WS.contrast(hex, bg) >= min) return hex;
+    const [h, s, l0] = WS.hexToHsl(hex); const dir = WS.lum(bg) > 0.18 ? -1 : 1;
+    for (let l = l0; l >= 0 && l <= 1; l += dir * 0.01) { const c = WS.hslToHex(h, s, l); if (WS.contrast(c, bg) >= min) return c; }
+    return dir < 0 ? '#111111' : '#FFFFFF';
+  };
+  // A custom brand color replaces the theme's accent (buttons, highlights, color bands). Text on it switches
+  // between near-black and white; a mid-tone that neither can read on (AA 4.5:1) is nudged until one can.
+  // accentInk is the same hue made readable as text/outline on the page background.
   WS.withAccent = (p, hex) => {
     if (!p || !/^#[0-9a-fA-F]{6}$/.test(String(hex || ''))) return p;
-    const on = WS.lum(hex) > 0.179 ? '#111111' : '#FFFFFF';
-    return Object.assign({}, p, { accent: hex, accentText: on, pop: hex, popText: on, price: hex });
+    let on = WS.lum(hex) > 0.179 ? '#111111' : '#FFFFFF';
+    if (WS.contrast(hex, on) < 4.5) hex = WS.fitContrast(hex, on, 4.5);
+    on = WS.lum(hex) > 0.179 ? '#111111' : '#FFFFFF';
+    return Object.assign({}, p, { accent: hex, accentText: on, pop: hex, popText: on, price: hex, accentInk: WS.fitContrast(hex, p.base, 4.5) });
   };
   WS.paletteCss = (p) =>
-    `--base:${p.base};--base-text:${p.baseText};--alt:${p.alt};--alt-text:${p.altText};--accent:${p.accent};--accent-text:${p.accentText};--pop:${p.pop};--pop-text:${p.popText};--surface:${p.surface};--price:${p.price || p.pop}`;
+    `--base:${p.base};--base-text:${p.baseText};--alt:${p.alt};--alt-text:${p.altText};--accent:${p.accent};--accent-text:${p.accentText};--accent-ink:${p.accentInk || WS.fitContrast(p.accent, p.base, 4.5)};--pop:${p.pop};--pop-text:${p.popText};--surface:${p.surface};--price:${p.price || p.pop}`;
 })(globalThis.WS = globalThis.WS || {});
 
 // Clean single-accent palettes for the Atelier style (contrast-checked via tools/audit.js).
@@ -976,7 +1002,7 @@ main{min-height:55vh}
 .pole{display:none}
 .name{font-family:var(--display);font-size:clamp(52px,9.4vw,150px);line-height:var(--name-lh,.84);font-weight:var(--name-weight,900);letter-spacing:var(--name-tracking,.005em);text-transform:var(--h-transform,uppercase);padding-bottom:.02em}
 /* monochrome signature: in the bold theme, lines after the first are set in outline */
-.wst-bold .hero-split .ln + .ln > span,.wst-bold .hero-type .ln + .ln > span{-webkit-text-stroke:2px var(--accent);color:color-mix(in srgb,var(--accent),transparent 92%)}
+.wst-bold .hero-split .ln + .ln > span,.wst-bold .hero-type .ln + .ln > span{-webkit-text-stroke:2px var(--accent-ink,var(--accent));color:color-mix(in srgb,var(--accent-ink,var(--accent)),transparent 92%)}
 .ln{display:block}
 .ln>span{display:block;animation:fade 1.1s var(--ease) both;animation-delay:calc(.15s + var(--d) * .08s)}
 @keyframes fade{from{opacity:0;transform:translateY(12px)}}
@@ -1176,21 +1202,23 @@ main{min-height:55vh}
 .embed-ph{margin-top:28px;padding:48px 24px;border:2px dashed var(--hair);text-align:center;opacity:.75}
 .steps-grid{list-style:none;padding:0;margin:48px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:36px}
 .steps .step{display:block}
-.step-n{display:block;width:auto;height:auto;border-radius:0;background:none;color:var(--accent);font-family:var(--display);font-weight:var(--h-weight,800);font-size:clamp(44px,4.4vw,60px);line-height:1;margin-bottom:16px}
+.step-n{display:block;width:auto;height:auto;border-radius:0;background:none;color:var(--accent-ink,var(--accent));font-family:var(--display);font-weight:var(--h-weight,800);font-size:clamp(44px,4.4vw,60px);line-height:1;margin-bottom:16px}
 .step-t{font-size:1.5rem;font-weight:var(--h-weight,800);text-transform:var(--h-transform,uppercase);letter-spacing:var(--h-tracking,.004em);margin:0 0 8px;color:var(--fg);font-family:var(--display)}
 .step-d{margin:0;opacity:.75;line-height:1.6;color:var(--fg)}
 .contactf{padding:clamp(72px,10vw,120px) 0}
 .wf-wrap{max-width:720px}
 .wf-sub{opacity:.75;margin:12px 0 0;font-size:1.05rem;line-height:1.6;color:var(--fg)}
 .wf-form{margin-top:36px;display:flex;flex-direction:column;gap:16px}
-.wf-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.wf-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.wf-l,.wf-i{min-width:0;box-sizing:border-box;max-width:100%}
+@media (max-width:560px){.wf-row{grid-template-columns:minmax(0,1fr)}}
 .wf-l{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:color-mix(in srgb,var(--fg),transparent 38%)}
 .wf-i{font:inherit;font-size:1rem;padding:13px 15px;border-radius:3px;border:1px solid color-mix(in srgb,var(--fg),transparent 70%);background:color-mix(in srgb,var(--fg),transparent 95%);color:var(--fg);text-transform:none;letter-spacing:0;font-weight:400}
 .wf-i:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent),transparent 80%)}
 .wf-t{resize:vertical;min-height:120px}
 .wf-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
 .wf-btn{align-self:flex-start;margin-top:6px}
-.wf-ok{margin:6px 0 0;font-weight:600;color:var(--accent)}
+.wf-ok{margin:6px 0 0;font-weight:600;color:var(--accent-ink,var(--accent))}
 .wf-err{margin:2px 0 0;padding:11px 14px;font-weight:600;font-size:.95rem;line-height:1.45;color:var(--fg);border-left:3px solid #d93a3a;background:color-mix(in srgb,#d93a3a,transparent 90%)}
 .wf-err[hidden]{display:none}
 .payments{padding:clamp(72px,10vw,120px) 0}
@@ -1198,7 +1226,7 @@ main{min-height:55vh}
 .pay-card{display:flex;flex-direction:column;justify-content:space-between;gap:18px;background:var(--surface);border:1px solid var(--hair);border-radius:16px;padding:22px}
 .pay-name{font-size:1.18rem;margin:0}
 .pay-desc{font-size:.95rem;opacity:.72;margin:6px 0 0;line-height:1.5}
-.pay-amt{font:600 1.5rem/1 var(--display);color:var(--accent);margin-top:12px}
+.pay-amt{font:600 1.5rem/1 var(--display);color:var(--accent-ink,var(--accent));margin-top:12px}
 .pay-btn{align-self:flex-start}
 .pay-soon{align-self:flex-start;font-size:.82rem;opacity:.5;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
 .pay-trust{text-align:center;margin:28px 0 0;font-size:.82rem;opacity:.55}
@@ -1207,7 +1235,7 @@ main{min-height:55vh}
 .ev-row{display:flex;align-items:center;gap:24px;padding:22px 4px;border-top:1px solid var(--hair)}
 .ev-row:last-child{border-bottom:1px solid var(--hair)}
 .ev-date{flex:none;width:150px;display:flex;flex-direction:column;gap:3px}
-.ev-d{font:600 1.05rem/1.2 var(--display);color:var(--accent)}
+.ev-d{font:600 1.05rem/1.2 var(--display);color:var(--accent-ink,var(--accent))}
 .ev-t{font-size:.86rem;opacity:.6}
 .ev-body{flex:1}
 .ev-name{font-size:1.25rem;margin:0}
@@ -1226,6 +1254,8 @@ main{min-height:55vh}
 .wsr-sharp .btn,.wsr-sharp .pill{border-radius:0!important}.wsr-sharp :is(input,textarea,select,figure.slot){border-radius:0}
 .wsr-soft .btn,.wsr-soft .pill{border-radius:8px!important}.wsr-soft :is(input,textarea,select){border-radius:8px}.wsr-soft figure.slot{border-radius:14px}
 .wsr-round .btn,.wsr-round .pill{border-radius:999px!important}.wsr-round :is(input,select){border-radius:999px;padding-left:18px}.wsr-round textarea{border-radius:18px}.wsr-round figure.slot{border-radius:26px}
+/* a long business name never grows the fixed header over the page: at most two lines */
+.mark:not(.has-logo){min-width:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .mark-logo{display:block;height:44px;width:auto;max-width:200px;object-fit:contain}
 .top.solid .mark-logo{height:36px}
 .credits{margin:0;text-align:center;font:500 11px/1.6 'Work Sans',system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:16px 20px 26px;background:#111;color:rgba(255,255,255,.64)}
@@ -1305,6 +1335,7 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
 @media (max-width:900px){
   .wrap,.hero-in{padding-left:20px;padding-right:20px}
   .top{grid-template-columns:1fr auto;padding:16px 20px}.top.solid{padding:12px 20px}.top nav{display:none}
+  .mark.mark-long:not(.has-logo){font-size:clamp(17px,5.4vw,22px);line-height:1.05}
   .multipage .top{grid-template-columns:1fr auto auto}
   .multipage .navtoggle{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:none;border:0;cursor:pointer;padding:0;color:inherit;z-index:62}
   .multipage.nav-open .top{backdrop-filter:none;-webkit-backdrop-filter:none}
@@ -1337,10 +1368,10 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
 /* ===== colour & depth: make sites feel real, not monochrome ===== */
 /* accent-coloured eyebrows, kickers and stat numbers on light/base sections (where the accent reads) */
 .ws-page{counter-reset:wsec}
-.on-base .eyebrow,.on-base .kicker{color:var(--accent);opacity:1;counter-increment:wsec}
+.on-base .eyebrow,.on-base .kicker{color:var(--accent-ink,var(--accent));opacity:1;counter-increment:wsec}
 .on-base .eyebrow::before,.on-base .kicker::before{content:counter(wsec,decimal-leading-zero) "  \\2014  "}
-.on-base .num{color:var(--accent)}
-.on-base .qa summary::after,.on-base .faq summary::after{color:var(--accent)}
+.on-base .num{color:var(--accent-ink,var(--accent))}
+.on-base .qa summary::after,.on-base .faq summary::after{color:var(--accent-ink,var(--accent))}
 /* a thin accent rule under the hero wordmark divider adds a designed, branded touch */
 .hero-photo.hero-noimg .hero-foot,.hero-photo:has(.hero-media.empty) .hero-foot{border-top:2px solid color-mix(in srgb,var(--accent),transparent 42%)}
 /* services: real cards with depth and an accent spine, instead of plain text in a row */
@@ -1421,12 +1452,13 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
   };
   WS.notFoundBand = (o = {}) => WS.noticeBand(Object.assign({ title: 'Page not found', text: 'Sorry, we could not find that page. It may have moved or no longer exists.', cls: 'ws-404' }, o));
 
-  // Responsive widths for resizable photo hosts (Unsplash), so phones download a ~480px image, not 1680px.
+  // Responsive widths for resizable photo hosts (Unsplash, Google place photos via our proxy), so phones download a ~480px image, not 1680px.
   WS.srcset = (src, sizes) => {
     const s = String(src || '');
-    if (!/^https:\/\/images\.unsplash\.com\//.test(s)) return '';
+    const place = /^https:\/\/websprout\.app\/api\/place-photo\?/.test(s);
+    if (!place && !/^https:\/\/images\.unsplash\.com\//.test(s)) return '';
     const at = (w) => (/[?&]w=\d+/.test(s) ? s.replace(/([?&])w=\d+/, '$1w=' + w) : s + (s.indexOf('?') > -1 ? '&' : '?') + 'w=' + w);
-    return ` srcset="${[480, 800, 1200, 1680].map((w) => e(at(w)) + ' ' + w + 'w').join(', ')}" sizes="${e(sizes || '100vw')}"`;
+    return ` srcset="${(place ? [400, 800, 1200, 1600] : [480, 800, 1200, 1680]).map((w) => e(at(w)) + ' ' + w + 'w').join(', ')}" sizes="${e(sizes || '100vw')}"`;
   };
 
   function ctxFor(site, sec, mode) {
@@ -1517,6 +1549,107 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
 })();
 `;
 
+  // ---- Local search structured data (schema.org LocalBusiness JSON-LD) ----
+  // The most specific schema.org type we can read from the business type text (works for any category,
+  // including ones added later); first match wins, so specific phrases come before generic words.
+  WS.ldTypes = [
+    [/nail/, 'NailSalon'], [/barber|hair|salon|stylist|blowout/, 'HairSalon'], [/massage|\bspa\b|day ?spa|wellness/, 'DaySpa'],
+    [/beauty|lash|brow|esthetic|makeup|wax/, 'BeautySalon'], [/tattoo|piercing/, 'TattooParlor'],
+    [/bakery|bakehouse|cake|pastr|patisserie|donut|doughnut|cupcake/, 'Bakery'], [/coffee|caf[eé]|espresso|tea ?house/, 'CafeOrCoffeeShop'],
+    [/ice ?cream|gelato|frozen yogurt/, 'IceCreamShop'], [/brewery|brew ?pub/, 'Brewery'], [/winery|vineyard/, 'Winery'],
+    [/\bbar\b|\bpub\b|tavern|lounge|cocktail/, 'BarOrPub'], [/food ?truck|catering|caterer/, 'FoodEstablishment'],
+    [/restaurant|pizz|taco|taqueria|grill|diner|bistro|sushi|bbq|barbecue|kitchen|eatery|burger|ramen|noodle|steak|deli\b|trattoria|cantina/, 'Restaurant'],
+    [/plumb/, 'Plumber'], [/electric/, 'Electrician'], [/hvac|heating|air ?condition|furnace|cooling/, 'HVACBusiness'], [/roof/, 'RoofingContractor'],
+    [/painter|painting/, 'HousePainter'], [/locksmith/, 'Locksmith'], [/moving|movers/, 'MovingCompany'],
+    [/contractor|construction|remodel|renovat|builder|handyman|carpent/, 'GeneralContractor'],
+    [/car ?wash|detailing|auto ?detail/, 'AutoWash'], [/auto ?body|collision/, 'AutoBodyShop'], [/\btires?\b/, 'TireShop'],
+    [/auto|mechanic|car repair|garage|transmission|oil change|brake/, 'AutoRepair'],
+    [/dentist|dental|orthodont/, 'Dentist'], [/physical therap|physiotherap/, 'Physiotherapy'], [/optometr|optician|eye care/, 'Optician'],
+    [/pharmac/, 'Pharmacy'], [/veterinar|\bvet\b|animal hospital/, 'VeterinaryCare'], [/chiropract|clinic|medical|urgent care/, 'MedicalClinic'],
+    [/doctor|physician|pediatric|family medicine/, 'Physician'],
+    [/pet (store|shop|supply|supplies)/, 'PetStore'], [/\bpets?\b|\bdogs?\b|\bcats?\b|groom|kennel/, 'LocalBusiness'],
+    [/daycare|day care|child ?care|preschool|nursery school/, 'ChildCare'], [/florist|flower/, 'Florist'],
+    [/yoga|pilates|gym|fitness|crossfit|boxing|martial|personal train/, 'ExerciseGym'],
+    [/\blaw\b|attorney|lawyer|legal/, 'Attorney'], [/accountant|accounting|cpa\b|bookkeep|\btax/, 'AccountingService'], [/real ?estate|realtor|realty/, 'RealEstateAgent'],
+    [/insurance/, 'InsuranceAgency'], [/hotel|motel|\binn\b|lodg/, 'Hotel'], [/b ?& ?b|bed and breakfast/, 'BedAndBreakfast'],
+    [/clean|maid|janitor|lawn|landscap|garden|tree service|junk|haul|appliance repair|pest control|pressure wash|\bpool/, 'HomeAndConstructionBusiness'],
+    [/boutique|clothing|apparel|fashion/, 'ClothingStore'], [/jewel/, 'JewelryStore'], [/book ?store|bookshop/, 'BookStore'],
+    [/hardware/, 'HardwareStore'], [/furniture/, 'FurnitureStore'], [/\bbike|bicycle/, 'BikeStore'], [/grocer|market\b/, 'GroceryStore'],
+    [/shop|store|retail|gift/, 'Store'],
+  ];
+  WS.ldType = (type) => { const t = String(type || '').toLowerCase(); const hit = t && WS.ldTypes.find((x) => x[0].test(t)); return hit ? hit[1] : 'LocalBusiness'; };
+  // Every section the site shows (all pages), for services/prices/photos.
+  WS.allSections = (site) => { const p = WS.pagesOf(site); return (p ? p.reduce((a, pg) => a.concat((pg && pg.sections) || []), []) : (site && site.sections) || []).filter((s) => s && !s.hidden); };
+  // opts: { url, image }. Only facts the owner gave: no invented prices, and a rating only from Google data
+  // (biz.googleRating + biz.googleReviews, numbers fetched from Google), never from owner-typed reviews.
+  WS.businessLd = (site, opts = {}) => {
+    const b = (site && site.biz) || {};
+    const s = WS.str;
+    const ld = { '@context': 'https://schema.org', '@type': WS.ldType(s(b.type) || s(site.category)), name: WS.bizName(site) };
+    const url = s(opts.url) || (site.slug ? 'https://' + String(site.slug).toLowerCase().replace(/[^a-z0-9-]/g, '') + '.websprout.app/' : '');
+    if (url) { ld['@id'] = url.replace(/#.*$/, '') + '#business'; ld.url = url; }
+    const desc = s(b.seoDescription) || s(b.tagline) || s(b.about);
+    if (desc) ld.description = desc.slice(0, 300);
+    if (s(b.phone).replace(/[^\d]/g, '').length >= 7) ld.telephone = s(b.phone);
+    if (/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(s(b.email))) ld.email = s(b.email);
+    if (s(b.address) || s(b.city)) {
+      ld.address = { '@type': 'PostalAddress' };
+      const parts = s(b.address).split(',').map((x) => x.trim()).filter(Boolean);
+      if (parts.length) ld.address.streetAddress = parts[0];
+      const loc = s(b.city) || (parts.length > 1 ? parts[1] : '');
+      if (loc) ld.address.addressLocality = loc.split(',')[0].trim();
+      const st = (s(b.city) + ' ' + parts.slice(1).join(' ')).match(/\b([A-Z]{2})\b/), zip = parts.slice(1).join(' ').match(/\b\d{5}(?:-\d{4})?\b/);
+      if (st) ld.address.addressRegion = st[1];
+      if (zip) ld.address.postalCode = zip[0];
+      if (s(b.country)) ld.address.addressCountry = s(b.country);
+    }
+    if (s(b.address)) ld.hasMap = WS.map(b.address);
+    const img = /^https?:\/\//i.test(s(opts.image)) ? s(opts.image) : '';
+    if (img) ld.image = img;
+    if (/^https:\/\//.test(s(b.logo))) ld.logo = s(b.logo);
+    const same = [];
+    const ig = WS.igHandle(b.instagram); if (ig) same.push('https://instagram.com/' + ig);
+    ['facebook', 'googleUrl', 'yelp', 'tiktok'].forEach((k) => { const u = WS.safeUrl(b[k]); if (/^https:\/\//.test(u) && same.indexOf(u) < 0) same.push(u); });
+    if (/^[A-Za-z0-9_-]{10,300}$/.test(s(b.googlePlaceId))) same.push('https://www.google.com/maps/place/?q=place_id:' + s(b.googlePlaceId));
+    if (same.length) ld.sameAs = same;
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const t24 = (v) => { const m = s(v).match(/^(\d{1,2}):(\d{2})/); return m ? ('0' + m[1]).slice(-2) + ':' + m[2] : ''; };
+    if (Array.isArray(b.hours)) {
+      const oh = [];
+      b.hours.forEach((hr, i) => {
+        if (!hr || !t24(hr.open) || !t24(hr.close)) return;
+        const d = days.find((x) => s(hr.d) && x.slice(0, 3).toLowerCase() === s(hr.d).slice(0, 3).toLowerCase()) || days[i];
+        if (d) oh.push({ '@type': 'OpeningHoursSpecification', dayOfWeek: 'https://schema.org/' + d, opens: t24(hr.open), closes: t24(hr.close) });
+      });
+      if (oh.length) ld.openingHoursSpecification = oh;
+    }
+    // Services, price list, plans and products the site shows: names always, prices only when the owner gave one.
+    const cur = (v) => (/£/.test(v) ? 'GBP' : /€/.test(v) ? 'EUR' : 'USD');
+    const offers = [], seen = {}, nums = [];
+    WS.allSections(site).forEach((sec) => {
+      if (!/^(services|prices|plans|products)$/.test(sec.type)) return;
+      const kind = sec.type === 'products' ? 'Product' : 'Service';
+      (Array.isArray(sec.items) ? sec.items : []).forEach((it) => {
+        if (!it || typeof it !== 'object') return;
+        const nm = s(it.name || it.title); if (!nm || seen[nm.toLowerCase()] || offers.length >= 40) return;
+        seen[nm.toLowerCase()] = 1;
+        const item = { '@type': kind, name: nm.slice(0, 120) };
+        const dsc = s(it.text || it.desc || it.meta); if (dsc) item.description = dsc.slice(0, 200);
+        const o = { '@type': 'Offer', itemOffered: item };
+        const raw = s(it.price || it.from); const n = WS.priceNum(raw);
+        if (n) { nums.push(n); o.priceCurrency = cur(raw); if (/\+|from|start/i.test(raw) || s(it.from)) o.priceSpecification = { '@type': 'PriceSpecification', minPrice: n, priceCurrency: cur(raw) }; else o.price = n; }
+        offers.push(o);
+      });
+    });
+    if (offers.length) ld.hasOfferCatalog = { '@type': 'OfferCatalog', name: 'Services', itemListElement: offers };
+    if (nums.length) { const lo = Math.min.apply(null, nums), hi = Math.max.apply(null, nums); const sym = { GBP: '£', EUR: '€' }[(offers.find((o) => o.priceCurrency) || {}).priceCurrency] || '$'; ld.priceRange = sym + lo + (hi > lo ? '–' + sym + hi : ''); }
+    const gr = b.googleRating, gn = Number(b.googleReviews);
+    if (s(b.googlePlaceId) && typeof gr === 'number' && isFinite(gr) && gr >= 1 && gr <= 5 && isFinite(gn) && gn >= 1) ld.aggregateRating = { '@type': 'AggregateRating', ratingValue: Math.round(gr * 10) / 10, reviewCount: Math.round(gn), bestRating: 5, worstRating: 1 };
+    return ld;
+  };
+  // A JSON-LD <script>; '<' is escaped so owner text can never close the tag.
+  WS.ldScript = (obj) => '<script type="application/ld+json">' + JSON.stringify(obj).replace(/</g, String.fromCharCode(92) + 'u003c') + '</script>';
+
   WS.renderSite = (site, { mode = 'live', activePath = null } = {}) => {
     const p = WS.withAccent(WS.palette(site.palette), site.accent);
     const b = site.biz || (site.biz = {});
@@ -1568,11 +1701,19 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
     const brand = site.brand || 'Websprout';
     const desc = b.seoDescription || b.tagline || '';
     const pillHref = WS.bookHref(site);
-    // Stock photos (Unsplash) must credit the photographer; only credit photos the site still uses.
+    // Stock photos (Unsplash) must credit the photographer; Google place photos credit their author and Google.
+    // Only credit photos the site still uses.
     const _pc = site.photoCredits || {}; const _used = site.photos || {}; const _seenPc = {};
-    const _pcl = Object.keys(_pc).filter((k) => _used[k] && _pc[k] && _pc[k].name && !_seenPc[_pc[k].name] && (_seenPc[_pc[k].name] = 1));
+    const _pcl = Object.keys(_pc).filter((k) => _used[k] && _pc[k] && _pc[k].name && !_seenPc[(_pc[k].source || '') + '|' + _pc[k].name] && (_seenPc[(_pc[k].source || '') + '|' + _pc[k].name] = 1));
+    const _pcg = _pcl.filter((k) => _pc[k].source === 'google');
+    // A Google photo can fall back to an Unsplash backup (site.photoFallbacks[key]) when Google is unavailable, so its
+    // backup photographer is credited too: whichever image shows is credited. (Reporting use to Unsplash is server-side.)
+    const _pfb = site.photoFallbacks || {};
+    const _pcu = _pcl.filter((k) => _pc[k].source !== 'google').map((k) => _pc[k]);
+    Object.keys(_pc).forEach((k) => { const f = _pfb[k]; if (_used[k] && _pc[k] && _pc[k].source === 'google' && f && typeof f === 'object' && WS.str(f.name) && !_seenPc['|' + f.name] && (_seenPc['|' + f.name] = 1)) _pcu.push({ name: WS.str(f.name), link: f.link }); });
     const _utm = 'utm_source=websprout&utm_medium=referral';
-    const photoCredit = _pcl.length ? ` &nbsp;·&nbsp; Photos by ${_pcl.slice(0, 6).map((k) => `<a href="${e(String((/^https:\/\//i.test(WS.safeUrl(_pc[k].link)) && WS.safeUrl(_pc[k].link)) || 'https://unsplash.com').split('?')[0] + '?' + _utm)}">${e(_pc[k].name)}</a>`).join(', ')} on <a href="https://unsplash.com/?${_utm}">Unsplash</a>` : '';
+    const photoCredit = (_pcu.length ? ` &nbsp;·&nbsp; Photos by ${_pcu.slice(0, 8).map((c) => `<a href="${e(String((/^https:\/\//i.test(WS.safeUrl(c.link)) && WS.safeUrl(c.link)) || 'https://unsplash.com').split('?')[0] + '?' + _utm)}">${e(c.name)}</a>`).join(', ')} on <a href="https://unsplash.com/?${_utm}">Unsplash</a>` : '')
+      + (_pcg.length ? ` &nbsp;·&nbsp; Photo${_pcg.length > 1 ? 's' : ''}: ${_pcg.slice(0, 6).map((k) => { const u = WS.safeUrl(_pc[k].link); return /^https:\/\//i.test(u) ? `<a href="${e(u)}" rel="nofollow noopener">${e(_pc[k].name)}</a>` : e(_pc[k].name); }).join(', ')} · Google` : '');
     const markHref = multi ? '#/' : '#';
     const routerInit = (multi && activePath != null) ? `window.__wsInitPath=${JSON.stringify(activePath)};` : '';
     const runtime = WS.runtime(site) + (multi ? routerInit + WS.pageRouter : '');
@@ -1605,21 +1746,7 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
     const favicon = `<link rel="icon" href="data:image/svg+xml,${encodeURIComponent(favSvg)}">`;
     const social = `<meta property="og:type" content="website"><meta property="og:site_name" content="${e(name)}">${heroPhoto ? `<meta property="og:image" content="${e(heroPhoto)}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${e(heroPhoto)}">` : `<meta name="twitter:card" content="summary">`}`;
     let ldScript = '';
-    try {
-      const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-      const ld = { '@context': 'https://schema.org', '@type': 'LocalBusiness', name: name };
-      if (desc) ld.description = desc;
-      if (b.phone) ld.telephone = b.phone;
-      if (b.address || b.city) { ld.address = { '@type': 'PostalAddress' }; if (b.address) ld.address.streetAddress = b.address; if (b.city) ld.address.addressLocality = b.city; }
-      if (heroPhoto) ld.image = heroPhoto;
-      if (ig) ld.sameAs = ['https://instagram.com/' + ig];
-      if (Array.isArray(b.hours) && b.hours.length) {
-        const oh = [];
-        b.hours.forEach((hr, i) => { if (hr && hr.open && hr.close) oh.push({ '@type': 'OpeningHoursSpecification', dayOfWeek: dayNames[i] || hr.d, opens: hr.open, closes: hr.close }); });
-        if (oh.length) ld.openingHoursSpecification = oh;
-      }
-      ldScript = `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`;
-    } catch (_l) {}
+    try { ldScript = WS.ldScript(WS.businessLd(site, { image: heroPhoto })); } catch (_l) {}
     // Type theme: fonts + CSS custom-prop overrides (bold / editorial / clean), picked per category at generation.
     const tt = (WS.typeTheme ? WS.typeTheme(site.typeset) : null) || { fonts: WS.styleFonts, vars: {} };
     const ttFonts = (tt.fonts && tt.fonts.length) ? tt.fonts : WS.styleFonts;
@@ -1643,7 +1770,7 @@ ${ldScript}${rdScript}
 </head>
 <body class="es-${e(site.emojiStyle || 'color')}${ttClass}${/^(sharp|soft|round)$/.test(site.corners || '') ? ' wsr-' + site.corners : ''}${mode === 'edit' ? ' edit' : ''}${multi ? ' multipage' : ''}${navMany ? ' nav-many' : ''}${top ? ' has-announce' : ''}">
 ${top}
-<header class="top" data-top><a class="mark${logoOk ? ' has-logo' : ''}" href="${markHref}">${logoOk ? `<img class="mark-logo" src="${e(b.logo)}" alt="${e(name)}" onerror="var a=this.parentNode;if(a)a.classList.remove('has-logo');this.replaceWith(document.createTextNode(this.alt||''));">` : e(name)}</a><nav aria-label="Main">${nav}</nav>${pillHref ? `<a class="pill" href="${e(pillHref)}">${e(b.bookShort || 'Book')}</a>` : '<span></span>'}${multi ? '<button class="navtoggle" type="button" aria-label="Menu" aria-expanded="false"><svg width="23" height="23" viewBox="0 0 23 23" fill="none" aria-hidden="true"><path d="M3 7h17M3 11.5h17M3 16h17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' : ''}</header>
+<header class="top" data-top><a class="mark${logoOk ? ' has-logo' : ''}${name.length > 18 ? ' mark-long' : ''}" href="${markHref}">${logoOk ? `<img class="mark-logo" src="${e(b.logo)}" alt="${e(name)}" onerror="var a=this.parentNode;if(a)a.classList.remove('has-logo');this.replaceWith(document.createTextNode(this.alt||''));">` : e(name)}</a><nav aria-label="Main">${nav}</nav>${pillHref ? `<a class="pill" href="${e(pillHref)}">${e(b.bookShort || 'Book')}</a>` : '<span></span>'}${multi ? '<button class="navtoggle" type="button" aria-label="Menu" aria-expanded="false"><svg width="23" height="23" viewBox="0 0 23 23" fill="none" aria-hidden="true"><path d="M3 7h17M3 11.5h17M3 16h17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' : ''}</header>
 <main${mainPad ? ' class="ws-padtop"' : ''}>
 ${body}
 </main>

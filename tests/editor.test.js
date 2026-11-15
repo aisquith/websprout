@@ -13,7 +13,9 @@ module.exports = async function (ctx, t) {
   t.eq(await page.evaluate(() => window._wsSiteData.biz.city), 'Austin', 'city from the form reaches the site');
 
   // photo into a hero slot is stored in the site data
-  const heroKey = await page.evaluate(() => window._wsSiteData.pages[0].sections.find((s) => s.type === 'hero').id + '.photo');
+  // (the generator may pick the big-type hero, which has no photo slot: use the photo layout so the check is deterministic)
+  const heroKey = await page.evaluate(() => { const h = window._wsSiteData.pages[0].sections.find((s) => s.type === 'hero'); h.variant = 'photo'; wsRerender(true); return h.id + '.photo'; });
+  await sleep(600);
   const px = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
   await page.evaluate((k, p) => { currentSlotId = k; fillSlot(p); }, heroKey, px); await sleep(1200);
   t.ok(await page.evaluate((k) => !!window._wsSiteData.photos[k], heroKey), 'photo saved to site data');

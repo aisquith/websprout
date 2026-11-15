@@ -364,6 +364,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 /* ---- TOAST ---- */
 .toast{position:fixed;bottom:24px;right:24px;background:#0f1a0d;border:1px solid rgba(45,122,58,.3);color:#e8f5e4;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,.35);z-index:99999;transform:translateY(80px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none;max-width:320px}
 .toast.on{transform:translateY(0);opacity:1}
+.toast-act{background:none;border:0;padding:0 2px;margin:0;font:inherit;font-weight:700;color:#9be38f;text-decoration:underline;cursor:pointer}.toast-act:focus-visible{outline:2px solid #9be38f;outline-offset:2px}
 
 /* ---- SKELETON ---- */
 .skeleton-wrap{position:absolute;inset:0;background:#060d05;z-index:5;overflow:hidden;display:none;flex-direction:column;align-items:center;justify-content:center}

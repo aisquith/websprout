@@ -45,6 +45,7 @@ export default {
     if (url.pathname === '/api/place' && request.method === 'GET') return doPlace(request, env);
     if (url.pathname === '/api/place/find' && request.method === 'GET') return doPlaceFind(request, env);
     if (url.pathname === '/api/place/details' && request.method === 'GET') return doPlaceDetails(request, env);
+    if (url.pathname === '/api/place-photo' && request.method === 'GET') return doPlacePhoto(request, env);
     if (url.pathname === '/api/photos/use' && request.method === 'POST') return doPhotoUse(request, env);
     if (url.pathname === '/ws-engine.js') return new Response(wsEngineJs(), { headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'public, max-age=86400' } });
     if (url.pathname === '/products') return doProducts(request, env);

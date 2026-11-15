@@ -7,12 +7,17 @@ function v3StarterBase(type) {
     about: 'Walk in for a classic cut or a modern fade. We take our time, line things up right, and send you out looking your best.',
     servicesTitle: 'What we do', ctaTitle: 'Ready for a fresh cut?', ctaText: 'Grab a chair and we will take care of the rest.',
     services: [['Haircut', 'A precise cut shaped to how you want to look and feel.', '1f488'], ['Skin Fade', 'Clean, blended fades from the skin up — crisp every time.', '2702'], ['Beard Trim', 'Shaped, lined up and conditioned so it looks intentional.', '1f9d4'], ['Hot Towel Shave', 'A traditional straight-razor shave with a hot-towel finish.', '1fa92']] };
-  if (M(/salon|hair studio|stylist|blowout|hairdress/)) return {
+  if (M(/\bpets?\b|(?<!hot )dog|groom|\bvet|kennel|boarding(?! school)|animal/)) return {
+    category: 'pet', tagline: 'Love your pet as much as you do.',
+    about: 'Gentle, attentive care from people who genuinely like animals. Your pet is in good hands — and you will see it when you pick them up.',
+    servicesTitle: 'What we offer', ctaTitle: 'Give your pet the best.', ctaText: 'Tell us about your companion and we will set things up.',
+    services: [['Grooming', 'Baths, cuts and nails that leave them fresh and happy.', '1f6c1'], ['Boarding', 'A safe, comfortable stay while you are away.', '1f3e1'], ['Daycare', 'Play, exercise and company all day long.', '1f415'], ['Wellness', 'Attentive care that keeps them feeling their best.', '1f43e']] };
+  if (M(/\bhair|stylist|blowout/) || (M(/salon/) && !M(/nail|tann|lash|brow|\bwax|skin|massage/))) return {
     category: 'salon', tagline: 'Hair you will want to show off.',
     about: 'From a trim to a full transformation, we listen first and cut to suit you — your hair, your face, your routine.',
     servicesTitle: 'Services', ctaTitle: 'Let us find your look.', ctaText: 'Book a chair and tell us what you have in mind.',
     services: [['Cut & Style', 'A tailored cut finished exactly how you like to wear it.', '2702'], ['Color', 'Balayage, highlights or a full color, matched to your tone.', '1f3a8'], ['Blowout', 'Smooth, bouncy and ready for whatever is next.', '1f4a8'], ['Treatment', 'A deep conditioning or gloss to bring hair back to life.', '2728']] };
-  if (M(/nail|\bspas?\b|day spa|lash|\bwax|esthet|massage|beauty|facial/)) return {
+  if (M(/nail|\bspas?\b|day spa|lash|brow|\bwax|esthet|massage|beauty|facial|tann/)) return {
     category: 'spa', tagline: 'An hour that is just for you.',
     about: 'Step away from the noise. Our treatments are about taking care of yourself, done properly, in a space made to relax in.',
     servicesTitle: 'Treatments', ctaTitle: 'Treat yourself.', ctaText: 'Book a time that works and leave the rest to us.',
@@ -32,7 +37,7 @@ function v3StarterBase(type) {
     about: 'Good coffee, a calm room and a welcome that makes you want to stay. Whether it is a quick cup or a slow afternoon, you are in the right place.',
     servicesTitle: 'On the menu', ctaTitle: 'See you in the morning.', ctaText: 'Swing by or order ahead and skip the line.',
     services: [['Espresso', 'Pulled fresh from beans we actually care about.', '2615'], ['Pour Over', 'Single-origin coffee brewed slow and clean.', '2615'], ['Pastries', 'A short, fresh case to go with your cup.', '1f950'], ['Cold Brew', 'Smooth, steeped overnight, served over ice.', '1f9ca']] };
-  if (M(/restaurant|kitchen|grill|bbq|barbecue|taco|pizza|sushi|diner|eatery|bistro|catering|food truck|cuisine|steakhouse/)) return {
+  if (M(/restaurant|kitchen|grill|bbq|barbecue|taco|pizza|sushi|diner|eatery|bistro|catering|food truck|cuisine|steakhouse/) && !M(/remodel|renovat|cabinet|countertop/)) return {
     category: 'restaurant', tagline: 'Food worth coming back for.',
     about: 'Honest cooking made from good ingredients, served by people who are glad you came in. Pull up a seat — we saved you one.',
     servicesTitle: 'Why people come back', ctaTitle: 'Hungry yet?', ctaText: 'Reserve a table or order ahead for pickup.',
@@ -42,7 +47,7 @@ function v3StarterBase(type) {
     about: 'We show up when we say we will and treat your yard like it is ours. Dependable work, fair prices, and a lawn you are proud of.',
     servicesTitle: 'What we handle', ctaTitle: 'Want a tidier yard?', ctaText: 'Tell us about your property and we will send a quote.',
     services: [['Mowing', 'Clean, even cuts on a schedule that fits your yard.', '1f33e'], ['Landscaping', 'Beds, plantings and features that lift the whole property.', '1fab4'], ['Cleanups', 'Seasonal leaf, brush and debris hauled away for good.', '1f342'], ['Trimming', 'Hedges, edges and trees kept sharp and healthy.', '1f333']] };
-  if (M(/clean|maid|janitor|housekeep|pressure wash|window wash/)) return {
+  if (M(/clean|maid|janitor|housekeep|pressure wash|window wash/) && !M(/\bcar\b|auto|vehicle|dry clean/)) return {
     category: 'cleaning', tagline: 'Come home to spotless.',
     about: 'Thorough, reliable cleaning from a team you can trust in your space. We sweat the corners so you never have to think about them.',
     servicesTitle: 'What we clean', ctaTitle: 'Ready for a cleaner place?', ctaText: 'Tell us the size of the job and we will quote it fast.',
@@ -52,7 +57,7 @@ function v3StarterBase(type) {
     about: 'New and used boats, straight talk, and a crew that actually boats. We will help you find the right one and keep it running for years.',
     servicesTitle: 'What we offer', ctaTitle: 'Ready to find your boat?', ctaText: 'Tell us how you like to spend time on the water and we will point you right.',
     services: [['Boat Sales', 'New and pre-owned boats matched to how you plan to use them.', '1f6a4'], ['Service & Repair', 'Factory-trained techs to keep you off the dock and on the water.', '1f527'], ['Parts & Rigging', 'The right gear, props and electronics, installed properly.', '2699'], ['Storage', 'Keep her covered and ready between trips.', '2693']] };
-  if (M(/auto|mechanic|car repair|detailing|\btires?\b|body shop|collision|automotive|garage/)) return {
+  if (M(/auto|mechanic|car repair|car ?wash|car clean|detailing|\btires?\b|body shop|collision|automotive|garage/) && !M(/garage door/)) return {
     category: 'auto', tagline: 'Honest work on your ride.',
     about: 'Straightforward diagnostics, fair prices and repairs that last. We tell you what you actually need — and what can wait.',
     servicesTitle: 'What we do', ctaTitle: 'Car acting up?', ctaText: 'Describe what is going on and we will get you scheduled.',
@@ -62,22 +67,37 @@ function v3StarterBase(type) {
     about: 'A room that pushes you without the ego. Coaches who know your name and a plan that actually fits your life.',
     servicesTitle: 'Train with us', ctaTitle: 'Ready to start?', ctaText: 'Come in for a first session and see if we are your place.',
     services: [['Personal Training', 'One-on-one coaching built around your goals.', '1f4aa'], ['Group Classes', 'High-energy sessions that are easy to stick with.', '1f3cb'], ['Open Gym', 'Your space, your pace, whenever it works.', '1f3cb'], ['Nutrition', 'Simple guidance that makes the training count.', '1f957']] };
-  if (M(/\bpets?\b|dog|groom|\bvet|kennel|boarding|animal/)) return {
-    category: 'pet', tagline: 'Love your pet as much as you do.',
-    about: 'Gentle, attentive care from people who genuinely like animals. Your pet is in good hands — and you will see it when you pick them up.',
-    servicesTitle: 'What we offer', ctaTitle: 'Give your pet the best.', ctaText: 'Tell us about your companion and we will set things up.',
-    services: [['Grooming', 'Baths, cuts and nails that leave them fresh and happy.', '1f6c1'], ['Boarding', 'A safe, comfortable stay while you are away.', '1f3e1'], ['Daycare', 'Play, exercise and company all day long.', '1f415'], ['Wellness', 'Attentive care that keeps them feeling their best.', '1f43e']] };
   if (M(/photo|videograph|film|cinematograph/)) return {
     category: 'photo', tagline: 'Moments worth keeping.',
     about: 'Natural, unforced images that actually look like you. We make the session easy and the photos something you will treasure.',
     servicesTitle: 'What we shoot', ctaTitle: 'Let us capture it.', ctaText: 'Tell us about your shoot and we will check our dates.',
     services: [['Portraits', 'Relaxed sessions that bring out who you really are.', '1f4f7'], ['Events', 'Weddings and milestones, documented beautifully.', '1f389'], ['Branding', 'Images that make your business look the part.', '1f4bc'], ['Video', 'Short films that hold onto the feeling, not just the look.', '1f3a5']] };
-  if (M(/boutique|apparel|clothing|jewelry|retail|store|shop|goods|merch|gift/)) return {
+  if (M(/locksmith|lock ?out|lock (?:and|&) key|rekey/)) return {
+    category: 'locksmith', tagline: 'Locked out? We can help.',
+    about: 'We get you back in carefully, change or rekey your locks, and tell you the price before we start. Homes, cars and businesses.',
+    servicesTitle: 'Services', ctaTitle: 'Need a locksmith?', ctaText: 'Call or message us with your location and what happened.',
+    services: [['Lockouts', 'Careful entry to homes and cars, without damage where possible.', '1f511'], ['Rekeying', 'Old keys stop working, your locks stay put.', '1f5dd'], ['Lock changes', 'New locks fitted on doors, gates and windows.', '1f512'], ['Key cutting', 'Spare keys cut and tested before you leave.', '1f511']] };
+  if (M(/appliance|washer|dryer repair|fridge|refrigerat|dishwasher|oven repair/)) return {
+    category: 'appliance', tagline: 'Fix it before you replace it.',
+    about: 'We find the fault, tell you what the repair costs and whether it is worth doing, then fix it with the right parts.',
+    servicesTitle: 'What we repair', ctaTitle: 'Something broken?', ctaText: 'Tell us the appliance, the brand and what it is doing.',
+    services: [['Washers and dryers', 'Leaks, noises, no spin or no heat.', '1f9fa'], ['Refrigerators', 'Not cooling, leaking or icing up.', '1f9ca'], ['Ovens and ranges', 'Burners, elements and temperature problems.', '1f525'], ['Dishwashers', 'Not draining, not cleaning or not starting.', '1f37d']] };
+  if (M(/tailor|alteration|seamstress|dressmak/)) return {
+    category: 'tailor', tagline: 'Clothes that fit properly.',
+    about: 'We take in, let out, hem and repair, so the clothes you already own fit the way they should. Every job starts with a proper fitting.',
+    servicesTitle: 'Alterations', ctaTitle: 'Bring it in.', ctaText: 'Book a fitting or stop by during opening hours.',
+    services: [['Hemming', 'Pants, skirts, dresses and sleeves taken up neatly.', '1f9f5'], ['Take in or let out', 'Waists, seams and sides adjusted to fit.', '1f4cf'], ['Suits', 'Jackets and pants fitted for a sharp look.', '1f454'], ['Repairs', 'Zippers, tears, buttons and linings fixed.', '2702']] };
+  if (M(/daycare|day care|child ?care|nursery school|pre-?school|pre-?k\b|after.?school|nanny|babysit|early learning|montessori/)) return {
+    category: 'childcare', tagline: 'A warm place to play and learn.',
+    about: 'We give children a safe, caring place to play, explore and learn, with a daily rhythm they can count on and staff who know each child well.',
+    servicesTitle: 'Our programs', ctaTitle: 'Come and visit.', ctaText: 'Book a tour and meet the people who would look after your child.',
+    services: [['Infant care', 'Gentle, attentive care for the youngest children.', '1f37c'], ['Toddlers', 'Play, songs and first friendships.', '1f9f8'], ['Preschool', 'Early learning that gets children ready for school.', '1f4da'], ['After-school care', 'A safe place to play and do homework.', '1f392']] };
+  if (M(/boutique|apparel|clothing|jewelry|retail|store|shop|goods|merch|gift/) && !M(/flower|florist/)) return {
     category: 'retail', tagline: 'Finds you will actually love.',
     about: 'A carefully chosen selection, not a warehouse. Everything here earned its place — come see what we picked out for you.',
     servicesTitle: 'Why shop with us', ctaTitle: 'Come take a look.', ctaText: 'Browse in store or reach out and we will hold something for you.',
     services: [['Curated', 'A tight, thoughtful selection you can trust.', '1f6cd'], ['Local', 'Owned and run by people who live here too.', '1f4cd'], ['Personal', 'Real help from people who know the stock.', '1f91d'], ['Quality', 'Pieces chosen to last, not just to sell.', '2728']] };
-  if (M(/handy|plumb|electric|hvac|heating|roofing|pest|pool|gutter|contractor|remodel|fence|deck|construction|painter|flooring/)) return {
+  if (M(/handy|plumb|electric|hvac|heating|air condition|furnace|roof|pest|pool|gutter|contractor|remodel|renovat|fence|deck|construction|paint|flooring|drywall|siding|garage door|cabinet|countertop/)) return {
     category: 'home', tagline: 'Done right, done once.',
     about: 'Licensed, tidy and on time. We treat your home with respect and leave it better than we found it — no surprises on the bill.',
     servicesTitle: 'What we handle', ctaTitle: 'Got a project?', ctaText: 'Describe the job and we will get you a straight quote.',
@@ -203,11 +223,12 @@ const V3_COLORFUL = {
   home: ['concrete', 'slate', 'desert'], generic: ['royal', 'sky', 'citrus'], legal: ['midnight', 'bottle', 'slate'],
   dental: ['sky', 'mint', 'harbor'], health: ['sage', 'mint', 'sky'], finance: ['midnight', 'bottle', 'royal'],
   realestate: ['desert', 'bottle', 'linen'], education: ['royal', 'citrus', 'sky'], events: ['blush', 'plum', 'butter'],
-  moving: ['sky', 'citrus', 'ember'], studio: ['ember', 'plum', 'royal'],
+  moving: ['sky', 'citrus', 'ember'], studio: ['ember', 'plum', 'royal'], locksmith: ['graphite', 'butter', 'midnight'],
+  appliance: ['sky', 'harbor', 'graphite'], tailor: ['linen', 'plum', 'espresso'], childcare: ['citrus', 'sky', 'mint'],
 };
 function v3StepsKind(cat) {
-  if (['barber', 'salon', 'spa', 'tattoo', 'fitness', 'pet', 'dental', 'health', 'education'].indexOf(cat) > -1) return 'visit';
-  if (['lawn', 'cleaning', 'home', 'moving'].indexOf(cat) > -1) return 'onsite';
+  if (['barber', 'salon', 'spa', 'tattoo', 'fitness', 'pet', 'dental', 'health', 'education', 'tailor', 'childcare'].indexOf(cat) > -1) return 'visit';
+  if (['lawn', 'cleaning', 'home', 'moving', 'locksmith', 'appliance'].indexOf(cat) > -1) return 'onsite';
   return 'project';
 }
 function v3StepsItems(cat) { const sets = V3_STEPS_BY_KIND[v3StepsKind(cat || '')] || V3_COPY.stepsSets; const set = v3FlavorPick(sets) || sets[0]; return set.map((x) => ({ name: x[0], text: x[1] })); }
@@ -254,6 +275,10 @@ function v3Starter(type) {
     events: ['w_rose', 'w_plum', 'w_coffee'],
     moving: ['w_ocean', 'w_amber', 'w_slate'],
     studio: ['w_mono', 'w_charcoal', 'w_plum'],
+    locksmith: ['w_charcoal', 'w_amber', 'w_slate'],
+    appliance: ['w_ocean', 'w_slate', 'w_teal'],
+    tailor: ['w_coffee', 'w_charcoal', 'w_plum'],
+    childcare: ['w_amber', 'w_teal', 'w_rose'],
   };
   // Type theme per category: 'bold' (condensed Monochrome look), 'editorial' (serif), 'clean' (Plex).
   const TYPE_BY_CAT = {
@@ -261,6 +286,7 @@ function v3Starter(type) {
     salon: 'editorial', spa: 'editorial', bakery: 'editorial', cafe: 'editorial', restaurant: 'editorial', photo: 'editorial', retail: 'editorial',
     lawn: 'clean', cleaning: 'clean', pet: 'clean', generic: 'clean',
     legal: 'editorial', dental: 'clean', health: 'clean', finance: 'clean', realestate: 'editorial', education: 'clean', events: 'editorial', moving: 'bold', studio: 'bold',
+    locksmith: 'bold', appliance: 'clean', tailor: 'editorial', childcare: 'clean',
   };
   // A second type style that also suits each category, used some of the time for variety.
   const TYPE_ALT = { bold: 'clean', editorial: 'clean', clean: 'editorial' };
@@ -282,30 +308,157 @@ const PHOTO_QUERY = {
   bakery: 'artisan bakery bread pastries', cafe: 'cozy coffee shop interior', restaurant: 'restaurant plated food',
   lawn: 'landscaping green lawn garden', cleaning: 'bright clean home interior', marine: 'boat on the water marina',
   auto: 'auto repair garage mechanic', fitness: 'modern gym workout', pet: 'happy dog grooming', photo: 'photographer camera studio',
-  retail: 'boutique shop interior', home: 'home renovation craftsmanship', generic: 'local small business storefront'
+  retail: 'boutique shop interior', home: 'home renovation craftsmanship', generic: 'local small business storefront',
+  locksmith: 'locksmith door lock key', appliance: 'appliance repair technician', tailor: 'tailor sewing alterations', childcare: 'children daycare classroom play'
 };
-async function unsplashPhotos(query, env, n) {
+// One Unsplash search → normalized photos, best match first. null = the request failed (no point retrying),
+// [] = it worked but found nothing.
+async function unsplashSearch(query, env, ms) {
   try {
-    if (!env || !env.UNSPLASH_ACCESS_KEY || !query) return [];
-    const url = 'https://api.unsplash.com/search/photos?per_page=24&orientation=landscape&content_filter=high&query=' + encodeURIComponent(query);
+    if (!env || !env.UNSPLASH_ACCESS_KEY || !query) return null;
+    const url = 'https://api.unsplash.com/search/photos?per_page=30&orientation=landscape&content_filter=high&query=' + encodeURIComponent(query);
     const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-    const to = ctrl ? setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, 4500) : 0;
+    const to = ctrl ? setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, ms || 4500) : 0;
     let r;
     try { r = await fetch(url, { headers: { 'Authorization': 'Client-ID ' + env.UNSPLASH_ACCESS_KEY, 'Accept-Version': 'v1' }, signal: ctrl ? ctrl.signal : undefined }); }
     finally { if (to) clearTimeout(to); }
-    if (!r || !r.ok) return [];
+    if (!r || !r.ok) return null;
     const j = await r.json();
-    const results = (j && j.results) || [];
-    const out = [];
-    for (let i = 0; i < results.length && out.length < (n || 4); i++) {
-      const raw = results[i] && results[i].urls && (results[i].urls.regular || results[i].urls.full || results[i].urls.raw);
-      if (raw) {
-        const u = results[i].user || {};
-        out.push({ url: raw + (raw.indexOf('?') > -1 ? '&' : '?') + 'w=1680&q=75&auto=format&fit=crop', name: u.name || 'Unsplash', link: (u.links && u.links.html) || 'https://unsplash.com', download: (results[i].links && results[i].links.download_location) || '' });
-      }
-    }
-    return out;
+    return ((j && j.results) || []).map(function (x) {
+      const raw = x && x.urls && (x.urls.regular || x.urls.full || x.urls.raw);
+      if (!raw) return null;
+      const u = x.user || {};
+      return { id: String(x.id || raw), url: raw + (raw.indexOf('?') > -1 ? '&' : '?') + 'w=1680&q=75&auto=format&fit=crop', name: u.name || 'Unsplash', link: (u.links && u.links.html) || 'https://unsplash.com', download: (x.links && x.links.download_location) || '' };
+    }).filter(Boolean);
+  } catch (e) { return null; }
+}
+// Search words for this business: the type the owner typed plus its one or two most specific services
+// ("vegan bakery sourdough"), so two businesses of the same kind rarely share photos. Vague types
+// ("Local business", "Services") use the category's hand-picked search instead, which is also the retry.
+const V3_VAGUE_WORD = /^(the|and|of|for|a|an|my|our|local|small|business|businesses|company|companies|co|llc|inc|ltd|service|services|shop|store|group|pro|pros|professional|professionals|best|quality|family|owned|other|misc|general|solutions|center|centre|new|top|expert|experts|specialist|specialists|\d+)$/;
+const V3_VAGUE_SERVICE = /^(consult|consults|consultation|consultations|free (estimate|estimates|quote|quotes|consultation)|estimate|estimates|quote|quotes|repair|repairs|maintenance|installation|installations|service|services|other|more|misc|general|custom|package|packages|basic|standard|premium|deluxe|gift card|gift cards|emergency|emergencies|support|appointment|appointments|walk ins?|online|in person|call|contact|help|other services|and more)$/;
+function v3Words(x) { return String(x || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\$\s?\d[\d,.]*\+?/g, ' ').replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim(); }
+function v3PhotoQueries(biz, sc) {
+  const fallback = (sc && (sc.photoQuery || PHOTO_QUERY[sc.category])) || 'local small business storefront';
+  const words = v3Words(biz && biz.type).split(' ').filter(function (w) { return w && !V3_VAGUE_WORD.test(w); });
+  const type = words.slice(0, 4).join(' ');
+  if (type.length < 4) return [fallback];
+  let q = type;
+  ((biz && biz.services) || []).map(function (s) { return v3Words(s && s.name); })
+    .filter(function (n) { return n.length >= 4 && n.split(' ').length <= 3 && !V3_VAGUE_SERVICE.test(n) && (' ' + type + ' ').indexOf(' ' + n + ' ') < 0; })
+    .slice(0, 2).forEach(function (n) { if ((q + ' ' + n).split(' ').length <= 6) q += ' ' + n; });
+  return q === fallback ? [q] : [q, fallback];
+}
+// n different photos: the hero at random from the ~10 most relevant, the rest at random from the next best.
+function v3PickPhotos(list, n) {
+  const pool = [], seen = {};
+  (list || []).forEach(function (p) { if (p && p.url && !seen[p.id || p.url] && !seen[p.url]) { seen[p.id || p.url] = 1; seen[p.url] = 1; pool.push(p); } });
+  const out = [];
+  while (out.length < (n || 4) && pool.length) out.push(pool.splice(Math.floor(Math.random() * Math.min(pool.length, out.length ? 20 : 10)), 1)[0]);
+  return out;
+}
+// Unsplash photos for a list of searches: the first (most specific) one, then the next if it found fewer than 4.
+async function unsplashPhotos(query, env, n) {
+  try {
+    const qs = (Array.isArray(query) ? query : [query]).filter(Boolean);
+    const t0 = Date.now();
+    let list = await unsplashSearch(qs[0], env, 4500);
+    if (list && list.length < 4 && qs[1] && qs[1] !== qs[0] && Date.now() - t0 < 3000) { const more = await unsplashSearch(qs[1], env, 3000); if (more) list = list.concat(more); }
+    return v3PickPhotos(list || [], n || 4);
   } catch (e) { return []; }
+}
+
+// ── The business's own photos from its Google listing (Places API (New), field mask "photos") ──
+// Google bills every call, so: the photo list (resource names) is cached in KV for 24 hours (one details
+// call serves every slot), each photo's image URL is cached in KV and the 302 at the edge for 7 days, and a
+// hard monthly cap (GPHOTO_MONTHLY_CAP, default 900, inside Google's free 1,000) counts every real call in
+// KV. At the cap no Google call is made: the generator uses Unsplash and /api/place-photo redirects to the
+// site's Unsplash backup (fb). Sites never see the API key. k = a short hash of the photo's name, so the
+// right photo is found even if Google reorders the list (falls back to index i).
+const GPLACE_RE = /^[A-Za-z0-9_-]{10,300}$/;
+const GPHOTO_FB_RE = /^https:\/\/images\.unsplash\.com\/[A-Za-z0-9._~\/?&=%+-]{1,400}$/;
+function v3Hash(s) { s = String(s || ''); let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
+function gphotoKey() { return 'gphoto:count:' + new Date().toISOString().slice(0, 7); }
+function gphotoCap(env) { const n = parseInt(env && env.GPHOTO_MONTHLY_CAP, 10); return isNaN(n) || n < 0 ? 900 : n; }
+// Billed Google calls left this month (0 without KV: no counter, no calls).
+async function gphotoLeft(env) { if (!env || !env.KV) return 0; try { return Math.max(0, gphotoCap(env) - (parseInt((await env.KV.get(gphotoKey())) || '0', 10) || 0)); } catch (e) { return 0; } }
+// Count one billed call before making it; false = the cap is reached, don't call Google.
+async function gphotoSpend(env) {
+  if (!env || !env.KV) return false;
+  try { const k = gphotoKey(); const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= gphotoCap(env)) return false; await env.KV.put(k, String(n + 1), { expirationTtl: 40 * 86400 }); return true; } catch (e) { return false; }
+}
+async function placePhotoList(pid, env, ms) {
+  if (!env || !env.GOOGLE_PLACES_KEY || !GPLACE_RE.test(String(pid || ''))) return null;
+  const ck = 'pphotos:' + pid;
+  try { if (env.KV) { const c = await env.KV.get(ck); if (c) return JSON.parse(c); } } catch (e) {}
+  if (!(await gphotoSpend(env))) return null;
+  const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  const to = ctrl ? setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, ms || 3000) : 0;
+  let r;
+  try { r = await fetch('https://places.googleapis.com/v1/places/' + encodeURIComponent(pid), { headers: { 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY, 'X-Goog-FieldMask': 'photos' }, signal: ctrl ? ctrl.signal : undefined }); }
+  catch (e) { return null; }
+  finally { if (to) clearTimeout(to); }
+  if (!r || !r.ok) return null;
+  let j; try { j = await r.json(); } catch (e) { return null; }
+  const out = ((j && j.photos) || []).slice(0, 10).map(function (p) {
+    if (!p || !/^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+$/.test(String(p.name || ''))) return null;
+    const a = (p.authorAttributions || [])[0] || {};
+    let link = String(a.uri || ''); if (link.indexOf('//') === 0) link = 'https:' + link;
+    return { name: p.name, w: +p.widthPx || 0, h: +p.heightPx || 0, by: String(a.displayName || '').slice(0, 80), link: /^https:\/\/[^\s"'<>]+$/.test(link) ? link.slice(0, 300) : '' };
+  }).filter(Boolean);
+  try { if (env.KV) await env.KV.put(ck, JSON.stringify(out), { expirationTtl: 24 * 3600 }); } catch (e) {}
+  return out;
+}
+// Google photos → site photo entries: a landscape photo for the hero when there is one, then the rest in order.
+// backups[j] (an Unsplash photo) rides along as fb, so the slot still shows a photo once the monthly cap is hit.
+function v3GooglePhotos(pid, list, n, backups) {
+  if (!GPLACE_RE.test(String(pid || '')) || !Array.isArray(list) || !list.length) return [];
+  let hero = list.findIndex(function (p) { return p.w > p.h; }); if (hero < 0) hero = 0;
+  const order = [hero].concat(list.map(function (p, i) { return i; }).filter(function (i) { return i !== hero; })).slice(0, n || 4);
+  return order.map(function (i, j) {
+    const p = list[i], b = (backups || [])[j];
+    const fb = b && GPHOTO_FB_RE.test(b.url) ? b : null;
+    return { url: 'https://websprout.app/api/place-photo?pid=' + encodeURIComponent(pid) + '&i=' + i + '&w=1600&k=' + v3Hash(p.name) + (fb ? '&fb=' + encodeURIComponent(fb.url) : ''), name: p.by || 'Google user', link: p.link || '', source: 'google', fallback: fb ? { url: fb.url, name: fb.name, link: fb.link } : null };
+  });
+}
+// GET /api/place-photo?pid=<place id>&i=<0-9>&w=<400-1600>[&k=<hash>][&fb=<Unsplash URL>] → 302 to the photo.
+// Cap reached or any failure → 302 to fb when given, else 404 (the site's image collapses to its fallback).
+async function doPlacePhoto(request, env) {
+  const url = new URL(request.url);
+  const pid = (url.searchParams.get('pid') || '').trim(), i = url.searchParams.get('i') || '0', k = url.searchParams.get('k') || '', fb = url.searchParams.get('fb') || '';
+  const nope = function (status, ttl) { return new Response(status === 400 ? 'Bad request' : 'Not found', { status: status, headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'text/plain', 'Cache-Control': ttl ? 'public, max-age=' + ttl : 'no-store' } }); };
+  if (!GPLACE_RE.test(pid) || !/^\d$/.test(i) || !/^[a-z0-9]{0,8}$/.test(k) || (fb && !GPHOTO_FB_RE.test(fb))) return nope(400);
+  // Always fetch one size from Google: each width would be a separate billed call, and the srcset asks for several.
+  const w = 1600;
+  // Not cached at the edge: once the month rolls over the real photo comes back.
+  const backup = function () { return fb ? new Response(null, { status: 302, headers: { 'Location': fb, 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=3600' } }) : nope(404); };
+  if (!env.GOOGLE_PLACES_KEY) return backup();
+  const cache = (typeof caches !== 'undefined' && caches.default) || null;
+  const ckey = new Request('https://websprout.app/api/place-photo?pid=' + encodeURIComponent(pid) + '&i=' + i + '&w=' + w + '&k=' + k);
+  try { if (cache) { const hit = await cache.match(ckey); if (hit) return hit; } } catch (e) {}
+  const found = function (uri) { return new Response(null, { status: 302, headers: { 'Location': uri, 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=604800' } }); };
+  try {
+    // Known image URL (another data center already asked Google): no Google call at all, not even for the list.
+    let known = ''; try { if (k && env.KV) known = (await env.KV.get('pphoto:' + pid + ':' + k + ':' + w)) || ''; } catch (e) {}
+    if (known) { const res = found(known); try { if (cache) await cache.put(ckey, res.clone()); } catch (e) {} return res; }
+    const list = await placePhotoList(pid, env, 5000);
+    if (!list) return backup();
+    const ph = (k && list.find(function (p) { return v3Hash(p.name) === k; })) || list[+i];
+    if (!ph) return fb ? backup() : nope(404, 3600);
+    const uk = 'pphoto:' + pid + ':' + v3Hash(ph.name) + ':' + w;
+    let uri = ''; try { if (env.KV) uri = (await env.KV.get(uk)) || ''; } catch (e) {}
+    if (!uri) {
+      if (!(await gphotoSpend(env))) return backup();
+      const r = await fetch('https://places.googleapis.com/v1/' + ph.name + '/media?maxWidthPx=' + w + '&skipHttpRedirect=true', { headers: { 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY } });
+      const j = r.ok ? await r.json() : null;
+      uri = String((j && j.photoUri) || '');
+      if (!/^https:\/\/[^\s"'<>]+$/.test(uri)) return backup();
+      try { if (env.KV) await env.KV.put(uk, uri, { expirationTtl: 7 * 86400 }); } catch (e) {}
+    }
+    const res = found(uri);
+    try { if (cache) await cache.put(ckey, res.clone()); } catch (e) {}
+    return res;
+  } catch (e) { return backup(); }
 }
 
 // ── Google rating + reviews for published sites (Places API (New); needs GOOGLE_PLACES_KEY) ──
@@ -465,7 +618,7 @@ function v3Pages(site, sc, isShop) {
     const mainPath = isShop ? 'shop' : (isFood ? 'menu' : 'services');
     // A real "do something" page by type: reservation (food), quote (project trades), appointment (personal
     // services). Shops already have the cart as their action, so they get none.
-    const quoteCats = ['lawn', 'cleaning', 'home', 'marine', 'auto', 'moving', 'events', 'studio', 'finance'];
+    const quoteCats = ['lawn', 'cleaning', 'home', 'marine', 'auto', 'moving', 'events', 'studio', 'finance', 'locksmith', 'appliance'];
     let bk = null;
     if (isShop) bk = null;
     else if (isFood) bk = { mode: 'reservation', path: 'reserve', title: 'Reserve', short: 'Reserve', head: 'Reserve a table', btn: 'Reserve a table', sub: 'Tell us when you’d like to come and we’ll confirm your table.', ok: 'Thanks. Your request is in and we’ll confirm your table shortly.' };
@@ -680,7 +833,7 @@ async function buildV3Site(d, env) {
     const palette = (d.palette || '').toString() || lookPal || sc.palette || 'w_mono';
     const typeset = (d.typeset || '').toString() || sc.typeset || 'bold';
     const emojiStyle = (d.emojiStyle || 'color').toString();
-    const knownType = /barber|salon|tattoo|groom|nail|spa|beauty|bak|cafe|coffee|food|restaurant|kitchen|donut|truck|lawn|landscap|garden|clean|pressure|pool|window|pest|gutter|handy/i.test(biz.type);
+    const knownType = /barber|salon|tattoo|groom|nail|spa|beauty|bak|cafe|coffee|food|restaurant|kitchen|donut|truck|lawn|landscap|garden|clean|pressure|pool|window|pest|gutter|handy|plumb|electric|hvac|heating|roof|paint|lock|appliance|junk|haul|tailor|alteration|daycare|child|preschool|tutor|music|piano|guitar|flor|flower|massage|yoga|pilates|car ?wash|detail|walk|sitter/i.test(biz.type);
     const has = function (a) { return Array.isArray(a) && a.length; };
     const site = { biz: biz, palette: palette, typeset: typeset, emojiStyle: emojiStyle, photos: {}, sections: [], statsApi: 'https://websprout.app/api/place' };
     const add = function (type, ov) { site.sections.push(Object.assign({ id: type + '-' + WSENGINE.uid(), type: type }, WSENGINE.sections[type].create(site), ov || {})); };
@@ -715,14 +868,28 @@ async function buildV3Site(d, env) {
       ? { variant: 'band', title: 'Shop the collection.', text: 'Browse everything and order online.', button: biz.bookLabel, emoji: '' }
       : { variant: 'band', title: sc.ctaTitle || "Let's get started.", text: sc.ctaText || "Reach out and we'll take it from here.", button: biz.bookLabel, emoji: '' });
     add('visit', { variant: 'hours' });
-    // Topical photography (graceful: no key or any failure → designed gradient hero, no gallery).
-    // One API call fills the hero plus a photo gallery, so sites read image-led, not template-flat.
+    // Photography (graceful: no keys or any failure → designed gradient hero, no gallery). A linked Google
+    // listing supplies the business's own photos for the hero and gallery; Unsplash (searched by type and
+    // services) fills any slot Google can't. Both lookups run at once, so linking Google adds no wait.
+    // Past the monthly Google cap, Google is skipped entirely. Unsplash fetches spares as each Google slot's backup.
     try {
-      const _pics = await unsplashPhotos((sc.photoQuery || PHOTO_QUERY[sc.category] || biz.type || 'small business'), env, 4);
+      const _gOn = !!biz.googlePlaceId && (await gphotoLeft(env)) > 0;
+      const _found = await Promise.all([
+        _gOn ? placePhotoList(biz.googlePlaceId, env, 3000).catch(function () { return null; }) : null,
+        unsplashPhotos(v3PhotoQueries(biz, sc), env, _gOn ? 8 : 4),
+      ]);
+      const _un = _found[1] || [];
+      const _gl = (_found[0] || []).slice(0, 4);
+      const _gp = v3GooglePhotos(biz.googlePlaceId, _gl, 4, _un.slice(4 - _gl.length));
+      const _pics = _gp.concat(_un).slice(0, 4);
       if (_pics.length) {
         const _h = site.sections.find(function (s) { return s.type === 'hero'; });
         site.photoCredits = {};
-        const _cr = function (k, p) { site.photos[k] = p.url; site.photoCredits[k] = { name: p.name, link: p.link }; };
+        const _cr = function (k, p) {
+          site.photos[k] = p.url;
+          site.photoCredits[k] = p.source === 'google' ? { name: p.name, link: p.link, source: 'google' } : { name: p.name, link: p.link };
+          if (p.fallback) { site.photoFallbacks = site.photoFallbacks || {}; site.photoFallbacks[k] = p.fallback; }
+        };
         if (_h) _cr(_h.id + '.photo', _pics[0]);
         if (_pics.length >= 4) {
           const _g = { id: 'gallery-' + WSENGINE.uid(), type: 'gallery', variant: 'strip', title: '' };

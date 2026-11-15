@@ -54,7 +54,40 @@ module.exports = async function (ctx, t) {
       await page.close();
     }
   }
-  if (!ctx.quick) t.ok(strokeChecked > 0, 'outlined headline text was found and its stroke contrast checked (' + strokeChecked + ')');
+  // Outlined headline words only appear on bold-type heroes with a big-type or split layout, which generation picks at
+  // random (and only without a photo), so the sample above may contain none. Render them deterministically: every
+  // palette, plus owner-picked brand colors (a pale logo yellow, a mid grey) that must still read as an outline.
+  const WS = new Function('globalThis', (await (await fetch(base + '/ws-engine.js')).text()) + ';return globalThis.WS;')({});
+  const gen = (await createSite(base, { name: 'Northside Fade Co', type: 'Barber shop', city: 'Austin', phone: '512-555-0100' })).site;
+  const combos = WS.palettes.map((p) => ({ palette: p.id })).concat(['#FFE600', '#9BE15D', '#7A7A7A', '#87CEEB', '#1B1B1B'].reduce((a, c) => a.concat([{ palette: 'w_mono', accent: c }, { palette: 'b_mono', accent: c }, { palette: 'w_teal', accent: c }]), []));
+  const sp = await openPage(browser, {});
+  await sp.goto(base + '/terms');
+  const strokeBad = [];
+  for (let i = 0; i < combos.length; i++) {
+    const site = JSON.parse(JSON.stringify(gen)); site.palette = combos[i].palette; site.typeset = 'bold'; site.photos = {};
+    if (combos[i].accent) site.accent = combos[i].accent; else delete site.accent;
+    const hero = (site.pages ? site.pages[0].sections : site.sections).find((x) => x.type === 'hero');
+    hero.variant = i % 2 ? 'split' : 'type'; hero.title = 'Northside Fade Co';
+    await sp.setContent(WS.renderSite(site, { mode: 'live' }), { waitUntil: 'domcontentloaded' });
+    const r = await sp.evaluate(() => {
+      const rgb = (s) => { const m = String(s).match(/rgba?\(([^)]+)\)|color\(srgb ([^)]+)\)/); if (!m) return null; const p = (m[1] || m[2]).split(/[ ,/]+/).filter(Boolean).map(Number); return m[2] ? p.slice(0, 3).map((x) => x * 255) : p.slice(0, 3); };
+      const lum = (c) => { const f = c.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * f[0] + 0.7152 * f[1] + 0.0722 * f[2]; };
+      const bgOf = (el) => { for (let n = el; n; n = n.parentElement) { const c = getComputedStyle(n).backgroundColor; const v = rgb(c); if (v && !/, 0\)$|\/ 0\)$/.test(c) && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') return v; } return [255, 255, 255]; };
+      const out = { n: 0, worst: 99 };
+      document.querySelectorAll('.hero *').forEach((el) => {
+        const cs = getComputedStyle(el); if (!(parseFloat(cs.webkitTextStrokeWidth) > 0) || !el.textContent.trim()) return;
+        const sc = rgb(cs.webkitTextStrokeColor); if (!sc) return; const a = lum(sc), b = lum(bgOf(el));
+        out.n++; out.worst = Math.min(out.worst, (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05));
+      });
+      return out;
+    });
+    strokeChecked += r.n;
+    if (!r.n) strokeBad.push(combos[i].palette + (combos[i].accent || '') + ': no outlined words');
+    else if (r.worst < 3) strokeBad.push(combos[i].palette + (combos[i].accent ? ' + ' + combos[i].accent : '') + ' ' + r.worst.toFixed(2));
+  }
+  await sp.close();
+  t.ok(strokeChecked > 0, 'outlined headline text was found and its stroke contrast checked (' + strokeChecked + ')');
+  t.eq(strokeBad.join(', '), '', 'outlined headline words keep >= 3:1 stroke contrast on every palette and brand color');
   const ids = Object.keys(found);
   ids.forEach((k) => t.fail('accessibility: ' + k + ' (' + found[k].n + ' elements) e.g. ' + found[k].where.join(' | ')));
   t.ok(ids.length === 0, 'generated sites have no serious accessibility issues on any page, desktop or phone');
