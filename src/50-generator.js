@@ -470,14 +470,14 @@ async function doPlace(request, env) {
   if (!/^[A-Za-z0-9_-]{10,300}$/.test(id)) return new Response(JSON.stringify({ error: 'bad place' }), { status: 400, headers: cors });
   if (!env.GOOGLE_PLACES_KEY) return new Response(JSON.stringify({ error: 'not configured' }), { status: 503, headers: cors });
   try {
-    const ck = 'place:' + id;
+    const ck = 'place2:' + id; // v2: reviews carry an id (so owners can hide one) and a link to it on Google
     if (env.KV) { const c = await env.KV.get(ck); if (c) return new Response(c, { headers: cors }); }
     const r = await fetch('https://places.googleapis.com/v1/places/' + encodeURIComponent(id), { headers: { 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY, 'X-Goog-FieldMask': 'displayName,rating,userRatingCount,googleMapsUri,reviews' } });
     if (!r.ok) return new Response(JSON.stringify({ error: 'google error' }), { status: 502, headers: cors });
     const p = await r.json();
     const out = JSON.stringify({
       name: (p.displayName && p.displayName.text) || '', rating: typeof p.rating === 'number' ? p.rating : null, reviews: typeof p.userRatingCount === 'number' ? p.userRatingCount : null, url: p.googleMapsUri || '',
-      items: (p.reviews || []).slice(0, 5).map(function (v) { return { rating: v.rating || 0, text: String((v.text && v.text.text) || (v.originalText && v.originalText.text) || '').slice(0, 600), name: (v.authorAttribution && v.authorAttribution.displayName) || 'Google user', when: v.relativePublishTimeDescription || '' }; }).filter(function (v) { return v.text; }),
+      items: (p.reviews || []).slice(0, 5).map(function (v) { const rid = String(v.name || '').split('/').pop().replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80); return { id: rid, link: /^https:\/\/[^\s"'<>]+$/.test(String(v.googleMapsUri || '')) ? String(v.googleMapsUri).slice(0, 400) : '', rating: v.rating || 0, text: String((v.text && v.text.text) || (v.originalText && v.originalText.text) || '').slice(0, 600), name: (v.authorAttribution && v.authorAttribution.displayName) || 'Google user', when: v.relativePublishTimeDescription || '' }; }).filter(function (v) { return v.text; }),
     });
     if (env.KV) await env.KV.put(ck, out, { expirationTtl: 6 * 3600 });
     return new Response(out, { headers: cors });

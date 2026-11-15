@@ -617,7 +617,7 @@ const WSENGINE = (function(){
         const fb = it.map((r) => `<blockquote><p>${lines(r.quote)}</p><footer>${e(r.name)}</footer></blockquote>`).join('');
         if (!c.biz.googlePlaceId && !fb && c.mode !== 'edit') return '';
         // Live with nothing typed: stays hidden until Google reviews actually arrive (never an empty band).
-        return `<section class="reviews reviews-wall reviews-google on-base" data-greviews${!fb && c.mode === 'live' ? ' hidden' : ''}><div class="wrap">${head(s, 'What people say')}<div class="gr-sum" hidden></div><div class="rw">${fb || (c.mode === 'edit' ? '<blockquote><p>Your latest Google reviews will appear here once your Google Business Profile is linked.</p></blockquote>' : '')}</div><p class="gr-attr" hidden></p></div></section>`;
+        return `<section class="reviews reviews-wall reviews-google on-base" data-greviews${(c.biz.googleHidden || []).length ? ` data-ghide="${e(c.biz.googleHidden.join(' '))}"` : ''}${!fb && c.mode === 'live' ? ' hidden' : ''}><div class="wrap">${head(s, 'What people say')}<div class="gr-sum" hidden></div><div class="rw">${fb || (c.mode === 'edit' ? '<blockquote><p>Your latest Google reviews will appear here once your Google Business Profile is linked.</p></blockquote>' : '')}</div><p class="gr-attr" hidden></p></div></section>`;
       }
       if (!it.length) return '';
       if (s.variant === 'wall')
@@ -1821,14 +1821,16 @@ document.documentElement.classList.add('js');document.body.classList.add('js');
     function none(){if(!box.querySelector('.rw blockquote'))box.remove();}
     if(!STATS_API||!PLACE){none();return;}
     fetch(STATS_API+'?place='+encodeURIComponent(PLACE)).then(function(r){return r.ok?r.json():null}).then(function(j){
-      if(!j||!j.items||!j.items.length){none();return;}
+      // Reviews the owner chose to hide (by Google review id) are skipped; the attribution then says so.
+      var hide=(box.getAttribute('data-ghide')||'').split(' ').filter(Boolean),items=(j&&j.items||[]).filter(function(v){return !(v.id&&hide.indexOf(v.id)>-1)}),cut=j&&j.items&&items.length<j.items.length;
+      if(!items.length){none();return;}
       box.hidden=false;
       var rw=box.querySelector('.rw'),sum=box.querySelector('.gr-sum'),at=box.querySelector('.gr-attr');
       function star(n){var o='';for(var i=0;i<5;i++)o+=i<Math.round(n)?'★':'☆';return o}
       function esc(s){return String(s==null?'':s).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;')}
-      rw.innerHTML=j.items.map(function(v){return '<blockquote><div class="gr-stars" aria-label="'+v.rating+' out of 5 stars">'+star(v.rating)+'</div><p>'+esc(v.text.length>320?v.text.slice(0,317)+'…':v.text)+'</p><footer>'+esc(v.name)+(v.when?' · '+esc(v.when):'')+'</footer></blockquote>'}).join('');
+      rw.innerHTML=items.map(function(v){return '<blockquote><div class="gr-stars" aria-label="'+v.rating+' out of 5 stars">'+star(v.rating)+'</div><p>'+esc(v.text.length>320?v.text.slice(0,317)+'…':v.text)+'</p><footer>'+esc(v.name)+(v.when?' · '+esc(v.when):'')+(/^https:\\/\\//.test(v.link||'')?' · <a href="'+esc(v.link)+'" target="_blank" rel="noopener nofollow">on Google</a>':'')+'</footer></blockquote>'}).join('');
       if(j.rating&&sum){sum.hidden=false;sum.innerHTML='<b>'+j.rating.toFixed(1)+'</b> <span class="gr-stars">'+star(j.rating)+'</span> <span>'+(j.reviews||0).toLocaleString()+' Google reviews</span>'}
-      if(at){at.hidden=false;at.innerHTML='Reviews from Google'+(/^https:\\/\\//.test(j.url||'')?' · <a href="'+esc(j.url)+'" target="_blank" rel="noopener">See all on Google</a>':'')}
+      if(at){at.hidden=false;at.innerHTML=(cut?'Selected reviews from Google, chosen by the business':'Reviews from Google')+(/^https:\\/\\//.test(j.url||'')?' · <a href="'+esc(j.url)+'" target="_blank" rel="noopener">See all on Google</a>':'')}
     }).catch(none);
   })();
   // before / after sliders

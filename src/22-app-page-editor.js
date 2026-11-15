@@ -2222,6 +2222,27 @@ function wsRenderBizInfo(pad,open){
   var gw=wseEl('div','wse-ctl');gw.appendChild(wseEl('div','wse-ctl-label','Google Business Profile'));
   if(b.googlePlaceId){
     var lk=wseEl('div','wse-hint','Linked: '+(b.googleName||'your Google listing'));gw.appendChild(lk);
+    // Choose which Google reviews show: untick one to hide it (stored by Google review id in biz.googleHidden).
+    var rvw=wseEl('div','wse-grevs');rvw.style.marginTop='8px';rvw.appendChild(wseEl('div','wse-hint','Loading your Google reviews…'));gw.appendChild(rvw);
+    fetch('/api/place?place='+encodeURIComponent(b.googlePlaceId)).then(function(r){return r.ok?r.json():null;}).then(function(j){
+      rvw.innerHTML='';var items=((j&&j.items)||[]).filter(function(v){return v&&v.id;});
+      if(!items.length){rvw.appendChild(wseEl('div','wse-hint','No Google reviews with text to show yet.'));return;}
+      rvw.appendChild(wseEl('div','wse-ctl-label','Google reviews on your site'));
+      rvw.appendChild(wseEl('div','wse-hint','Untick a review to hide it. Google shares up to 5 of your most relevant reviews.'));
+      items.forEach(function(v){
+        var row=document.createElement('label');row.style.cssText='display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:13px;line-height:1.4;cursor:pointer';
+        var cb=document.createElement('input');cb.type='checkbox';cb.style.marginTop='3px';cb.checked=(b.googleHidden||[]).indexOf(v.id)<0;
+        var st='';for(var i=0;i<5;i++)st+=i<Math.round(v.rating||0)?'★':'☆';
+        var tx=document.createElement('span');var t=String(v.text||'');tx.textContent=st+'  '+(v.name||'Google user')+' — '+(t.length>110?t.slice(0,107)+'…':t);
+        cb.setAttribute('aria-label','Show the review by '+(v.name||'Google user'));
+        cb.addEventListener('change',function(){
+          var h=(b.googleHidden||[]).filter(function(x){return x!==v.id;});if(!cb.checked)h.push(v.id);
+          if(h.length)b.googleHidden=h;else delete b.googleHidden;
+          wsRerender(true);try{toast(cb.checked?'Review shown on your site':'Review hidden from your site',2200);}catch(e){}
+        });
+        row.appendChild(cb);row.appendChild(tx);rvw.appendChild(row);
+      });
+    }).catch(function(){rvw.innerHTML='';rvw.appendChild(wseEl('div','wse-hint','Could not load your Google reviews right now.'));});
     var hasG=wsAllSections().some(function(s){return s.type==='reviews'&&s.variant==='google';});
     if(!hasG){var add=wseEl('button','wse-btn wse-wide','Show my Google reviews');add.type='button';add.style.marginTop='8px';add.addEventListener('click',function(){
       var home=(sd.pages&&sd.pages[0])?sd.pages[0].sections:sd.sections;var at=home.length;for(var k=0;k<home.length;k++){if(home[k].type==='cta'){at=k;break;}}
@@ -2229,7 +2250,7 @@ function wsRenderBizInfo(pad,open){
       if(rv){rv.variant='google';}else{home.splice(at,0,Object.assign({id:'reviews-'+window.WS.uid(),type:'reviews'},window.WS.sections.reviews.create(sd),{variant:'google',title:'What people say'}));}
       wsRerender();wsOpenEditor();try{toast('Google reviews added to your home page',3000);}catch(e){}
     });gw.appendChild(add);}
-    var ul=wseEl('button','wse-link danger','Unlink');ul.type='button';ul.style.marginTop='8px';ul.addEventListener('click',function(){delete b.googlePlaceId;delete b.googleName;wsRerender();wsOpenEditor();var d2=document.getElementById('wseBizInfo');if(d2)d2.open=true;});gw.appendChild(ul);
+    var ul=wseEl('button','wse-link danger','Unlink');ul.type='button';ul.style.marginTop='8px';ul.addEventListener('click',function(){delete b.googlePlaceId;delete b.googleName;delete b.googleHidden;wsRerender();wsOpenEditor();var d2=document.getElementById('wseBizInfo');if(d2)d2.open=true;});gw.appendChild(ul);
   } else {
     var gr=wseEl('div','wse-row');var gq=document.createElement('input');gq.className='wse-field';gq.placeholder='Business name and city';gq.value=[b.name||'',b.city||''].filter(Boolean).join(' ');gq.setAttribute('aria-label','Find your business on Google');
     var gb=wseEl('button','wse-btn','Find');gb.type='button';gr.appendChild(gq);gr.appendChild(gb);gw.appendChild(gr);
