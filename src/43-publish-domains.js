@@ -8,7 +8,9 @@ const PUB_404 = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="vi
 
 function withBadge(html){
   if (!html || html.indexOf('ws-badge') > -1) return html;
-  const b = '<a href="https://websprout.app/?utm_source=badge&utm_medium=referral&ref=badge" target="_blank" rel="noopener" id="ws-badge" style="position:fixed;bottom:14px;right:14px;z-index:2147483600;display:flex;align-items:center;gap:6px;background:rgba(15,26,13,.92);color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif;font-size:12px;font-weight:600;padding:7px 12px;border-radius:100px;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.14);line-height:1">🌱 Built with Websprout — make yours free</a>';
+  // The cart pill (engine .wsp-cart, legacy #wsCartBtn) also sits bottom-right: lift it above the badge, and hide
+  // the badge while the cart drawer is open so it never covers the drawer.
+  const b = '<style id="ws-badge-css">.wsp-cart,#wsCartBtn{bottom:64px!important}.wsp-draw.on~#ws-badge{display:none!important}@media(max-width:480px){#ws-badge{font-size:11px!important;padding:6px 10px!important;bottom:10px!important;right:10px!important}.wsp-cart,#wsCartBtn{bottom:56px!important;right:12px!important}}</style><a href="https://websprout.app/?utm_source=badge&utm_medium=referral&ref=badge" target="_blank" rel="noopener" id="ws-badge" style="position:fixed;bottom:14px;right:14px;z-index:2147483600;display:flex;align-items:center;gap:6px;background:rgba(15,26,13,.92);color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif;font-size:12px;font-weight:600;padding:7px 12px;border-radius:100px;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.14);line-height:1">🌱 Built with Websprout — make yours free</a>';
   const i = html.lastIndexOf('</body>');
   return i > -1 ? html.slice(0,i) + b + html.slice(i) : html + b;
 }
@@ -19,8 +21,54 @@ function normalizePagePath(p){
   while (p.length && p.charAt(p.length-1) === '/') p = p.slice(0, -1);
   return p;
 }
-function pubPage404(){
-  return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Page not found</title><style>body{font-family:-apple-system,Segoe UI,Arial,sans-serif;background:#060d05;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}.b{max-width:420px;padding:24px}.m{font-size:40px;margin-bottom:10px}a{color:#4ade80;font-weight:700;text-decoration:none}</style></head><body><div class="b"><div class="m">&#127793;</div><h1 style="font-size:22px;margin:0 0 8px">Page not found</h1><p style="color:rgba(255,255,255,.72);line-height:1.6">This page does not exist on this site. <br><a href="/">Back to home</a>.</p></div></body></html>';
+function pubPage404(base){
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Page not found</title><style>body{font-family:-apple-system,Segoe UI,Arial,sans-serif;background:#060d05;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}.b{max-width:420px;padding:24px}.m{font-size:40px;margin-bottom:10px}a{color:#4ade80;font-weight:700;text-decoration:none}</style></head><body><div class="b"><div class="m">&#127793;</div><h1 style="font-size:22px;margin:0 0 8px">Page not found</h1><p style="color:rgba(255,255,255,.72);line-height:1.6">This page does not exist on this site. <br><a href="' + htmlAttr(base || '/') + '">Back to home</a>.</p></div></body></html>';
+}
+// Owner redirects baked into the published home by the engine (old page path -> new path, '' = home).
+function pubRedirects(home){
+  try { const m = /<script type="application\/json" id="ws-redirects">([^<]*)<\/script>/.exec(home || ''); const o = m ? JSON.parse(m[1]) : null; return (o && typeof o === 'object' && !Array.isArray(o)) ? o : {}; } catch(e){ return {}; }
+}
+// Follows the redirect chain from an unknown path to a page that exists (at most 5 hops); null when there is none.
+function pubRedirectTarget(home, pg, known){
+  const rd = pubRedirects(home); let p = pg;
+  for (let hop = 0; hop < 5 && Object.prototype.hasOwnProperty.call(rd, p); hop++){ p = normalizePagePath(rd[p]); if (!/^[a-z0-9/_-]*$/.test(p)) return null; if (known(p)) return p; }
+  return null;
+}
+function pubTitleCase(s){ return String(s || '').replace(/[-_]+/g, ' ').trim().replace(/(^|\s)\S/g, function(c){ return c.toUpperCase(); }); }
+// A branded 404: the site's own header, footer and colours around a "Page not found" band (engine-rendered),
+// with every page link pointing at the site's base (works under websprout.app/s/<slug>/ too).
+function pubBranded404(home, base){
+  base = base || '/';
+  const i = (home || '').indexOf('<main'), j = (home || '').lastIndexOf('</main>');
+  if (i < 0 || j < i || home.indexOf('data-top') < 0 || typeof WSENGINE === 'undefined' || !WSENGINE.notFoundBand) return pubPage404(base);
+  const un = function(s){ return String(s || '').replace(/&amp;/g, '&'); };
+  const tel = un((home.match(/href="(tel:[^"]+)"/) || [])[1]), mail = un((home.match(/href="(mailto:[^"]+)"/) || [])[1]);
+  let h = home.slice(0, i) + '<main>' + WSENGINE.notFoundBand({ home: base, tel: tel, mail: mail }) + home.slice(j);
+  h = h.replace(/window\.__wsInitPath=("(?:[^"\\]|\\.)*");/g, '');
+  const brand = ((home.match(/<title>([^<]*)<\/title>/) || [])[1] || '').split('|')[0].trim();
+  h = h.replace(/<title>[^<]*<\/title>/, '<title>Page not found' + (brand ? ' | ' + brand : '') + '</title>');
+  h = h.replace(/href="#\/([^"]*)"/g, function(m, p){ return 'href="' + htmlAttr(base + p) + '"'; }).replace(/href="#"/g, 'href="' + htmlAttr(base) + '"').replace(/href="#([^"/][^"]*)"/g, function(m, a){ return 'href="' + htmlAttr(base) + '#' + a + '"'; });
+  h = h.replace(/<head>/i, '<head><meta name="robots" content="noindex">');
+  return h;
+}
+// Can this site take card payments right now? (Pro owner with a ready Stripe Connect account, or the platform owner.)
+async function pubCanCheckout(env, sid){
+  if (!sid || !env || !env.KV) return false;
+  try {
+    const own = ((await env.KV.get('notify:' + sid)) || '').toLowerCase();
+    if (!own) return false;
+    if (own === SUPPORT_EMAIL.toLowerCase()) return true;
+    const u = JSON.parse((await env.KV.get('user:' + own)) || 'null');
+    return !!(u && u.plan === 'pro' && u.stripeConnect && u.stripeConnectReady);
+  } catch(e){ return false; }
+}
+// Where a legacy shop's "Inquire" button goes: an on-page contact form, else phone, else email ('' = no button).
+function pubInquireHref(html){
+  if (/\sid="contact-form"/.test(html)) return '#contact-form';
+  if (/\sid="contact"/.test(html)) return '#contact';
+  const t = (html.match(/href="(tel:[^"]+)"/) || [])[1]; if (t) return t.replace(/&amp;/g, '&');
+  const m = (html.match(/href="(mailto:[^"]+)"/) || [])[1]; if (m) return m.replace(/&amp;/g, '&');
+  return '';
 }
 // Multi-page aware. A legacy single-page site (no pubpages index) serves its home for ANY path - unchanged behavior.
 // A multi-page site (pubpages index present) resolves pub:slug:path and 404s on unknown pages.
@@ -53,25 +101,33 @@ async function servePublished(slug, env, path, opts){
   const home = await env.KV.get('pub:' + slug);
   if (!home) return null;
   let html = home;
-  const pg = normalizePagePath(path);
+  let pg = normalizePagePath(path);
+  if (pg === 'index.html' || pg === 'index.htm') pg = '';
+  // Which paths exist: every page of a structured (v3) multi-page site; the indexed pages of an older
+  // multi-page site; only home for a single-page site. Anything else: owner redirect (301), else a 404.
+  const v3pages = v3PagePaths(home);
+  let idxPages = null;
+  if (v3pages.length <= 1) { try { const idx = await env.KV.get('pubpages:' + slug); if (idx) { const a = JSON.parse(idx); if (Array.isArray(a)) idxPages = a; } } catch(e){} }
+  const known = function(p){ return v3pages.length > 1 ? v3pages.some(function(x){ return x.path === p; }) : (p === '' || !!(idxPages && idxPages.indexOf(p) > -1)); };
+  if (!known(pg)) {
+    const to = pubRedirectTarget(home, pg, known);
+    if (to !== null) return new Response(null, { status: 301, headers: { 'Location': base + to, 'Cache-Control': 'public, max-age=300' } });
+    // Missing files (favicon.ico, old image links...) get a plain 404; pages get the site's own branded one.
+    if (/\.[a-z0-9]{2,5}$/i.test(pg) && !/\.html?$/i.test(pg)) return new Response('Not found', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+    let nf = wsFixCss(pubBranded404(home, base));
+    let nb404 = false; try { const m = await env.KV.get('pubmeta:' + slug); if (m) nb404 = !!JSON.parse(m).nobadge; } catch(e){}
+    return new Response(nb404 ? nf : withBadge(nf), { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex' } });
+  }
   // Structured multi-page sites: every page gets its own real address (/about, /contact...) so search
   // engines can index each one. The page's own content is served; links between pages become real paths.
-  const v3pages = v3PagePaths(home);
   let v3target = null;
   if (v3pages.length > 1) {
     v3target = v3pages.find(function(p){ return p.path === pg; }) || null;
-    if (!v3target) return new Response(pubPage404(), { status: 404, headers: { 'Content-Type':'text/html; charset=utf-8' } });
     html = html.replace(/window\.__wsInitPath=("(?:[^"\\]|\\.)*");/g, '');
     const boot = '<script>window.__wsInitPath=' + JSON.stringify(v3target.path) + ';(function(){var h=location.hash||"";if(/^#\\/[a-z0-9-]*$/.test(h)&&h.slice(2)!==window.__wsInitPath){location.replace(' + JSON.stringify(base) + '+h.slice(2));}})();</scr' + 'ipt>';
     html = html.replace(/<head>/i, '<head>' + boot);
-  }
-  if (pg) {
-    let pages = null;
-    try { const idx = await env.KV.get('pubpages:' + slug); if (idx) { const a = JSON.parse(idx); if (Array.isArray(a)) pages = a; } } catch(e){}
-    if (pages) {
-      if (pages.indexOf(pg) > -1) { html = (await env.KV.get('pub:' + slug + ':' + pg)) || home; }
-      else { return new Response(pubPage404(), { status: 404, headers: { 'Content-Type':'text/html; charset=utf-8' } }); }
-    }
+  } else if (pg && idxPages) {
+    html = (await env.KV.get('pub:' + slug + ':' + pg)) || home;
   }
   html = wsFixCss(html);
   try{var _ne=html.indexOf('</nav>'),_he=html.indexOf('</header>'),_bd=-1;if(_ne>=0)_bd=_ne+6;if(_he>=0&&_he+9>_bd)_bd=_he+9;if(_bd>0&&html.slice(0,_bd).indexOf('<!--WS_PRODUCTS-->')>-1){html=html.slice(0,_bd).split('<!--WS_PRODUCTS-->').join('')+html.slice(_bd);if(html.indexOf('<!--WS_PRODUCTS-->')<0){var _ps='<section id="shop" style="padding:64px 24px"><div style="max-width:1100px;margin:0 auto"><h2 style="text-align:center;margin:0 0 28px;font-size:2rem">Shop</h2><!--WS_PRODUCTS--></div></section>';var _pbi=html.lastIndexOf('</body>');html=_pbi>-1?(html.slice(0,_pbi)+_ps+html.slice(_pbi)):(html+_ps);}}}catch(e){}
@@ -79,30 +135,30 @@ async function servePublished(slug, env, path, opts){
     try {
       let _sid = ''; const _m0 = await env.KV.get('pubmeta:' + slug); if (_m0) { try { _sid = (JSON.parse(_m0).siteId) || ''; } catch(e){} }
       let _prods = []; if (_sid) { const _pr = await env.KV.get('products:' + _sid); if (_pr) { try { _prods = JSON.parse(_pr); } catch(e){} } }
-      let _ckEnabled = false;
-      if (_sid) {
-        try {
-          const _own = ((await env.KV.get('notify:' + _sid)) || '').toLowerCase();
-          if (_own) {
-            if (_own === SUPPORT_EMAIL.toLowerCase()) _ckEnabled = true;
-            else { const _u = JSON.parse((await env.KV.get('user:' + _own)) || 'null'); if (_u && _u.plan === 'pro' && _u.stripeConnect && _u.stripeConnectReady) _ckEnabled = true; }
-          }
-        } catch(e){}
-      }
-      html = html.split('<!--WS_PRODUCTS-->').join(renderProductGrid(_prods, _sid, _ckEnabled));
+      const _ckEnabled = await pubCanCheckout(env, _sid);
+      html = html.split('<!--WS_PRODUCTS-->').join(renderProductGrid(_prods, _sid, _ckEnabled, pubInquireHref(html)));
       if (_ckEnabled && _prods.length) { try { var _cartHtml = cartInjection(_prods, _sid); var _bi = html.lastIndexOf('</body>'); if (_bi > -1) { html = html.slice(0,_bi) + _cartHtml + html.slice(_bi); } else { html += _cartHtml; } } catch(e){} }
+    } catch(e){}
+  }
+  // Structured (engine) shops: when the site cannot take payments right now, hide Add to cart and the cart and
+  // show "Ask about this" instead (the engine's CSS keys off body.ws-nopay).
+  if (html.indexOf('data-wsshop') > -1) {
+    try {
+      let _sid2 = ''; const _m2 = await env.KV.get('pubmeta:' + slug); if (_m2) { try { _sid2 = (JSON.parse(_m2).siteId) || ''; } catch(e){} }
+      if (!(await pubCanCheckout(env, _sid2))) html = html.replace(/<body class="/, '<body class="ws-nopay ');
     } catch(e){}
   }
   let nobadge = false; try { const m = await env.KV.get('pubmeta:' + slug); if (m) nobadge = !!JSON.parse(m).nobadge; } catch(e){}
   const resp = new Response(nobadge ? html : withBadge(html), { headers: { 'Content-Type':'text/html; charset=utf-8', 'X-Robots-Tag':'all' } });
   if (!v3target) return resp;
   const t = v3target;
-  const brand = ((html.match(/<title>([^<]*)<\/title>/) || [])[1] || '').split('|')[0].trim();
+  const brand = ((html.match(/<title>([^<]*)<\/title>/) || [])[1] || '').split('|')[0].trim().replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>') || pubTitleCase(slug);
   const canon = origin + '/' + t.path;
+  const pageTitle = String(t.title || '').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim() || pubTitleCase(t.path);
   return new HTMLRewriter()
-    .on('div.ws-page', { element(el){ if ((el.getAttribute('data-path') || '') !== t.path) el.remove(); else el.setAttribute('class', 'ws-page on'); } })
+    .on('div.ws-page', { element(el){ if ((el.getAttribute('data-path') || '') !== t.path) el.remove(); else el.setAttribute('class', String(el.getAttribute('class') || 'ws-page').replace(/(^|\s)on(?=\s|$)/g, ' ').replace(/\s+/g, ' ').trim() + ' on'); } })
     .on('a[href^="#/"]', { element(el){ el.setAttribute('href', base + (el.getAttribute('href') || '#/').slice(2)); } })
-    .on('title', { element(el){ if (t.path) el.setInnerContent((t.title || t.path) + (brand ? ' | ' + brand : ''), { html: false }); } })
+    .on('title', { element(el){ if (t.path) el.setInnerContent([pageTitle, brand].filter(Boolean).join(' | '), { html: false }); } })
     .on('meta[property="og:url"]', { element(el){ el.setAttribute('content', canon); } })
     .on('head', { element(el){ el.append('<link rel="canonical" href="' + htmlAttr(canon) + '">', { html: true }); } })
     .transform(resp);
@@ -168,9 +224,11 @@ async function doPublish(request, env){
     try {
       if (b.site && typeof b.site === 'object') {
         const _prods = [];
-        const _secs = [].concat.apply([], (Array.isArray(b.site.pages) ? b.site.pages : []).map(function(p){ return (p && p.sections) || []; })).concat(Array.isArray(b.site.sections) ? b.site.sections : []);
+        // site.pages is the source of truth whenever present (even one page); site.sections only for legacy sites.
+        const _pgs = (Array.isArray(b.site.pages) && b.site.pages.length) ? b.site.pages : null;
+        const _secs = _pgs ? [].concat.apply([], _pgs.map(function(p){ return (p && p.sections) || []; })) : (Array.isArray(b.site.sections) ? b.site.sections : []);
         const _seen = new Set();
-        _secs.forEach(function(s){ if (s && s.type === 'products' && Array.isArray(s.items) && !_seen.has(s.id)) { _seen.add(s.id); s.items.forEach(function(it){ if (it && it.name && _prods.length < 200) _prods.push({ name: String(it.name).slice(0, 120), price: String(it.price || '').slice(0, 40), desc: String(it.desc || '').slice(0, 200) }); }); } });
+        _secs.forEach(function(s){ if (s && !s.hidden && s.type === 'products' && Array.isArray(s.items) && !_seen.has(s.id)) { _seen.add(s.id); s.items.forEach(function(it){ if (it && it.name && _prods.length < 200) _prods.push({ name: String(it.name).slice(0, 120), price: String(it.price || '').slice(0, 40), desc: String(it.desc || '').slice(0, 200) }); }); } });
         if (_prods.length) await env.KV.put('v3products:' + b.siteId, JSON.stringify(_prods)); else await env.KV.delete('v3products:' + b.siteId);
       }
     } catch(e){}

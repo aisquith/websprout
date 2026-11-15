@@ -349,6 +349,8 @@
       <button class="s-btn s-ghost" id="deployBtn" data-needs-site="1"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-rocket"/></svg>Deploy</button>
       </span>
       <style>.gs-item{display:block;width:100%;text-align:left;background:none;border:none;color:#fff;padding:10px 12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}.gs-item:hover{background:rgba(45,122,58,.18)}.gs-sub{display:block;font-size:11px;color:rgba(255,255,255,.72);font-weight:400;margin-top:1px}.gs-head{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:rgba(255,255,255,.72);padding:10px 12px 4px}.gs-head:first-child{padding-top:4px}.s-sep{width:1px;height:20px;background:rgba(255,255,255,.1);margin:0 3px;flex-shrink:0;align-self:center}.s-menu{position:absolute;top:calc(100% + 6px);right:0;background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:6px;min-width:218px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:1000}.s-icon{padding:6px 9px}</style>
+      <style>.ws-upd{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;font-weight:600}.ws-upd.pending{background:rgba(240,170,90,.14);border-color:rgba(240,170,90,.55);color:#ffd9a8}.ws-upd.pending b{background:#2d7a3a;color:#fff;border-radius:6px;padding:3px 8px;font-weight:700}.ws-upd.pending:hover b{background:#3ea04e}.ws-upd-dot{width:7px;height:7px;border-radius:50%;background:#f0aa5a;flex:none}.ws-upd.ok{background:none;border-color:transparent;color:rgba(127,227,154,.9);cursor:default;opacity:1}@media(max-width:860px){.ws-upd-t{display:none}.ws-upd.ok{display:none!important}.ws-upd{padding:6px 8px}}</style>
+      <button class="s-btn ws-upd" id="wsUpdBtn" type="button" data-needs-site="1" style="display:none" aria-live="polite"></button>
       <span id="saveStatus" style="font-size:12px;color:rgba(255,255,255,.72);font-weight:600;margin-right:6px;opacity:0;transition:opacity .3s;white-space:nowrap" title="Your work autosaves as you edit">Saved</span>
       <span style="position:relative;display:inline-block">
         <button class="s-btn" id="getSiteBtn" data-needs-site="1" style="background:#2d7a3a;color:#fff;border-color:#2d7a3a;font-weight:700" title="Publish, download or share your site"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-globe"/></svg>Publish &#9662;</button>
@@ -504,6 +506,7 @@
         goBtn.textContent='Publish live \u2192';goBtn.disabled=false;
         if(j.error){avail.innerHTML='<span style="color:#f87171">'+j.error+'</span>';return;}
         try{localStorage.setItem('ws_slug_'+site(),j.slug);}catch(e){}
+        try{if(window.wsAfterPublish)window.wsAfterPublish();}catch(e){}
         showLive(j.slug);
       }).catch(function(){goBtn.textContent='Publish live \u2192';goBtn.disabled=false;avail.innerHTML='<span style="color:#f87171">Could not publish — please try again</span>';});
     });
@@ -511,6 +514,7 @@
     $('pubOpen').addEventListener('click',function(){window.open(window._wsLive||$('pubUrl').textContent,'_blank');});
     $('pubUpdate').addEventListener('click',function(){
       var btn=this,orig=btn.innerHTML;btn.textContent='Re-publishing...';
+      if(window.wsPublishUpdate){window.wsPublishUpdate().then(function(){btn.innerHTML=orig;},function(){btn.innerHTML=orig;});return;}
       fetch('/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:window._wsSiteData||undefined,html:curHtml(),slug:window._wsSlug,siteId:site(),key:key(),pages:(window._wsPages&&window._wsPages.length>1)?(window.wsSyncPages&&window.wsSyncPages(),window._wsPages.map(function(p){return{path:p.path,html:p.html};})):undefined})}).then(function(r){return r.json();}).then(function(j){btn.innerHTML=orig;if(window.toast)toast(j.error?j.error:'\u2713 Updated — your live site now shows your latest edits.');}).catch(function(){btn.innerHTML=orig;if(window.toast)toast('Could not update — please try again');});
     });
     var unpubBtn=$('pubUnpub');
@@ -1282,9 +1286,9 @@
   if(_pfd)_pfd.addEventListener('click',async function(){
     var em=(window._wsUser&&window._wsUser.email)?window._wsUser.email:'your account';
     var __ok=await wsConfirm({title:'Permanently delete your account?',message:'This will delete '+em+' and ALL your sites, drafts, products and data. This cannot be undone.',okLabel:'Delete everything',cancelLabel:'Cancel',danger:true});if(!__ok) return;
-    var typed=prompt('This is permanent and cannot be undone. Type DELETE to confirm.');
-    if(typed!=='DELETE'){ if(window.toast)window.toast('Deletion cancelled'); return; }
-    fetch('/account/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({confirm:'DELETE'})}).then(function(r){return r.json();}).then(function(j){ if(j&&j.ok){ try{localStorage.clear();}catch(e){} alert('Your account and all your data have been permanently deleted.'); location.href='/'; } else { if(window.toast)window.toast((j&&j.error)||'Could not delete account'); } }).catch(function(){ if(window.toast)window.toast('Could not delete account'); });
+    var typed=await wsPrompt({title:'Type DELETE to confirm',message:'This is permanent and cannot be undone.',label:'Type DELETE',placeholder:'DELETE',okLabel:'Delete my account',danger:true,maxLength:10,validate:function(v){return v.trim()==='DELETE'?'':'Type DELETE in capital letters to confirm.';}});
+    if(typed==null||typed.trim()!=='DELETE'){ if(window.toast)window.toast('Deletion cancelled'); return; }
+    fetch('/account/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({confirm:'DELETE'})}).then(function(r){return r.json();}).then(function(j){ if(j&&j.ok){ try{localStorage.clear();}catch(e){} if(window.toast)window.toast('Your account and all your data have been permanently deleted.',4000); window._wsNavOK=true; setTimeout(function(){location.href='/';},1600); } else { if(window.toast)window.toast((j&&j.error)||'Could not delete account'); } }).catch(function(){ if(window.toast)window.toast('Could not delete account'); });
   });
   var so=$('pfSignOut');
   if(so)so.addEventListener('click',async function(){
@@ -1691,9 +1695,10 @@
       var nm='this site',pkey='';try{var pp=getProjects();for(var z=0;z<pp.length;z++){if(pp[z].siteId===sid){nm=pp[z].name||nm;pkey=pp[z].key||'';break;}}}catch(e){}
       var slug='';try{slug=localStorage.getItem('ws_slug_'+sid)||'';}catch(e){}
       if(slug){
-        var typed=prompt('\u26A0\uFE0F \u201C'+nm+'\u201D is LIVE at '+slug+'.websprout.app \u2014 deleting is permanent and takes it offline. To confirm, type the site name exactly:');
+        var _want=(nm||'').trim().toLowerCase();
+        var typed=await wsPrompt({title:'Delete a live site?',message:'\u201C'+nm+'\u201D is LIVE at '+slug+'.websprout.app. Deleting is permanent and takes it offline. To confirm, type the site name exactly:',label:'Site name',placeholder:nm,okLabel:'Delete site',danger:true,maxLength:120,validate:function(v){return v.trim().toLowerCase()===_want?'':'That does not match the site name.';}});
         if(typed===null)return;
-        if((typed||'').trim().toLowerCase()!==(nm||'').trim().toLowerCase()){alert('That did not match \u2014 your site was NOT deleted.');return;}
+        if((typed||'').trim().toLowerCase()!==_want){if(window.toast)toast('That did not match \u2014 your site was NOT deleted.');return;}
         try{fetch('/unpublish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:slug,siteId:sid,key:pkey})}).catch(function(){});localStorage.removeItem('ws_slug_'+sid);}catch(e){}
       } else {
         var __ok=await wsConfirm({title:'Remove this site?',message:'Remove \u201C'+nm+'\u201D from your sites? You can rebuild it anytime.',okLabel:'Remove',cancelLabel:'Keep',danger:true});if(!__ok)return;
@@ -1714,10 +1719,10 @@
     var p=getProjects(),it=null;for(var i=0;i<p.length;i++){if(p[i].siteId===sid){it=p[i];break;}}
     if(!it)return;if(b)b.textContent='Loading...';
     fetch('/load?site='+encodeURIComponent(sid)+'&key='+encodeURIComponent(it.key||'')).then(function(r){return r.json();}).then(function(j){
-      if(j.error||!j.html){if(b)b.textContent='Edit';alert('Could not load this site. It may have expired.');return;}
+      if(j.error||!j.html){if(b)b.textContent='Edit';if(window.toast)toast('Could not load this site. It may have expired.',4000);return;}
       try{localStorage.setItem('wsh',j.html);localStorage.setItem('ws_site',sid);localStorage.setItem('ws_key',it.key||'');sessionStorage.setItem('ws_studio','1');if(j.site&&j.site.sections)localStorage.setItem('ws_sd',JSON.stringify(j.site));else localStorage.removeItem('ws_sd');}catch(e){}
-      window._wsSite=sid;window._wsKey=it.key||'';location.href='/';
-    }).catch(function(){if(b)b.textContent='Edit';alert('Could not load this site.');});
+      window._wsSite=sid;window._wsKey=it.key||'';window._wsNavOK=true;location.href='/';
+    }).catch(function(){if(b)b.textContent='Edit';if(window.toast)toast('Could not load this site.',4000);});
   }
   window.openMySites=function(){render();modal.style.display='flex';accountSync();};
   var msBtn=document.getElementById('mySitesBtn');if(msBtn)msBtn.addEventListener('click',window.openMySites);

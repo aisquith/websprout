@@ -24,6 +24,46 @@ const WSENGINE = (function(){
     return h + (mm && mm !== '00' ? ':' + mm : '') + ' ' + s;
   };
   WS.uid = () => Math.random().toString(36).slice(2, 9);
+  // Owner-typed text: trimmed string ('' for whitespace-only / missing).
+  WS.str = (v) => (v == null || typeof v === 'object' ? '' : String(v).trim());
+  WS.titleCase = (s = '') => String(s).replace(/[-_/]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/(^|\s)\S/g, (c) => c.toUpperCase());
+  // List items with at least one non-blank field (of `keys`); keeps the original index (photo slots are index-based).
+  WS.filled = (items, keys) => (Array.isArray(items) ? items : []).map((it, i) => ({ it, i })).filter((x) => x.it && typeof x.it === 'object' && keys.some((k) => WS.str(x.it[k]) !== ''));
+  // Owner-typed links: bare domains get https://; only http(s), mailto:, tel:, #anchors, #/pages and relative
+  // site paths survive; anything else (javascript:, data:, vbscript:...) returns '' so the link is dropped.
+  WS.safeUrl = (u) => {
+    const s = WS.str(u);
+    if (!s) return '';
+    const t = s.replace(/[\s\u0000-\u001f\u007f]+/g, '');
+    if (/^#/.test(t)) return s;
+    if (/^(https?:\/\/|mailto:|tel:)/i.test(t)) return /^(https?:\/\/)/i.test(t) && t.length < 10 ? '' : s;
+    if (/^[a-z][a-z0-9+.-]*:/i.test(t)) return '';
+    if (/^\/\//.test(t)) return 'https:' + t;
+    const isFile = /^[^/?#]+\.(html?|php|aspx?|jpe?g|png|gif|webp|svg|pdf)([?#].*)?$/i.test(t);
+    if (!isFile && /^(www\.)?[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(:\d+)?([/?#].*)?$/i.test(t)) return 'https://' + t;
+    if (/^(\.{0,2}\/)?[a-z0-9._~%-]+(\/[a-z0-9._~%-]*)*([?#].*)?$/i.test(t) || /^\/[^/]?/.test(t)) return t;
+    return '';
+  };
+  // Instagram: accepts @handle, handle or a pasted profile URL; returns the bare handle ('' if not valid).
+  WS.igHandle = (v) => {
+    let s = WS.str(v).replace(/^https?:\/\//i, '').replace(/^(www\.|m\.)?instagr(am\.com|\.am)\//i, '').replace(/^@+/, '');
+    s = s.split(/[/?#]/)[0];
+    return /^[A-Za-z0-9._]{1,30}$/.test(s) ? s : '';
+  };
+  // A price as a positive number (first amount after a currency sign, else the first number), or NaN.
+  WS.priceNum = (v) => {
+    const s = String(v == null ? '' : v).replace(/(\d),(?=\d{3}\b)/g, '$1');
+    const c = s.match(/[$£€]\s*(\d+(?:\.\d{1,2})?)/);
+    const m = c ? [c[1]] : s.match(/\d+(?:\.\d{1,2})?/);
+    const n = m ? parseFloat(m[0]) : NaN;
+    return isFinite(n) && n > 0 ? n : NaN;
+  };
+  // Business name with a sensible fallback (title-cased slug, then the business type).
+  WS.bizName = (site) => { const b = (site && site.biz) || {}; return WS.str(b.name) || WS.titleCase(WS.str(site && site.slug)) || WS.str(b.type) || 'Welcome'; };
+  // The pages a site really renders: site.pages when present (even with one page), else null (legacy site.sections).
+  WS.pagesOf = (site) => (site && Array.isArray(site.pages) && site.pages.length ? site.pages : null);
+  // Sections of the one-page layout (pages[0] when pages exist, else the legacy flat list).
+  WS.layoutSections = (site) => { const p = WS.pagesOf(site); return ((p ? p[0] && p[0].sections : site && site.sections) || []).filter((s) => s && !s.hidden); };
   WS.words = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
   WS.streetOf = (addr = '') =>
     (String(addr).split(',')[0] || '')
@@ -180,7 +220,9 @@ const WSENGINE = (function(){
   const e = WS.esc;
   const R = WS.register;
   const lines = (txt) => e(txt).replace(/\n/g, '<br>');
-  const head = (sec, fallback) => `<h2 class="h2">${e(sec.title || fallback)}</h2>`;
+  const head = (sec, fallback) => { const t = WS.str(sec.title) || WS.str(fallback); return t ? `<h2 class="h2">${e(t)}</h2>` : ''; };
+  // A "Book" style button: dropped entirely when the site has nowhere to send people.
+  const bookBtn = (c, cls, label) => (c.book ? `<a${cls ? ` class="${cls}"` : ''} href="${c.book}">${e(label)}</a>` : '');
 
   // ---------- Announcement bar ----------
   R('announce', {
@@ -205,13 +247,15 @@ const WSENGINE = (function(){
     ],
     create: (site) => ({ variant: 'photo', title: '', tagline: site.biz.tagline || '', emoji: WS.emojiRecsFor(site.biz.type)[0], status: true }),
     render: (s, c) => {
-      const name = s.title || c.biz.name;
+      const name = WS.str(s.title) || c.name;
       const l = WS.twoLines(name);
       const title = `<h1 class="name">${l.map((x, i) => `<span class="ln"><span style="--d:${i}">${e(x)}</span></span>`).join('')}</h1>`;
-      const status = s.status ? `<p class="status"><span class="pole" aria-hidden="true"></span><span data-status>${c.biz.walkIns ? 'Walk-ins welcome' : ''}</span></p>` : '';
-      const actions = `<div class="actions"><a class="btn" href="${c.book}">${e(c.biz.bookLabel || 'Book now')}</a>${c.biz.phone ? `<a class="btn ghost" href="${WS.tel(c.biz.phone)}">${e(c.biz.phone)}</a>` : ''}</div>`;
+      const hasHours = (c.biz.hours || []).some((h) => h && h.open && h.close);
+      const status = s.status && (hasHours || c.biz.walkIns) ? `<p class="status"><span class="pole" aria-hidden="true"></span><span data-status>${c.biz.walkIns ? 'Walk-ins welcome' : ''}</span></p>` : '';
+      const acts = bookBtn(c, 'btn', c.biz.bookLabel || 'Book now') + (c.biz.phone ? `<a class="btn ghost" href="${WS.tel(c.biz.phone)}">${e(c.biz.phone)}</a>` : '');
+      const actions = acts ? `<div class="actions">${acts}</div>` : '';
       if (s.variant === 'split')
-        return `<section class="hero hero-split on-base"><div class="wrap hs-grid"><div class="hs-copy">${status}${title}<p class="tag">${e(s.tagline)}</p>${actions}</div>${c.slot('photo', { hint: 'Your best photo, tall works best', cls: 'hs-img reveal' })}</div></section>`;
+        return `<section class="hero hero-split on-base${c.photo('photo') ? '' : ' hs-solo'}"><div class="wrap hs-grid"><div class="hs-copy">${status}${title}<p class="tag">${e(s.tagline)}</p>${actions}</div>${c.slot('photo', { hint: 'Your best photo, tall works best', cls: 'hs-img reveal' })}</div></section>`;
       if (s.variant === 'type')
         return `<section class="hero hero-type on-base"><div class="wrap">${status}<div class="ht-row">${title}${s.emoji ? `<div class="ht-emo">${WS.emoji(s.emoji)}</div>` : ''}</div><div class="hero-foot"><p class="tag">${e(s.tagline)}</p>${actions}</div></div></section>`;
       return `<section class="hero hero-photo on-base${c.photo('photo') ? '' : ' hero-noimg'}">${c.bg('photo', { hint: 'a cover photo', cls: 'hero-media' })}<div class="hero-in">${status}${title}<div class="hero-foot"><p class="tag">${e(s.tagline)}</p>${actions}</div></div></section>`;
@@ -239,7 +283,7 @@ const WSENGINE = (function(){
     fields: [{ key: 'title', label: 'Title', type: 'text' }, { key: 'text', label: 'Subtitle', type: 'textarea' }, { key: 'emoji', label: 'Emoji', type: 'emoji' }],
     create: (site) => ({ variant: 'band', title: '', text: '', emoji: '' }),
     render: (s, c) =>
-      `<section class="pagehead on-base"><div class="wrap">${s.emoji ? `<div class="emo-big">${WS.emoji(s.emoji)}</div>` : ''}<h1 class="pagehead-t">${e(s.title || '')}</h1>${s.text ? `<p class="pagehead-s">${lines(s.text)}</p>` : ''}</div></section>`,
+      `<section class="pagehead on-base"><div class="wrap">${s.emoji ? `<div class="emo-big">${WS.emoji(s.emoji)}</div>` : ''}${WS.str(s.title) ? `<h1 class="pagehead-t">${e(WS.str(s.title))}</h1>` : ''}${s.text ? `<p class="pagehead-s">${lines(s.text)}</p>` : ''}</div></section>`,
   });
 
   // ---------- Contact form (messages go to the owner's inbox via /api/form/<siteId>) ----------
@@ -338,15 +382,16 @@ const WSENGINE = (function(){
     ],
     create: (site) => ({ variant: 'list', title: 'Upcoming events', note: '', items: [{ date: '', time: '', name: '', desc: '', url: '' }] }),
     render: (s, c) => {
-      const items = (s.items || []).filter((it) => it && (it.name || it.date));
+      const items = WS.filled(s.items, ['name', 'date']).map((x) => x.it);
+      if (!items.length && c.mode === 'live') return '';
       const hd = s.title === '' ? '' : head(s, 'Upcoming events');
       let body;
       if (!items.length) {
         body = `<p class="ev-empty">More events coming soon — check back shortly.</p>`;
       } else {
         body = `<ul class="ev-list">${items.map((it) => {
-          const url = String(it.url || '');
-          const live = url.indexOf('https://') === 0 || url.indexOf('http://') === 0;
+          const url = WS.safeUrl(it.url);
+          const live = /^https?:\/\//i.test(url);
           const btn = live ? `<a class="btn btn-ink ev-btn" href="${e(url)}" target="_blank" rel="noopener">Details</a>` : '';
           return `<li class="ev-row"><div class="ev-date"><span class="ev-d">${e(it.date || 'TBA')}</span>${it.time ? `<span class="ev-t">${e(it.time)}</span>` : ''}</div><div class="ev-body"><h3 class="ev-name">${e(it.name || '')}</h3>${it.desc ? `<p class="ev-desc">${e(it.desc)}</p>` : ''}</div>${btn}</li>`;
         }).join('')}</ul>`;
@@ -376,15 +421,17 @@ const WSENGINE = (function(){
       { name: 'Buy a gift card', desc: 'The gift that always fits.', amount: '', url: '' },
     ] }),
     render: (s, c) => {
-      const items = (s.items || []).filter((it) => it && (it.name || it.url));
+      const okUrl = (it) => /^https?:\/\//i.test(WS.safeUrl(it.url));
+      const items = WS.filled(s.items, ['name', 'url', 'desc', 'amount']).map((x) => x.it).filter((it) => c.mode !== 'live' || okUrl(it));
+      if (!items.length) return '';
       const cards = items.map((it) => {
-        const url = String(it.url || '');
-        const live = url.indexOf('https://') === 0 || url.indexOf('http://') === 0;
+        const url = WS.safeUrl(it.url);
+        const live = okUrl(it);
         const amt = it.amount ? `<div class="pay-amt">${e(it.amount)}</div>` : '';
         const btn = live
           ? `<a class="btn btn-ink pay-btn" href="${e(url)}" target="_blank" rel="noopener">Pay now</a>`
           : `<span class="pay-soon">Add your link</span>`;
-        return `<div class="pay-card"><div class="pay-body"><h3 class="pay-name">${e(it.name || 'Payment')}</h3>${it.desc ? `<p class="pay-desc">${e(it.desc)}</p>` : ''}${amt}</div>${btn}</div>`;
+        return `<div class="pay-card"><div class="pay-body"><h3 class="pay-name">${e(WS.str(it.name) || 'Payment')}</h3>${it.desc ? `<p class="pay-desc">${e(it.desc)}</p>` : ''}${amt}</div>${btn}</div>`;
       }).join('');
       const hd = s.title === '' ? '' : head(s, 'Pay online');
       return `<section class="payments on-base" id="pay"><div class="wrap">${hd}${s.note ? `<p class="lede">${lines(s.note)}</p>` : ''}<div class="pay-grid">${cards}</div><p class="pay-trust">Payments are handled securely by your payment provider.</p></div></section>`;
@@ -399,7 +446,9 @@ const WSENGINE = (function(){
     fields: [{ key: 'title', label: 'Title', type: 'text' }, { key: 'items', label: 'Steps', type: 'list', add: 'Add step', item: [{ key: 'name', label: 'Step title', type: 'text' }, { key: 'text', label: 'Detail', type: 'textarea' }] }],
     create: (site) => ({ variant: 'grid', title: 'How it works', items: [{ name: 'Reach out', text: 'Tell us what you need and when works for you.' }, { name: 'We plan it', text: 'We confirm the details and give you a clear, honest price.' }, { name: 'We deliver', text: 'We do the work and check you’re happy with it.' }] }),
     render: (s, c) => {
-      const items = (s.items || []).map((it, i) => `<li class="step reveal"><span class="step-n">${i + 1}</span><div><h3 class="step-t">${e(it.name || '')}</h3><p class="step-d">${lines(it.text || '')}</p></div></li>`).join('');
+      const list = WS.filled(s.items, ['name', 'text']).map((x) => x.it);
+      if (!list.length) return '';
+      const items = list.map((it, i) => `<li class="step reveal"><span class="step-n">${i + 1}</span><div><h3 class="step-t">${e(it.name || '')}</h3><p class="step-d">${lines(it.text || '')}</p></div></li>`).join('');
       return `<section class="steps on-base" id="steps"><div class="wrap">${head(s, 'How it works')}<ol class="steps-grid">${items}</ol></div></section>`;
     },
   });
@@ -438,11 +487,13 @@ const WSENGINE = (function(){
       ],
     }),
     render: (s, c) => {
-      const items = (s.items || []).map((it) => {
-        const val = it.source === 'years' && c.biz.founded ? String(new Date().getFullYear() - +c.biz.founded) : it.value;
+      const list = WS.filled(s.items, ['label', 'value']).map((x) => x.it).filter((it) => WS.str(it.value) !== '' || (it.source === 'years' && c.biz.founded) || (/^google_/.test(it.source || '') && c.biz.googlePlaceId));
+      if (!list.length) return '';
+      const items = list.map((it) => {
+        const val = it.source === 'years' && c.biz.founded ? String(new Date().getFullYear() - +c.biz.founded) : WS.str(it.value);
         return `<div class="stat">${it.emoji ? WS.emoji(it.emoji, 'stat-emo') : ''}<p class="num"><span data-count="${e(String(val).replace(/,/g, ''))}" data-src="${e(it.source || 'manual')}" ${it.source === 'years' ? `data-founded="${e(c.biz.founded || '')}"` : ''}>${e(val)}</span>${it.suffix ? `<small>${e(it.suffix)}</small>` : ''}</p><p class="lbl">${e(it.label)}</p></div>`;
       });
-      return `<section class="stats stats-${s.variant} ${s.variant === 'band' ? 'on-pop' : 'on-base'}"><div class="wrap">${s.title ? head(s) : ''}<div class="stat-row">${items.join('')}</div></div></section>`;
+      return `<section class="stats stats-${s.variant} ${s.variant === 'band' ? 'on-pop' : 'on-base'}"><div class="wrap">${head(s)}<div class="stat-row">${items.join('')}</div></div></section>`;
     },
   });
 
@@ -458,10 +509,12 @@ const WSENGINE = (function(){
     ],
     create: (site) => ({ variant: 'menu', title: 'Prices', note: '', items: (site.biz.services || []).map((x) => ({ name: x.name, price: x.price, meta: [x.time, x.note].filter(Boolean).join(', ') })) }),
     render: (s, c) => {
-      const list = `<ul class="plist">${(s.items || []).map((it) => `<li><span class="svc">${e(it.name)}</span><span class="lead" aria-hidden="true"></span><span class="price">${WS.money(isNaN(+it.price) || it.price === '' ? it.price : +it.price)}</span><a class="pl-book" href="${c.book}">${e(c.biz.bookLabel || 'Book')}</a>${it.meta ? `<span class="meta">${e(it.meta)}</span>` : ''}</li>`).join('')}</ul>`;
+      const rows = WS.filled(s.items, ['name', 'price', 'meta']).map((x) => x.it);
+      if (!rows.length) return '';
+      const list = `<ul class="plist">${rows.map((it) => { const pr = WS.str(it.price); return `<li><span class="svc">${e(it.name)}</span><span class="lead" aria-hidden="true"></span><span class="price">${WS.money(isNaN(+pr) || pr === '' ? pr : +pr)}</span>${bookBtn(c, 'pl-book', c.biz.bookLabel || 'Book')}${WS.str(it.meta) ? `<span class="meta">${e(it.meta)}</span>` : ''}</li>`; }).join('')}</ul>`;
       const top = `${head(s, 'Prices')}${s.note ? `<p class="lede">${lines(s.note)}</p>` : ''}`;
-      if (s.variant === 'board') return `<section class="prices prices-board on-alt" id="prices"><div class="wrap">${top}<div class="board">${list}</div><a class="btn btn-ink" href="${c.book}">${e(c.biz.bookLabel || 'Book now')}</a></div></section>`;
-      return `<section class="prices prices-menu on-alt" id="prices">${c.slot('photo', { hint: 'A shave, a cut, or your tools', cls: 'pm-img reveal' })}<div class="pm-body">${top}${list}<a class="btn btn-ink" href="${c.book}">${e(c.biz.bookLabel || 'Book now')}</a></div></section>`;
+      if (s.variant === 'board') return `<section class="prices prices-board on-alt" id="prices"><div class="wrap">${top}<div class="board">${list}</div>${bookBtn(c, 'btn btn-ink', c.biz.bookLabel || 'Book now')}</div></section>`;
+      return `<section class="prices prices-menu on-alt" id="prices">${c.slot('photo', { hint: 'A shave, a cut, or your tools', cls: 'pm-img reveal' })}<div class="pm-body">${top}${list}${bookBtn(c, 'btn btn-ink', c.biz.bookLabel || 'Book now')}</div></section>`;
     },
   });
 
@@ -478,7 +531,11 @@ const WSENGINE = (function(){
       const recs = WS.emojiRecsFor(site.biz.type);
       return { variant: 'grid', title: 'What we do best', items: (site.biz.services || []).slice(0, 4).map((x, i) => ({ emoji: recs[(i + 2) % recs.length], name: x.name, text: x.desc || x.note || '', from: x.price ? String(x.price) : '' })) };
     },
-    render: (s) => `<section class="services services-${s.variant} ${s.tone || 'on-alt'}" id="services"><div class="wrap">${head(s, 'Services')}<ul class="sv">${(s.items || []).map((it) => `<li>${it.emoji ? `<div class="sv-emo">${WS.emoji(it.emoji)}</div>` : ''}<h3>${e(it.name)}</h3>${it.text ? `<p>${lines(it.text)}</p>` : ''}${it.from ? `<span class="from">from ${WS.money(isNaN(+it.from) ? it.from : +it.from)}</span>` : ''}</li>`).join('')}</ul></div></section>`,
+    render: (s) => {
+      const list = WS.filled(s.items, ['name', 'text', 'from']).map((x) => x.it);
+      if (!list.length) return '';
+      return `<section class="services services-${s.variant} ${s.tone || 'on-alt'}" id="services"><div class="wrap">${head(s, 'Services')}<ul class="sv">${list.map((it) => `<li>${it.emoji ? `<div class="sv-emo">${WS.emoji(it.emoji)}</div>` : ''}${WS.str(it.name) ? `<h3>${e(it.name)}</h3>` : ''}${WS.str(it.text) ? `<p>${lines(it.text)}</p>` : ''}${WS.str(it.from) ? `<span class="from">from ${WS.money(isNaN(+it.from) ? it.from : +it.from)}</span>` : ''}</li>`).join('')}</ul></div></section>`;
+    },
   });
 
   // ---------- Gallery ----------
@@ -511,10 +568,12 @@ const WSENGINE = (function(){
       return { variant: 'rows', title: t.length > 1 && t.length < 11 ? `${WS.words[t.length]} chairs. Pick yours.` : 'Meet the team', items: t.map((x) => ({ name: x.name, text: x.specialty })) };
     },
     render: (s, c) => {
-      const items = s.items || [];
+      const people = WS.filled(s.items, ['name', 'text']);
+      if (!people.length) return '';
+      const items = people.map((x) => x.it);
       if (s.variant === 'portraits')
-        return `<section class="team team-portraits on-base" id="team"><div class="wrap">${head(s, 'Team')}<ul class="tp">${items.map((it, i) => `<li>${c.slot('m' + i, { hint: `A photo of ${it.name || 'them'}`, cls: 'tp-img reveal' })}<h3>${e(it.name)}</h3><p>${lines(it.text)}</p></li>`).join('')}</ul></div></section>`;
-      return `<section class="team team-rows on-base" id="team"><div class="wrap">${head(s, 'Team')}<ul class="tr">${items.map((it) => `<li><h3>${e(it.name)}</h3><p>${lines(it.text)}</p><a href="${c.book}">Book with ${e(it.name)}</a></li>`).join('')}</ul></div></section>`;
+        return `<section class="team team-portraits on-base" id="team"><div class="wrap">${head(s, 'Team')}<ul class="tp">${people.map(({ it, i }) => `<li>${c.slot('m' + i, { hint: `A photo of ${it.name || 'them'}`, cls: 'tp-img reveal' })}<h3>${e(it.name)}</h3><p>${lines(it.text)}</p></li>`).join('')}</ul></div></section>`;
+      return `<section class="team team-rows on-base" id="team"><div class="wrap">${head(s, 'Team')}<ul class="tr">${items.map((it) => `<li><h3>${e(it.name)}</h3><p>${lines(it.text)}</p>${WS.str(it.name) ? bookBtn(c, '', 'Book with ' + WS.str(it.name)) : ''}</li>`).join('')}</ul></div></section>`;
     },
   });
 
@@ -526,12 +585,13 @@ const WSENGINE = (function(){
     fields: [{ key: 'title', label: 'Title (Google layout)', type: 'text', only: ['google'] }, { key: 'items', label: 'Reviews (shown if Google is unavailable)', type: 'list', add: 'Add a review', item: [{ key: 'quote', label: 'Quote', type: 'textarea' }, { key: 'name', label: 'Name', type: 'text' }] }],
     create: (site) => ({ variant: 'feature', items: (site.biz.reviews || []).map((r) => ({ quote: r.quote, name: r.name })) }),
     render: (s, c) => {
-      const it = s.items || [];
+      const it = WS.filled(s.items, ['quote']).map((x) => x.it);
       if (s.variant === 'google') {
         // Typed reviews are the fallback; the runtime swaps in live Google reviews when a place is linked.
         const fb = it.map((r) => `<blockquote><p>${lines(r.quote)}</p><footer>${e(r.name)}</footer></blockquote>`).join('');
         if (!c.biz.googlePlaceId && !fb && c.mode !== 'edit') return '';
-        return `<section class="reviews reviews-wall reviews-google on-base" data-greviews><div class="wrap">${head(s, 'What people say')}<div class="gr-sum" hidden></div><div class="rw">${fb || (c.mode === 'edit' ? '<blockquote><p>Your latest Google reviews will appear here once your Google Business Profile is linked.</p></blockquote>' : '')}</div><p class="gr-attr" hidden></p></div></section>`;
+        // Live with nothing typed: stays hidden until Google reviews actually arrive (never an empty band).
+        return `<section class="reviews reviews-wall reviews-google on-base" data-greviews${!fb && c.mode === 'live' ? ' hidden' : ''}><div class="wrap">${head(s, 'What people say')}<div class="gr-sum" hidden></div><div class="rw">${fb || (c.mode === 'edit' ? '<blockquote><p>Your latest Google reviews will appear here once your Google Business Profile is linked.</p></blockquote>' : '')}</div><p class="gr-attr" hidden></p></div></section>`;
       }
       if (!it.length) return '';
       if (s.variant === 'wall')
@@ -577,11 +637,11 @@ const WSENGINE = (function(){
       { name: 'Premium', price: '$149', per: 'per visit', features: 'Everything in Plus\nOur most complete service\nFollow-up check-in', button: '' },
     ] }),
     render: (s, c) => {
-      const items = (s.items || []).filter((it) => it && (it.name || it.price));
+      const items = WS.filled(s.items, ['name', 'price']).map((x) => x.it);
       if (!items.length) return '';
       const cards = items.map((it) => {
         const feats = String(it.features || '').split('\n').map((x) => x.trim()).filter(Boolean);
-        return `<article class="plan reveal${it.featured === 'yes' ? ' plan-hot' : ''}">${it.featured === 'yes' ? '<span class="plan-tag">Most popular</span>' : ''}<h3 class="plan-n">${e(it.name || '')}</h3><div class="plan-p"><b>${e(it.price || '')}</b>${it.per ? `<span>${e(it.per)}</span>` : ''}</div>${feats.length ? `<ul class="plan-f">${feats.map((f) => `<li>${e(f)}</li>`).join('')}</ul>` : ''}<a class="btn${it.featured === 'yes' ? '' : ' ghost'}" href="${c.book}">${e(it.button || c.biz.bookLabel || 'Get started')}</a></article>`;
+        return `<article class="plan reveal${it.featured === 'yes' ? ' plan-hot' : ''}">${it.featured === 'yes' ? '<span class="plan-tag">Most popular</span>' : ''}<h3 class="plan-n">${e(it.name || '')}</h3><div class="plan-p"><b>${e(it.price || '')}</b>${it.per ? `<span>${e(it.per)}</span>` : ''}</div>${feats.length ? `<ul class="plan-f">${feats.map((f) => `<li>${e(f)}</li>`).join('')}</ul>` : ''}${bookBtn(c, 'btn' + (it.featured === 'yes' ? '' : ' ghost'), WS.str(it.button) || c.biz.bookLabel || 'Get started')}</article>`;
       }).join('');
       return `<section class="plans on-base" id="plans"><div class="wrap">${head(s, 'Packages')}${s.text ? `<p class="lede">${lines(s.text)}</p>` : ''}<div class="plans-grid">${cards}</div></div></section>`;
     },
@@ -629,7 +689,11 @@ const WSENGINE = (function(){
         { q: 'Is there parking?', a: 'Street parking out front, free after 6 pm.' },
       ],
     }),
-    render: (s) => `<section class="faq ${s.tone || 'on-base'}" id="faq"><div class="wrap faq-grid">${head(s, 'Questions')}<div class="qa">${(s.items || []).map((it) => `<details><summary>${e(it.q)}</summary><p>${lines(it.a)}</p></details>`).join('')}</div></div></section>`,
+    render: (s) => {
+      const list = WS.filled(s.items, ['q']).map((x) => x.it);
+      if (!list.length) return '';
+      return `<section class="faq ${s.tone || 'on-base'}" id="faq"><div class="wrap faq-grid">${head(s, 'Questions')}<div class="qa">${list.map((it) => `<details><summary>${e(it.q)}</summary>${WS.str(it.a) ? `<p>${lines(it.a)}</p>` : ''}</details>`).join('')}</div></div></section>`;
+    },
   });
 
   // ---------- Call to action ----------
@@ -639,10 +703,16 @@ const WSENGINE = (function(){
     variants: { band: 'Color band', split: 'With a photo' },
     fields: [{ key: 'title', label: 'Title', type: 'text' }, { key: 'text', label: 'Text', type: 'textarea' }, { key: 'button', label: 'Button text', type: 'text' }, { key: 'link', label: 'Button link (optional)', type: 'text' }, { key: 'emoji', label: 'Emoji', type: 'emoji' }],
     create: (site) => ({ variant: 'band', title: 'We’d love to see you.', text: 'Book online in under a minute.', button: site.biz.bookLabel || 'Book now', link: '', emoji: WS.emojiRecsFor(site.biz.type)[0] }),
-    render: (s, c) =>
-      s.variant === 'split'
-        ? `<section class="cta cta-split on-alt">${c.slot('photo', { hint: 'A welcoming photo', cls: 'cta-img reveal' })}<div class="cta-body"><h2 class="h2">${s.emoji ? WS.emoji(s.emoji) + ' ' : ''}${e(s.title)}</h2><p>${lines(s.text)}</p><a class="btn btn-ink" href="${s.link ? e(s.link) : c.book}">${e(s.button || 'Book now')}</a></div></section>`
-        : `<section class="cta cta-band on-pop"><div class="wrap cta-row"><h2 class="h2">${s.emoji ? WS.emoji(s.emoji) + ' ' : ''}${e(s.title)}</h2><div><p>${lines(s.text)}</p><a class="btn btn-light" href="${s.link ? e(s.link) : c.book}">${e(s.button || 'Book now')}</a></div></div></section>`,
+    render: (s, c) => {
+      const t = WS.str(s.title), href = c.link(s.link) || c.book;
+      const h2 = t ? `<h2 class="h2">${s.emoji ? WS.emoji(s.emoji) + ' ' : ''}${e(t)}</h2>` : '';
+      const p = WS.str(s.text) ? `<p>${lines(s.text)}</p>` : '';
+      const btn = (cls) => (href ? `<a class="btn ${cls}" href="${href}">${e(WS.str(s.button) || 'Book now')}</a>` : '');
+      if (c.mode === 'live' && !t && !p && !href) return '';
+      return s.variant === 'split'
+        ? `<section class="cta cta-split on-alt">${c.slot('photo', { hint: 'A welcoming photo', cls: 'cta-img reveal' })}<div class="cta-body">${h2}${p}${btn('btn-ink')}</div></section>`
+        : `<section class="cta cta-band on-pop"><div class="wrap cta-row">${h2}<div>${p}${btn('btn-light')}</div></div></section>`;
+    },
   });
 
   // ---------- Visit ----------
@@ -657,15 +727,16 @@ const WSENGINE = (function(){
       const st = WS.streetOf(addr);
       const hrs = (c.biz.hours || []).filter((h) => h && h.d);
       const hasHours = hrs.some((h) => h.open);
-      const title = s.title || (st ? `Find us on ${st}.` : addr ? 'Come see us.' : (c.biz.city ? `Serving ${c.biz.city}.` : 'Get in touch.'));
-      const reach = [c.biz.phone ? `<tr><th scope="row">Call</th><td><a href="${WS.tel(c.biz.phone)}">${e(c.biz.phone)}</a></td></tr>` : '', c.biz.email ? `<tr><th scope="row">Email</th><td><a href="mailto:${e(c.biz.email)}">${e(c.biz.email)}</a></td></tr>` : '', c.biz.instagram ? `<tr><th scope="row">Instagram</th><td><a href="https://instagram.com/${e(c.biz.instagram)}">@${e(c.biz.instagram)}</a></td></tr>` : '', c.biz.city ? `<tr><th scope="row">Area</th><td>${e(c.biz.city)}</td></tr>` : ''].join('');
+      const ig = WS.igHandle(c.biz.instagram);
+      const title = WS.str(s.title) || (st ? `Find us on ${st}.` : addr ? 'Come see us.' : (c.biz.city ? `Serving ${c.biz.city}.` : 'Get in touch.'));
+      const reach = [c.biz.phone ? `<tr><th scope="row">Call</th><td><a href="${WS.tel(c.biz.phone)}">${e(c.biz.phone)}</a></td></tr>` : '', c.biz.email ? `<tr><th scope="row">Email</th><td><a href="mailto:${e(c.biz.email)}">${e(c.biz.email)}</a></td></tr>` : '', ig ? `<tr><th scope="row">Instagram</th><td><a href="https://instagram.com/${e(ig)}">@${e(ig)}</a></td></tr>` : '', c.biz.city ? `<tr><th scope="row">Area</th><td>${e(c.biz.city)}</td></tr>` : ''].join('');
       const hours = hasHours
         ? `<table class="hours" aria-label="Opening hours">${hrs.map((h) => `<tr><th scope="row">${e(h.d)}</th><td>${h.open && h.close ? `${WS.fmtTime(h.open)} to ${WS.fmtTime(h.close)}` : 'Closed'}</td></tr>`).join('')}</table>`
         : (reach ? `<table class="hours" aria-label="How to reach us">${reach}</table>` : '');
       const callBtn = c.biz.phone ? `<a class="btn ghost" href="${WS.tel(c.biz.phone)}">Call us</a>` : '';
-      const left = `<div><h2 class="h2">${e(title)}</h2>${addr ? `<a class="addr" href="${WS.map(addr)}">${e(addr)}</a>` : ''}<div class="actions"><a class="btn" href="${c.book}">${e(c.biz.bookLabel || 'Book now')}</a>${addr ? `<a class="btn ghost" href="${WS.map(addr)}">Get directions</a>` : ''}${callBtn}</div></div>`;
+      const left = `<div><h2 class="h2">${e(title)}</h2>${addr ? `<a class="addr" href="${WS.map(addr)}">${e(addr)}</a>` : ''}<div class="actions">${bookBtn(c, 'btn', c.biz.bookLabel || 'Book now')}${addr ? `<a class="btn ghost" href="${WS.map(addr)}">Get directions</a>` : ''}${callBtn}</div></div>`;
       if (s.variant === 'map' && addr)
-        return `<section class="visit visit-map on-base" id="visit"><div class="wrap visit-grid">${left}<div><iframe class="mapf" title="Map to ${e(c.biz.name)}" src="${WS.mapEmbed(c.biz.address)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>${hours}</div></div></section>`;
+        return `<section class="visit visit-map on-base" id="visit"><div class="wrap visit-grid">${left}<div><iframe class="mapf" title="Map to ${e(c.name)}"src="${WS.mapEmbed(c.biz.address)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>${hours}</div></div></section>`;
       return `<section class="visit on-base" id="visit"><div class="wrap visit-grid">${left}${hours}</div></section>`;
     },
   });
@@ -707,6 +778,11 @@ const WSENGINE = (function(){
 .wsp-tot{display:flex;justify-content:space-between;font-weight:800;font-size:1.18rem;margin:18px 0}
 .wsp-co{width:100%;padding:15px;border-radius:12px;border:none;cursor:pointer;background:var(--accent);color:var(--accent-text);font:inherit;font-weight:800;font-size:1rem}
 .wsp-close{position:absolute;top:16px;right:18px;background:none;border:none;color:inherit;font-size:1.7rem;cursor:pointer;opacity:.6;line-height:1}
+.wsp-ph{position:relative}.wsp-ph .wsp-fb{display:none}.wsp-ph.empty .wsp-fb{display:grid;place-items:center}
+.wsp-ask{display:none;align-items:center;font:inherit;font-weight:700;font-size:.86rem;padding:9px 15px;border-radius:9px;border:1px solid currentColor;color:inherit;text-decoration:none;white-space:nowrap}
+.wsp-ask.on,.ws-nopay .wsp-ask{display:inline-flex}
+.ws-nopay .wsp-buy,.ws-nopay .wsp-cart,.ws-nopay .wsp-draw{display:none!important}
+.wsp-tot[hidden]{display:none}
 </style>`;
 
   const CART_JS = `<script>(function(){
@@ -737,7 +813,7 @@ const WSENGINE = (function(){
   function paint(){
     if(pill){pill.classList.toggle('on',cart.length>0);var c=pill.querySelector('b');if(c)c.textContent=cart.length;}
     var box=draw&&draw.querySelector('[data-lines]');if(box)box.innerHTML=cart.length?cart.map(function(i,ix){return '<div class="wsp-line"><span>'+String(i.name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span><span>'+money(i.price)+' <button class="wsp-x" data-rm="'+ix+'" aria-label="Remove">&times;</button></span></div>';}).join(''):'<p style="opacity:.6">Your cart is empty.</p>';
-    var tt=draw&&draw.querySelector('[data-total]');if(tt)tt.textContent='$'+total().toFixed(2);
+    var tt=draw&&draw.querySelector('[data-total]'),tw=draw&&draw.querySelector('.wsp-tot'),sum=total();if(tt)tt.textContent=sum>0?'$'+sum.toFixed(2):'';if(tw)tw.hidden=!(sum>0);
   }
   document.addEventListener('click',function(ev){
     var b=ev.target.closest('.wsp-buy');if(b){cart.push({name:b.getAttribute('data-n'),price:b.getAttribute('data-p')});paint();try{pill.animate([{transform:'scale(1)'},{transform:'scale(1.14)'},{transform:'scale(1)'}],{duration:260});}catch(e){}return;}
@@ -765,20 +841,32 @@ const WSENGINE = (function(){
     ],
     create: () => ({ variant: 'grid', title: 'Shop', items: [] }),
     render: (s, c) => {
-      const items = s.items || [];
-      if (!items.length && c.mode !== 'edit') return '';
-      const cards = items.map((it, i) => {
+      // Keep each product's original index: its photo lives in slot 'p<index>'.
+      const list = WS.filled(s.items, ['name', 'price', 'desc']);
+      if (!list.length && c.mode !== 'edit') return '';
+      // "Ask about this" goes to the site's contact method; it replaces Add to cart for unpriced products, and
+      // for every product when the published site cannot take payments (the server adds body.ws-nopay).
+      const ask = c.contact;
+      let priced = 0;
+      const cards = list.map(({ it, i }) => {
         const src = c.photo && c.photo('p' + i);
+        const fb = WS.emoji(it.emoji || '1f4e6', 'emo-big');
         const img = src
-          ? `<figure class="wsp-ph"><img src="${e(src)}"${WS.srcset(src, '(max-width: 760px) 50vw, 300px')} alt="${e(it.name)}" loading="lazy" decoding="async"></figure>`
+          ? `<figure class="wsp-ph"><img src="${e(src)}"${WS.srcset(src, '(max-width: 760px) 50vw, 300px')} alt="${e(it.name)}" loading="lazy" decoding="async" onerror="var f=this.parentNode;if(f)f.classList.add('empty');this.remove();"><span class="wsp-fb" aria-hidden="true">${fb}</span></figure>`
           : (c.mode === 'edit'
               ? c.slot('p' + i, { hint: 'Product photo', cls: 'wsp-ph' })
-              : `<div class="wsp-ph empty" aria-hidden="true">${WS.emoji(it.emoji || '1f4e6', 'emo-big')}</div>`);
-        return `<article class="wsp-card">${img}<div class="wsp-b"><h3 class="wsp-n">${e(it.name)}</h3>${it.desc ? `<p class="wsp-d">${e(it.desc)}</p>` : ''}<div class="wsp-r"><span class="wsp-pr">${money(it.price)}</span><button class="wsp-buy" type="button" data-n="${e(it.name)}" data-p="${e(it.price)}">Add to cart</button></div></div></article>`;
+              : `<div class="wsp-ph empty" aria-hidden="true">${fb}</div>`);
+        const pr = WS.str(it.price);
+        const canBuy = !isNaN(WS.priceNum(pr));
+        if (canBuy) priced++;
+        const askA = ask ? `<a class="wsp-ask${canBuy ? '' : ' on'}" href="${ask}">Ask about this</a>` : '';
+        const buy = canBuy ? `<button class="wsp-buy" type="button" data-n="${e(it.name)}" data-p="${e(pr)}">Add to cart</button>` : '';
+        const row = pr || buy || askA ? `<div class="wsp-r">${pr ? `<span class="wsp-pr">${money(pr)}</span>` : ''}${buy}${askA}</div>` : '';
+        return `<article class="wsp-card">${img}<div class="wsp-b">${WS.str(it.name) ? `<h3 class="wsp-n">${e(it.name)}</h3>` : ''}${WS.str(it.desc) ? `<p class="wsp-d">${e(it.desc)}</p>` : ''}${row}</div></article>`;
       }).join('');
-      const cart = c.mode === 'edit' ? '' :
-        `<button class="wsp-cart" type="button" aria-label="Open cart">Cart &middot; <b>0</b></button><div class="wsp-draw" data-site="${e(c.site.siteId || '')}"><div class="wsp-panel"><button class="wsp-close" type="button" aria-label="Close cart">&times;</button><h3>Your cart</h3><div data-lines></div><div class="wsp-tot"><span>Total</span><span data-total>$0.00</span></div><button class="wsp-co" type="button">Checkout</button></div></div>` + CART_JS;
-      return `<section id="shop" class="shop on-base">${SHOP_CSS}<div class="wrap"><h2 class="h2">${e(s.title || 'Shop')}</h2><div class="wsp-grid">${cards}</div></div></section>${cart}`;
+      const cart = c.mode === 'edit' || !priced ? '' :
+        `<button class="wsp-cart" type="button" aria-label="Open cart">Cart &middot; <b>0</b></button><div class="wsp-draw" data-site="${e(c.site.siteId || '')}"><div class="wsp-panel"><button class="wsp-close" type="button" aria-label="Close cart">&times;</button><h3>Your cart</h3><div data-lines></div><div class="wsp-tot" hidden><span>Total</span><span data-total></span></div><button class="wsp-co" type="button">Checkout</button></div></div>` + CART_JS;
+      return `<section id="shop" class="shop on-base" data-wsshop>${SHOP_CSS}<div class="wrap"><h2 class="h2">${e(WS.str(s.title) || 'Shop')}</h2><div class="wsp-grid">${cards}</div></div></section>${cart}`;
     },
   });
 })(globalThis.WS = globalThis.WS || {});
@@ -862,7 +950,12 @@ figure{margin:0}
 .top nav{display:flex;gap:30px;font-size:14px}
 .top nav a{text-decoration:none;color:color-mix(in srgb,currentColor,transparent 25%);transition:color .2s;position:relative}.top nav a:hover{color:currentColor}
 .top nav a.active{color:currentColor}
-.top nav a.active::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:2px;background:var(--accent);border-radius:2px}
+.top nav a{white-space:nowrap;max-width:18ch;overflow:hidden;text-overflow:ellipsis;padding:6px 0;margin:-6px 0}
+.top nav a.active::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--accent);border-radius:2px}
+main{min-height:55vh}
+.ws-padtop{padding-top:clamp(84px,11vh,112px)}
+.ws-notice-a{justify-content:center;margin-top:30px}
+.ws-nf[hidden]{display:none}
 .js .ws-page{display:none}.js .ws-page.on{display:block}.ws-page{animation:wsPageIn .4s ease both}
 .pagehead{padding:clamp(104px,17vh,180px) 24px clamp(40px,7vh,72px);text-align:center;border-bottom:1px solid var(--hair)}
 .pagehead .wrap{max-width:860px;margin:0 auto}
@@ -879,6 +972,7 @@ figure{margin:0}
 /* hero */
 .hero .status{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;margin:0 0 26px;padding:8px 16px;background:color-mix(in srgb,var(--base),transparent 15%);color:var(--base-text);backdrop-filter:blur(6px);border:1px solid var(--hair);border-radius:2px}
 .hero .status b{font-weight:600}
+.hero .status:has([data-status]:empty){display:none}
 .pole{display:none}
 .name{font-family:var(--display);font-size:clamp(52px,9.4vw,150px);line-height:var(--name-lh,.84);font-weight:var(--name-weight,900);letter-spacing:var(--name-tracking,.005em);text-transform:var(--h-transform,uppercase);padding-bottom:.02em}
 /* monochrome signature: in the bold theme, lines after the first are set in outline */
@@ -906,6 +1000,8 @@ figure{margin:0}
 .hero-split .name{font-size:clamp(48px,7.2vw,118px)}
 .hero-split .tag{margin:26px 0 30px}
 .hs-img{aspect-ratio:4/5;min-height:440px;border-radius:4px;overflow:hidden}
+.hs-solo .hs-grid,.hs-grid:has(.hs-img[hidden]){grid-template-columns:1fr}
+.hs-solo .hs-copy,.hs-grid:has(.hs-img[hidden]) .hs-copy{max-width:900px}
 .hero-type{padding:190px 0 96px}
 .ht-row{display:flex;align-items:center;justify-content:space-between;gap:40px}
 .ht-emo{font-size:clamp(72px,11vw,168px);line-height:1;flex:none;animation:fade 1s .4s both}
@@ -1095,6 +1191,8 @@ figure{margin:0}
 .wf-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
 .wf-btn{align-self:flex-start;margin-top:6px}
 .wf-ok{margin:6px 0 0;font-weight:600;color:var(--accent)}
+.wf-err{margin:2px 0 0;padding:11px 14px;font-weight:600;font-size:.95rem;line-height:1.45;color:var(--fg);border-left:3px solid #d93a3a;background:color-mix(in srgb,#d93a3a,transparent 90%)}
+.wf-err[hidden]{display:none}
 .payments{padding:clamp(72px,10vw,120px) 0}
 .pay-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;margin-top:40px}
 .pay-card{display:flex;flex-direction:column;justify-content:space-between;gap:18px;background:var(--surface);border:1px solid var(--hair);border-radius:16px;padding:22px}
@@ -1168,6 +1266,8 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
 .wsp-pr{font-weight:500;font-size:16px;color:var(--base-text);font-variant-numeric:tabular-nums}
 .wsp-buy{font:500 11px/1 'Work Sans',system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;padding:11px 16px;border-radius:2px;border:1px solid var(--base-text);cursor:pointer;background:transparent;color:var(--base-text);transition:background .2s,color .2s}
 .wsp-buy:hover{background:var(--base-text);color:var(--base)}
+.shop .wsp-ask{font:500 11px/1 'Work Sans',system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;padding:11px 16px;border-radius:2px;border:1px solid var(--base-text);color:var(--base-text)}
+.shop .wsp-ask:hover{background:var(--base-text);color:var(--base)}
 .wsp-cart{position:fixed;right:20px;bottom:20px;z-index:9000;display:none;align-items:center;gap:8px;padding:14px 22px;border-radius:2px;border:none;cursor:pointer;background:var(--accent);color:var(--accent-text);font:500 13px/1 'Work Sans',system-ui;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 10px 30px rgba(0,0,0,.18)}
 .wsp-cart.on{display:inline-flex}
 .wsp-draw{position:fixed;inset:0;z-index:9001;display:none;background:rgba(0,0,0,.4)}
@@ -1191,14 +1291,25 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
 .edit .ln>span,.edit .hero-foot,.edit .hero-media img{animation:none!important}
 .edit .reveal{opacity:1!important;transform:none!important}
 
+/* desktop with many / long page names: the same full-screen menu as on phones */
+@media (min-width:901px){
+  .multipage.nav-many .top{grid-template-columns:1fr auto auto}
+  .multipage.nav-many .top nav{display:none}
+  .multipage.nav-many .navtoggle{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:none;border:0;cursor:pointer;padding:0;color:inherit;z-index:62}
+  .multipage.nav-many.nav-open .top{backdrop-filter:none;-webkit-backdrop-filter:none}
+  .multipage.nav-many.nav-open .top nav{display:flex;position:fixed;inset:0;flex-direction:column;justify-content:flex-start;align-items:center;gap:26px;padding:110px 24px 56px;overflow-y:auto;overscroll-behavior:contain;background:color-mix(in srgb,var(--base),transparent 2%);z-index:60}
+  .multipage.nav-many.nav-open .top nav a{font-size:24px;color:var(--base-text);max-width:min(90vw,40ch);flex:none}
+  .multipage.nav-many.nav-open .top nav a.active::after{display:none}
+  .multipage.nav-many.nav-open .navtoggle{position:fixed;top:22px;right:32px}
+}
 @media (max-width:900px){
   .wrap,.hero-in{padding-left:20px;padding-right:20px}
   .top{grid-template-columns:1fr auto;padding:16px 20px}.top.solid{padding:12px 20px}.top nav{display:none}
   .multipage .top{grid-template-columns:1fr auto auto}
   .multipage .navtoggle{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;background:none;border:0;cursor:pointer;padding:0;color:inherit;z-index:62}
   .multipage.nav-open .top{backdrop-filter:none;-webkit-backdrop-filter:none}
-  .multipage.nav-open .top nav{display:flex;position:fixed;inset:0;flex-direction:column;justify-content:center;align-items:center;gap:30px;background:color-mix(in srgb,var(--base),transparent 2%);z-index:60}
-  .multipage.nav-open .top nav a{font-size:22px;color:var(--base-text)}
+  .multipage.nav-open .top nav{display:flex;position:fixed;inset:0;flex-direction:column;justify-content:flex-start;align-items:center;gap:26px;padding:96px 24px 48px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:color-mix(in srgb,var(--base),transparent 2%);z-index:60}
+  .multipage.nav-open .top nav a{font-size:22px;color:var(--base-text);max-width:100%;flex:none}
   .multipage.nav-open .top nav a.active::after{display:none}
   .multipage.nav-open .navtoggle{position:fixed;top:17px;right:18px}
   .hero-photo{height:90svh;min-height:540px}
@@ -1259,16 +1370,56 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
 
   // Where "Book" buttons go: the owner's booking link, else (multi-page) the Book/Reserve/Quote or Contact page,
   // else the on-page Visit section. '#visit' on a multi-page site would be read by the router as an unknown page.
+  // Never points at a page or anchor that does not exist: booking URL -> book/quote/contact page -> on-page
+  // booking / visit / contact section -> phone -> email -> '' (callers then hide the button).
+  const hasSec = (secs, type) => secs.some((s) => s.type === type);
+  const reach = (b) => (WS.str(b.phone) && WS.str(b.phone).replace(/[^\d+]/g, '') ? WS.tel(b.phone) : (/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(WS.str(b.email)) ? 'mailto:' + WS.str(b.email) : ''));
   WS.bookHref = (site) => {
     const b = (site && site.biz) || {};
-    if (b.bookingUrl) return b.bookingUrl;
-    if (Array.isArray(site.pages) && site.pages.length > 1) {
-      const bp = site.pages.find((pg) => /^(book|reserve|quote)$/.test(pg.path || ''));
-      const cp = bp || site.pages.find((pg) => /contact|visit|reach/i.test((pg.path || '') + ' ' + (pg.title || '')));
-      return '#/' + ((cp && cp.path) || '');
+    const bu = WS.safeUrl(b.bookingUrl);
+    if (bu) return bu;
+    const pages = WS.pagesOf(site);
+    if (pages && pages.length > 1) {
+      const bp = pages.find((pg) => /^(book|reserve|quote)$/.test(pg.path || ''));
+      const cp = bp || pages.find((pg) => pg.path && /contact|visit|reach/i.test((pg.path || '') + ' ' + (pg.title || '')));
+      if (cp) return '#/' + cp.path;
+    } else {
+      const secs = WS.layoutSections(site);
+      if (hasSec(secs, 'booking')) return '#book';
+      if (hasSec(secs, 'visit')) return '#visit';
+      if (hasSec(secs, 'contact')) return '#contact-form';
     }
-    return '#visit';
+    return reach(b);
   };
+  // Where "Ask about this" / "get in touch" goes: contact page or form, else phone, else email ('' if none).
+  WS.contactHref = (site) => {
+    const b = (site && site.biz) || {};
+    const pages = WS.pagesOf(site);
+    if (pages && pages.length > 1) {
+      const cp = pages.find((pg) => pg.path && /contact|reach/i.test((pg.path || '') + ' ' + (pg.title || ''))) || pages.find((pg) => /^(book|reserve|quote)$/.test(pg.path || ''));
+      if (cp) return '#/' + cp.path;
+    } else {
+      const secs = WS.layoutSections(site);
+      if (hasSec(secs, 'contact')) return '#contact-form';
+      if (hasSec(secs, 'booking')) return '#book';
+    }
+    return reach(b) || WS.safeUrl(b.bookingUrl);
+  };
+  // Owner redirects (old page address -> new one), cleaned: lower-case page paths, no leading slash.
+  WS.redirectsOf = (site) => {
+    const out = {}, r = site && site.redirects;
+    if (!r || typeof r !== 'object') return out;
+    const norm = (p) => String(p == null ? '' : p).toLowerCase().trim().replace(/^[#/]+|\/+$/g, '');
+    const live = {}; (WS.pagesOf(site) || []).forEach((pg) => { live[norm(pg.path)] = 1; });
+    Object.keys(r).forEach((k) => { const from = norm(k), to = norm(r[k]); if (from && from !== to && /^[a-z0-9/_-]+$/.test(from) && /^[a-z0-9/_-]*$/.test(to) && !live[from]) out[from] = to; });
+    return out;
+  };
+  // A titled band with contact buttons: used for the not-found page and for pages that have no content yet.
+  WS.noticeBand = ({ title = '', text = '', home = '', homeLabel = 'Back to home', tel = '', mail = '', contact = '', cls = '' } = {}) => {
+    const btns = (home ? `<a class="btn" href="${e(home)}">${e(homeLabel)}</a>` : '') + (contact ? `<a class="btn${home ? ' ghost' : ''}" href="${e(contact)}">Get in touch</a>` : '') + (tel ? `<a class="btn ghost" href="${e(tel)}">Call us</a>` : '') + (mail ? `<a class="btn ghost" href="${e(mail)}">Email us</a>` : '');
+    return `<section class="pagehead ws-notice on-base${cls ? ' ' + cls : ''}"><div class="wrap">${title ? `<h1 class="pagehead-t">${e(title)}</h1>` : ''}${text ? `<p class="pagehead-s">${e(text)}</p>` : ''}${btns ? `<div class="actions ws-notice-a">${btns}</div>` : ''}</div></section>`;
+  };
+  WS.notFoundBand = (o = {}) => WS.noticeBand(Object.assign({ title: 'Page not found', text: 'Sorry, we could not find that page. It may have moved or no longer exists.', cls: 'ws-404' }, o));
 
   // Responsive widths for resizable photo hosts (Unsplash), so phones download a ~480px image, not 1680px.
   WS.srcset = (src, sizes) => {
@@ -1282,14 +1433,19 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
     const photos = site.photos || {};
     const key = (k) => sec.id + '.' + k;
     const photo = (k) => photos[key(k)];
+    const rd = WS.redirectsOf(site);
     return {
       site, mode, biz: site.biz,
+      name: WS.bizName(site),
       book: e(WS.bookHref(site)),
+      contact: e(WS.contactHref(site)),
+      // Owner-typed link, made safe ('' = drop it); #/old-page links follow the site's redirects. Returned escaped.
+      link: (u) => { let s = WS.safeUrl(u); if (/^#\//.test(s)) { const p = s.slice(2).toLowerCase(); if (Object.prototype.hasOwnProperty.call(rd, p)) s = '#/' + rd[p]; } return e(s); },
       photo,
       slot: (k, { hint = 'Add a photo', cls = '', alt = '' } = {}) => {
         const src = photo(k);
         if (!src && mode === 'live') return `<figure class="slot ${cls} empty" hidden></figure>`;
-        return `<figure class="slot ${cls}${src ? '' : ' empty'}" data-slot="${key(k)}">${src ? `<img src="${e(src)}"${WS.srcset(src, '(max-width: 760px) 100vw, 50vw')} alt="${e(alt)}" loading="lazy" decoding="async"${mode === 'live' ? ` onerror="var f=this.closest('figure');if(f)f.style.display='none';"` : ''}>` : ''}${
+        return `<figure class="slot ${cls}${src ? '' : ' empty'}" data-slot="${key(k)}">${src ? `<img src="${e(src)}"${WS.srcset(src, '(max-width: 760px) 100vw, 50vw')} alt="${e(alt)}" loading="lazy" decoding="async"${mode === 'live' ? ` onerror="var f=this.closest('figure');if(f)f.hidden=true;"` : ''}>` : ''}${
           mode === 'edit'
             ? `<button class="slot-add" type="button">${camera}<b>${e(hint)}</b><span>Click or drag a photo here</span></button><span class="slot-tools"><button type="button" data-act="replace">Replace</button><button type="button" data-act="remove">Remove</button></span>`
             : ''
@@ -1319,15 +1475,25 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
   WS.pageRouter = `
 (function(){
   function run(){
+    var tg=document.querySelector('.navtoggle');
+    if(tg)tg.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();var o=document.body.classList.toggle('nav-open');tg.setAttribute('aria-expanded',o?'true':'false');},true);
     var pages=[].slice.call(document.querySelectorAll('.ws-page'));
     if(!pages.length)return;
-    var BASE=document.title,BRAND=(BASE.split('|')[0]||BASE).trim();
+    var BASE=document.title,BRAND=(BASE.split('|')[0]||BASE).trim(),NF=document.querySelector('[data-nf]'),RD={};
+    try{var rde=document.getElementById('ws-redirects');if(rde)RD=JSON.parse(rde.textContent||'{}')||{};}catch(e){}
     function path(){return (location.hash||'').replace(/^#\\/?/,'').split('?')[0];}
-    function show(pth){
+    function show(pth,hops){
       var found=false,i,active=null;
-      for(i=0;i<pages.length;i++){var on=(pages[i].getAttribute('data-path')||'')===pth;if(on){found=true;active=pages[i];}pages[i].classList.toggle('on',on);}
-      if(!found){for(i=0;i<pages.length;i++)pages[i].classList.toggle('on',i===0);pth=pages[0].getAttribute('data-path')||'';active=pages[0];}
-      try{var pt=active?active.getAttribute('data-title'):'';document.title=(pth&&pt)?(pt+' · '+BRAND):BASE;}catch(e){}
+      pth=String(pth||'').toLowerCase();
+      for(i=0;i<pages.length;i++){if((pages[i].getAttribute('data-path')||'')===pth){found=true;active=pages[i];}}
+      // An old page address the owner renamed or deleted: follow the redirect (at most a few hops).
+      if(!found&&pth&&Object.prototype.hasOwnProperty.call(RD,pth)&&(hops||0)<5){var to=RD[pth];try{history.replaceState(null,'','#/'+to);}catch(e){}return show(to,(hops||0)+1);}
+      var missing=!found&&!!pth&&!!NF;
+      if(!found&&!missing)active=pages[0];
+      for(i=0;i<pages.length;i++)pages[i].classList.toggle('on',pages[i]===active);
+      if(NF)NF.hidden=!missing;
+      if(active)pth=active.getAttribute('data-path')||'';
+      try{var pt=missing?(NF.getAttribute('data-title')||''):(active?active.getAttribute('data-title'):'');document.title=((pth||missing)&&pt)?(pt+' · '+BRAND):BASE;}catch(e){}
       var links=document.querySelectorAll('[data-page]');
       for(i=0;i<links.length;i++)links[i].classList.toggle('active',(links[i].getAttribute('data-page')||'')===pth);
       try{window.scrollTo(0,0);}catch(e){}
@@ -1336,8 +1502,6 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
       try{parent.postMessage({ws:true,type:'wsPageShown',path:pth},'*');}catch(e){}
     }
     window.__wsShowPage=show;
-    var tg=document.querySelector('.navtoggle');
-    if(tg)tg.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();var o=document.body.classList.toggle('nav-open');tg.setAttribute('aria-expanded',o?'true':'false');},true);
     document.addEventListener('click',function(e){
       var a=e.target&&e.target.closest?e.target.closest('a[href^="#/"]'):null;if(!a)return;
       e.preventDefault();e.stopPropagation();
@@ -1355,28 +1519,49 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
 
   WS.renderSite = (site, { mode = 'live', activePath = null } = {}) => {
     const p = WS.withAccent(WS.palette(site.palette), site.accent);
-    const b = site.biz;
-    const multi = Array.isArray(site.pages) && site.pages.length > 1;
-    let body, nav, top;
+    const b = site.biz || (site.biz = {});
+    const name = WS.bizName(site);
+    // C1: site.pages is the source of truth whenever present (even a single page); legacy sites use site.sections.
+    const allPages = WS.pagesOf(site);
+    const multi = !!(allPages && allPages.length > 1);
+    const label = (pg) => WS.str(pg.title) || (pg.path ? WS.titleCase(pg.path) : 'Home');
+    const ig = WS.igHandle(b.instagram);
+    const contactHref = WS.contactHref(site);
+    // Render a page's sections; returns { html, pad } (pad: the first band has no room for the fixed header).
+    const renderList = (secs, pageTitle) => {
+      const out = secs.map((s) => ({ s, html: WS.renderSection(site, s, mode) })).filter((x) => x.html);
+      if (!out.length && mode === 'live') {
+        const tel = WS.str(b.phone).replace(/[^\d+]/g, '') ? WS.tel(b.phone) : '';
+        const mail = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(WS.str(b.email)) ? 'mailto:' + WS.str(b.email) : '';
+        const cHref = /^#/.test(contactHref) && contactHref !== '#/' + (pageTitle && pageTitle.path) ? contactHref : '';
+        return { html: WS.noticeBand({ title: pageTitle ? label(pageTitle) : name, text: 'This page is being updated. In the meantime, we would love to hear from you.', contact: cHref, tel, mail, cls: 'ws-empty' }), pad: false, out };
+      }
+      return { html: out.map((x) => x.html).join('\n'), pad: !!(out[0] && !/^(hero|pagehead)$/.test(out[0].s.type)), out };
+    };
+    let body, nav, top, mainPad = false, navCount = 0;
     if (multi) {
-      const pages = site.pages;
+      const pages = allPages;
       const home = pages[0] || { sections: [] };
-      const annSecs = (home.sections || []).filter((s) => s.type === 'announce' && !s.hidden);
+      const annSecs = (home.sections || []).filter((s) => s && s.type === 'announce' && !s.hidden);
       top = annSecs.map((s) => WS.renderSection(site, s, mode)).join('');
       body = pages.map((pg, idx) => {
-        const inner = (pg.sections || []).filter((s) => !s.hidden && s.type !== 'announce')
-          .map((s) => WS.renderSection(site, s, mode)).join('\n');
+        const r = renderList((pg.sections || []).filter((s) => s && !s.hidden && s.type !== 'announce'), pg);
         const on = (activePath != null ? (pg.path || '') === activePath : idx === 0) ? ' on' : '';
-        return `<div class="ws-page${on}" data-path="${e(pg.path || '')}" data-title="${e(pg.title || '')}" role="region" aria-label="${e(pg.title || 'Page')}">${inner}</div>`;
-      }).join('\n');
-      nav = pages.filter((pg) => pg.nav !== false)
-        .map((pg) => `<a href="#/${e(pg.path || '')}" data-page="${e(pg.path || '')}">${e(pg.title || 'Home')}</a>`).join('');
+        return `<div class="ws-page${on}${r.pad ? ' ws-padtop' : ''}" data-path="${e(pg.path || '')}" data-title="${e(label(pg))}" role="region" aria-label="${e(label(pg))}">${r.html}</div>`;
+      }).join('\n') + `\n<div class="ws-nf" data-nf data-title="Page not found" hidden>${WS.notFoundBand({ home: '#/', contact: /^#\//.test(contactHref) ? contactHref : '' })}</div>`;
+      const navPages = pages.filter((pg) => pg.nav !== false);
+      navCount = navPages.length;
+      nav = navPages.map((pg) => `<a href="#/${e(pg.path || '')}" data-page="${e(pg.path || '')}" title="${e(label(pg))}">${e(label(pg))}</a>`).join('');
     } else {
-      const secs = (site.sections || []).filter((s) => !s.hidden);
+      const secs = WS.layoutSections(site);
       const announce = secs.filter((s) => s.type === 'announce');
       const rest = secs.filter((s) => s.type !== 'announce');
-      body = rest.map((s) => WS.renderSection(site, s, mode)).join('\n');
-      nav = rest.filter((s) => navFor[s.type]).map((s) => `<a href="#${s.type}">${navFor[s.type]}</a>`).join('');
+      const r = renderList(rest, null);
+      body = r.html;
+      mainPad = r.pad;
+      // Only link to sections that actually rendered (an empty Team section must not leave a dead nav link).
+      const seenNav = {};
+      nav = r.out.filter((x) => navFor[x.s.type] && !seenNav[x.s.type] && (seenNav[x.s.type] = 1)).map((x) => `<a href="#${x.s.type}">${navFor[x.s.type]}</a>`).join('');
       top = announce.map((s) => WS.renderSection(site, s, mode)).join('');
     }
     const usesEmoji = /notoemoji/.test(body + top);
@@ -1387,30 +1572,47 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
     const _pc = site.photoCredits || {}; const _used = site.photos || {}; const _seenPc = {};
     const _pcl = Object.keys(_pc).filter((k) => _used[k] && _pc[k] && _pc[k].name && !_seenPc[_pc[k].name] && (_seenPc[_pc[k].name] = 1));
     const _utm = 'utm_source=websprout&utm_medium=referral';
-    const photoCredit = _pcl.length ? ` &nbsp;·&nbsp; Photos by ${_pcl.slice(0, 6).map((k) => `<a href="${e(String(_pc[k].link || 'https://unsplash.com').split('?')[0] + '?' + _utm)}">${e(_pc[k].name)}</a>`).join(', ')} on <a href="https://unsplash.com/?${_utm}">Unsplash</a>` : '';
+    const photoCredit = _pcl.length ? ` &nbsp;·&nbsp; Photos by ${_pcl.slice(0, 6).map((k) => `<a href="${e(String((/^https:\/\//i.test(WS.safeUrl(_pc[k].link)) && WS.safeUrl(_pc[k].link)) || 'https://unsplash.com').split('?')[0] + '?' + _utm)}">${e(_pc[k].name)}</a>`).join(', ')} on <a href="https://unsplash.com/?${_utm}">Unsplash</a>` : '';
     const markHref = multi ? '#/' : '#';
     const routerInit = (multi && activePath != null) ? `window.__wsInitPath=${JSON.stringify(activePath)};` : '';
     const runtime = WS.runtime(site) + (multi ? routerInit + WS.pageRouter : '');
     // Hero photo (for social preview) + a generated favicon monogram + LocalBusiness structured data.
+    // Social image: the hero photo, else the first web photo the site uses (data: URIs are useless to crawlers).
     let heroPhoto = '';
     try {
-      const allSecs = multi ? (site.pages[0] && site.pages[0].sections) || [] : (site.sections || []);
-      const h = allSecs.find((s) => s.type === 'hero');
-      if (h) heroPhoto = (site.photos || {})[h.id + '.photo'] || '';
+      const webPhoto = (u) => (/^https?:\/\//i.test(String(u || '')) ? String(u) : '');
+      const photos = site.photos || {};
+      const h = WS.layoutSections(site).find((s) => s.type === 'hero');
+      heroPhoto = (h && webPhoto(photos[h.id + '.photo'])) || '';
+      if (!heroPhoto) {
+        const used = {}; (allPages ? allPages.reduce((a, pg) => a.concat(pg.sections || []), []) : (site.sections || [])).forEach((s) => { if (s && !s.hidden) used[s.id] = 1; });
+        const k = Object.keys(photos).find((x) => used[x.split('.')[0]] && webPhoto(photos[x])) || Object.keys(photos).find((x) => webPhoto(photos[x]));
+        heroPhoto = k ? photos[k] : '';
+      }
     } catch (_e) {}
-    const initial = e((b.name || 'W').trim().charAt(0).toUpperCase() || 'W');
+    const initial = e(name.charAt(0).toUpperCase() || 'W');
+    const seoTitle = WS.str(b.seoTitle);
+    const sub = WS.str(b.city) ? (WS.str(b.type) ? WS.str(b.type) + ' in ' + WS.str(b.city) : WS.str(b.city)) : '';
+    const docTitle = seoTitle || [name, sub].filter(Boolean).join(' | ');
+    const rd = WS.redirectsOf(site);
+    const rdScript = Object.keys(rd).length ? `<script type="application/json" id="ws-redirects">${JSON.stringify(rd).replace(/</g, '\\u003c')}</script>` : '';
+    const logoOk = /^data:image\/(png|jpe?g|webp|gif|svg\+xml);base64,/.test(b.logo || '') || /^https:\/\//.test(b.logo || '');
+    const navMany = multi && navCount > 6;
+    const pageLinks = multi ? allPages.filter((pg) => pg.nav !== false).map((pg) => `<a href="#/${e(pg.path || '')}">${e(label(pg))}</a>`).join('') : '';
+    const footSub = WS.str(b.tagline) ? `<p>${e(WS.str(b.tagline))}</p>` : (WS.str(b.type) ? `<p>${e(WS.str(b.type))}${WS.str(b.city) ? ' in ' + e(WS.str(b.city)) : ''}</p>` : '');
+    const footReach = (WS.str(b.phone) ? `<a href="${WS.tel(b.phone)}">${e(b.phone)}</a>` : '') + (WS.str(b.email) ? `<a href="mailto:${e(WS.str(b.email))}">${e(b.email)}</a>` : '') + (WS.str(b.address) ? `<a href="${WS.map(b.address)}">${e(b.address)}</a>` : (WS.str(b.city) ? `<span>${e(b.city)}</span>` : '')) + (ig ? `<a href="https://instagram.com/${e(ig)}">Instagram</a>` : '') + (pillHref ? `<a href="${e(pillHref)}">${e(b.bookLabel || 'Get in touch')}</a>` : '');
     const favSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="${p.accent}"/><text x="32" y="45" font-family="Inter,Arial,sans-serif" font-size="38" font-weight="700" text-anchor="middle" fill="${p.accentText}">${initial}</text></svg>`;
     const favicon = `<link rel="icon" href="data:image/svg+xml,${encodeURIComponent(favSvg)}">`;
-    const social = `<meta property="og:type" content="website"><meta property="og:site_name" content="${e(b.name)}">${heroPhoto ? `<meta property="og:image" content="${e(heroPhoto)}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${e(heroPhoto)}">` : `<meta name="twitter:card" content="summary">`}`;
+    const social = `<meta property="og:type" content="website"><meta property="og:site_name" content="${e(name)}">${heroPhoto ? `<meta property="og:image" content="${e(heroPhoto)}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${e(heroPhoto)}">` : `<meta name="twitter:card" content="summary">`}`;
     let ldScript = '';
     try {
       const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-      const ld = { '@context': 'https://schema.org', '@type': 'LocalBusiness', name: b.name };
+      const ld = { '@context': 'https://schema.org', '@type': 'LocalBusiness', name: name };
       if (desc) ld.description = desc;
       if (b.phone) ld.telephone = b.phone;
       if (b.address || b.city) { ld.address = { '@type': 'PostalAddress' }; if (b.address) ld.address.streetAddress = b.address; if (b.city) ld.address.addressLocality = b.city; }
       if (heroPhoto) ld.image = heroPhoto;
-      if (b.instagram) ld.sameAs = ['https://instagram.com/' + b.instagram];
+      if (ig) ld.sameAs = ['https://instagram.com/' + ig];
       if (Array.isArray(b.hours) && b.hours.length) {
         const oh = [];
         b.hours.forEach((hr, i) => { if (hr && hr.open && hr.close) oh.push({ '@type': 'OpeningHoursSpecification', dayOfWeek: dayNames[i] || hr.d, opens: hr.open, closes: hr.close }); });
@@ -1428,24 +1630,24 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${b.seoTitle ? e(b.seoTitle) : e(b.name) + (b.city ? ' | ' + e(b.type || '') + ' in ' + e(b.city) : '')}</title>
+<title>${e(docTitle)}</title>
 <meta name="description" content="${e(desc)}">
 <meta name="theme-color" content="${p.base}">
 ${favicon}
-<meta property="og:title" content="${e(b.name)}"><meta property="og:description" content="${e(desc)}">
+<meta property="og:title" content="${e(name)}"><meta property="og:description" content="${e(desc)}">
 ${social}
-${ldScript}
+${ldScript}${rdScript}
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?${ttFonts.map((f) => 'family=' + f).join('&')}&display=swap">
 <style>:root{${WS.paletteCss(p)};${ttVars}}${WS.styleCss}${WS.emojiCss}${ttVars ? `body{${ttVars};font-family:var(--body)}` : ''}</style>
 </head>
-<body class="es-${e(site.emojiStyle || 'color')}${ttClass}${/^(sharp|soft|round)$/.test(site.corners || '') ? ' wsr-' + site.corners : ''}${mode === 'edit' ? ' edit' : ''}${multi ? ' multipage' : ''}${top ? ' has-announce' : ''}">
+<body class="es-${e(site.emojiStyle || 'color')}${ttClass}${/^(sharp|soft|round)$/.test(site.corners || '') ? ' wsr-' + site.corners : ''}${mode === 'edit' ? ' edit' : ''}${multi ? ' multipage' : ''}${navMany ? ' nav-many' : ''}${top ? ' has-announce' : ''}">
 ${top}
-<header class="top" data-top><a class="mark${b.logo ? ' has-logo' : ''}" href="${markHref}">${/^data:image\/(png|jpe?g|webp|gif|svg\+xml);base64,/.test(b.logo || '') || /^https:\/\//.test(b.logo || '') ? `<img class="mark-logo" src="${e(b.logo)}" alt="${e(b.name)}">` : e(b.name)}</a><nav aria-label="Main">${nav}</nav><a class="pill" href="${e(pillHref)}">${e(b.bookShort || 'Book')}</a>${multi ? '<button class="navtoggle" type="button" aria-label="Menu" aria-expanded="false"><svg width="23" height="23" viewBox="0 0 23 23" fill="none" aria-hidden="true"><path d="M3 7h17M3 11.5h17M3 16h17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' : ''}</header>
-<main>
+<header class="top" data-top><a class="mark${logoOk ? ' has-logo' : ''}" href="${markHref}">${logoOk ? `<img class="mark-logo" src="${e(b.logo)}" alt="${e(name)}" onerror="var a=this.parentNode;if(a)a.classList.remove('has-logo');this.replaceWith(document.createTextNode(this.alt||''));">` : e(name)}</a><nav aria-label="Main">${nav}</nav>${pillHref ? `<a class="pill" href="${e(pillHref)}">${e(b.bookShort || 'Book')}</a>` : '<span></span>'}${multi ? '<button class="navtoggle" type="button" aria-label="Menu" aria-expanded="false"><svg width="23" height="23" viewBox="0 0 23 23" fill="none" aria-hidden="true"><path d="M3 7h17M3 11.5h17M3 16h17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' : ''}</header>
+<main${mainPad ? ' class="ws-padtop"' : ''}>
 ${body}
 </main>
-<footer class="foot"><div class="foot-brand"><b>${e(b.name)}</b>${b.tagline ? `<p>${e(b.tagline)}</p>` : (b.type ? `<p>${e(b.type)}${b.city ? ' in ' + e(b.city) : ''}</p>` : '')}</div>${multi ? `<nav class="foot-col" aria-label="Pages"><h4>Pages</h4>${site.pages.filter((pg) => pg.nav !== false).map((pg) => `<a href="#/${e(pg.path || '')}">${e(pg.title || 'Home')}</a>`).join('')}</nav>` : `<div class="foot-col"></div>`}<div class="foot-col"><h4>Contact</h4>${b.phone ? `<a href="${WS.tel(b.phone)}">${e(b.phone)}</a>` : ''}${b.email ? `<a href="mailto:${e(b.email)}">${e(b.email)}</a>` : ''}${b.address ? `<a href="${WS.map(b.address)}">${e(b.address)}</a>` : (b.city ? `<span>${e(b.city)}</span>` : '')}${b.instagram ? `<a href="https://instagram.com/${e(b.instagram)}">Instagram</a>` : ''}<a href="${e(pillHref)}">${e(b.bookLabel || 'Get in touch')}</a></div></footer>
+<footer class="foot"><div class="foot-brand"><b>${e(name)}</b>${footSub}</div>${multi ? `<nav class="foot-col" aria-label="Pages"><h4>Pages</h4>${pageLinks}</nav>` : `<div class="foot-col"></div>`}<div class="foot-col">${footReach ? `<h4>Contact</h4>${footReach}` : ''}</div></footer>
 <p class="credits"><a href="https://websprout.app/?ref=site">Made with ${e(brand)}</a>${photoCredit}${usesEmoji ? ` &nbsp;·&nbsp; Animated emoji: <a href="https://googlefonts.github.io/noto-emoji-animation/">Noto Emoji by Google</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>` : ''}</p>
 <script>${runtime}${mode === 'edit' ? WS.editBridge : ''}</script>
 </body>
@@ -1461,6 +1663,8 @@ document.documentElement.classList.add('js');document.body.classList.add('js');
   var top=document.querySelector('[data-top]'),ann=document.querySelector('.announce');
   function onScroll(){var y=window.scrollY;top.classList.toggle('solid',y>60);if(ann)top.style.setProperty('--top-offset',Math.max(0,ann.offsetHeight-y)+'px')}
   window.addEventListener('scroll',onScroll,{passive:true});window.addEventListener('resize',onScroll);onScroll();
+  // Desktop nav that does not fit (many or long page names) folds into the menu button instead of overflowing.
+  try{var nvb=document.body,nvn=top.querySelector('nav');var navFit=function(){if(!nvn||!nvb.classList.contains('multipage')||nvb.classList.contains('nav-open')||nvn.querySelectorAll('a').length>6)return;nvb.classList.remove('nav-many');if(window.innerWidth>900&&top.scrollWidth>top.clientWidth+2)nvb.classList.add('nav-many');};navFit();window.addEventListener('resize',navFit);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(navFit);}catch(e){}
   function seen(els,fn){if(!('IntersectionObserver' in window)||EDIT){els.forEach(fn);return}var io=new IntersectionObserver(function(es){es.forEach(function(x){if(x.isIntersecting){fn(x.target);io.unobserve(x.target)}})},{rootMargin:'0px 0px -10% 0px'});els.forEach(function(el){io.observe(el)})}
   seen(document.querySelectorAll('.reveal'),function(el){el.classList.add('in')});
   // open / closed status
@@ -1487,16 +1691,20 @@ document.documentElement.classList.add('js');document.body.classList.add('js');
     }).catch(function(){}).then(startCounts);
   } else startCounts();
   // live Google reviews (needs a linked place; falls back to the typed reviews already on the page)
-  (function(){var box=document.querySelector('[data-greviews]');if(!box||!STATS_API||!PLACE||EDIT)return;
+  (function(){var box=document.querySelector('[data-greviews]');if(!box||EDIT)return;
+    // Nothing typed and nothing from Google: drop the whole band rather than show an empty section.
+    function none(){if(!box.querySelector('.rw blockquote'))box.remove();}
+    if(!STATS_API||!PLACE){none();return;}
     fetch(STATS_API+'?place='+encodeURIComponent(PLACE)).then(function(r){return r.ok?r.json():null}).then(function(j){
-      if(!j||!j.items||!j.items.length)return;
+      if(!j||!j.items||!j.items.length){none();return;}
+      box.hidden=false;
       var rw=box.querySelector('.rw'),sum=box.querySelector('.gr-sum'),at=box.querySelector('.gr-attr');
       function star(n){var o='';for(var i=0;i<5;i++)o+=i<Math.round(n)?'★':'☆';return o}
       function esc(s){return String(s==null?'':s).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;')}
       rw.innerHTML=j.items.map(function(v){return '<blockquote><div class="gr-stars" aria-label="'+v.rating+' out of 5 stars">'+star(v.rating)+'</div><p>'+esc(v.text.length>320?v.text.slice(0,317)+'…':v.text)+'</p><footer>'+esc(v.name)+(v.when?' · '+esc(v.when):'')+'</footer></blockquote>'}).join('');
       if(j.rating&&sum){sum.hidden=false;sum.innerHTML='<b>'+j.rating.toFixed(1)+'</b> <span class="gr-stars">'+star(j.rating)+'</span> <span>'+(j.reviews||0).toLocaleString()+' Google reviews</span>'}
-      if(at){at.hidden=false;at.innerHTML='Reviews from Google'+(j.url?' · <a href="'+esc(j.url)+'" target="_blank" rel="noopener">See all on Google</a>':'')}
-    }).catch(function(){});
+      if(at){at.hidden=false;at.innerHTML='Reviews from Google'+(/^https:\\/\\//.test(j.url||'')?' · <a href="'+esc(j.url)+'" target="_blank" rel="noopener">See all on Google</a>':'')}
+    }).catch(none);
   })();
   // before / after sliders
   document.querySelectorAll('[data-ba]').forEach(function(fr){var r=fr.querySelector('.ba-range');if(r)r.addEventListener('input',function(){fr.style.setProperty('--x',r.value+'%')})});
@@ -1505,13 +1713,15 @@ document.documentElement.classList.add('js');document.body.classList.add('js');
     if(!inFrame&&!EDIT){document.querySelectorAll('form[data-wsform]').forEach(function(f){
       f.addEventListener('submit',function(ev){ev.preventDefault();
         var url=f.getAttribute('action'),ok=f.querySelector('[data-wfok]'),btn=f.querySelector('button[type=submit]'),ot=btn?btn.textContent:'';
+        function err(msg){var m=f.querySelector('[data-wferr]');if(!m){m=document.createElement('p');m.className='wf-err';m.setAttribute('data-wferr','');m.setAttribute('role','alert');if(btn&&btn.parentNode)btn.parentNode.insertBefore(m,btn.nextSibling);else f.appendChild(m);}m.textContent=msg;m.hidden=!msg;}
+        err('');
         var fd={};new FormData(f).forEach(function(v,k){fd[k]=v;});
         if(!url){f.reset();if(ok)ok.hidden=false;return;}
         if(btn){btn.disabled=true;btn.textContent='Sending…';}
         fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(fd)}).then(function(r){return r.json().catch(function(){return{ok:r.ok};});}).then(function(j){
           if(j&&j.ok){f.reset();if(ok)ok.hidden=false;if(btn)btn.textContent='Sent ✓';}
-          else{if(btn){btn.disabled=false;btn.textContent=ot;}alert((j&&j.error==='rate')?'Too many messages right now — please try again later.':'Sorry, that did not go through. Please try again.');}
-        }).catch(function(){if(btn){btn.disabled=false;btn.textContent=ot;}alert('Sorry, that did not go through. Please try again.');});
+          else{if(btn){btn.disabled=false;btn.textContent=ot;}err((j&&j.error==='rate')?'Too many messages right now. Please try again later.':'Sorry, that did not go through. Please check your details and try again.');}
+        }).catch(function(){if(btn){btn.disabled=false;btn.textContent=ot;}err('Sorry, that did not go through. Please check your connection and try again.');});
       });
     });}
   }catch(e){}

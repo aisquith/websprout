@@ -57,17 +57,26 @@ a{color:#4ade80;text-decoration:none}.muted{color:rgba(234,242,232,.38)}.err{col
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function dt(ms){if(!ms)return '<span class="muted">&mdash;</span>';var d=new Date(ms);return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
 function card(n,l,cls){return '<div class="card '+(cls||'')+'"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>';}
-function clearErrors(){if(!confirm('Clear all logged errors?'))return;fetch('/admin/errors/clear',{method:'POST'}).then(function(r){return r.json();}).then(function(){load();});}
+// Small styled confirm + notice (no native dialogs).
+function admConfirm(msg,ok,danger){return new Promise(function(res){var b=document.createElement('div');b.setAttribute('role','dialog');b.setAttribute('aria-modal','true');b.style.cssText='position:fixed;inset:0;background:rgba(6,13,5,.72);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px';var x=document.createElement('div');x.style.cssText='background:#0f1a0d;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:20px;max-width:380px;width:100%;color:#eaf2e8;font:14px/1.5 system-ui,sans-serif';var m=document.createElement('div');m.textContent=msg;m.style.marginBottom='16px';var r=document.createElement('div');r.style.cssText='display:flex;gap:8px;justify-content:flex-end';var c=document.createElement('button');c.textContent='Cancel';var k=document.createElement('button');k.textContent=ok||'Confirm';[c,k].forEach(function(e){e.type='button';e.style.cssText='border:1px solid rgba(255,255,255,.18);background:none;color:#eaf2e8;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;font-family:inherit';});k.style.background=danger?'#c9372c':'#2d7a3a';k.style.borderColor='transparent';r.appendChild(c);r.appendChild(k);x.appendChild(m);x.appendChild(r);b.appendChild(x);document.body.appendChild(b);k.focus();var done=function(v){document.removeEventListener('keydown',kd,true);b.remove();res(v);};var kd=function(e){if(e.key==='Escape'){e.preventDefault();done(false);}};document.addEventListener('keydown',kd,true);c.onclick=function(){done(false);};k.onclick=function(){done(true);};b.onclick=function(e){if(e.target===b)done(false);};});}
+function admNote(msg){var n=document.createElement('div');n.setAttribute('role','status');n.textContent=msg;n.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#c9372c;color:#fff;padding:10px 16px;border-radius:9px;font:600 13px system-ui,sans-serif;z-index:99999';document.body.appendChild(n);setTimeout(function(){n.remove();},3500);}
+function clearErrors(){admConfirm('Clear all logged errors?','Clear',true).then(function(ok){if(!ok)return;fetch('/admin/errors/clear',{method:'POST'}).then(function(r){return r.json();}).then(function(){load();});});}
 function setPlan(email,plan){
-  if(plan==='free'&&!confirm('Revoke Pro from '+email+'?'))return;
-  fetch('/admin/grant?email='+encodeURIComponent(email)+'&plan='+plan).then(function(r){return r.text();}).then(function(){load();}).catch(function(){alert('Failed \u2014 try again');});
+  if(plan==='free'){admConfirm('Revoke Pro from '+email+'?','Revoke',true).then(function(ok){if(ok)setPlanGo(email,plan);});return;}
+  setPlanGo(email,plan);
+}
+function setPlanGo(email,plan){
+  fetch('/admin/grant?email='+encodeURIComponent(email)+'&plan='+plan).then(function(r){return r.text();}).then(function(){load();}).catch(function(){admNote('Failed \u2014 try again');});
 }
 function setDev(email,role){
-  if(role==='user'&&!confirm('Revoke developer access from '+email+'?'))return;
-  fetch('/admin/grant?email='+encodeURIComponent(email)+'&role='+role).then(function(r){return r.text();}).then(function(){load();}).catch(function(){alert('Failed \u2014 try again');});
+  if(role==='user'){admConfirm('Revoke developer access from '+email+'?','Revoke',true).then(function(ok){if(ok)setDevGo(email,role);});return;}
+  setDevGo(email,role);
+}
+function setDevGo(email,role){
+  fetch('/admin/grant?email='+encodeURIComponent(email)+'&role='+role).then(function(r){return r.text();}).then(function(){load();}).catch(function(){admNote('Failed \u2014 try again');});
 }
 function setFeature(slug,on){
-  fetch('/admin/feature?slug='+encodeURIComponent(slug)+'&on='+on).then(function(r){return r.json();}).then(function(){load();}).catch(function(){alert('Failed \u2014 try again');});
+  fetch('/admin/feature?slug='+encodeURIComponent(slug)+'&on='+on).then(function(r){return r.json();}).then(function(){load();}).catch(function(){admNote('Failed \u2014 try again');});
 }
 function load(){
   fetch('/admin/data').then(function(r){return r.json();}).then(function(j){

@@ -11,7 +11,9 @@ compatibility_date = "2025-01-01"
 routes = [
   { pattern = "websprout.app/*", zone_name = "websprout.app" },
   { pattern = "www.websprout.app/*", zone_name = "websprout.app" },
-  { pattern = "*.websprout.app/*", zone_name = "websprout.app" }
+  { pattern = "*.websprout.app/*", zone_name = "websprout.app" },
+  # Customers' own domains (Cloudflare for SaaS custom hostnames) reach the worker through this.
+  { pattern = "*/*", zone_name = "websprout.app" }
 ]
 
 # The worker is assembled from src/ by build.js (dist/ is generated, not committed).

@@ -107,17 +107,19 @@ function cartInjection(products, siteId, preview){
         html+="</div>";
       }
       itemsEl.innerHTML=any?html:"<div style='color:var(--wsc-sub);text-align:center;padding:56px 20px'><div style='font-size:34px;margin-bottom:10px'>🛒</div><div style='font-weight:600;color:var(--wsc-sub)'>Your cart is empty</div></div>";
-      if(totEl) totEl.textContent=money(total);
+      if(totEl) totEl.textContent=total>0?money(total):"—";
       var bs=itemsEl.querySelectorAll("button");
       for(var b=0;b<bs.length;b++){ bs[b].onclick=function(){ var a=this.getAttribute("data-a"), d=this.getAttribute("data-d"); var cc=gv(); if(a!==null){ cc[a]=(cc[a]||0)+1; } else if(d!==null){ cc[d]=(cc[d]||0)-1; if(cc[d]<1){ delete cc[d]; } } sv(cc); }; }
     }
-    function checkout(){ if(PREVIEW){ alert("Publish your site to accept payments. Checkout is disabled in preview."); return; }
+    // Shown inline under the Checkout button (never a browser alert).
+    function msg(t){ var m=document.getElementById("wsCartMsg"); if(!m) return; m.textContent=t||""; m.style.display=t?"block":"none"; }
+    function checkout(){ msg(""); if(PREVIEW){ msg("Publish your site to accept payments. Checkout is disabled in preview."); return; }
       var c=gv(); var items=[]; for(var k in c){ if(c[k]>0){ items.push({p:parseInt(k,10),qty:c[k]}); } }
       if(!items.length) return;
       var co=document.getElementById("wsCartCo"); if(co){ co.disabled=true; co.textContent="Starting checkout..."; }
       fetch("/cart-checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({site:SITE,items:items})}).then(function(r){ return r.json(); }).then(function(j){
-        if(j&&j.url){ location.href=j.url; } else { if(co){ co.disabled=false; co.textContent="Checkout"; } alert((j&&j.error)||"Could not start checkout. Please try again."); }
-      }).catch(function(){ if(co){ co.disabled=false; co.textContent="Checkout"; } alert("Could not start checkout. Please try again."); });
+        if(j&&j.url){ location.href=j.url; } else { if(co){ co.disabled=false; co.textContent="Checkout →"; } msg(((j&&j.error)?j.error+". ":"Could not start checkout. ")+"Please try again, or contact the shop directly."); }
+      }).catch(function(){ if(co){ co.disabled=false; co.textContent="Checkout →"; } msg("Could not reach checkout. Please check your connection and try again."); });
     }
     function build(){
       if(document.getElementById("wsCartBtn")) return; function _prgb(c){c=c||"";var i=c.indexOf("(");if(i<0)return null;var j=c.indexOf(")");var a=c.slice(i+1,j).split(",");var o=[];for(var k=0;k<a.length;k++)o.push(parseFloat(a[k]));return o.length>=3?o:null;} function _lum(pp){if(!pp)return -1;if(pp.length>3&&pp[3]<0.05)return -1;function ch(v){v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);}return 0.2126*ch(pp[0])+0.7152*ch(pp[1])+0.0722*ch(pp[2]);} function _themeDark(){var el=document.body;while(el){var st=getComputedStyle(el);var pc=_prgb(st.backgroundColor);if(pc&&(pc.length<4||pc[3]>0.5)){return _lum(pc)<0.42;}var bi=st.backgroundImage||"";if(bi.indexOf("gradient")>-1){var qq=bi.indexOf("rgb");if(qq>-1){var ee=bi.indexOf(")",qq);var gp=_prgb(bi.slice(qq,ee+1));if(gp)return _lum(gp)<0.42;}}if(el===document.documentElement)break;el=el.parentElement;}return false;} var DARK=_themeDark(); var VARS=DARK?"--wsc-fg:#fff;--wsc-sub:rgba(255,255,255,.55);--wsc-line:rgba(255,255,255,.12);--wsc-foot:rgba(255,255,255,.04);--wsc-btn:#fff;--wsc-btnfg:#111;":"--wsc-fg:#111;--wsc-sub:#999;--wsc-line:#efefef;--wsc-foot:#fafafa;--wsc-btn:#111;--wsc-btnfg:#fff;"; var CBG=DARK?"#1a1a1e":"#ffffff"; var CSH=DARK?"0 24px 70px rgba(0,0,0,.6)":"0 24px 70px rgba(0,0,0,.22)";
@@ -130,7 +132,7 @@ function cartInjection(products, siteId, preview){
       ov.onclick=function(e){ if(e.target===ov){ close(); } };
       panel=document.createElement("div");
       panel.style.cssText="position:absolute;right:18px;bottom:88px;width:360px;max-width:calc(100vw - 36px);max-height:72vh;"+VARS+"background:"+CBG+";color:var(--wsc-fg);border:1px solid var(--wsc-line);border-radius:18px;box-shadow:"+CSH+";display:flex;flex-direction:column;overflow:hidden;font:14px system-ui,-apple-system,sans-serif";
-      panel.innerHTML="<div style='padding:20px;border-bottom:1px solid var(--wsc-line);display:flex;justify-content:space-between;align-items:center'><b style='font-size:17px;font-weight:800;letter-spacing:-.02em'>Your Cart</b><span id='wsCartX' style='cursor:pointer;font-size:24px;line-height:1;color:var(--wsc-sub);padding:0 4px'>×</span></div><div id='wsCartItems' style='flex:1;overflow:auto;padding:8px 20px'></div><div style='padding:20px;border-top:1px solid var(--wsc-line);background:var(--wsc-foot)'><div style='display:flex;justify-content:space-between;font-weight:800;font-size:17px;margin-bottom:14px'><span>Total</span><span id='wsCartTot'>$0.00</span></div><button type='button' id='wsCartCo' style='width:100%;background:var(--wsc-btn);color:var(--wsc-btnfg);border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer'>Checkout →</button><div style='text-align:center;font-size:11px;color:var(--wsc-sub);margin-top:10px'>Secure checkout · powered by Stripe</div></div>";
+      panel.innerHTML="<div style='padding:20px;border-bottom:1px solid var(--wsc-line);display:flex;justify-content:space-between;align-items:center'><b style='font-size:17px;font-weight:800;letter-spacing:-.02em'>Your Cart</b><span id='wsCartX' style='cursor:pointer;font-size:24px;line-height:1;color:var(--wsc-sub);padding:0 4px'>×</span></div><div id='wsCartItems' style='flex:1;overflow:auto;padding:8px 20px'></div><div style='padding:20px;border-top:1px solid var(--wsc-line);background:var(--wsc-foot)'><div style='display:flex;justify-content:space-between;font-weight:800;font-size:17px;margin-bottom:14px'><span>Total</span><span id='wsCartTot'>$0.00</span></div><button type='button' id='wsCartCo' style='width:100%;background:var(--wsc-btn);color:var(--wsc-btnfg);border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer'>Checkout →</button><div id='wsCartMsg' role='alert' style='display:none;margin-top:10px;font-size:13px;line-height:1.45;color:var(--wsc-fg);background:rgba(217,58,58,.12);border-left:3px solid #d93a3a;padding:9px 11px;border-radius:6px'></div><div style='text-align:center;font-size:11px;color:var(--wsc-sub);margin-top:10px'>Secure checkout · powered by Stripe</div></div>";
       ov.appendChild(panel); document.body.appendChild(ov);
       itemsEl=document.getElementById("wsCartItems"); totEl=document.getElementById("wsCartTot"); ctEl=document.getElementById("wsCartCt");
       var x=document.getElementById("wsCartX"); if(x){ x.onclick=close; }
@@ -206,17 +208,19 @@ async function doCartCheckout(request, env){
     return succeed({ url:j.url });
   }catch(e){ return fail(e.message); }
 }
-function renderProductGrid(products, siteId, checkoutEnabled){
+function renderProductGrid(products, siteId, checkoutEnabled, inquireHref){
   if (!Array.isArray(products) || !products.length) return '<div style="text-align:center;opacity:.6;padding:40px 0;font-size:1rem">Products coming soon.</div>';
   var esc = function(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
   var cards = products.map(function(p, i){
-    var img = p.img ? ('<div class="wsp-img" style="background-image:url(' + esc(p.img) + ')"></div>') : '<div class="wsp-img wsp-noimg"></div>';
+    // Background images cannot fire onerror: a hidden probe <img> swaps a broken photo for the plain tile.
+    var imgOk = p.img && /^(https?:\/\/|data:image\/)/i.test(String(p.img)) && !/[()'"\\\s]/.test(String(p.img).slice(0, 2000).replace(/^data:image\/[a-z+]+;base64,/i, ''));
+    var img = imgOk ? ('<div class="wsp-img" style="background-image:url(' + esc(p.img) + ')"><img src="' + esc(p.img) + '" alt="" hidden onerror="var d=this.parentNode;if(d){d.style.backgroundImage=\'none\';d.classList.add(\'wsp-noimg\');}this.remove();"></div>') : '<div class="wsp-img wsp-noimg"></div>';
     var price = p.price ? ('<div class="wsp-price">' + esc(p.price) + '</div>') : '';
     var desc = p.desc ? ('<div class="wsp-desc">' + esc(p.desc) + '</div>') : '';
     var buy;
     if (p.payUrl && /^https:\/\//i.test(p.payUrl)) buy = '<a class="wsp-buy" href="' + esc(p.payUrl) + '" target="_blank" rel="noopener">Buy now</a>';
-    else if (checkoutEnabled && siteId) buy = '<button class="wsp-buy" type="button" onclick="wsAddToCart(' + i + ')">Add to cart</button>';
-    else buy = '<a class="wsp-buy" href="#contact">Inquire</a>';
+    else if (checkoutEnabled && siteId && priceToCents(p.price) >= 50) buy = '<button class="wsp-buy" type="button" onclick="wsAddToCart(' + i + ')">Add to cart</button>';
+    else buy = inquireHref ? '<a class="wsp-buy" href="' + esc(inquireHref) + '">Inquire</a>' : '';
     return '<div class="wsp-card" data-category="' + esc(p.category||'') + '">' + img + '<div class="wsp-body"><div class="wsp-name">' + esc(p.name||'Product') + '</div>' + price + desc + buy + '</div></div>';
   }).join('');
   var css = '<style>.wsp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:22px;max-width:1100px;margin:0 auto;padding:8px 0}.wsp-card{border:1px solid rgba(128,128,128,.18);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;background:rgba(128,128,128,.04)}.wsp-img{aspect-ratio:4/3;background-size:cover;background-position:center}.wsp-noimg{background:linear-gradient(135deg,rgba(128,128,128,.12),rgba(128,128,128,.05))}.wsp-body{padding:16px;display:flex;flex-direction:column;gap:6px}.wsp-name{font-weight:700;font-size:1.05rem}.wsp-price{font-weight:700;opacity:.85}.wsp-desc{font-size:.9rem;opacity:.7;line-height:1.5}.wsp-buy{margin-top:8px;display:inline-block;text-align:center;padding:10px 16px;border:1px solid currentColor;border-radius:10px;text-decoration:none;color:inherit;font-weight:600}.wsp-buy:hover{opacity:.8}.wsp-tabs{position:relative;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:1100px;margin:0 auto 26px;padding-bottom:12px}.wsp-tab{background:none;border:none;font:inherit;font-weight:700;font-size:.9rem;letter-spacing:.03em;text-transform:uppercase;color:inherit;opacity:.45;cursor:pointer;padding:6px 14px;transition:opacity .2s}.wsp-tab.wsp-tab-on{opacity:1}.wsp-tab-ind{position:absolute;bottom:0;height:2px;background:currentColor;border-radius:2px;transition:left .28s ease,width .28s ease;left:0;width:0}</style>';

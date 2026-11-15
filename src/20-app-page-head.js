@@ -15,7 +15,7 @@ const PAGE = `<!DOCTYPE html>
 <meta name="ws-build" content="2026-11-13-r322">
 <script src="/ws-engine.js" defer></script>
 <script>window._wsBuild="2026-11-13-r322";console.log("%c[Websprout] build 2026-11-13-r322 — fully no-AI: deterministic creation + structured visual editor (fields, sections, palette); Gemini generation and chat editing removed","color:#4ade80;font-weight:700")</script>
-<style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}</style>
+<style id="wsCfmStyle">.wsCfm-back{position:fixed;inset:0;background:rgba(6,13,5,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2147483647;opacity:0;transition:opacity .16s ease;padding:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.wsCfm-back.on{opacity:1}.wsCfm-box{background:#0f1a0d;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5);padding:24px;max-width:420px;width:100%;color:#eaf2e8;transform:translateY(6px) scale(.985);transition:transform .16s ease}.wsCfm-back.on .wsCfm-box{transform:translateY(0) scale(1)}.wsCfm-title{font-size:17px;font-weight:800;letter-spacing:-.3px;color:#fff;margin:0 0 8px}.wsCfm-msg{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;margin:0 0 20px}.wsCfm-actions{display:flex;gap:10px;justify-content:flex-end}.wsCfm-btn{border:1px solid rgba(255,255,255,.14);background:transparent;color:#eaf2e8;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;cursor:pointer;font-family:inherit}.wsCfm-btn:hover{background:rgba(255,255,255,.06)}.wsCfm-btn.primary{background:#2d7a3a;border-color:#2d7a3a;color:#fff}.wsCfm-btn.primary:hover{background:#3ea04e}.wsCfm-btn.danger{background:#c9372c;border-color:#c9372c;color:#fff}.wsCfm-btn.danger:hover{background:#dc4b3f}.wsCfm-list{margin:-10px 0 20px;padding:0 0 0 18px;font-size:13.5px;line-height:1.55;color:#fca5a5}.wsCfm-list li{margin:3px 0}.wsCfm-lbl{display:block;font-size:12px;font-weight:700;color:rgba(255,255,255,.6);margin:0 0 6px}.wsCfm-in{display:block;width:100%;box-sizing:border-box;background:#060d05;border:1px solid rgba(255,255,255,.16);border-radius:10px;color:#fff;font:15px/1.4 inherit;font-family:inherit;padding:11px 13px;outline:none}.wsCfm-in:focus{border-color:#3dba52;box-shadow:0 0 0 3px rgba(61,186,82,.22)}.wsCfm-in.bad{border-color:#f87171}textarea.wsCfm-in{min-height:110px;resize:vertical}.wsCfm-err{min-height:18px;font-size:12.5px;color:#fca5a5;margin:6px 0 12px}</style>
 <script>
 window.wsConfirm=function(opts){
   return new Promise(function(resolve){
@@ -29,10 +29,11 @@ window.wsConfirm=function(opts){
     var box=document.createElement("div"); box.className="wsCfm-box";
     var h=document.createElement("div"); h.className="wsCfm-title"; h.id="wsCfmT"; h.textContent=title;
     var p=document.createElement("div"); p.className="wsCfm-msg"; p.textContent=message;
+    var ul=null; if(opts.items&&opts.items.length){ ul=document.createElement("ul"); ul.className="wsCfm-list"; opts.items.forEach(function(t){ var li=document.createElement("li"); li.textContent=t; ul.appendChild(li); }); }
     var row=document.createElement("div"); row.className="wsCfm-actions";
     var c=document.createElement("button"); c.type="button"; c.className="wsCfm-btn"; c.textContent=cancelLabel;
     var k=document.createElement("button"); k.type="button"; k.className="wsCfm-btn "+(danger?"danger":"primary"); k.textContent=okLabel;
-    row.appendChild(c); row.appendChild(k); box.appendChild(h); box.appendChild(p); box.appendChild(row); back.appendChild(box); document.body.appendChild(back);
+    row.appendChild(c); row.appendChild(k); box.appendChild(h); box.appendChild(p); if(ul) box.appendChild(ul); box.appendChild(row); back.appendChild(box); document.body.appendChild(back);
     var prev=document.activeElement;
     requestAnimationFrame(function(){ back.classList.add("on"); k.focus(); });
     function close(ans){
@@ -45,6 +46,50 @@ window.wsConfirm=function(opts){
     c.addEventListener("click", function(){ close(false); });
     k.addEventListener("click", function(){ close(true); });
     back.addEventListener("click", function(e){ if(e.target===back) close(false); });
+    document.addEventListener("keydown", onKey, true);
+  });
+};
+// Styled text-input modal: wsPrompt({title,message,value,placeholder,okLabel,cancelLabel,maxLength,multiline,label,validate}) -> Promise<string|null>.
+// validate(value) returns an error message (shown inline, dialog stays open) or "" when the value is fine.
+window.wsPrompt=function(opts){
+  return new Promise(function(resolve){
+    opts=opts||{};
+    var back=document.createElement("div"); back.className="wsCfm-back"; back.setAttribute("role","dialog"); back.setAttribute("aria-modal","true"); back.setAttribute("aria-labelledby","wsPrT");
+    var box=document.createElement("div"); box.className="wsCfm-box";
+    var h=document.createElement("div"); h.className="wsCfm-title"; h.id="wsPrT"; h.textContent=opts.title||"Enter a value";
+    var p=null; if(opts.message){ p=document.createElement("div"); p.className="wsCfm-msg"; p.style.marginBottom="14px"; p.textContent=opts.message; }
+    var lb=document.createElement("label"); lb.className="wsCfm-lbl"; lb.htmlFor="wsPrIn"; lb.textContent=opts.label||opts.title||"Value"; if(!opts.label) lb.style.cssText="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)";
+    var inp=document.createElement(opts.multiline?"textarea":"input"); inp.className="wsCfm-in"; inp.id="wsPrIn"; if(!opts.multiline) inp.type="text";
+    inp.value=opts.value==null?"":String(opts.value); if(opts.placeholder) inp.placeholder=opts.placeholder; if(opts.maxLength) inp.maxLength=opts.maxLength;
+    inp.setAttribute("aria-describedby","wsPrErr"); inp.setAttribute("autocomplete","off");
+    var err=document.createElement("div"); err.className="wsCfm-err"; err.id="wsPrErr"; err.setAttribute("role","alert"); err.setAttribute("aria-live","polite");
+    var row=document.createElement("div"); row.className="wsCfm-actions";
+    var c=document.createElement("button"); c.type="button"; c.className="wsCfm-btn"; c.textContent=opts.cancelLabel||"Cancel";
+    var k=document.createElement("button"); k.type="button"; k.className="wsCfm-btn "+(opts.danger?"danger":"primary"); k.textContent=opts.okLabel||"OK";
+    row.appendChild(c); row.appendChild(k); box.appendChild(h); if(p) box.appendChild(p); box.appendChild(lb); box.appendChild(inp); box.appendChild(err); box.appendChild(row); back.appendChild(box); document.body.appendChild(back);
+    var prev=document.activeElement, done=false;
+    requestAnimationFrame(function(){ back.classList.add("on"); try{ inp.focus(); inp.select(); }catch(e){} });
+    function close(ans){
+      if(done) return; done=true;
+      back.classList.remove("on");
+      setTimeout(function(){ if(back.parentNode) back.parentNode.removeChild(back); try{ if(prev&&prev.focus) prev.focus(); }catch(e){} }, 160);
+      document.removeEventListener("keydown", onKey, true);
+      resolve(ans);
+    }
+    function submit(){
+      var v=inp.value; var m=""; try{ m=opts.validate?(opts.validate(v)||""):""; }catch(e){ m=""; }
+      if(m){ err.textContent=m; inp.classList.add("bad"); inp.setAttribute("aria-invalid","true"); try{ inp.focus(); }catch(e){} return; }
+      close(v);
+    }
+    inp.addEventListener("input", function(){ if(err.textContent){ err.textContent=""; inp.classList.remove("bad"); inp.removeAttribute("aria-invalid"); } });
+    function onKey(e){
+      if(e.key==="Escape"){ e.preventDefault(); close(null); }
+      else if(e.key==="Enter"&&(!opts.multiline||e.ctrlKey||e.metaKey)&&document.activeElement!==c){ e.preventDefault(); submit(); }
+      else if(e.key==="Tab"){ var els=[inp,c,k]; var i=els.indexOf(document.activeElement); e.preventDefault(); els[(i+(e.shiftKey?els.length-1:1))%els.length].focus(); }
+    }
+    c.addEventListener("click", function(){ close(null); });
+    k.addEventListener("click", submit);
+    back.addEventListener("click", function(e){ if(e.target===back) close(null); });
     document.addEventListener("keydown", onKey, true);
   });
 };
