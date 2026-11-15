@@ -148,7 +148,8 @@ a{color:#2d7a3a}
 <p>We rely on a small number of trusted providers to run the Service. Each processes data only to provide its part of the Service:</p>
 <ul>
 <li><strong>Cloudflare</strong> — hosts Websprout and securely stores your account and the sites you build.</li>
-<li><strong>Unsplash</strong> — supplies royalty-free stock photos. When a site is generated, we send only the business category (not your personal details) to Unsplash to find relevant images.</li>
+<li><strong>Unsplash</strong> — supplies royalty-free stock photos. When a site is generated, we send Unsplash a short search made from the business type and up to two of its service names (for example, &ldquo;vegan bakery sourdough&rdquo;), never your personal details, to find relevant images.</li>
+<li><strong>Google (Places)</strong> — if you choose to fill in your site from your Google listing, the business name and city you search for are sent to Google to find it. Sites linked to a Google listing then show that listing's public rating, reviews and photos, which our servers look up from Google (photos are then loaded by the visitor's browser directly from Google) and credit to their authors. Your personal details are never sent.</li>
 <li><strong>Stripe</strong> — processes subscription and store payments. We never see or store card details.</li>
 <li><strong>Resend</strong> — delivers transactional email, such as notifying you when a visitor submits a form on your site.</li>
 </ul>

@@ -1580,8 +1580,8 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
   WS.ldType = (type) => { const t = String(type || '').toLowerCase(); const hit = t && WS.ldTypes.find((x) => x[0].test(t)); return hit ? hit[1] : 'LocalBusiness'; };
   // Every section the site shows (all pages), for services/prices/photos.
   WS.allSections = (site) => { const p = WS.pagesOf(site); return (p ? p.reduce((a, pg) => a.concat((pg && pg.sections) || []), []) : (site && site.sections) || []).filter((s) => s && !s.hidden); };
-  // opts: { url, image }. Only facts the owner gave: no invented prices, and a rating only from Google data
-  // (biz.googleRating + biz.googleReviews, numbers fetched from Google), never from owner-typed reviews.
+  // opts: { url, image }. Only facts the owner gave: no invented prices. No aggregateRating/review markup:
+  // Google's guidelines forbid ratings aggregated from other sites, and business pages can't get review stars.
   WS.businessLd = (site, opts = {}) => {
     const b = (site && site.biz) || {};
     const s = WS.str;
@@ -1643,8 +1643,6 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
     });
     if (offers.length) ld.hasOfferCatalog = { '@type': 'OfferCatalog', name: 'Services', itemListElement: offers };
     if (nums.length) { const lo = Math.min.apply(null, nums), hi = Math.max.apply(null, nums); const sym = { GBP: '£', EUR: '€' }[(offers.find((o) => o.priceCurrency) || {}).priceCurrency] || '$'; ld.priceRange = sym + lo + (hi > lo ? '–' + sym + hi : ''); }
-    const gr = b.googleRating, gn = Number(b.googleReviews);
-    if (s(b.googlePlaceId) && typeof gr === 'number' && isFinite(gr) && gr >= 1 && gr <= 5 && isFinite(gn) && gn >= 1) ld.aggregateRating = { '@type': 'AggregateRating', ratingValue: Math.round(gr * 10) / 10, reviewCount: Math.round(gn), bestRating: 5, worstRating: 1 };
     return ld;
   };
   // A JSON-LD <script>; '<' is escaped so owner text can never close the tag.

@@ -65,7 +65,7 @@ module.exports = async function (ctx, t) {
   t.eq(b1.logo, 'https://example.com/logo.png', 'logo');
   t.eq(JSON.stringify((b1.openingHoursSpecification || []).map((o) => [o.dayOfWeek.replace('https://schema.org/', ''), o.opens, o.closes])), '[["Monday","08:00","17:00"],["Tuesday","08:30","17:00"]]', 'openingHoursSpecification from hours (closed days left out)');
   t.ok((b1.sameAs || []).some((u) => /place_id:ChIJ_test_place_123/.test(u)), 'sameAs has the Google listing');
-  t.ok(b1.aggregateRating && b1.aggregateRating.ratingValue === 4.7 && b1.aggregateRating.reviewCount === 88, 'aggregateRating from Google data');
+  t.ok(!b1.aggregateRating && !b1.review, 'no rating markup even with Google rating data (Google forbids aggregated ratings)');
   t.ok(!b1.review && !JSON.stringify(b1).includes('Best ever'), 'owner-typed reviews never become review markup');
   delete one.biz.googlePlaceId;
   t.ok(!WS.businessLd(one).aggregateRating, 'no rating markup without a linked Google listing');
