@@ -173,7 +173,9 @@ module.exports = async function (ctx, t) {
     const BAKE = { results: [ph('pz', { alt_description: 'pepperoni pizza on a wooden table' }), ph('b1', { alt_description: 'fresh bread loaves' }), ph('b2', { alt_description: 'croissants and pastries in a bakery' }), ph('b3', { alt_description: 'baker shaping sourdough' }), ph('b4', { alt_description: 'cakes in a bakery window' })] };
     const bk = (await builder((u) => (u.indexOf('/search/photos') > -1 ? json(BAKE) : json({}))).build({ name: 'Crumb', type: 'Bakery' }, KEYS())).site;
     t.ok(!Object.values(bk.photos).some((u) => /photo-pz/.test(u)), 'a bakery doesn’t get a pizza photo');
-    const pzb = (await builder((u) => (u.indexOf('/search/photos') > -1 ? json(BAKE) : json({}))).build({ name: 'Crust', type: 'Pizza bakery' }, KEYS())).site;
+    // exactly four usable photos, so the (allowed) pizza photo is always among the ones picked
+    const BAKE4 = { results: BAKE.results.slice(0, 4) };
+    const pzb = (await builder((u) => (u.indexOf('/search/photos') > -1 ? json(BAKE4) : json({}))).build({ name: 'Crust', type: 'Pizza bakery' }, KEYS())).site;
     t.ok(Object.values(pzb.photos).some((u) => /photo-pz/.test(u)), '…unless the type says pizza');
     // reporting: only the photos actually used are pinged, and the hourly cap still holds
     const Bd = builder((u) => (u.indexOf('/search/photos') > -1 ? json(PLUMB) : json({})));

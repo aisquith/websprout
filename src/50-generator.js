@@ -871,6 +871,12 @@ function v3Towns(x) {
   return out.slice(0, 12);
 }
 // Their words, lightly tidied: a capital at the start and a full stop at the end. Nothing added.
+// Near-duplicate detection on meaningful words (≥4 letters, crude plural strip), for dropping repeated sentences
+// (an AI paraphrase of the owner's answer next to the answer itself) and why points that restate it.
+const V3_STOP = { that: 1, this: 1, with: 1, your: 1, from: 1, have: 1, will: 1, what: 1, when: 1, they: 1, them: 1, there: 1, their: 1, were: 1, been: 1, into: 1, just: 1, make: 1, every: 1, about: 1, also: 1, here: 1, more: 1, than: 1, then: 1, want: 1, work: 1, sure: 1 };
+function v3SigWords(t) { const o = {}; String(t || '').toLowerCase().replace(/[’']/g, '').split(/[^a-z]+/).forEach(function (w) { if (w.length >= 4 && !V3_STOP[w]) o[w.replace(/(?:ies)$/, 'y').replace(/(?<!s)s$/, '')] = 1; }); return o; }
+function v3Overlap(a, b) { const A = v3SigWords(a), B = v3SigWords(b), ka = Object.keys(A), kb = Object.keys(B); if (!ka.length || !kb.length) return 0; let n = 0; ka.forEach(function (w) { if (B[w]) n++; }); return n / Math.min(ka.length, kb.length); }
+function v3Dedupe(text) { const out = []; (String(text || '').match(/[^.!?]+[.!?]+(?:\s|$)|[^.!?]+$/g) || []).forEach(function (x) { x = x.trim(); if (x && !out.some(function (y) { return v3Overlap(x, y) >= 0.5; })) out.push(x); }); return out.join(' '); }
 function v3Sentence(s) { s = String(s || '').trim(); if (!s) return ''; s = s.charAt(0).toUpperCase() + s.slice(1); return /[.!?…]$/.test(s) ? s : s + '.'; }
 function v3And(a) { return a.length < 2 ? (a[0] || '') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]; }
 // The city as people say it in a sentence: "Asheville, NC", "Austin, TX 78701" or "Asheville North Carolina" →
@@ -936,7 +942,7 @@ function v3WhyItems(b, cat, fam, hasArea, trust) {
   if (b.founded) { const y = { icon: 'calendar', title: n >= 2 ? n + ' years in ' + (city || 'business') : 'Since ' + b.founded, text: city ? 'Serving ' + city + ' since ' + b.founded + '.' : 'In business since ' + b.founded + '.', source: 'years' }; if (trust) spares.unshift(y); else out.push(y); }
   if (city || (b.towns || []).length) { const l = { icon: 'map-pin', title: city ? 'Local to ' + city : 'Local to the area', text: (hasArea && city && v3Nearby(b).length) ? 'Based in ' + city + ' and working in the towns around it.' : (v3ServeLine(b) || 'We’re based in ' + city + ', close to the people we work for.'), source: 'local' }; if (trust && hasArea && (b.towns || []).length) spares.push(l); else out.push(l); }
   const have = {}; out.forEach(function (x) { have[x.title.toLowerCase()] = 1; });
-  const pool = (V3_WHY[cat] || []).concat(V3_WHY[cat === 'childcare' ? 'childcare' : fam] || V3_WHY.generic).filter(function (x, i, a) { return a.findIndex(function (y) { return y[1] === x[1]; }) === i && !have[x[1].toLowerCase()] && !(cat === 'cleaning' && /clean up/i.test(x[1])); });
+  const pool = (V3_WHY[cat] || []).concat(V3_WHY[cat === 'childcare' ? 'childcare' : fam] || V3_WHY.generic).filter(function (x, i, a) { return a.findIndex(function (y) { return y[1] === x[1]; }) === i && !have[x[1].toLowerCase()] && !(cat === 'cleaning' && /clean up/i.test(x[1])) && !(b.unique && Object.keys(v3SigWords(x[1] + ' ' + x[2])).some(function (w) { return w.length >= 6 && v3SigWords(b.unique)[w]; })); });
   while (out.length < 4 && pool.length) { const p = pool.splice(Math.floor(v3Rand() * pool.length), 1)[0]; out.push({ icon: p[0], title: p[1], text: p[2], source: 'starter' }); }
   while (out.length < 3 && spares.length) out.push(spares.shift());
   const ic = (typeof WSENGINE !== 'undefined' && WSENGINE.ICONS) || null;
@@ -1318,8 +1324,8 @@ function v3AiApply(site, ai, biz, starterFaq) {
   const home = (site.pages && site.pages[0] && site.pages[0].sections) || [];
   const about = ((site.pages || []).find(function (p) { return p.path === 'about'; }) || { sections: [] }).sections;
   if (ai.tagline && !biz.tagline) { const h = home.find(function (s) { return s.type === 'hero'; }); if (h) { h.tagline = ai.tagline; used.push('tagline'); } }
-  if (ai.intro) { const i = home.find(function (s) { return s.type === 'intro'; }); if (i && !(biz.about && i.text === biz.about)) { i.text = ai.intro; used.push('intro'); } else rej.push(i ? 'intro:owner' : 'intro:no_section'); }
-  if (ai.about && !biz.about) { const i = about.find(function (s) { return s.type === 'intro'; }); if (i) { const u = biz.unique ? v3Sentence(biz.unique) : ''; i.text = u && ai.about.indexOf(biz.unique) < 0 ? u + ' ' + ai.about : ai.about; used.push('about'); } }
+  if (ai.intro) { const i = home.find(function (s) { return s.type === 'intro'; }); if (i && !(biz.about && i.text === biz.about)) { i.text = v3Dedupe(ai.intro); used.push('intro'); } else rej.push(i ? 'intro:owner' : 'intro:no_section'); }
+  if (ai.about && !biz.about) { const i = about.find(function (s) { return s.type === 'intro'; }); if (i) { const u = biz.unique ? v3Sentence(biz.unique) : ''; i.text = v3Dedupe(u && ai.about.indexOf(biz.unique) < 0 && v3Overlap(u, ai.about) < 0.5 ? u + ' ' + ai.about : ai.about); used.push('about'); } }
   if (ai.services) {
     let n = 0; const own = {}; (biz.services || []).forEach(function (s) { if (s.desc) own[String(s.name).trim().toLowerCase()] = 1; });
     all.filter(function (s) { return s.type === 'services'; }).forEach(function (s) { (s.items || []).forEach(function (it) { const k = String(it.name || '').trim().toLowerCase(); if (ai.services[k] && !own[k]) { it.text = ai.services[k]; n++; } }); });
