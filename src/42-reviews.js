@@ -13,8 +13,8 @@ async function doReviewSubmit(request, env){
     if(b._ws_hp) return jsonR({ ok:true });
     if(!env.KV) return jsonR({ ok:true });
     let rating = parseInt(b.rating,10); if(!(rating>=1 && rating<=5)) rating=5;
-    const name = String(b.name||'').slice(0,80).trim();
-    const text = String(b.text||'').slice(0,1500).trim();
+    const name = wsClean(b.name||'').slice(0,80).trim();
+    const text = wsClean(b.text||'').slice(0,1500).trim();
     if(text.length < 2) return jsonR({ ok:false, error:'empty' }, 400);
     const ip = request.headers.get('cf-connecting-ip') || '0';
     const rlKey = 'rrl:' + siteId + ':' + ip;
@@ -28,9 +28,9 @@ async function doReviewSubmit(request, env){
       if(env.RESEND_API_KEY){
         const tk='revnotify:'+siteId;
         if(!(await env.KV.get(tk))){
-          let to='', siteName='';
-          try{ const slug=await env.KV.get('slugof:'+siteId); if(slug){ const ph=await env.KV.get('pub:'+slug); to=extractContactEmail(ph); siteName=extractTitle(ph); } }catch(e){}
-          if(!to){ try{ to=(await env.KV.get('notify:'+siteId))||''; }catch(e){} }
+          // Only the site's verified owner account is told, never an address scraped from the page or typed into settings.
+          let to=await wsSiteOwner(env, siteId), siteName='';
+          try{ const slug=await env.KV.get('slugof:'+siteId); if(slug){ const ph=await env.KV.get('pub:'+slug); siteName=wsClean(extractTitle(ph)); } }catch(e){}
           if(to){ await env.KV.put(tk, '1', { expirationTtl: 900 }); try{ await sendReviewEmail(env, to, siteId, siteName, { name:name, rating:rating, text:text }); }catch(e){} }
         }
       }
@@ -89,7 +89,8 @@ async function ownsSite(s, env, siteId){
   if(!s || !s.email || !siteId || !env || !env.KV) return false;
   const em = s.email.toLowerCase();
   if(em === SUPPORT_EMAIL.toLowerCase()) return true;
-  try{ const owner = (await env.KV.get('notify:'+siteId) || '').toLowerCase(); return !!owner && owner === em; }catch(e){ return false; }
+  // The recorded owner, or any account holding the site's key in its saved sites (never the editable notify address).
+  try{ if((await wsSiteOwner(env, siteId)) === em) return true; return (await wsAccountHasSite(env, s.email, siteId)) || (s.email !== em && await wsAccountHasSite(env, em, siteId)); }catch(e){ return false; }
 }
 async function listAllReviews(env, siteId){
   const out=[];
@@ -112,8 +113,8 @@ async function doReviewsManage(request, env){
   const action = String(b.action||'');
   if(action === 'add'){
     let rating = parseInt(b.rating,10); if(!(rating>=1 && rating<=5)) rating=5;
-    const name = String(b.name||'').slice(0,80).trim();
-    const text = String(b.text||'').slice(0,1500).trim();
+    const name = wsClean(b.name||'').slice(0,80).trim();
+    const text = wsClean(b.text||'').slice(0,1500).trim();
     if(text.length < 1) return jsonR({ ok:false, error:'empty' }, 400);
     const id = Date.now() + ':' + Math.random().toString(36).slice(2,8);
     await env.KV.put('review:'+siteId+':'+id, JSON.stringify({ id, name, rating, text, ts:Date.now(), status:'approved', source:'owner' }), { expirationTtl: 400*86400 });

@@ -112,7 +112,7 @@ function saveAutoReply(){var on=document.getElementById('autoreply').checked;fet
 function saveNotify(){var email=document.getElementById('notify').value.trim();fetch('/api/inbox/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:site,key:key,email:email})}).then(function(r){return r.json();}).then(function(j){if(j.error){nmsg(j.error,false);}else{nmsg(email?'Saved! New submissions will be emailed to '+email:'Email notifications turned off.',true);}});}
 function clearAll(){if(!confirm('Delete ALL submissions for this site? This cannot be undone.'))return;fetch('/api/inbox/clear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:site,key:key})}).then(function(r){return r.json();}).then(function(){load();});}
 function exportCsv(){if(!DATA.length)return;var cols={};DATA.forEach(function(s){for(var k in s.fields)cols[k]=1;});var keys=Object.keys(cols);var rows=[['date'].concat(keys)];DATA.forEach(function(s){var r=[new Date(s.ts).toISOString()];keys.forEach(function(k){r.push(s.fields[k]||'');});rows.push(r);});
-  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\\n');
+  var csv=rows.map(function(r){return r.map(function(c){var v=String(c);if(/^[=+\\-@\\t\\r]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"';}).join(',');}).join('\\n');
   var b=new Blob([csv],{type:'text/csv'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='websprout-submissions.csv';a.click();}
 if(site&&key){show('app','block');load();}else{show('gate','block');if(site)document.getElementById('g_site').value=site;}
 </script>
@@ -123,8 +123,21 @@ if(site&&key){show('app','block');load();}else{show('gate','block');if(site)docu
 // ───────────────────────────────────────────────────────────
 function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+// Fail closed: without FORM_SECRET nothing that depends on it (site keys, unsubscribe and domain tokens) works.
+function wsSecret(env){ const s = env && env.FORM_SECRET; if (!s) { const e = new Error('Server is not configured'); e.wsNoSecret = true; throw e; } return s; }
+// Constant-time string compare (no early exit on the first differing character).
+function wsSafeEq(a, b){ a = String(a == null ? '' : a); b = String(b == null ? '' : b); const n = Math.max(a.length, b.length); let d = a.length ^ b.length; for (let i = 0; i < n; i++) d |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0); return d === 0; }
+async function siteKeyOk(siteId, key, env){ return !!siteId && typeof key === 'string' && !!key && wsSafeEq(key, await siteKey(siteId, env)); }
+// Unexpected errors: log the detail, show a generic message (a missing secret is a 500).
+function wsErr(e){
+  try { console.error((e && e.stack) || e); } catch(_){}
+  if (e && e.wsNoSecret) return new Response(JSON.stringify({ error:'Server is not configured' }), { status:500, headers:{ 'Content-Type':'application/json' } });
+  return fail('Something went wrong. Please try again.');
+}
+// Bidi overrides and zero-width characters can disguise names, reviews and lead fields shown to owners: strip them.
+function wsClean(s){ return String(s == null ? '' : s).replace(/[​-‏‪-‮⁦-⁩﻿]/g, ''); }
 async function siteKey(siteId, env){
-  const secret = (env && env.FORM_SECRET) || 'ws-forms-v1-shared-secret';
+  const secret = wsSecret(env);
   const enc = new TextEncoder();
   const k = await crypto.subtle.importKey('raw', enc.encode(secret), { name:'HMAC', hash:'SHA-256' }, false, ['sign']);
   const sig = await crypto.subtle.sign('HMAC', k, enc.encode('site:' + siteId));
@@ -162,10 +175,11 @@ async function doClientLog(request, env){
 // ── Visitor analytics for published sites ──
 async function doHit(request, env){
   try {
-    if (!env.KV) return new Response('{}', { headers: formCors() });
+    if (!env.KV && !env.DB) return new Response('{}', { headers: formCors() });
     const b = await request.json().catch(function(){ return {}; });
     const site = String(b.site||'').replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
     if (!site) return new Response('{}', { headers: formCors() });
+    if (env.DB) { await wsCount(env, 'site_views', site, request); return new Response('{"ok":true}', { headers: formCors() }); }
     const day = new Date().toISOString().slice(0,10).replace(/-/g,'');
     const tk = 'views:'+site+':total', dk = 'views:'+site+':'+day;
     const tv = await env.KV.get(tk); const dv = await env.KV.get(dk);
@@ -181,17 +195,13 @@ async function doViews(request, env){
     const site = url.searchParams.get('site') || '';
     const key = url.searchParams.get('key') || '';
     if (!site) return fail('Missing site');
-    if (key !== (await siteKey(site, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
-    const total = parseInt((await env.KV.get('views:'+site+':total'))||'0',10)||0;
-    const days = []; const now = Date.now(); let week = 0, today = 0;
-    for (let i=6;i>=0;i--){
-      const ds = new Date(now - i*86400000).toISOString().slice(0,10).replace(/-/g,'');
-      const c = parseInt((await env.KV.get('views:'+site+':'+ds))||'0',10)||0;
-      days.push({ d: ds, c: c }); week += c; if (i===0) today = c;
-    }
+    if (!(await siteKeyOk(site, key, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
+    const _v = await wsSiteViews(env, site, 7);
+    const total = _v.total, days = _v.days; let week = 0, today = 0;
+    days.forEach(function(x, i){ week += x.c; if (i === days.length - 1) today = x.c; });
     let liveSlug = ''; try { liveSlug = (await env.KV.get('slugof:'+site)) || ''; } catch(e){}
     return succeed({ total: total, today: today, week: week, days: days, live: !!liveSlug, slug: liveSlug });
-  } catch(e){ return fail(e.message); }
+  } catch(e){ return wsErr(e); }
 }
 function jsonR(obj, status){ return new Response(JSON.stringify(obj), { status: status||200, headers: { ...formCors(), 'Content-Type':'application/json' } }); }
 
@@ -205,7 +215,7 @@ async function doFormSubmit(request, env, siteId){
     else { const fd = await request.formData(); fd.forEach(function(v,k){ data[k] = (typeof v === 'string') ? v : '(file)'; }); }
     if (data._ws_hp || data._gotcha) return jsonR({ ok:true }); // honeypot -> silently accept
     const fields = {}; let n = 0;
-    for (const k in data){ if (String(k).charAt(0) === '_') continue; if (n++ >= 25) break; let val = data[k]; if (typeof val !== 'string') val = String(val); if (!val) continue; fields[String(k).slice(0,60)] = val.slice(0,3000); }
+    for (const k in data){ if (String(k).charAt(0) === '_') continue; if (n++ >= 25) break; let val = data[k]; if (typeof val !== 'string') val = String(val); val = wsClean(val); if (!val) continue; fields[wsClean(k).slice(0,60)] = val.slice(0,3000); }
     if (Object.keys(fields).length === 0) return jsonR({ ok:false, error:'empty' }, 400);
     const ip = request.headers.get('cf-connecting-ip') || '0';
     const rlKey = 'frl:' + siteId + ':' + ip;
@@ -218,6 +228,7 @@ async function doFormSubmit(request, env, siteId){
     let notify = '';
     try { notify = await env.KV.get('notify:' + siteId) || ''; if (notify && env.RESEND_API_KEY) await sendFormEmail(env, notify, siteId, fields); } catch(e){}
     try { await sendAutoReply(env, siteId, fields, notify); } catch(e){}
+    try { await logEvent(request, env, 'lead', { site: siteId, anon: true, props: { emailed: (notify && env.RESEND_API_KEY) ? 1 : 0 } }); } catch(e){}
     return jsonR({ ok:true });
   } catch(e){ return jsonR({ ok:false, error:'error' }, 500); }
 }
@@ -244,9 +255,9 @@ async function runWeeklyDigest(env){
     try{
       const notify = await env.KV.get('notify:'+siteId);
       if(!notify) continue;
-      let weekViews = 0;
-      for(let i=0;i<7;i++){ const ds = new Date(now - i*86400000).toISOString().slice(0,10).replace(/-/g,''); weekViews += parseInt((await env.KV.get('views:'+siteId+':'+ds))||'0',10)||0; }
-      const totalViews = parseInt((await env.KV.get('views:'+siteId+':total'))||'0',10)||0;
+      const _v = await wsSiteViews(env, siteId, 7);
+      const weekViews = _v.days.reduce(function(a, x){ return a + x.c; }, 0);
+      const totalViews = _v.total;
       let weekLeads = 0;
       try{
         const frk = await kvAllKeys(env, 'form:'+siteId+':');
@@ -276,6 +287,7 @@ async function sendDigestEmail(env, to, siteId, weekViews, weekLeads, totalViews
     + '<p style="margin:0"><a href="' + inboxUrl + '" style="display:inline-block;background:#16a34a;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">View your leads</a></p>'
     + '</div></div>';
   await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer '+env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'\uD83C\uDF31 Your website got ' + weekViews + ' views this week', html: html }) });
+  await wsMailCount(env, 'digest');
 }
 // Business name for emails, from a published page's <title> ("Name | Barber shop in Austin").
 function siteNameFromHtml(html){
@@ -283,10 +295,21 @@ function siteNameFromHtml(html){
   return t.replace(/[\r\n<>"]/g,'').trim().slice(0,60);
 }
 // One place to send mail. Test servers (WS_TEST_MODE, never set in production) record it instead.
+// Global daily caps per kind of mail (KV counters; override with MAIL_CAP_<KIND>), so no single feature can be used
+// to send unlimited mail from our domain.
+const WS_MAIL_CAPS = { autoreply: 500, lead: 2000, review: 300, invoice: 300, site_email: 200, signin: 1000, support: 200 };
+async function wsMailCapOk(env, kind){
+  if (!env || !env.KV) return true;
+  const cap = parseInt(env['MAIL_CAP_' + String(kind).toUpperCase()], 10) || WS_MAIL_CAPS[kind] || 1000;
+  const k = 'mailcap:' + kind + ':' + new Date().toISOString().slice(0,10);
+  try { const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= cap) return false; await env.KV.put(k, String(n + 1), { expirationTtl: 2 * 86400 }); } catch(e){}
+  return true;
+}
 async function wsSendMail(env, msg){
-  if (env.WS_TEST_MODE === '1') { try { const k = 'testmail:' + msg.to[0]; const prev = JSON.parse((await env.KV.get(k)) || '{}'); await env.KV.put(k, JSON.stringify(Object.assign({}, msg, { n: (prev.n || 0) + 1 })), { expirationTtl: 600 }); } catch(e){} return true; }
+  if (env.WS_TEST_MODE === '1') { await wsMailCount(env, 'test'); try { const k = 'testmail:' + msg.to[0]; const prev = JSON.parse((await env.KV.get(k)) || '{}'); await env.KV.put(k, JSON.stringify(Object.assign({}, msg, { n: (prev.n || 0) + 1 })), { expirationTtl: 600 }); } catch(e){} return true; }
   if (!env.RESEND_API_KEY) return false;
   const r = await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify(msg) });
+  if (r.ok) await wsMailCount(env, 'transactional');
   return r.ok;
 }
 // "Thanks, we got your message" to the visitor, from the business. On by default; the owner can turn it off
@@ -316,7 +339,10 @@ async function sendAutoReply(env, siteId, fields, ownerEmail){
     + (ownerEmail ? '<p style="margin:0 0 14px">If you need to add anything, just reply to this email.</p>' : '')
     + '<p style="margin:0">' + escHtml(name) + '</p>'
     + '<p style="margin:24px 0 0;color:#999;font-size:12px">You are getting this because you sent a message through ' + escHtml(name) + '&#39;s website. Website by Websprout.</p></div>';
-  const msg = { from: name + ' <hello@websprout.app>', to: [to], subject: 'We got your message - ' + name, html: html };
+  // The From name is fixed-format and visibly "via Websprout", so an owner-chosen title cannot pose as someone else's mail.
+  const fromName = name.replace(/[\u0000-\u001f\u007f"<>\\,;:@()\[\]]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40).trim();
+  if (!fromName || !(await wsMailCapOk(env, 'autoreply'))) return false;
+  const msg = { from: '"' + fromName + ' via Websprout" <hello@websprout.app>', to: [to], subject: 'We got your message - ' + name, html: html };
   if (ownerEmail && isRealEmail(ownerEmail)) msg.reply_to = String(ownerEmail).trim();
   const ok = await wsSendMail(env, msg);
   if (ok) { await env.KV.put(dk, '1', { expirationTtl: 86400 }); await env.KV.put(ck, String(cnt + 1), { expirationTtl: 2 * 86400 }); }
@@ -326,23 +352,26 @@ async function doInboxAutoReply(request, env){
   try {
     const b = await request.json();
     if (!b.site || !env.KV) return fail('Missing site');
-    if (b.key !== (await siteKey(b.site, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{ 'Content-Type':'application/json' } });
+    if (!(await siteKeyOk(b.site, b.key, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{ 'Content-Type':'application/json' } });
     if (b.on) await env.KV.delete('autoreply:' + b.site); else await env.KV.put('autoreply:' + b.site, 'off');
     return succeed({ ok:true, autoreply: !!b.on });
   } catch(e){ return fail('Could not save'); }
 }
 
 async function sendFormEmail(env, to, siteId, fields){
+  if (!(await wsMailCapOk(env, 'lead'))) return;
   let rows = '';
   for (const k in fields){ rows += '<tr><td style="padding:7px 12px;font-weight:600;color:#0f1a0d;border-bottom:1px solid #eee;vertical-align:top">' + escHtml(k) + '</td><td style="padding:7px 12px;color:#333;border-bottom:1px solid #eee">' + escHtml(fields[k]).replace(/\n/g,'<br>') + '</td></tr>'; }
   const html = '<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:560px;margin:0 auto"><div style="background:#0f1a0d;padding:20px;text-align:center"><span style="color:#fff;font-size:20px;font-weight:800">🌱 New form submission</span></div><div style="padding:24px"><p style="color:#555;margin:0 0 14px">Someone just submitted a form on your website:</p><table style="width:100%;border-collapse:collapse;font-size:14px;border:1px solid #eee;border-radius:8px;overflow:hidden">' + rows + '</table><p style="margin:20px 0 0"><a href="https://websprout.app/leads" style="color:#2d7a3a;font-weight:700;text-decoration:none">Reply from your Leads inbox →</a></p></div></div>';
   await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'🌱 New submission from your website', html: html }) });
+  await wsMailCount(env, 'lead');
 }
 
 async function sendReviewEmail(env, to, siteId, siteName, rev){
+  if (!(await wsMailCapOk(env, 'review'))) return;
   let stars=''; const full=(rev&&rev.rating)||5; for(let i=0;i<5;i++) stars += (i<full?'\u2605':'\u2606');
-  const safeName = escHtml((rev&&rev.name)||'A visitor');
-  const safeText = escHtml(((rev&&rev.text)||'').slice(0,600)).replace(/\n/g,'<br>');
+  const safeName = escHtml(wsClean((rev&&rev.name)||'A visitor'));
+  const safeText = escHtml(wsClean((rev&&rev.text)||'').slice(0,600)).replace(/\n/g,'<br>');
   const title = siteName ? escHtml(siteName) : 'your website';
   const url = 'https://websprout.app/reviews?site=' + encodeURIComponent(siteId);
   const html = '<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:560px;margin:0 auto">'
@@ -358,10 +387,12 @@ async function sendReviewEmail(env, to, siteId, siteName, rev){
     + '<p style="margin:18px 0 0;font-size:12px;color:#999">Approve it to publish it, or reject it \u2014 your call.</p>'
     + '</div></div>';
   await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'\u2B50 New review waiting for your approval', html: html }) });
+  await wsMailCount(env, 'review');
 }
 function isRealEmail(e){
   if(!e) return false;
   e=String(e).toLowerCase().trim();
+  if(e.length>254) return false;
   const at=e.indexOf('@');
   if(at<1 || e.indexOf(' ')>-1 || e.indexOf('[')>-1 || e.indexOf(']')>-1) return false;
   if(!/^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/.test(e)) return false;
@@ -479,10 +510,12 @@ async function doInvoice(request, env){
   }catch(e){ return fail('Could not create the invoice. Please try again.'); }
 }
 async function sendInvoiceEmail(env, to, fromOwner, desc, amount, currency, url){
+  if (!(await wsMailCapOk(env, 'invoice'))) throw new Error('daily invoice email cap reached');
   const amt = (amount/100).toFixed(2);
   const cur = currency.toUpperCase();
   const html = '<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:520px;margin:0 auto"><div style="background:#0f1a0d;padding:20px;text-align:center"><span style="color:#fff;font-size:20px;font-weight:800">Invoice</span></div><div style="padding:24px"><p style="color:#555;margin:0 0 6px">' + escHtml(desc) + '</p><p style="font-size:28px;font-weight:800;color:#0f1a0d;margin:0 0 18px">' + cur + ' ' + amt + '</p><p style="margin:0 0 22px"><a href="' + url + '" style="display:inline-block;background:#16a34a;color:#fff;padding:13px 26px;border-radius:8px;text-decoration:none;font-weight:700">Pay now</a></p><p style="color:#999;font-size:12px;margin:0">Sent via Websprout on behalf of ' + escHtml(fromOwner) + '. Reply to this email to reach them directly.</p></div></div>';
   await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer '+env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout Invoices <hello@websprout.app>', to:[to], reply_to:fromOwner, subject:'Invoice: '+desc+' ('+cur+' '+amt+')', html:html }) });
+  await wsMailCount(env, 'invoice');
 }
 
 async function doInboxData(request, env){
@@ -492,7 +525,7 @@ async function doInboxData(request, env){
     const key = url.searchParams.get('key') || '';
     if (!site) return fail('Missing site');
     if (!env.KV) return fail('KV not configured');
-    if (key !== (await siteKey(site, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{ 'Content-Type':'application/json' } });
+    if (!(await siteKeyOk(site, key, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{ 'Content-Type':'application/json' } });
     const keys = await kvAllKeys(env, 'form:' + site + ':');
     const names = keys.map(function(k){ return k.name; }).sort().reverse().slice(0,200);
     const subs = [];
@@ -503,7 +536,7 @@ async function doInboxData(request, env){
     for (let i=6;i>=0;i--){ const ds = new Date(now - i*86400000).toISOString().slice(0,10).replace(/-/g,''); const c = parseInt((await env.KV.get('views:'+site+':'+ds))||'0',10)||0; days.push({ d: ds, c: c }); week += c; if (i===0) today = c; }
     const autoreply = (await env.KV.get('autoreply:' + site)) !== 'off';
     return succeed({ submissions: subs, notify: notify, autoreply: autoreply, count: subs.length, total: total, today: today, week: week, days: days });
-  } catch(e){ return fail(e.message); }
+  } catch(e){ return wsErr(e); }
 }
 
 async function doInboxNotify(request, env){
@@ -511,11 +544,11 @@ async function doInboxNotify(request, env){
     const b = await request.json();
     if (!b.site) return fail('Missing site');
     if (!env.KV) return fail('KV not configured');
-    if (b.key !== (await siteKey(b.site, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{ 'Content-Type':'application/json' } });
+    if (!(await siteKeyOk(b.site, b.key, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{ 'Content-Type':'application/json' } });
     const email = (b.email || '').trim().slice(0,120);
     if (email) await env.KV.put('notify:' + b.site, email); else await env.KV.delete('notify:' + b.site);
     return succeed({ ok:true, notify: email });
-  } catch(e){ return fail(e.message); }
+  } catch(e){ return wsErr(e); }
 }
 
 // List every key under a prefix (KV.list returns at most 1000 per call).
@@ -529,11 +562,11 @@ async function doInboxClear(request, env){
     const b = await request.json();
     if (!b.site) return fail('Missing site');
     if (!env.KV) return fail('KV not configured');
-    if (b.key !== (await siteKey(b.site, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{ 'Content-Type':'application/json' } });
+    if (!(await siteKeyOk(b.site, b.key, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{ 'Content-Type':'application/json' } });
     const keys = await kvAllKeys(env, 'form:' + b.site + ':');
     for (const k of keys){ await env.KV.delete(k.name); }
     return succeed({ ok:true });
-  } catch(e){ return fail(e.message); }
+  } catch(e){ return wsErr(e); }
 }
 
 // Injected into every generated site: auto-wires all <form>s to the inbox.

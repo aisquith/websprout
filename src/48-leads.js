@@ -12,15 +12,23 @@ async function leadsOwnerSites(env, email) {
 }
 
 // Pull the visitor's email, phone and name out of whatever fields the form had.
+// Only the first 200 characters of a field are looked at, and the email search splits on whitespace and checks whole tokens
+// (no backtracking scan across a long attacker-supplied value).
 function leadContact(fields) {
   const out = { email: '', phone: '', name: '' };
   for (const k in (fields || {})) {
-    const v = String(fields[k] || '').trim();
+    const v = wsClean(String(fields[k] || '').slice(0, 200)).trim();
     if (!out.email && /e-?mail/i.test(k) && isRealEmail(v)) out.email = v.toLowerCase();
     else if (!out.phone && /phone|tel|mobile|cell|number/i.test(k) && (v.replace(/\D/g, '').length >= 7)) out.phone = v.slice(0, 30);
     else if (!out.name && /^(full[ _-]?|first[ _-]?|your[ _-]?)?name$/i.test(k)) out.name = v.slice(0, 60);
   }
-  if (!out.email) { for (const k in (fields || {})) { const m = String(fields[k] || '').match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/); if (m && isRealEmail(m[0])) { out.email = m[0].toLowerCase(); break; } } }
+  if (!out.email) {
+    for (const k in (fields || {})) {
+      const toks = String(fields[k] || '').slice(0, 200).split(/[\s,;<>()"']+/);
+      for (const tk of toks) { const t = tk.replace(/^mailto:/i, '').replace(/[.:!?]+$/, ''); if (t.length <= 120 && t.indexOf('@') > 0 && /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(t) && isRealEmail(t)) { out.email = t.toLowerCase(); break; } }
+      if (out.email) break;
+    }
+  }
   return out;
 }
 

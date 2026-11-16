@@ -172,7 +172,7 @@ module.exports = async function (ctx, t) {
   }
   // new types generate complete sites, with the right action page
   const B = builder(() => json({}));
-  for (const [type, cat, action] of [['Locksmith', 'locksmith', 'quote'], ['Appliance repair', 'appliance', 'quote'], ['Tailor', 'tailor', 'book'], ['Daycare', 'childcare', 'book'], ['Car wash', 'auto', 'quote'], ['Junk removal', 'moving', 'quote']]) {
+  for (const [type, cat, action] of [['Locksmith', 'locksmith', 'quote'], ['Appliance repair', 'appliance', 'book'], ['Tailor', 'tailor', 'book'], ['Daycare', 'childcare', 'book'], ['Car wash', 'auto', 'contact'], ['Junk removal', 'moving', 'quote']]) {
     const s = (await B.build({ name: 'Maple ' + type, type, city: 'Springfield' }, {})).site;
     const svc = s.pages.flatMap((p) => p.sections).find((x) => x.type === 'services');
     t.ok(s.pages.some((p) => p.path === action) && svc && svc.items.length >= 3 && s.pages.flatMap((p) => p.sections).some((x) => x.type === 'faq'), type + ' gets services, FAQ and a ' + action + ' page');

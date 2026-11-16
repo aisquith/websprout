@@ -69,7 +69,7 @@ const WSENGINE = (function(){
     (String(addr).split(',')[0] || '')
       .replace(/^\d+\s+/, '')
       .replace(/^(N|S|E|W|North|South|East|West)\.?\s+/i, '')
-      .replace(/\s+(Ave|Avenue|St|Street|Rd|Road|Blvd|Dr|Drive|Ln|Lane|Way|Pkwy)\.?$/i, '')
+      .replace(/\.+$/, '')
       .trim();
   // Split a name into two balanced lines: "Southside / Fade Co."
   WS.twoLines = (name = '') => {
@@ -150,7 +150,7 @@ const WSENGINE = (function(){
     return Object.assign({}, p, { accent: hex, accentText: on, pop: hex, popText: on, price: hex, accentInk: WS.fitContrast(hex, p.base, 4.5) });
   };
   WS.paletteCss = (p) =>
-    `--base:${p.base};--base-text:${p.baseText};--alt:${p.alt};--alt-text:${p.altText};--accent:${p.accent};--accent-text:${p.accentText};--accent-ink:${p.accentInk || WS.fitContrast(p.accent, p.base, 4.5)};--pop:${p.pop};--pop-text:${p.popText};--surface:${p.surface};--price:${p.price || p.pop}`;
+    `--base:${p.base};--base-text:${p.baseText};--alt:${p.alt};--alt-text:${p.altText};--accent:${p.accent};--accent-text:${p.accentText};--accent-ink:${p.accentInk || WS.fitContrast(p.accent, p.base, 4.5)};--pop:${p.pop};--pop-text:${p.popText};--surface:${p.surface};--price:${p.price || p.pop};--alt-ink:${WS.fitContrast(p.accent, p.alt, 4.5)};--pop-ink:${p.pop === p.accent ? p.popText : WS.fitContrast(p.accent, p.pop, 4.5)}`;
 })(globalThis.WS = globalThis.WS || {});
 
 // Clean single-accent palettes for the Atelier style (contrast-checked via tools/audit.js).
@@ -240,13 +240,231 @@ const WSENGINE = (function(){
 `;
 })(globalThis.WS = globalThis.WS || {});
 
+// Line icons for service / feature cards: a curated subset of Lucide (https://lucide.dev).
+//   Lucide License (ISC). Copyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather
+//   (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022. Permission to use, copy, modify,
+//   and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above
+//   copyright notice and this permission notice appear in all copies. THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR
+//   DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
+//   "tooth", "razor" and "yoga" are from Tabler Icons (https://tabler.io/icons), MIT License, Copyright (c) 2020-2024
+//   Paweł Kuna: permission is granted free of charge to use, copy, modify, merge, publish and distribute, provided this
+//   notice is included; provided "as is", without warranty of any kind.
+// All are 24x24 with round strokes, so they share one look. site.iconStyle: 'line' (these icons) or 'emoji'.
+// Unset (sites made before icons existed): line only when every card emoji on the site maps to an icon.
+(function (WS) {
+  WS.ICONS = {
+    "anchor": "<path d='M12 22V8'/><path d='M5 12H2a10 10 0 0 0 20 0h-3'/><circle cx='12' cy='5' r='3'/>",
+    "app-window": "<rect x='2' y='4' width='20' height='16' rx='2'/><path d='M10 4v4'/><path d='M2 8h20'/><path d='M6 4v4'/>",
+    "baby": "<path d='M9 12h.01'/><path d='M15 12h.01'/><path d='M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5'/><path d='M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1'/>",
+    "backpack": "<path d='M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z'/><path d='M8 10h8'/><path d='M8 18h8'/><path d='M8 22v-6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v6'/><path d='M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2'/>",
+    "bath": "<path d='M10 4 8 6'/><path d='M17 19v2'/><path d='M2 12h20'/><path d='M7 19v2'/><path d='M9 5 7.621 3.621A2.121 2.121 0 0 0 4 5v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5'/>",
+    "beef": "<circle cx='12.5' cy='8.5' r='2.5'/><path d='M12.5 2a6.5 6.5 0 0 0-6.22 4.6c-1.1 3.13-.78 3.9-3.18 6.08A3 3 0 0 0 5 18c4 0 8.4-1.8 11.4-4.3A6.5 6.5 0 0 0 12.5 2Z'/><path d='m18.5 6 2.19 4.5a6.48 6.48 0 0 1 .31 2 6.49 6.49 0 0 1-2.6 5.2C15.4 20.2 11 22 7 22a3 3 0 0 1-2.68-1.66L2.4 16.5'/>",
+    "bike": "<circle cx='18.5' cy='17.5' r='3.5'/><circle cx='5.5' cy='17.5' r='3.5'/><circle cx='15' cy='5' r='1'/><path d='M12 17.5V14l-3-3 4-3 2 3h2'/>",
+    "bird": "<path d='M16 7h.01'/><path d='M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.3L2 20'/><path d='m20 7 2 .5-2 .5'/><path d='M10 18v3'/><path d='M14 17.75V21'/><path d='M7 18a6 6 0 0 0 3.84-10.61'/>",
+    "blocks": "<rect width='7' height='7' x='14' y='3' rx='1'/><path d='M10 21V8a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H3'/>",
+    "bone": "<path d='M17 10c.7-.7 1.69 0 2.5 0a2.5 2.5 0 1 0 0-5 .5.5 0 0 1-.5-.5 2.5 2.5 0 1 0-5 0c0 .81.7 1.8 0 2.5l-7 7c-.7.7-1.69 0-2.5 0a2.5 2.5 0 0 0 0 5c.28 0 .5.22.5.5a2.5 2.5 0 1 0 5 0c0-.81-.7-1.8 0-2.5Z'/>",
+    "book-open": "<path d='M12 7v14'/><path d='M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z'/>",
+    "brick-wall": "<rect width='18' height='18' x='3' y='3' rx='2'/><path d='M12 9v6'/><path d='M16 15v6'/><path d='M16 3v6'/><path d='M3 15h18'/><path d='M3 9h18'/><path d='M8 15v6'/><path d='M8 3v6'/>",
+    "briefcase": "<path d='M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16'/><rect width='20' height='14' x='2' y='6' rx='2'/>",
+    "brush": "<path d='m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08'/><path d='M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z'/>",
+    "bug": "<path d='m8 2 1.88 1.88'/><path d='M14.12 3.88 16 2'/><path d='M9 7.13v-1a3.003 3.003 0 1 1 6 0v1'/><path d='M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6'/><path d='M12 20v-9'/><path d='M6.53 9C4.6 8.8 3 7.1 3 5'/><path d='M6 13H2'/><path d='M3 21c0-2.1 1.7-3.9 3.8-4'/><path d='M20.97 5c0 2.1-1.6 3.8-3.5 4'/><path d='M22 13h-4'/><path d='M17.2 17c2.1.1 3.8 1.9 3.8 4'/>",
+    "building-2": "<path d='M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z'/><path d='M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2'/><path d='M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2'/><path d='M10 6h4'/><path d='M10 10h4'/><path d='M10 14h4'/><path d='M10 18h4'/>",
+    "cake": "<path d='M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8'/><path d='M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1'/><path d='M2 21h20'/><path d='M7 8v3'/><path d='M12 8v3'/><path d='M17 8v3'/><path d='M7 4h.01'/><path d='M12 4h.01'/><path d='M17 4h.01'/>",
+    "cake-slice": "<circle cx='9' cy='7' r='2'/><path d='M7.2 7.9 3 11v9c0 .6.4 1 1 1h16c.6 0 1-.4 1-1v-9c0-2-3-6-7-8l-3.6 2.6'/><path d='M16 13H3'/><path d='M16 17H3'/>",
+    "calendar": "<path d='M8 2v4'/><path d='M16 2v4'/><rect width='18' height='18' x='3' y='4' rx='2'/><path d='M3 10h18'/>",
+    "calendar-check": "<path d='M8 2v4'/><path d='M16 2v4'/><rect width='18' height='18' x='3' y='4' rx='2'/><path d='M3 10h18'/><path d='m9 16 2 2 4-4'/>",
+    "camera": "<path d='M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z'/><circle cx='12' cy='13' r='3'/>",
+    "car": "<path d='M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2'/><circle cx='7' cy='17' r='2'/><path d='M9 17h6'/><circle cx='17' cy='17' r='2'/>",
+    "cat": "<path d='M12 5c.67 0 1.35.09 2 .26 1.78-2 5.03-2.84 6.42-2.26 1.4.58-.42 7-.42 7 .57 1.07 1 2.24 1 3.44C21 17.9 16.97 21 12 21s-9-3-9-7.56c0-1.25.5-2.4 1-3.44 0 0-1.89-6.42-.5-7 1.39-.58 4.72.23 6.5 2.23A9.04 9.04 0 0 1 12 5Z'/><path d='M8 14v.5'/><path d='M16 14v.5'/><path d='M11.25 16.25h1.5L12 17l-.75-.75Z'/>",
+    "chart-column": "<path d='M3 3v16a2 2 0 0 0 2 2h16'/><path d='M18 17V9'/><path d='M13 17V5'/><path d='M8 17v-3'/>",
+    "chef-hat": "<path d='M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z'/><path d='M6 17h12'/>",
+    "circle-check": "<circle cx='12' cy='12' r='10'/><path d='m9 12 2 2 4-4'/>",
+    "clipboard-list": "<rect width='8' height='4' x='8' y='2' rx='1' ry='1'/><path d='M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2'/><path d='M12 11h4'/><path d='M12 16h4'/><path d='M8 11h.01'/><path d='M8 16h.01'/>",
+    "clock": "<circle cx='12' cy='12' r='10'/><polyline points='12 6 12 12 16 14'/>",
+    "coffee": "<path d='M10 2v2'/><path d='M14 2v2'/><path d='M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1'/><path d='M6 2v2'/>",
+    "cog": "<path d='M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z'/><path d='M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z'/><path d='M12 2v2'/><path d='M12 22v-2'/><path d='m17 20.66-1-1.73'/><path d='M11 10.27 7 3.34'/><path d='m20.66 17-1.73-1'/><path d='m3.34 7 1.73 1'/><path d='M14 12h8'/><path d='M2 12h2'/><path d='m20.66 7-1.73 1'/><path d='m3.34 17 1.73-1'/><path d='m17 3.34-1 1.73'/><path d='m11 13.73-4 6.93'/>",
+    "compass": "<path d='m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z'/><circle cx='12' cy='12' r='10'/>",
+    "cookie": "<path d='M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5'/><path d='M8.5 8.5v.01'/><path d='M16 15.5v.01'/><path d='M12 12v.01'/><path d='M11 17v.01'/><path d='M7 14v.01'/>",
+    "croissant": "<path d='m4.6 13.11 5.79-3.21c1.89-1.05 4.79 1.78 3.71 3.71l-3.22 5.81C8.8 23.16.79 15.23 4.6 13.11Z'/><path d='m10.5 9.5-1-2.29C9.2 6.48 8.8 6 8 6H4.5C2.79 6 2 6.5 2 8.5a7.71 7.71 0 0 0 2 4.83'/><path d='M8 6c0-1.55.24-4-2-4-2 0-2.5 2.17-2.5 4'/><path d='m14.5 13.5 2.29 1c.73.3 1.21.7 1.21 1.5v3.5c0 1.71-.5 2.5-2.5 2.5a7.71 7.71 0 0 1-4.83-2'/><path d='M18 16c1.55 0 4-.24 4 2 0 2-2.17 2.5-4 2.5'/>",
+    "cup-soda": "<path d='m6 8 1.75 12.28a2 2 0 0 0 2 1.72h4.54a2 2 0 0 0 2-1.72L18 8'/><path d='M5 8h14'/><path d='M7 15a6.47 6.47 0 0 1 5 0 6.47 6.47 0 0 0 5 0'/><path d='m12 8 1-6h2'/>",
+    "dog": "<path d='M11.25 16.25h1.5L12 17z'/><path d='M16 14v.5'/><path d='M4.42 11.247A13.152 13.152 0 0 0 4 14.556C4 18.728 7.582 21 12 21s8-2.272 8-6.444a11.702 11.702 0 0 0-.493-3.309'/><path d='M8 14v.5'/><path d='M8.5 8.5c-.384 1.05-1.083 2.028-2.344 2.5-1.931.722-3.576-.297-3.656-1-.113-.994 1.177-6.53 4-7 1.923-.321 3.651.845 3.651 2.235A7.497 7.497 0 0 1 14 5.277c0-1.39 1.844-2.598 3.767-2.277 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.855-1.45-2.239-2.5'/>",
+    "door-open": "<path d='M13 4h3a2 2 0 0 1 2 2v14'/><path d='M2 20h3'/><path d='M13 20h9'/><path d='M10 12v.01'/><path d='M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.561Z'/>",
+    "droplet": "<path d='M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z'/>",
+    "droplets": "<path d='M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z'/><path d='M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97'/>",
+    "dumbbell": "<path d='M14.4 14.4 9.6 9.6'/><path d='M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z'/><path d='m21.5 21.5-1.4-1.4'/><path d='M3.9 3.9 2.5 2.5'/><path d='M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z'/>",
+    "eye": "<path d='M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0'/><circle cx='12' cy='12' r='3'/>",
+    "file-text": "<path d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'/><path d='M14 2v4a2 2 0 0 0 2 2h4'/><path d='M10 9H8'/><path d='M16 13H8'/><path d='M16 17H8'/>",
+    "fish": "<path d='M6.5 12c.94-3.46 4.94-6 8.5-6 3.56 0 6.06 2.54 7 6-.94 3.47-3.44 6-7 6s-7.56-2.53-8.5-6Z'/><path d='M18 12v.5'/><path d='M16 17.93a9.77 9.77 0 0 1 0-11.86'/><path d='M7 10.67C7 8 5.58 5.97 2.73 5.5c-1 1.5-1 5 .23 6.5-1.24 1.5-1.24 5-.23 6.5C5.58 18.03 7 16 7 13.33'/><path d='M10.46 7.26C10.2 5.88 9.17 4.24 8 3h5.8a2 2 0 0 1 1.98 1.67l.23 1.4'/><path d='m16.01 17.93-.23 1.4A2 2 0 0 1 13.8 21H9.5a5.96 5.96 0 0 0 1.49-3.98'/>",
+    "flame": "<path d='M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z'/>",
+    "flower": "<circle cx='12' cy='12' r='3'/><path d='M12 16.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 1 1 4.5 4.5 4.5 4.5 0 1 1-4.5 4.5'/><path d='M12 7.5V9'/><path d='M7.5 12H9'/><path d='M16.5 12H15'/><path d='M12 16.5V15'/><path d='m8 8 1.88 1.88'/><path d='M14.12 9.88 16 8'/><path d='m8 16 1.88-1.88'/><path d='M14.12 14.12 16 16'/>",
+    "flower-2": "<path d='M12 5a3 3 0 1 1 3 3m-3-3a3 3 0 1 0-3 3m3-3v1M9 8a3 3 0 1 0 3 3M9 8h1m5 0a3 3 0 1 1-3 3m3-3h-1m-2 3v-1'/><circle cx='12' cy='8' r='2'/><path d='M12 10v12'/><path d='M12 22c4.2 0 7-1.667 7-5-4.2 0-7 1.667-7 5Z'/><path d='M12 22c-4.2 0-7-1.667-7-5 4.2 0 7 1.667 7 5Z'/>",
+    "footprints": "<path d='M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z'/><path d='M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z'/><path d='M16 17h4'/><path d='M4 13h4'/>",
+    "gavel": "<path d='m14.5 12.5-8 8a2.119 2.119 0 1 1-3-3l8-8'/><path d='m16 16 6-6'/><path d='m8 8 6-6'/><path d='m9 7 8 8'/><path d='m21 11-8-8'/>",
+    "gem": "<path d='M6 3h12l4 6-10 13L2 9Z'/><path d='M11 3 8 9l4 13 4-13-3-6'/><path d='M2 9h20'/>",
+    "gift": "<rect x='3' y='8' width='18' height='4' rx='1'/><path d='M12 8v13'/><path d='M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7'/><path d='M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5'/>",
+    "graduation-cap": "<path d='M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z'/><path d='M22 10v6'/><path d='M6 12.5V16a6 3 0 0 0 12 0v-3.5'/>",
+    "hammer": "<path d='m15 12-8.373 8.373a1 1 0 1 1-3-3L12 9'/><path d='m18 15 4-4'/><path d='m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172V7l-2.26-2.26a6 6 0 0 0-4.202-1.756L9 2.96l.92.82A6.18 6.18 0 0 1 12 8.4V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5'/>",
+    "hand-heart": "<path d='M11 14h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 16'/><path d='m7 20 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9'/><path d='m2 15 6 6'/><path d='M19.5 8.5c.7-.7 1.5-1.6 1.5-2.7A2.73 2.73 0 0 0 16 4a2.78 2.78 0 0 0-5 1.8c0 1.2.8 2 1.5 2.8L16 12Z'/>",
+    "handshake": "<path d='m11 17 2 2a1 1 0 1 0 3-3'/><path d='m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4'/><path d='m21 3 1 11h-2'/><path d='M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3'/><path d='M3 4h8'/>",
+    "hard-hat": "<path d='M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5'/><path d='M14 6a6 6 0 0 1 6 6v3'/><path d='M4 15v-3a6 6 0 0 1 6-6'/><rect x='2' y='15' width='20' height='4' rx='1'/>",
+    "heart": "<path d='M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z'/>",
+    "heart-pulse": "<path d='M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z'/><path d='M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27'/>",
+    "house": "<path d='M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8'/><path d='M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/>",
+    "ice-cream-cone": "<path d='m7 11 4.08 10.35a1 1 0 0 0 1.84 0L17 11'/><path d='M17 7A5 5 0 0 0 7 7'/><path d='M17 7a2 2 0 0 1 0 4H7a2 2 0 0 1 0-4'/>",
+    "key-round": "<path d='M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z'/><circle cx='16.5' cy='7.5' r='.5' fill='currentColor'/>",
+    "landmark": "<line x1='3' x2='21' y1='22' y2='22'/><line x1='6' x2='6' y1='18' y2='11'/><line x1='10' x2='10' y1='18' y2='11'/><line x1='14' x2='14' y1='18' y2='11'/><line x1='18' x2='18' y1='18' y2='11'/><polygon points='12 2 20 7 4 7'/>",
+    "laptop": "<path d='M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16'/>",
+    "leaf": "<path d='M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z'/><path d='M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12'/>",
+    "lightbulb": "<path d='M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5'/><path d='M9 18h6'/><path d='M10 22h4'/>",
+    "lock": "<rect width='18' height='11' x='3' y='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/>",
+    "map": "<path d='M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z'/><path d='M15 5.764v15'/><path d='M9 3.236v15'/>",
+    "map-pin": "<path d='M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0'/><circle cx='12' cy='10' r='3'/>",
+    "megaphone": "<path d='m3 11 18-5v12L3 14v-3z'/><path d='M11.6 16.8a3 3 0 1 1-5.8-1.6'/>",
+    "message-circle": "<path d='M7.9 20A9 9 0 1 0 4 16.1L2 22Z'/>",
+    "mic": "<path d='M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z'/><path d='M19 10v2a7 7 0 0 1-14 0v-2'/><line x1='12' x2='12' y1='19' y2='22'/>",
+    "microscope": "<path d='M6 18h8'/><path d='M3 22h18'/><path d='M14 22a7 7 0 1 0 0-14h-1'/><path d='M9 14h2'/><path d='M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z'/><path d='M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3'/>",
+    "moon": "<path d='M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z'/>",
+    "music": "<path d='M9 18V5l12-2v13'/><circle cx='6' cy='18' r='3'/><circle cx='18' cy='16' r='3'/>",
+    "package": "<path d='M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z'/><path d='M12 22V12'/><path d='m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7'/><path d='m7.5 4.27 9 5.15'/>",
+    "paint-roller": "<rect width='16' height='6' x='2' y='2' rx='2'/><path d='M10 16v-2a2 2 0 0 1 2-2h8a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2'/><rect width='4' height='6' x='8' y='16' rx='1'/>",
+    "paintbrush": "<path d='m14.622 17.897-10.68-2.913'/><path d='M18.376 2.622a1 1 0 1 1 3.002 3.002L17.36 9.643a.5.5 0 0 0 0 .707l.944.944a2.41 2.41 0 0 1 0 3.408l-.944.944a.5.5 0 0 1-.707 0L8.354 7.348a.5.5 0 0 1 0-.707l.944-.944a2.41 2.41 0 0 1 3.408 0l.944.944a.5.5 0 0 0 .707 0z'/><path d='M9 8c-1.804 2.71-3.97 3.46-6.583 3.948a.507.507 0 0 0-.302.819l7.32 8.883a1 1 0 0 0 1.185.204C12.735 20.405 16 16.792 16 15'/>",
+    "palette": "<circle cx='13.5' cy='6.5' r='.5' fill='currentColor'/><circle cx='17.5' cy='10.5' r='.5' fill='currentColor'/><circle cx='8.5' cy='7.5' r='.5' fill='currentColor'/><circle cx='6.5' cy='12.5' r='.5' fill='currentColor'/><path d='M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z'/>",
+    "party-popper": "<path d='M5.8 11.3 2 22l10.7-3.79'/><path d='M4 3h.01'/><path d='M22 8h.01'/><path d='M15 2h.01'/><path d='M22 20h.01'/><path d='m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10'/><path d='m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11c-.11.7-.72 1.22-1.43 1.22H17'/><path d='m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V7'/><path d='M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z'/>",
+    "paw-print": "<circle cx='11' cy='4' r='2'/><circle cx='18' cy='8' r='2'/><circle cx='20' cy='16' r='2'/><path d='M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z'/>",
+    "pen-tool": "<path d='M15.707 21.293a1 1 0 0 1-1.414 0l-1.586-1.586a1 1 0 0 1 0-1.414l5.586-5.586a1 1 0 0 1 1.414 0l1.586 1.586a1 1 0 0 1 0 1.414z'/><path d='m18 13-1.375-6.874a1 1 0 0 0-.746-.776L3.235 2.028a1 1 0 0 0-1.207 1.207L5.35 15.879a1 1 0 0 0 .776.746L13 18'/><path d='m2.3 2.3 7.286 7.286'/><circle cx='11' cy='11' r='2'/>",
+    "pencil-ruler": "<path d='M13 7 8.7 2.7a2.41 2.41 0 0 0-3.4 0L2.7 5.3a2.41 2.41 0 0 0 0 3.4L7 13'/><path d='m8 6 2-2'/><path d='m18 16 2-2'/><path d='m17 11 4.3 4.3c.94.94.94 2.46 0 3.4l-2.6 2.6c-.94.94-2.46.94-3.4 0L11 17'/><path d='M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z'/><path d='m15 5 4 4'/>",
+    "phone": "<path d='M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z'/>",
+    "pizza": "<path d='m12 14-1 1'/><path d='m13.75 18.25-1.25 1.42'/><path d='M17.775 5.654a15.68 15.68 0 0 0-12.121 12.12'/><path d='M18.8 9.3a1 1 0 0 0 2.1 7.7'/><path d='M21.964 20.732a1 1 0 0 1-1.232 1.232l-18-5a1 1 0 0 1-.695-1.232A19.68 19.68 0 0 1 15.732 2.037a1 1 0 0 1 1.232.695z'/>",
+    "plug": "<path d='M12 22v-5'/><path d='M9 8V2'/><path d='M15 8V2'/><path d='M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z'/>",
+    "razor": "<path d='M7 3h10v4h-10z'/><path d='M12 7v4'/><path d='M12 11a2 2 0 0 1 2 2v6a2 2 0 1 1 -4 0v-6a2 2 0 0 1 2 -2z'/>",
+    "receipt": "<path d='M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z'/><path d='M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8'/><path d='M12 17.5v-11'/>",
+    "refresh-cw": "<path d='M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8'/><path d='M21 3v5h-5'/><path d='M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16'/><path d='M8 16H3v5'/>",
+    "rocket": "<path d='M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z'/><path d='m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z'/><path d='M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0'/><path d='M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5'/>",
+    "route": "<circle cx='6' cy='19' r='3'/><path d='M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15'/><circle cx='18' cy='5' r='3'/>",
+    "ruler": "<path d='M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z'/><path d='m14.5 12.5 2-2'/><path d='m11.5 9.5 2-2'/><path d='m8.5 6.5 2-2'/><path d='m17.5 15.5 2-2'/>",
+    "sailboat": "<path d='M22 18H2a4 4 0 0 0 4 4h12a4 4 0 0 0 4-4Z'/><path d='M21 14 10 2 3 14h18Z'/><path d='M10 2v16'/>",
+    "salad": "<path d='M7 21h10'/><path d='M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9Z'/><path d='M11.38 12a2.4 2.4 0 0 1-.4-4.77 2.4 2.4 0 0 1 3.2-2.77 2.4 2.4 0 0 1 3.47-.63 2.4 2.4 0 0 1 3.37 3.37 2.4 2.4 0 0 1-1.1 3.7 2.51 2.51 0 0 1 .03 1.1'/><path d='m13 12 4-4'/><path d='M10.9 7.25A3.99 3.99 0 0 0 4 10c0 .73.2 1.41.54 2'/>",
+    "sandwich": "<path d='m2.37 11.223 8.372-6.777a2 2 0 0 1 2.516 0l8.371 6.777'/><path d='M21 15a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-5.25'/><path d='M3 15a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h9'/><path d='m6.67 15 6.13 4.6a2 2 0 0 0 2.8-.4l3.15-4.2'/><rect width='20' height='4' x='2' y='11' rx='1'/>",
+    "scale": "<path d='m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z'/><path d='m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z'/><path d='M7 21h10'/><path d='M12 3v18'/><path d='M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2'/>",
+    "scissors": "<circle cx='6' cy='6' r='3'/><path d='M8.12 8.12 12 12'/><path d='M20 4 8.12 15.88'/><circle cx='6' cy='18' r='3'/><path d='M14.8 14.8 20 20'/>",
+    "search": "<circle cx='11' cy='11' r='8'/><path d='m21 21-4.3-4.3'/>",
+    "shield": "<path d='M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z'/>",
+    "shield-check": "<path d='M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z'/><path d='m9 12 2 2 4-4'/>",
+    "shirt": "<path d='M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z'/>",
+    "shopping-bag": "<path d='M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z'/><path d='M3 6h18'/><path d='M16 10a4 4 0 0 1-8 0'/>",
+    "shower-head": "<path d='m4 4 2.5 2.5'/><path d='M13.5 6.5a4.95 4.95 0 0 0-7 7'/><path d='M15 5 5 15'/><path d='M14 17v.01'/><path d='M10 16v.01'/><path d='M13 13v.01'/><path d='M16 10v.01'/><path d='M11 20v.01'/><path d='M17 14v.01'/><path d='M20 11v.01'/>",
+    "siren": "<path d='M7 18v-6a5 5 0 1 1 10 0v6'/><path d='M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z'/><path d='M21 12h1'/><path d='M18.5 4.5 18 5'/><path d='M2 12h1'/><path d='M12 2v1'/><path d='m4.929 4.929.707.707'/><path d='M12 12v6'/>",
+    "smile": "<circle cx='12' cy='12' r='10'/><path d='M8 14s1.5 2 4 2 4-2 4-2'/><line x1='9' x2='9.01' y1='9' y2='9'/><line x1='15' x2='15.01' y1='9' y2='9'/>",
+    "snowflake": "<line x1='2' x2='22' y1='12' y2='12'/><line x1='12' x2='12' y1='2' y2='22'/><path d='m20 16-4-4 4-4'/><path d='m4 8 4 4-4 4'/><path d='m16 4-4 4-4-4'/><path d='m8 20 4-4 4 4'/>",
+    "sofa": "<path d='M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3'/><path d='M2 16a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z'/><path d='M4 18v2'/><path d='M20 18v2'/><path d='M12 4v9'/>",
+    "soup": "<path d='M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9Z'/><path d='M7 21h10'/><path d='M19.5 12 22 6'/><path d='M16.25 3c.27.1.8.53.75 1.36-.06.83-.93 1.2-1 2.02-.05.78.34 1.24.73 1.62'/><path d='M11.25 3c.27.1.8.53.74 1.36-.05.83-.93 1.2-.98 2.02-.06.78.33 1.24.72 1.62'/><path d='M6.25 3c.27.1.8.53.75 1.36-.06.83-.93 1.2-1 2.02-.05.78.34 1.24.74 1.62'/>",
+    "sparkle": "<path d='M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z'/>",
+    "sparkles": "<path d='M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z'/><path d='M20 3v4'/><path d='M22 5h-4'/><path d='M4 17v2'/><path d='M5 18H3'/>",
+    "spray-can": "<path d='M3 3h.01'/><path d='M7 5h.01'/><path d='M11 7h.01'/><path d='M3 7h.01'/><path d='M7 9h.01'/><path d='M3 11h.01'/><rect width='4' height='4' x='15' y='5'/><path d='m19 9 2 2v10c0 .6-.4 1-1 1h-6c-.6 0-1-.4-1-1V11l2-2'/><path d='m13 14 8-2'/><path d='m13 19 8-2'/>",
+    "sprout": "<path d='M7 20h10'/><path d='M10 20c5.5-2.5.8-6.4 3-10'/><path d='M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z'/><path d='M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z'/>",
+    "star": "<path d='M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z'/>",
+    "stethoscope": "<path d='M11 2v2'/><path d='M5 2v2'/><path d='M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1'/><path d='M8 15a6 6 0 0 0 12 0v-3'/><circle cx='20' cy='10' r='2'/>",
+    "sun": "<circle cx='12' cy='12' r='4'/><path d='M12 2v2'/><path d='M12 20v2'/><path d='m4.93 4.93 1.41 1.41'/><path d='m17.66 17.66 1.41 1.41'/><path d='M2 12h2'/><path d='M20 12h2'/><path d='m6.34 17.66-1.41 1.41'/><path d='m19.07 4.93-1.41 1.41'/>",
+    "syringe": "<path d='m18 2 4 4'/><path d='m17 7 3-3'/><path d='M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5'/><path d='m9 11 4 4'/><path d='m5 19-3 3'/><path d='m14 4 6 6'/>",
+    "thermometer": "<path d='M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z'/>",
+    "thumbs-up": "<path d='M7 10v12'/><path d='M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z'/>",
+    "ticket": "<path d='M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z'/><path d='M13 5v2'/><path d='M13 17v2'/><path d='M13 11v2'/>",
+    "toilet": "<path d='M7 12h13a1 1 0 0 1 1 1 5 5 0 0 1-5 5h-.598a.5.5 0 0 0-.424.765l1.544 2.47a.5.5 0 0 1-.424.765H5.402a.5.5 0 0 1-.424-.765L7 18'/><path d='M8 18a5 5 0 0 1-5-5V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8'/>",
+    "tooth": "<path d='M12 5.5c-1.074 -.586 -2.583 -1.5 -4 -1.5c-2.1 0 -4 1.247 -4 5c0 4.899 1.056 8.41 2.671 10.537c.573 .756 1.97 .521 2.567 -.236c.398 -.505 .819 -1.439 1.262 -2.801c.292 -.771 .892 -1.504 1.5 -1.5c.602 0 1.21 .737 1.5 1.5c.443 1.362 .864 2.295 1.262 2.8c.597 .759 2 .993 2.567 .237c1.615 -2.127 2.671 -5.637 2.671 -10.537c0 -3.74 -1.908 -5 -4 -5c-1.423 0 -2.92 .911 -4 1.5z'/><path d='M12 5.5l3 1.5'/>",
+    "traffic-cone": "<path d='M9.3 6.2a4.55 4.55 0 0 0 5.4 0'/><path d='M7.9 10.7c.9.8 2.4 1.3 4.1 1.3s3.2-.5 4.1-1.3'/><path d='M13.9 3.5a1.93 1.93 0 0 0-3.8-.1l-3 10c-.1.2-.1.4-.1.6 0 1.7 2.2 3 5 3s5-1.3 5-3c0-.2 0-.4-.1-.5Z'/><path d='m7.5 12.2-4.7 2.7c-.5.3-.8.7-.8 1.1s.3.8.8 1.1l7.6 4.5c.9.5 2.1.5 3 0l7.6-4.5c.7-.3 1-.7 1-1.1s-.3-.8-.8-1.1l-4.7-2.8'/>",
+    "trash-2": "<path d='M3 6h18'/><path d='M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6'/><path d='M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2'/><line x1='10' x2='10' y1='11' y2='17'/><line x1='14' x2='14' y1='11' y2='17'/>",
+    "tree-deciduous": "<path d='M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.03V6a3 3 0 1 1 6 0v.04a3.5 3.5 0 0 1 3.24 5.65A4 4 0 0 1 16 19Z'/><path d='M12 19v3'/>",
+    "trees": "<path d='M10 10v.2A3 3 0 0 1 8.9 16H5a3 3 0 0 1-1-5.8V10a3 3 0 0 1 6 0Z'/><path d='M7 16v6'/><path d='M13 19v3'/><path d='M12 19h8.3a1 1 0 0 0 .7-1.7L18 14h.3a1 1 0 0 0 .7-1.7L16 9h.2a1 1 0 0 0 .8-1.7L13 3l-1.4 1.5'/>",
+    "trophy": "<path d='M6 9H4.5a2.5 2.5 0 0 1 0-5H6'/><path d='M18 9h1.5a2.5 2.5 0 0 0 0-5H18'/><path d='M4 22h16'/><path d='M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22'/><path d='M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22'/><path d='M18 2H6v7a6 6 0 0 0 12 0V2Z'/>",
+    "truck": "<path d='M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2'/><path d='M15 18H9'/><path d='M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14'/><circle cx='17' cy='18' r='2'/><circle cx='7' cy='18' r='2'/>",
+    "user": "<path d='M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/>",
+    "users": "<path d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M22 21v-2a4 4 0 0 0-3-3.87'/><path d='M16 3.13a4 4 0 0 1 0 7.75'/>",
+    "utensils": "<path d='M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2'/><path d='M7 2v20'/><path d='M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7'/>",
+    "utensils-crossed": "<path d='m16 2-2.3 2.3a3 3 0 0 0 0 4.2l1.8 1.8a3 3 0 0 0 4.2 0L22 8'/><path d='M15 15 3.3 3.3a4.2 4.2 0 0 0 0 6l7.3 7.3c.7.7 2 .7 2.8 0L15 15Zm0 0 7 7'/><path d='m2.1 21.8 6.4-6.3'/><path d='m19 5-7 7'/>",
+    "video": "<path d='m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5'/><rect x='2' y='6' width='14' height='12' rx='2'/>",
+    "washing-machine": "<path d='M3 6h3'/><path d='M17 6h.01'/><rect width='18' height='20' x='3' y='2' rx='2'/><circle cx='12' cy='13' r='5'/><path d='M12 18a2.5 2.5 0 0 0 0-5 2.5 2.5 0 0 1 0-5'/>",
+    "waves": "<path d='M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1'/><path d='M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1'/><path d='M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1'/>",
+    "wheat": "<path d='M2 22 16 8'/><path d='M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z'/><path d='M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z'/><path d='M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z'/><path d='M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z'/><path d='M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z'/><path d='M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z'/><path d='M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z'/>",
+    "wind": "<path d='M12.8 19.6A2 2 0 1 0 14 16H2'/><path d='M17.5 8a2.5 2.5 0 1 1 2 4H2'/><path d='M9.8 4.4A2 2 0 1 1 11 8H2'/>",
+    "wine": "<path d='M8 22h8'/><path d='M7 10h10'/><path d='M12 15v7'/><path d='M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z'/>",
+    "wrench": "<path d='M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z'/>",
+    "yoga": "<path d='M12 4m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0'/><path d='M4 20h4l1.5 -3'/><path d='M17 20l-1 -5h-5l1 -7'/><path d='M4 10l4 -1l4 -1l4 1.5l4 1.5'/>",
+    "zap": "<path d='M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z'/>"
+  };
+  WS.EMOJI_ICON = {"2600":"sun","2615":"coffee","2693":"anchor","2696":"scale","2699":"cog","2702":"scissors","2705":"circle-check","2728":"sparkles","2744":"snowflake","2764":"heart","1f488":"razor","1f9d4":"razor","1fa92":"razor","1f466":"smile","1f4cf":"ruler","1f3a8":"palette","1f4a8":"wind","1f9f4":"spray-can","1f4ac":"message-circle","1f490":"flower-2","1f486":"hand-heart","1f9d6":"droplets","1f485":"sparkle","1f338":"flower","1f441":"eye","1f58b":"pen-tool","270d":"pen-tool","1f504":"refresh-cw","1f48e":"gem","1f35e":"wheat","1f950":"croissant","1f382":"cake","1f36a":"cookie","1f96a":"sandwich","1f4cb":"clipboard-list","1f9ca":"snowflake","1f375":"coffee","1f6cd":"shopping-bag","1f37d":"utensils","1f961":"shopping-bag","1f942":"wine","1f373":"chef-hat","1f377":"wine","1f33e":"wheat","1fab4":"sprout","1f342":"leaf","1f333":"tree-deciduous","1f33f":"leaf","1f4a7":"droplet","1f4c5":"calendar","1f4e6":"package","1f3e2":"building-2","1fa9f":"app-window","1f6bf":"shower-head","1f9fa":"washing-machine","1f6a4":"sailboat","1f527":"wrench","1f50d":"search","1f6e2":"car","1f6d1":"car","1f4aa":"dumbbell","1f3cb":"dumbbell","1f331":"sprout","1f957":"salad","1f9d8":"yoga","1f6c1":"bath","1f3e1":"house","1f415":"dog","1f9ae":"dog","1f43e":"paw-print","1f408":"cat","1f4f7":"camera","1f492":"heart","1f389":"party-popper","1f4bc":"briefcase","1f4f8":"camera","1f3a5":"video","1f381":"gift","1f91d":"handshake","1f4cd":"map-pin","1f39f":"ticket","1f6e0":"hammer","1f528":"hammer","1f6a8":"siren","1f4dd":"file-text","1f54a":"bird","1fa65":"shirt","1f9b7":"tooth","1f9d2":"baby","1f601":"smile","1f44b":"smile","1fa7a":"stethoscope","1f4bb":"laptop","1f4c4":"file-text","1f4ca":"chart-column","1f4c8":"chart-column","1f9fe":"receipt","1f3e6":"landmark","1f511":"key-round","1f69a":"truck","1f4da":"book-open","1f465":"users","1f3db":"landmark","1f5fa":"map","1f5d1":"trash-2","1f9ed":"compass","1f680":"rocket","1f4e3":"megaphone","1f5dd":"key-round","1f512":"lock","1f697":"car","1f525":"flame","26a1":"zap","1f9f5":"scissors","1f454":"shirt","1f457":"shirt","1f4d0":"pencil-ruler","1f37c":"baby","1f9f8":"blocks","1f392":"backpack","1f34e":"book-open","1f355":"pizza","1f370":"cake-slice","1f32e":"utensils-crossed","1f32f":"sandwich","1f336":"flame","1f379":"cup-soda","1f363":"fish","1f35c":"soup","1f371":"utensils","1f962":"utensils","1f376":"wine","1f356":"beef","1f3aa":"ticket","1f35d":"utensils","1f9c0":"utensils","1f368":"ice-cream-cone","1f354":"beef","1f35f":"utensils-crossed","1f964":"cup-soda","1f6bd":"toilet","1f4a1":"lightbulb","1f50c":"plug","1f32c":"wind","1f321":"thermometer","1f3e0":"house","1f58c":"paintbrush","1f41c":"bug","1f42d":"bug","1f6e1":"shield","1f3ca":"waves","1f6a7":"traffic-cone","1fab5":"trees","1f6aa":"door-open","1f532":"app-window","1f3d7":"hard-hat","1f9f9":"brush","1f6bb":"toilet","1f9fb":"toilet","1f3c3":"footprints","1f930":"heart-pulse","1faa8":"brick-wall","1f491":"heart","1f319":"moon","1f464":"user","1f94b":"dumbbell","1f94a":"dumbbell","1f489":"syringe","1f3e5":"heart-pulse","1f9b4":"bone","1fa91":"sofa","260e":"phone","1f453":"eye","1f9fd":"spray-can","1f9fc":"droplets","1f3b5":"music","1f3a4":"mic","1f52c":"microscope","1f6e3":"route","1f6cb":"sofa","1f9f1":"brick-wall","1f48d":"gem","1f4d6":"book-open","1f4f1":"phone","1f963":"soup","23f0":"clock","1f4af":"star","1f60e":"smile","1f919":"phone","1f64c":"hand-heart","1f44c":"thumbs-up","1f31f":"star","1f3c6":"trophy","1f6ce":"star","1f929":"star","1f37f":"ticket","1f37e":"wine","1f37b":"wine","1f60b":"smile","1f924":"utensils","1f60d":"heart","1f49d":"gift","1f343":"leaf","1f340":"leaf","1f308":"sparkles","1f31e":"sun","1f41d":"flower","1f98b":"flower-2","1f40c":"leaf","1f305":"sun","1f44d":"thumbs-up","1f44f":"hand-heart","1f4de":"phone","1f4c6":"calendar","1f552":"clock","1f550":"clock","23f1":"clock","1f3b8":"music","1f3b9":"music","1f393":"graduation-cap","1f6b2":"bike","1f4b0":"receipt","1f4b5":"receipt","1f3d8":"house","1f3a7":"mic","1f50a":"megaphone","1f4f9":"video","1f9e0":"lightbulb","1f9ea":"microscope","1f48a":"heart-pulse","1f3e8":"building-2","1f455":"shirt","1f45f":"footprints","1f9e1":"heart","1f49b":"heart","1f49a":"heart","1f499":"heart","1f49c":"heart","2b50":"star","1f33b":"flower","1f337":"flower","1f339":"flower","1f33a":"flower","1f332":"trees","1f334":"trees","1f9c1":"cake-slice","1f369":"cookie","1f953":"beef","1f357":"beef","1f36b":"cookie","1f9cb":"cup-soda","1f378":"wine","1f943":"wine","1f37a":"wine","1f699":"car","1f695":"car","1f68c":"truck","26f5":"sailboat","1f3a3":"fish","1f420":"fish","1f41f":"fish","1f436":"dog","1f431":"cat","1f9f0":"wrench","1fa9b":"wrench","1fa9a":"hammer","1f529":"wrench","26cf":"hammer","1f9ef":"flame","1f50b":"zap","1f39e":"video","1f5bc":"palette","1f3ad":"ticket","1f3c0":"trophy","26bd":"trophy","1f6b4":"bike","1f9d7":"dumbbell","1f938":"dumbbell","1f483":"music","1f57a":"music"};
+  // Item names -> icon, for cards without an emoji (or with one we have no icon for). First match wins.
+  WS.ICON_WORDS = [
+    [/emergenc|24\/7|urgent/, 'siren'], [/consult|advice|question|talk/, 'message-circle'], [/estimate|quote|plan\b|planning|assessment/, 'clipboard-list'],
+    [/inspect|diagnos|check-?up|survey/, 'search'], [/deliver|moving|haul|junk/, 'truck'], [/cater|lunch|dinner|brunch|menu|meal/, 'utensils'],
+    [/cake|cupcake/, 'cake'], [/coffee|espresso|latte|cafe/, 'coffee'], [/bread|sourdough|loaf|bagel/, 'wheat'], [/pastr|croissant/, 'croissant'],
+    [/taco|burrito|grill|bbq/, 'utensils-crossed'], [/pizza/, 'pizza'], [/drink|cocktail|wine|bar\b/, 'wine'],
+    [/shave|fade|beard|razor/, 'razor'], [/cut|trim|hair|style|tailor|alteration/, 'scissors'], [/colou?r|dye|highlight/, 'palette'], [/nail|manicure|pedicure/, 'sparkle'],
+    [/massage|facial|spa/, 'hand-heart'], [/yoga|pilates|meditat|stretch/, 'yoga'], [/train|gym|fitness|strength|class/, 'dumbbell'],
+    [/drain|pipe|leak|water|plumb|faucet|toilet|sewer/, 'droplet'], [/heat|furnace|boiler|thermostat/, 'thermometer'], [/cool|a\/c|\bac\b|air con/, 'snowflake'],
+    [/electric|wiring|panel|outlet|light|ev charg/, 'zap'], [/paint/, 'paint-roller'], [/roof|gutter/, 'house'], [/remodel|repair|fix|install|maint|handyman|build|renovat/, 'wrench'],
+    [/clean|maid|wash|detail/, 'sparkles'], [/lawn|mow|garden|landscap|hedge|yard/, 'leaf'], [/tree/, 'trees'], [/plant|flower|bouquet|floral/, 'flower-2'],
+    [/dog|pet|groom|walk|puppy|cat\b/, 'paw-print'], [/photo|portrait|headshot|shoot/, 'camera'], [/video|film/, 'video'], [/wedding|event|party/, 'party-popper'],
+    [/car\b|auto|oil|brake|tire|engine/, 'car'], [/lock|key/, 'key-round'], [/secur|insur|protect|warrant/, 'shield-check'], [/legal|law|contract|will|estate|court|litig/, 'scale'],
+    [/tax|account|bookkeep|payroll|financ/, 'chart-column'], [/teeth|dental|clean(ing)? and|whiten|tooth|smile/, 'tooth'], [/child|kid|baby|infant|toddler/, 'baby'],
+    [/tutor|lesson|course|school|learn|teach/, 'graduation-cap'], [/music|piano|guitar|voice|sing/, 'music'], [/book|appointment|schedul|calendar/, 'calendar-check'],
+    [/gift/, 'gift'], [/home|house|real estate|propert/, 'house'], [/team|group|staff/, 'users'], [/fast|quick|same.day|on time/, 'clock'],
+  ];
+  // Business type -> default icon (the never-blank fallback).
+  WS.ICON_TYPES = [
+    [/barber/, 'razor'], [/hair|salon|stylist|tailor|alteration|sew/, 'scissors'], [/nail|beauty|lash|brow|makeup/, 'sparkle'], [/spa|massage/, 'hand-heart'],
+    [/bak|pastr|donut|cake/, 'croissant'], [/coffee|caf[eé]|tea/, 'coffee'], [/restaurant|food|kitchen|cater|truck|taco|pizza|grill|diner|bistro/, 'utensils'],
+    [/plumb/, 'droplet'], [/electric/, 'zap'], [/hvac|heating|air|cooling/, 'thermometer'], [/paint/, 'paint-roller'], [/roof|contractor|construct|remodel|handyman|carpent|build/, 'hammer'],
+    [/clean|maid|janitor|wash|detail/, 'sparkles'], [/lawn|landscap|garden/, 'leaf'], [/tree/, 'trees'], [/flor|flower/, 'flower-2'],
+    [/auto|car|mechanic|garage|tire/, 'car'], [/pet|dog|groom|vet|kennel/, 'paw-print'], [/photo|video/, 'camera'], [/gym|fitness|boxing|martial|crossfit|train/, 'dumbbell'],
+    [/yoga|pilates/, 'yoga'], [/dent|ortho/, 'tooth'], [/law|attorney|legal/, 'scale'], [/account|tax|cpa|bookkeep|financ|insur/, 'briefcase'],
+    [/real ?estate|realt/, 'house'], [/daycare|child|preschool|nanny/, 'baby'], [/tutor|school|lesson|teach/, 'graduation-cap'], [/music|piano|guitar/, 'music'],
+    [/lock/, 'key-round'], [/mov|haul|junk|courier/, 'truck'], [/chiro|therap|clinic|medical|health|wellness/, 'heart-pulse'], [/boat|marine/, 'anchor'],
+  ];
+  WS.iconNames = Object.keys(WS.ICONS);
+  WS.iconLabel = (n) => String(n).replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase());
+  // Inline SVG (decorative: the card title says what it is). Unknown names give ''.
+  WS.iconSvg = (name, cls = '') => (WS.ICONS[name] ? `<svg class="ico${cls ? ' ' + cls : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${WS.ICONS[name].replace(/'/g, '"')}</svg>` : '');
+  WS.emojiIcon = (code) => { const c = String(code || '').toLowerCase().replace(/_fe0f$/, ''); return WS.EMOJI_ICON[c] || WS.EMOJI_ICON[c.split('_')[0]] || ''; };
+  // The icon for a card: the owner's pick, else its emoji's icon, else one matched from its name, else the business type's.
+  WS.iconFor = (it, type) => {
+    it = it || {};
+    if (WS.ICONS[it.icon]) return it.icon;
+    const fromEmoji = WS.emojiIcon(it.emoji); if (fromEmoji) return fromEmoji;
+    const nm = String(it.name || it.label || '').toLowerCase();
+    const w = nm && WS.ICON_WORDS.find((x) => x[0].test(nm)); if (w) return w[1];
+    const t = WS.ICON_TYPES.find((x) => x[0].test(String(type || '').toLowerCase()));
+    return t ? t[1] : 'circle-check';
+  };
+  // 'line' or 'emoji' for a site (see the note above).
+  WS.iconStyleOf = (site) => {
+    const v = site && site.iconStyle;
+    if (v === 'line' || v === 'emoji') return v;
+    const secs = (WS.allSections ? WS.allSections(site) : []) || [];
+    const codes = [];
+    secs.forEach((s) => { if (/^(services|steps|stats)$/.test(s.type)) (Array.isArray(s.items) ? s.items : []).forEach((it) => { if (it && WS.str(it.emoji)) codes.push(it.emoji); }); });
+    return codes.every((c) => WS.emojiIcon(c)) ? 'line' : 'emoji';
+  };
+})(globalThis.WS = globalThis.WS || {});
+
 // Section library. Each section: label, blurb, variants, fields (drives the editor forms),
 // create(site) -> default content written from the business's own details, render(sec, ctx) -> HTML.
 (function (WS) {
   const e = WS.esc;
   const R = WS.register;
   const lines = (txt) => e(txt).replace(/\n/g, '<br>');
-  const head = (sec, fallback) => { const t = WS.str(sec.title) || WS.str(fallback); return t ? `<h2 class="h2">${e(t)}</h2>` : ''; };
+  // Small label above a heading (sec.eyebrow overrides the default; '' hides it). Skipped when the title already says it.
+  const eyebrow = (sec, def, title) => { const v = sec.eyebrow != null ? WS.str(sec.eyebrow) : WS.str(def); return v && String(title || '').toLowerCase().indexOf(v.toLowerCase()) < 0 ? `<p class="eb">${e(v)}</p>` : ''; };
+  const head = (sec, fallback, eb) => { const t = WS.str(sec.title) || WS.str(fallback); return t ? `<div class="sh">${eyebrow(sec, eb, t)}<h2 class="h2">${e(t)}</h2></div>` : ''; };
+  // What a business sells, for eyebrows: a menu, a shop or services.
+  const offerWord = (c) => (/restaurant|food|kitchen|cafe|café|coffee|bak|taco|pizza|grill|diner|bistro|bar\b|truck|cater/i.test(String((c.biz && c.biz.type) || '')) ? 'Menu' : 'Services');
+  // A card's icon: a line icon (site.iconStyle 'line'), or its emoji; never blank (falls back to a line icon).
+  const cardIcon = (c, it, cls) => {
+    const em = WS.str(it.emoji);
+    if (c.iconStyle === 'emoji' && em && !it.icon) return `<span class="ic ic-emo${cls ? ' ' + cls : ''}">${WS.emoji(em)}</span>`;
+    return `<span class="ic${cls ? ' ' + cls : ''}">${WS.iconSvg(WS.iconFor(it, c.biz && c.biz.type))}</span>`;
+  };
+  // Inline/decorative emoji (headings, statements): an icon in line mode when one fits, else the emoji.
+  const glyph = (c, code, cls) => { if (!code) return ''; const n = c.iconStyle === 'line' && WS.emojiIcon(code); return n ? `<span class="glyph${cls ? ' ' + cls : ''}">${WS.iconSvg(n)}</span>` : WS.emoji(code, cls || ''); };
   // A "Book" style button: dropped entirely when the site has nowhere to send people.
   const bookBtn = (c, cls, label) => (c.book ? `<a${cls ? ` class="${cls}"` : ''} href="${c.book}">${e(label)}</a>` : '');
 
@@ -264,7 +482,7 @@ const WSENGINE = (function(){
   R('hero', {
     label: 'Opening',
     blurb: 'The first thing visitors see.',
-    variants: { photo: 'Full-screen photo', split: 'Text and photo side by side', type: 'Big type with emoji' },
+    variants: { photo: 'Full-screen photo', center: 'Full-screen photo, centered', split: 'Text and photo side by side', frame: 'Text beside a framed photo', minimal: 'Big type with a wide photo below', type: 'Big type with emoji' },
     fields: [
       { key: 'title', label: 'Big title', type: 'text', hint: 'Leave empty to use your business name' },
       { key: 'tagline', label: 'Tagline', type: 'textarea' },
@@ -283,7 +501,16 @@ const WSENGINE = (function(){
       if (s.variant === 'split')
         return `<section class="hero hero-split on-base${c.photo('photo') ? '' : ' hs-solo'}"><div class="wrap hs-grid"><div class="hs-copy">${status}${title}<p class="tag">${e(s.tagline)}</p>${actions}</div>${c.slot('photo', { hint: 'Your best photo, tall works best', cls: 'hs-img reveal' })}</div></section>`;
       if (s.variant === 'type')
-        return `<section class="hero hero-type on-base"><div class="wrap">${status}<div class="ht-row">${title}${s.emoji ? `<div class="ht-emo">${WS.emoji(s.emoji)}</div>` : ''}</div><div class="hero-foot"><p class="tag">${e(s.tagline)}</p>${actions}</div></div></section>`;
+        return `<section class="hero hero-type on-base"><div class="wrap">${status}<div class="ht-row">${title}${s.emoji ? `<div class="ht-emo">${glyph(c, s.emoji)}</div>` : ''}</div><div class="hero-foot"><p class="tag">${e(s.tagline)}</p>${actions}</div></div></section>`;
+      // Framed: text beside a photo set in a frame with an offset accent block (a calmer split).
+      if (s.variant === 'frame')
+        return `<section class="hero hero-frame on-base${c.photo('photo') ? '' : ' hs-solo'}"><div class="wrap hs-grid"><div class="hs-copy">${status}${title}<p class="tag">${e(s.tagline)}</p>${actions}</div><div class="hf-pic">${c.slot('photo', { hint: 'Your best photo', cls: 'hs-img' })}</div></div></section>`;
+      // Minimal: a text-led opening, then the photo as a wide band underneath.
+      if (s.variant === 'minimal')
+        return `<section class="hero hero-minimal on-base"><div class="wrap"><div class="hm-row"><div>${status}${title}</div><div class="hm-side"><p class="tag">${e(s.tagline)}</p>${actions}</div></div>${c.slot('photo', { hint: 'A wide photo of your place or work', cls: 'hm-img' })}</div></section>`;
+      // Centered: full-bleed photo with the name and actions centered over an even scrim.
+      if (s.variant === 'center')
+        return `<section class="hero hero-photo hero-center on-base${c.photo('photo') ? '' : ' hero-noimg'}">${c.bg('photo', { hint: 'a cover photo', cls: 'hero-media' })}<div class="hero-in">${status}${title}<p class="tag">${e(s.tagline)}</p>${actions}</div></section>`;
       return `<section class="hero hero-photo on-base${c.photo('photo') ? '' : ' hero-noimg'}">${c.bg('photo', { hint: 'a cover photo', cls: 'hero-media' })}<div class="hero-in">${status}${title}<div class="hero-foot"><p class="tag">${e(s.tagline)}</p>${actions}</div></div></section>`;
     },
   });
@@ -292,13 +519,18 @@ const WSENGINE = (function(){
   R('intro', {
     label: 'About statement',
     blurb: 'One bold paragraph about who you are.',
-    variants: { offset: 'Statement with photo', center: 'Centered statement' },
-    fields: [{ key: 'text', label: 'Statement', type: 'textarea' }, { key: 'emoji', label: 'Emoji', type: 'emoji' }],
+    variants: { offset: 'Statement with photo', center: 'Centered statement', columns: 'Title and text in two columns' },
+    fields: [{ key: 'title', label: 'Title', type: 'text', only: ['columns'], hint: 'Leave empty for "About [your name]"' }, { key: 'text', label: 'Statement', type: 'textarea' }, { key: 'emoji', label: 'Emoji', type: 'emoji' }],
     create: (site) => ({ variant: 'offset', text: site.biz.about || 'Tell people what makes you different, in one or two sentences.', emoji: WS.emojiRecsFor(site.biz.type)[1] }),
-    render: (s, c) =>
-      s.variant === 'center'
-        ? `<section class="intro intro-center on-base"><div class="wrap">${s.emoji ? `<div class="emo-big">${WS.emoji(s.emoji)}</div>` : ''}<p class="statement">${lines(s.text)}</p></div></section>`
-        : `<section class="intro on-base"><div class="wrap intro-grid"><p class="statement">${s.emoji ? WS.emoji(s.emoji) + ' ' : ''}${lines(s.text)}</p>${c.slot('photo', { hint: 'A close-up of your work', cls: 'intro-img reveal' })}</div></section>`,
+    render: (s, c) => {
+      if (s.variant === 'columns') {
+        const t = WS.str(s.title) || 'About ' + c.name;
+        return `<section class="intro intro-cols on-base"><div class="wrap ic-grid"><div class="sh">${eyebrow(s, 'About', t)}<h2 class="h2">${e(t)}</h2></div><div><p class="ic-text">${lines(s.text)}</p>${c.biz.city ? `<p class="ic-meta">${WS.iconSvg('map-pin')}${e(WS.str(c.biz.type) ? WS.str(c.biz.type) + ' in ' + WS.str(c.biz.city) : WS.str(c.biz.city))}</p>` : ''}</div></div></section>`;
+      }
+      return s.variant === 'center'
+        ? `<section class="intro intro-center on-base"><div class="wrap">${s.emoji ? `<div class="emo-big">${glyph(c, s.emoji)}</div>` : ''}<p class="statement">${lines(s.text)}</p></div></section>`
+        : `<section class="intro on-base"><div class="wrap intro-grid"><p class="statement">${s.emoji ? glyph(c, s.emoji) + ' ' : ''}${lines(s.text)}</p>${c.slot('photo', { hint: 'A close-up of your work', cls: 'intro-img reveal' })}</div></section>`;
+    },
   });
 
   // ---------- Page header (top band of a sub-page) ----------
@@ -309,7 +541,7 @@ const WSENGINE = (function(){
     fields: [{ key: 'title', label: 'Title', type: 'text' }, { key: 'text', label: 'Subtitle', type: 'textarea' }, { key: 'emoji', label: 'Emoji', type: 'emoji' }],
     create: (site) => ({ variant: 'band', title: '', text: '', emoji: '' }),
     render: (s, c) =>
-      `<section class="pagehead on-base"><div class="wrap">${s.emoji ? `<div class="emo-big">${WS.emoji(s.emoji)}</div>` : ''}${WS.str(s.title) ? `<h1 class="pagehead-t">${e(WS.str(s.title))}</h1>` : ''}${s.text ? `<p class="pagehead-s">${lines(s.text)}</p>` : ''}</div></section>`,
+      `<section class="pagehead on-base"><div class="wrap">${s.emoji ? `<div class="emo-big">${glyph(c, s.emoji)}</div>` : ''}${WS.str(s.title) ? `<h1 class="pagehead-t">${e(WS.str(s.title))}</h1>` : ''}${s.text ? `<p class="pagehead-s">${lines(s.text)}</p>` : ''}</div></section>`,
   });
 
   // ---------- Contact form (messages go to the owner's inbox via /api/form/<siteId>) ----------
@@ -336,7 +568,7 @@ const WSENGINE = (function(){
   R('booking', {
     label: 'Booking request',
     blurb: 'Let people request an appointment, table, or quote — straight to your inbox.',
-    variants: { appointment: 'Appointment request', reservation: 'Table reservation', quote: 'Quote request', application: 'Job application' },
+    variants: { appointment: 'Appointment request', reservation: 'Table reservation', order: 'Order for pickup', quote: 'Quote request', application: 'Job application' },
     fields: [
       { key: 'title', label: 'Title', type: 'text' },
       { key: 'text', label: 'Intro text', type: 'textarea' },
@@ -349,12 +581,14 @@ const WSENGINE = (function(){
       const action = (c.site && c.site.siteId) ? ('https://websprout.app/api/form/' + e(c.site.siteId)) : '';
       const mode = s.variant || 'appointment';
       const names = (s.services || []).map((x) => (typeof x === 'string' ? x : (x && x.name) || '')).filter(Boolean);
-      const svcLabel = mode === 'application' ? 'Position' : (mode === 'quote' ? 'What do you need?' : 'Service');
+      const svcLabel = mode === 'application' ? 'Position' : (mode === 'quote' ? 'What do you need?' : (mode === 'order' ? 'Item' : 'Service'));
       const svc = names.length ? `<label class="wf-l">${svcLabel}<select class="wf-i" name="service">${names.map((x) => `<option>${e(x)}</option>`).join('')}</select></label>` : '';
       let fields = '';
       if (mode === 'reservation') {
         const parties = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12+'];
         fields = `<div class="wf-row"><label class="wf-l">Date<input class="wf-i" type="date" name="date" required></label><label class="wf-l">Time<input class="wf-i" type="time" name="time" required></label></div><label class="wf-l">Party size<select class="wf-i" name="party">${parties.map((p) => `<option>${p}</option>`).join('')}</select></label>`;
+      } else if (mode === 'order') {
+        fields = `${svc}<label class="wf-l">What would you like?<textarea class="wf-i wf-t" name="details" rows="3" required></textarea></label><div class="wf-row"><label class="wf-l">Pickup date<input class="wf-i" type="date" name="date" required></label><label class="wf-l">Pickup time<input class="wf-i" type="time" name="time"></label></div>`;
       } else if (mode === 'quote') {
         fields = `${svc}<label class="wf-l">Tell us about the job<textarea class="wf-i wf-t" name="details" rows="4" required></textarea></label>`;
       } else if (mode === 'application') {
@@ -363,8 +597,8 @@ const WSENGINE = (function(){
         fields = `${svc}<div class="wf-row"><label class="wf-l">Preferred date<input class="wf-i" type="date" name="date"></label><label class="wf-l">Preferred time<input class="wf-i" type="time" name="time"></label></div>`;
       }
       const notes = (mode === 'quote') ? '' : `<label class="wf-l">${mode === 'application' ? 'Links or anything else (optional)' : 'Anything we should know?'}<textarea class="wf-i wf-t" name="notes" rows="3"></textarea></label>`;
-      const reqLabel = mode === 'reservation' ? 'Reservation' : (mode === 'quote' ? 'Quote request' : (mode === 'application' ? 'Application' : 'Appointment'));
-      const fallback = mode === 'reservation' ? 'Reserve a table' : (mode === 'quote' ? 'Request a quote' : (mode === 'application' ? 'Apply now' : 'Book an appointment'));
+      const reqLabel = mode === 'order' ? 'Pickup order' : mode === 'reservation' ? 'Reservation' : (mode === 'quote' ? 'Quote request' : (mode === 'application' ? 'Application' : 'Appointment'));
+      const fallback = mode === 'order' ? 'Order ahead' : mode === 'reservation' ? 'Reserve a table' : (mode === 'quote' ? 'Request a quote' : (mode === 'application' ? 'Apply now' : 'Book an appointment'));
       const header = s.title === '' ? '' : `<div class="wf-head">${head(s, fallback)}${s.text ? `<p class="wf-sub">${lines(s.text)}</p>` : ''}</div>`;
       return `<section class="booking contactf on-base" id="book"><div class="wrap wf-wrap">${header}<form class="wf-form" data-wsform${action ? ` action="${action}"` : ''} method="post" novalidate><input type="hidden" name="request" value="${reqLabel}">${fields}<div class="wf-row"><label class="wf-l">Name<input class="wf-i" type="text" name="name" required autocomplete="name"></label><label class="wf-l">Email<input class="wf-i" type="email" name="email" required autocomplete="email"></label></div><label class="wf-l">Phone<input class="wf-i" type="tel" name="phone" autocomplete="tel"></label>${notes}<input type="text" name="_ws_hp" tabindex="-1" autocomplete="off" aria-hidden="true" class="wf-hp"><button class="btn btn-ink wf-btn" type="submit">${e(s.button || fallback)}</button><p class="wf-ok" data-wfok hidden>${e(s.success || 'Request received! We will confirm shortly.')}</p></form></div></section>`;
     },
@@ -410,7 +644,7 @@ const WSENGINE = (function(){
     render: (s, c) => {
       const items = WS.filled(s.items, ['name', 'date']).map((x) => x.it);
       if (!items.length && c.mode === 'live') return '';
-      const hd = s.title === '' ? '' : head(s, 'Upcoming events');
+      const hd = s.title === '' ? '' : head(s, 'Upcoming events', 'Events');
       let body;
       if (!items.length) {
         body = `<p class="ev-empty">More events coming soon — check back shortly.</p>`;
@@ -468,14 +702,14 @@ const WSENGINE = (function(){
   R('steps', {
     label: 'How it works',
     blurb: 'A simple numbered walkthrough of your process.',
-    variants: { grid: 'Numbered steps' },
+    variants: { grid: 'Numbered steps', line: 'Timeline' },
     fields: [{ key: 'title', label: 'Title', type: 'text' }, { key: 'items', label: 'Steps', type: 'list', add: 'Add step', item: [{ key: 'name', label: 'Step title', type: 'text' }, { key: 'text', label: 'Detail', type: 'textarea' }] }],
     create: (site) => ({ variant: 'grid', title: 'How it works', items: [{ name: 'Reach out', text: 'Tell us what you need and when works for you.' }, { name: 'We plan it', text: 'We confirm the details and give you a clear, honest price.' }, { name: 'We deliver', text: 'We do the work and check you’re happy with it.' }] }),
     render: (s, c) => {
       const list = WS.filled(s.items, ['name', 'text']).map((x) => x.it);
       if (!list.length) return '';
-      const items = list.map((it, i) => `<li class="step reveal"><span class="step-n">${i + 1}</span><div><h3 class="step-t">${e(it.name || '')}</h3><p class="step-d">${lines(it.text || '')}</p></div></li>`).join('');
-      return `<section class="steps on-base" id="steps"><div class="wrap">${head(s, 'How it works')}<ol class="steps-grid">${items}</ol></div></section>`;
+      const items = list.map((it, i) => `<li class="step reveal"><span class="step-n">${s.variant === 'line' ? i + 1 : String(i + 1).padStart(2, '0')}</span><div><h3 class="step-t">${e(it.name || '')}</h3><p class="step-d">${lines(it.text || '')}</p></div></li>`).join('');
+      return `<section class="steps steps-${s.variant === 'line' ? 'line' : 'num'} on-base" id="steps"><div class="wrap">${head(s, 'How it works', 'Process')}<ol class="steps-grid">${items}</ol></div></section>`;
     },
   });
 
@@ -517,7 +751,7 @@ const WSENGINE = (function(){
       if (!list.length) return '';
       const items = list.map((it) => {
         const val = it.source === 'years' && c.biz.founded ? String(new Date().getFullYear() - +c.biz.founded) : WS.str(it.value);
-        return `<div class="stat">${it.emoji ? WS.emoji(it.emoji, 'stat-emo') : ''}<p class="num"><span data-count="${e(String(val).replace(/,/g, ''))}" data-src="${e(it.source || 'manual')}" ${it.source === 'years' ? `data-founded="${e(c.biz.founded || '')}"` : ''}>${e(val)}</span>${it.suffix ? `<small>${e(it.suffix)}</small>` : ''}</p><p class="lbl">${e(it.label)}</p></div>`;
+        return `<div class="stat">${it.emoji ? glyph(c, it.emoji, 'stat-emo') : ''}<p class="num"><span data-count="${e(String(val).replace(/,/g, ''))}" data-src="${e(it.source || 'manual')}" ${it.source === 'years' ? `data-founded="${e(c.biz.founded || '')}"` : ''}>${e(val)}</span>${it.suffix ? `<small>${e(it.suffix)}</small>` : ''}</p><p class="lbl">${e(it.label)}</p></div>`;
       });
       return `<section class="stats stats-${s.variant} ${s.variant === 'band' ? 'on-pop' : 'on-base'}"><div class="wrap">${head(s)}<div class="stat-row">${items.join('')}</div></div></section>`;
     },
@@ -538,7 +772,7 @@ const WSENGINE = (function(){
       const rows = WS.filled(s.items, ['name', 'price', 'meta']).map((x) => x.it);
       if (!rows.length) return '';
       const list = `<ul class="plist">${rows.map((it) => { const pr = WS.str(it.price); return `<li><span class="svc">${e(it.name)}</span><span class="lead" aria-hidden="true"></span><span class="price">${WS.money(isNaN(+pr) || pr === '' ? pr : +pr)}</span>${bookBtn(c, 'pl-book', c.biz.bookLabel || 'Book')}${WS.str(it.meta) ? `<span class="meta">${e(it.meta)}</span>` : ''}</li>`; }).join('')}</ul>`;
-      const top = `${head(s, 'Prices')}${s.note ? `<p class="lede">${lines(s.note)}</p>` : ''}`;
+      const top = `${head(s, 'Prices', 'Prices')}${s.note ? `<p class="lede">${lines(s.note)}</p>` : ''}`;
       if (s.variant === 'board') return `<section class="prices prices-board on-alt" id="prices"><div class="wrap">${top}<div class="board">${list}</div>${bookBtn(c, 'btn btn-ink', c.biz.bookLabel || 'Book now')}</div></section>`;
       return `<section class="prices prices-menu on-alt" id="prices">${c.slot('photo', { hint: 'A shave, a cut, or your tools', cls: 'pm-img reveal' })}<div class="pm-body">${top}${list}${bookBtn(c, 'btn btn-ink', c.biz.bookLabel || 'Book now')}</div></section>`;
     },
@@ -547,20 +781,31 @@ const WSENGINE = (function(){
   // ---------- Services ----------
   R('services', {
     label: 'Services',
-    blurb: 'What you offer, each with an animated emoji.',
-    variants: { grid: 'Grid', list: 'Big list' },
+    blurb: 'What you offer, each with an icon.',
+    variants: { grid: 'Cards', rows: 'Two-column list with icons', list: 'Big list', numbered: 'Numbered cards', feature: 'List beside a photo' },
     fields: [
       { key: 'title', label: 'Title', type: 'text' },
-      { key: 'items', label: 'Services', type: 'list', add: 'Add a service', item: [{ key: 'emoji', label: 'Emoji', type: 'emoji' }, { key: 'name', label: 'Name', type: 'text' }, { key: 'text', label: 'Description', type: 'textarea' }, { key: 'from', label: 'Starting price', type: 'text' }] },
+      { key: 'items', label: 'Services', type: 'list', add: 'Add a service', item: [{ key: 'icon', label: 'Icon', type: 'select', options: () => [['', 'Automatic']].concat(WS.iconNames.map((n) => [n, WS.iconLabel(n)])) }, { key: 'emoji', label: 'Emoji (when the site uses emoji)', type: 'emoji' }, { key: 'name', label: 'Name', type: 'text' }, { key: 'text', label: 'Description', type: 'textarea' }, { key: 'from', label: 'Starting price', type: 'text' }] },
     ],
     create: (site) => {
       const recs = WS.emojiRecsFor(site.biz.type);
       return { variant: 'grid', title: 'What we do best', items: (site.biz.services || []).slice(0, 4).map((x, i) => ({ emoji: recs[(i + 2) % recs.length], name: x.name, text: x.desc || x.note || '', from: x.price ? String(x.price) : '' })) };
     },
-    render: (s) => {
+    render: (s, c) => {
       const list = WS.filled(s.items, ['name', 'text', 'from']).map((x) => x.it);
       if (!list.length) return '';
-      return `<section class="services services-${s.variant} ${s.tone || 'on-alt'}" id="services"><div class="wrap">${head(s, 'Services')}<ul class="sv">${list.map((it) => `<li>${it.emoji ? `<div class="sv-emo">${WS.emoji(it.emoji)}</div>` : ''}${WS.str(it.name) ? `<h3>${e(it.name)}</h3>` : ''}${WS.str(it.text) ? `<p>${lines(it.text)}</p>` : ''}${WS.str(it.from) ? `<span class="from">from ${WS.money(isNaN(+it.from) ? it.from : +it.from)}</span>` : ''}</li>`).join('')}</ul></div></section>`;
+      const v = /^(grid|rows|list|numbered|feature)$/.test(s.variant) ? s.variant : 'grid';
+      const from = (it) => (WS.str(it.from) ? `<span class="from">from ${WS.money(isNaN(+it.from) ? it.from : +it.from)}</span>` : '');
+      const body = (it) => `${WS.str(it.name) ? `<h3>${e(it.name)}</h3>` : ''}${WS.str(it.text) ? `<p>${lines(it.text)}</p>` : ''}${from(it)}`;
+      const items = list.map((it, i) => (v === 'numbered'
+        ? `<li><span class="sv-n">${String(i + 1).padStart(2, '0')}</span>${body(it)}</li>`
+        : v === 'grid' ? `<li>${cardIcon(c, it)}${body(it)}</li>` : `<li>${cardIcon(c, it)}<div class="sv-b">${body(it)}</div></li>`)).join('');
+      const hd = head(s, 'Services', offerWord(c));
+      if (v === 'feature') {
+        const pic = c.slot('photo', { hint: 'A photo of your work', cls: 'svf-img' });
+        return `<section class="services services-feature ${s.tone || 'on-alt'}${c.photo('photo') || c.mode === 'edit' ? '' : ' svf-solo'}" id="services"><div class="wrap svf-grid">${pic}<div class="svf-body">${hd}<ul class="sv">${items}</ul>${bookBtn(c, 'btn btn-ink', c.biz.bookLabel || 'Book now')}</div></div></section>`;
+      }
+      return `<section class="services services-${v} ${s.tone || 'on-alt'}" id="services"><div class="wrap">${hd}<ul class="sv${v === 'grid' || v === 'numbered' ? ' rail' : ''}" aria-label="${e(WS.str(s.title) || 'Services')}">${items}</ul></div></section>`;
     },
   });
 
@@ -568,15 +813,17 @@ const WSENGINE = (function(){
   R('gallery', {
     label: 'Photo gallery',
     blurb: 'Show off your work. Every spot is an upload box.',
-    variants: { strip: 'Three-photo strip', grid: 'Six-photo mosaic' },
+    variants: { strip: 'Three photos in a row', bento: 'One large photo, two beside it', grid: 'Six-photo mosaic' },
     fields: [{ key: 'title', label: 'Title (optional)', type: 'text' }],
     create: () => ({ variant: 'strip', title: '' }),
     render: (s, c) => {
       const hints = ['A client in the chair', 'Your best work', 'The shop itself', 'A detail shot', 'Your team', 'A happy customer'];
-      const n = s.variant === 'grid' ? 6 : 3;
-      const figs = Array.from({ length: n }, (_, i) => c.slot('p' + i, { hint: hints[i], cls: `g${i} reveal` })).join('');
-      if (c.mode === 'live' && !Array.from({ length: n }).some((_, i) => c.photo('p' + i))) return '';
-      return `<section class="gallery gallery-${s.variant} on-base" aria-label="Photos">${s.title ? `<div class="wrap">${head(s)}</div>` : ''}<div class="g-wrap">${figs}</div></section>`;
+      const v = /^(strip|bento|grid)$/.test(s.variant) ? s.variant : 'strip';
+      const n = v === 'grid' ? 6 : 3;
+      const figs = Array.from({ length: n }, (_, i) => c.slot('p' + i, { hint: hints[i], cls: `g${i}` })).join('');
+      const have = Array.from({ length: n }).filter((_, i) => c.photo('p' + i)).length;
+      if (c.mode === 'live' && !have) return '';
+      return `<section class="gallery gallery-${v} on-base${c.mode === 'live' ? ' gn' + have : ''}" aria-label="Photos"><div class="wrap">${s.title ? head(s, '', 'Gallery') : ''}<div class="g-wrap rail" role="group" aria-label="Photos">${figs}</div></div></section>`;
     },
   });
 
@@ -598,8 +845,8 @@ const WSENGINE = (function(){
       if (!people.length) return '';
       const items = people.map((x) => x.it);
       if (s.variant === 'portraits')
-        return `<section class="team team-portraits on-base" id="team"><div class="wrap">${head(s, 'Team')}<ul class="tp">${people.map(({ it, i }) => `<li>${c.slot('m' + i, { hint: `A photo of ${it.name || 'them'}`, cls: 'tp-img reveal' })}<h3>${e(it.name)}</h3><p>${lines(it.text)}</p></li>`).join('')}</ul></div></section>`;
-      return `<section class="team team-rows on-base" id="team"><div class="wrap">${head(s, 'Team')}<ul class="tr">${items.map((it) => `<li><h3>${e(it.name)}</h3><p>${lines(it.text)}</p>${WS.str(it.name) ? bookBtn(c, '', 'Book with ' + WS.str(it.name)) : ''}</li>`).join('')}</ul></div></section>`;
+        return `<section class="team team-portraits on-base" id="team"><div class="wrap">${head(s, 'Team', 'Team')}<ul class="tp">${people.map(({ it, i }) => `<li>${c.slot('m' + i, { hint: `A photo of ${it.name || 'them'}`, cls: 'tp-img reveal' })}<h3>${e(it.name)}</h3><p>${lines(it.text)}</p></li>`).join('')}</ul></div></section>`;
+      return `<section class="team team-rows on-base" id="team"><div class="wrap">${head(s, 'Team', 'Team')}<ul class="tr">${items.map((it) => `<li><h3>${e(it.name)}</h3><p>${lines(it.text)}</p>${WS.str(it.name) ? bookBtn(c, '', 'Book with ' + WS.str(it.name)) : ''}</li>`).join('')}</ul></div></section>`;
     },
   });
 
@@ -607,8 +854,8 @@ const WSENGINE = (function(){
   R('reviews', {
     label: 'Reviews',
     blurb: 'What customers say.',
-    variants: { feature: 'One big quote', wall: 'Wall of quotes', google: 'Live Google reviews' },
-    fields: [{ key: 'title', label: 'Title (Google layout)', type: 'text', only: ['google'] }, { key: 'items', label: 'Reviews (shown if Google is unavailable)', type: 'list', add: 'Add a review', item: [{ key: 'quote', label: 'Quote', type: 'textarea' }, { key: 'name', label: 'Name', type: 'text' }] }],
+    variants: { feature: 'One big quote', cards: 'Quote cards', wall: 'Wall of quotes', google: 'Live Google reviews' },
+    fields: [{ key: 'title', label: 'Title', type: 'text', only: ['google', 'wall', 'cards'] }, { key: 'items', label: 'Reviews (shown if Google is unavailable)', type: 'list', add: 'Add a review', item: [{ key: 'quote', label: 'Quote', type: 'textarea' }, { key: 'name', label: 'Name', type: 'text' }] }],
     create: (site) => ({ variant: 'feature', items: (site.biz.reviews || []).map((r) => ({ quote: r.quote, name: r.name })) }),
     render: (s, c) => {
       const it = WS.filled(s.items, ['quote']).map((x) => x.it);
@@ -617,11 +864,13 @@ const WSENGINE = (function(){
         const fb = it.map((r) => `<blockquote><p>${lines(r.quote)}</p><footer>${e(r.name)}</footer></blockquote>`).join('');
         if (!c.biz.googlePlaceId && !fb && c.mode !== 'edit') return '';
         // Live with nothing typed: stays hidden until Google reviews actually arrive (never an empty band).
-        return `<section class="reviews reviews-wall reviews-google on-base" data-greviews${(c.biz.googleHidden || []).length ? ` data-ghide="${e(c.biz.googleHidden.join(' '))}"` : ''}${!fb && c.mode === 'live' ? ' hidden' : ''}><div class="wrap">${head(s, 'What people say')}<div class="gr-sum" hidden></div><div class="rw">${fb || (c.mode === 'edit' ? '<blockquote><p>Your latest Google reviews will appear here once your Google Business Profile is linked.</p></blockquote>' : '')}</div><p class="gr-attr" hidden></p></div></section>`;
+        return `<section class="reviews reviews-wall reviews-google on-base" data-greviews${(c.biz.googleHidden || []).length ? ` data-ghide="${e(c.biz.googleHidden.join(' '))}"` : ''}${!fb && c.mode === 'live' ? ' hidden' : ''}><div class="wrap">${head(s, 'What people say', 'Reviews')}<div class="gr-sum" hidden></div><div class="rw">${fb || (c.mode === 'edit' ? '<blockquote><p>Your latest Google reviews will appear here once your Google Business Profile is linked.</p></blockquote>' : '')}</div><p class="gr-attr" hidden></p></div></section>`;
       }
       if (!it.length) return '';
       if (s.variant === 'wall')
-        return `<section class="reviews reviews-wall on-base"><div class="wrap"><div class="rw">${it.map((r) => `<blockquote><p>${lines(r.quote)}</p><footer>${e(r.name)}</footer></blockquote>`).join('')}</div></div></section>`;
+        return `<section class="reviews reviews-wall on-base"><div class="wrap">${head(s, 'What people say', 'Reviews')}<div class="rw">${it.map((r) => `<blockquote><p>${lines(r.quote)}</p><footer>${e(r.name)}</footer></blockquote>`).join('')}</div></div></section>`;
+      if (s.variant === 'cards')
+        return `<section class="reviews reviews-cards ${s.tone || 'on-alt'}"><div class="wrap">${head(s, 'What people say', 'Reviews')}<ul class="rc rail" aria-label="Reviews">${it.slice(0, 6).map((r) => { const nm = WS.str(r.name); return `<li><blockquote><span class="rc-mark" aria-hidden="true">&ldquo;</span><p>${lines(r.quote)}</p>${nm ? `<footer><span class="rc-av" aria-hidden="true">${e(nm.charAt(0).toUpperCase())}</span>${e(nm)}</footer>` : ''}</blockquote></li>`; }).join('')}</ul></div></section>`;
       return `<section class="reviews reviews-feature on-pop">${c.bg('bg', { hint: 'a background photo', cls: 'rv-media' })}<div class="wrap"><blockquote class="big-q"><p>${lines(it[0].quote)}</p><footer>${e(it[0].name)}</footer></blockquote>${it.length > 1 ? `<div class="more">${it.slice(1, 4).map((r) => `<blockquote><p>${lines(r.quote)}</p><footer>${e(r.name)}</footer></blockquote>`).join('')}</div>` : ''}</div></section>`;
     },
   });
@@ -669,7 +918,7 @@ const WSENGINE = (function(){
         const feats = String(it.features || '').split('\n').map((x) => x.trim()).filter(Boolean);
         return `<article class="plan reveal${it.featured === 'yes' ? ' plan-hot' : ''}">${it.featured === 'yes' ? '<span class="plan-tag">Most popular</span>' : ''}<h3 class="plan-n">${e(it.name || '')}</h3><div class="plan-p"><b>${e(it.price || '')}</b>${it.per ? `<span>${e(it.per)}</span>` : ''}</div>${feats.length ? `<ul class="plan-f">${feats.map((f) => `<li>${e(f)}</li>`).join('')}</ul>` : ''}${bookBtn(c, 'btn' + (it.featured === 'yes' ? '' : ' ghost'), WS.str(it.button) || c.biz.bookLabel || 'Get started')}</article>`;
       }).join('');
-      return `<section class="plans on-base" id="plans"><div class="wrap">${head(s, 'Packages')}${s.text ? `<p class="lede">${lines(s.text)}</p>` : ''}<div class="plans-grid">${cards}</div></div></section>`;
+      return `<section class="plans on-base" id="plans"><div class="wrap">${head(s, 'Packages', 'Pricing')}${s.text ? `<p class="lede">${lines(s.text)}</p>` : ''}<div class="plans-grid">${cards}</div></div></section>`;
     },
   });
 
@@ -718,7 +967,7 @@ const WSENGINE = (function(){
     render: (s) => {
       const list = WS.filled(s.items, ['q']).map((x) => x.it);
       if (!list.length) return '';
-      return `<section class="faq ${s.tone || 'on-base'}" id="faq"><div class="wrap faq-grid">${head(s, 'Questions')}<div class="qa">${list.map((it) => `<details><summary>${e(it.q)}</summary>${WS.str(it.a) ? `<p>${lines(it.a)}</p>` : ''}</details>`).join('')}</div></div></section>`;
+      return `<section class="faq ${s.tone || 'on-base'}" id="faq"><div class="wrap faq-grid">${head(s, 'Questions', 'FAQ')}<div class="qa">${list.map((it) => `<details><summary>${e(it.q)}</summary>${WS.str(it.a) ? `<p>${lines(it.a)}</p>` : ''}</details>`).join('')}</div></div></section>`;
     },
   });
 
@@ -726,15 +975,19 @@ const WSENGINE = (function(){
   R('cta', {
     label: 'Call to action',
     blurb: 'A loud band that asks people to book or call.',
-    variants: { band: 'Color band', split: 'With a photo' },
+    variants: { band: 'Color band', card: 'Rounded color card', split: 'With a photo' },
     fields: [{ key: 'title', label: 'Title', type: 'text' }, { key: 'text', label: 'Text', type: 'textarea' }, { key: 'button', label: 'Button text', type: 'text' }, { key: 'link', label: 'Button link (optional)', type: 'text' }, { key: 'emoji', label: 'Emoji', type: 'emoji' }],
     create: (site) => ({ variant: 'band', title: 'We’d love to see you.', text: 'Book online in under a minute.', button: site.biz.bookLabel || 'Book now', link: '', emoji: WS.emojiRecsFor(site.biz.type)[0] }),
     render: (s, c) => {
       const t = WS.str(s.title), href = c.link(s.link) || c.book;
-      const h2 = t ? `<h2 class="h2">${s.emoji ? WS.emoji(s.emoji) + ' ' : ''}${e(t)}</h2>` : '';
+      const h2 = t ? `<h2 class="h2">${s.emoji ? glyph(c, s.emoji) + ' ' : ''}${e(t)}</h2>` : '';
       const p = WS.str(s.text) ? `<p>${lines(s.text)}</p>` : '';
       const btn = (cls) => (href ? `<a class="btn ${cls}" href="${href}">${e(WS.str(s.button) || 'Book now')}</a>` : '');
       if (c.mode === 'live' && !t && !p && !href) return '';
+      if (s.variant === 'card') {
+        const tel = c.biz.phone && !/^tel:/.test(href) ? `<a class="btn btn-line" href="${WS.tel(c.biz.phone)}">${WS.iconSvg('phone')}${e(c.biz.phone)}</a>` : '';
+        return `<section class="cta cta-card on-base"><div class="wrap"><div class="cc-box on-pop"><div class="cc-copy">${h2}${p}</div><div class="actions">${btn('btn-light')}${tel}</div></div></div></section>`;
+      }
       return s.variant === 'split'
         ? `<section class="cta cta-split on-alt">${c.slot('photo', { hint: 'A welcoming photo', cls: 'cta-img reveal' })}<div class="cta-body">${h2}${p}${btn('btn-ink')}</div></section>`
         : `<section class="cta cta-band on-pop"><div class="wrap cta-row">${h2}<div>${p}${btn('btn-light')}</div></div></section>`;
@@ -742,10 +995,14 @@ const WSENGINE = (function(){
   });
 
   // ---------- Visit ----------
+  // A map shows whenever there is an address: the "map" layout embeds Google's keyless map (lazy-loaded); the default
+  // layout shows a designed placeholder that loads the same map only when the visitor taps "Show map" (no third-party
+  // request until then). Hours get a table with today highlighted and a live open/closed line.
+  const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
   R('visit', {
     label: 'Location and hours',
-    blurb: 'Address, directions and opening hours.',
-    variants: { hours: 'Address and hours', map: 'With a map' },
+    blurb: 'Address, map, directions and opening hours.',
+    variants: { hours: 'Address and hours (map on tap)', map: 'With a map' },
     fields: [{ key: 'title', label: 'Title', type: 'text', hint: 'Leave empty to say "Find us on [your street]"' }],
     create: () => ({ variant: 'hours', title: '' }),
     render: (s, c) => {
@@ -756,14 +1013,22 @@ const WSENGINE = (function(){
       const ig = WS.igHandle(c.biz.instagram);
       const title = WS.str(s.title) || (st ? `Find us on ${st}.` : addr ? 'Come see us.' : (c.biz.city ? `Serving ${c.biz.city}.` : 'Get in touch.'));
       const reach = [c.biz.phone ? `<tr><th scope="row">Call</th><td><a href="${WS.tel(c.biz.phone)}">${e(c.biz.phone)}</a></td></tr>` : '', c.biz.email ? `<tr><th scope="row">Email</th><td><a href="mailto:${e(c.biz.email)}">${e(c.biz.email)}</a></td></tr>` : '', ig ? `<tr><th scope="row">Instagram</th><td><a href="https://instagram.com/${e(ig)}">@${e(ig)}</a></td></tr>` : '', c.biz.city ? `<tr><th scope="row">Area</th><td>${e(c.biz.city)}</td></tr>` : ''].join('');
+      const dayIx = (d, i) => { const k = DAYS.indexOf(String(d).slice(0, 3).toLowerCase()); return k > -1 ? k : i; };
       const hours = hasHours
-        ? `<table class="hours" aria-label="Opening hours">${hrs.map((h) => `<tr><th scope="row">${e(h.d)}</th><td>${h.open && h.close ? `${WS.fmtTime(h.open)} to ${WS.fmtTime(h.close)}` : 'Closed'}</td></tr>`).join('')}</table>`
-        : (reach ? `<table class="hours" aria-label="How to reach us">${reach}</table>` : '');
+        ? `<table class="hours" aria-label="Opening hours">${hrs.map((h, i) => `<tr data-day="${dayIx(h.d, i)}"><th scope="row">${e(h.d)}</th><td>${h.open && h.close ? `${WS.fmtTime(h.open)} to ${WS.fmtTime(h.close)}` : 'Closed'}</td></tr>`).join('')}</table>`
+        : '';
+      const reachT = reach ? `<table class="hours reach" aria-label="How to reach us">${reach}</table>` : '';
+      const status = hasHours ? `<p class="v-status"><span class="v-dot" aria-hidden="true"></span><span data-status></span></p>` : '';
       const callBtn = c.biz.phone ? `<a class="btn ghost" href="${WS.tel(c.biz.phone)}">Call us</a>` : '';
-      const left = `<div><h2 class="h2">${e(title)}</h2>${addr ? `<a class="addr" href="${WS.map(addr)}">${e(addr)}</a>` : ''}<div class="actions">${bookBtn(c, 'btn', c.biz.bookLabel || 'Book now')}${addr ? `<a class="btn ghost" href="${WS.map(addr)}">Get directions</a>` : ''}${callBtn}</div></div>`;
-      if (s.variant === 'map' && addr)
-        return `<section class="visit visit-map on-base" id="visit"><div class="wrap visit-grid">${left}<div><iframe class="mapf" title="Map to ${e(c.name)}"src="${WS.mapEmbed(c.biz.address)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>${hours}</div></div></section>`;
-      return `<section class="visit on-base" id="visit"><div class="wrap visit-grid">${left}${hours}</div></section>`;
+      const acts = `${bookBtn(c, 'btn', c.biz.bookLabel || 'Book now')}${addr ? `<a class="btn ghost" href="${WS.map(addr)}">Get directions</a>` : ''}${callBtn}`;
+      const info = `<div class="v-info"><div class="sh">${eyebrow(s, 'Visit', title)}<h2 class="h2">${e(title)}</h2></div>${addr ? `<a class="addr" href="${WS.map(addr)}">${e(addr)}</a>` : ''}${status}${acts ? `<div class="actions">${acts}</div>` : ''}`;
+      if (addr) {
+        const map = s.variant === 'map'
+          ? `<iframe class="mapf" title="Map to ${e(c.name)}" src="${WS.mapEmbed(addr)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`
+          : `<div class="vm-ph" data-map="${e(WS.mapEmbed(addr))}" data-map-title="Map to ${e(c.name)}"><span class="vm-pin">${WS.iconSvg('map-pin')}</span><p class="vm-a">${e(addr)}</p><button type="button" class="btn btn-ink vm-load">Show map</button><p class="vm-n">Loads Google Maps</p></div>`;
+        return `<section class="visit visit-geo on-base" id="visit"><div class="wrap visit-grid">${info}${hours || reachT}</div><div class="v-map">${map}</div></div></section>`;
+      }
+      return `<section class="visit on-base" id="visit"><div class="wrap visit-grid">${info}</div>${hours || reachT}</div></section>`;
     },
   });
 
@@ -938,6 +1203,21 @@ const WSENGINE = (function(){
       },
     },
   };
+  // Four more pairings (two families each, few weights, same Google Fonts loading as above).
+  //   refined: DM Serif Display + DM Sans (warm, upscale: salons, spas, bakeries, florists, boutiques)
+  //   grotesk: Inter Tight + Inter (modern, precise: trades, tech-minded services, gyms, studios)
+  //   friendly: Nunito + Nunito Sans (soft, rounded: childcare, pets, cleaning, cafés, tutoring)
+  //   classic: Playfair Display + Source Sans 3 (traditional editorial: law, finance, real estate, restaurants)
+  const tv = (display, body, o) => Object.assign({ '--display': display, '--body': body, '--mono': body, '--h-transform': 'none' }, o);
+  const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+  Object.assign(WS.typeThemes, {
+    refined: { fonts: ['DM+Serif+Display', 'DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600'], vars: tv("'DM Serif Display',Georgia,'Times New Roman',serif", "'DM Sans'," + SANS, { '--h-weight': '400', '--h-tracking': '-.01em', '--h-lh': '1.04', '--name-weight': '400', '--name-lh': '.98', '--name-tracking': '-.02em', '--mark-weight': '400', '--mark-tracking': '0', '--btn-radius': '999px', '--btn-weight': '500' }) },
+    grotesk: { fonts: ['Inter+Tight:wght@500;600;700', 'Inter:wght@400;500;600'], vars: tv("'Inter Tight','Inter'," + SANS, "'Inter'," + SANS, { '--h-weight': '600', '--h-tracking': '-.03em', '--h-lh': '1.0', '--name-weight': '600', '--name-lh': '.94', '--name-tracking': '-.045em', '--mark-weight': '700', '--mark-tracking': '-.02em', '--btn-radius': '8px', '--btn-weight': '600' }) },
+    friendly: { fonts: ['Nunito:wght@700;800', 'Nunito+Sans:wght@400;600;700'], vars: tv("'Nunito','Nunito Sans'," + SANS, "'Nunito Sans'," + SANS, { '--h-weight': '800', '--h-tracking': '-.015em', '--h-lh': '1.05', '--name-weight': '800', '--name-lh': '.98', '--name-tracking': '-.025em', '--mark-weight': '800', '--mark-tracking': '-.01em', '--btn-radius': '999px', '--btn-weight': '700' }) },
+    classic: { fonts: ['Playfair+Display:wght@500;600;700', 'Source+Sans+3:wght@400;600'], vars: tv("'Playfair Display',Georgia,'Times New Roman',serif", "'Source Sans 3'," + SANS, { '--h-weight': '600', '--h-tracking': '-.01em', '--h-lh': '1.06', '--name-weight': '600', '--name-lh': '1.0', '--name-tracking': '-.02em', '--mark-weight': '700', '--mark-tracking': '0', '--btn-radius': '3px', '--btn-weight': '600' }) },
+  });
+  // Names for the editor's font picker (in this order).
+  WS.typeNames = { bold: 'Bold condensed', editorial: 'Editorial serif', clean: 'Clean sans', refined: 'Refined serif', grotesk: 'Modern grotesk', friendly: 'Friendly rounded', classic: 'Classic editorial' };
   WS.typeTheme = (id) => WS.typeThemes[id] || WS.typeThemes.bold;
   WS.styleFonts = ['Big+Shoulders+Display:wght@700;800;900', 'Work+Sans:wght@400;500;600', 'IBM+Plex+Mono:wght@400;500'];
   WS.styleCss = `
@@ -1316,8 +1596,6 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
 .edit [data-sec].sel{outline:3px solid #3B82F6;outline-offset:-3px}
 
 /* reveal on scroll: gentle fade only */
-.js .reveal{opacity:0;transform:translateY(16px);transition:opacity 1s var(--ease),transform 1s var(--ease)}
-.js .reveal.in{opacity:1;transform:none}
 .edit .ln>span,.edit .hero-foot,.edit .hero-media img{animation:none!important}
 .edit .reveal{opacity:1!important;transform:none!important}
 
@@ -1388,6 +1666,216 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
 .cta-band{position:relative;overflow:hidden}
 .cta-band::before{content:"";position:absolute;inset:0;background:radial-gradient(900px 420px at 85% -10%,color-mix(in srgb,var(--pop-text),transparent 88%),transparent 60%);pointer-events:none}
 .cta-band .wrap{position:relative;z-index:1}
+/* ===== design system v4: one spacing scale, eyebrows, line icons, calmer cards, phone carousels ===== */
+body{--sp-l:clamp(80px,10vw,136px);--sp-m:clamp(64px,8vw,112px);--sp-s:clamp(48px,6vw,80px);--sp-join:clamp(28px,3.5vw,48px);--gap-h:clamp(28px,3.4vw,48px);--r-card:10px;--r-img:6px}
+.wst-bold{--r-card:4px;--r-img:3px}
+.wsr-sharp{--r-card:0px;--r-img:0px}.wsr-soft{--r-card:14px;--r-img:12px}.wsr-round{--r-card:24px;--r-img:20px}
+.on-base{--ink:var(--accent-ink,var(--accent))}.on-alt{--ink:var(--alt-ink,var(--alt-text))}.on-pop{--ink:var(--pop-ink,var(--pop-text))}
+/* section rhythm: medium by default, small for short bands, joined when two bands share a colour */
+.intro,.services,.stats,.team,.ba,.faq,.reviews-wall,.reviews-cards,.prices-board,.steps,.contactf,.payments,.events,.servicearea,.plans,.embed,.visit,.cta-band{padding:var(--sp-m) 0}
+.intro-center,.cta-card,.gallery{padding:var(--sp-s) 0}
+.reviews-feature{padding:var(--sp-l) 0 var(--sp-m)}
+main>.on-base:not(.hero-photo):not(.pagehead)+.on-base:not(.hero):not(.pagehead),.ws-page>.on-base:not(.hero-photo):not(.pagehead)+.on-base:not(.hero):not(.pagehead),main>.on-alt+.on-alt,.ws-page>.on-alt+.on-alt{padding-top:var(--sp-join)}
+.gallery .wrap{padding-top:0;padding-bottom:0}
+/* headings: eyebrow + title, one gap to the content below */
+.sh{margin:0 0 var(--gap-h)}
+.sh .h2{margin:0}
+.h2{font-size:clamp(30px,4vw,56px)}
+.sh+.lede{margin-top:calc(16px - var(--gap-h))}
+.eb{display:flex;align-items:center;gap:10px;margin:0 0 16px;font:600 12px/1.3 var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
+.eb::before{content:"";width:22px;height:2px;border-radius:2px;background:currentColor;opacity:.75;flex:none}
+.sv,.steps-grid,.tr,.tp,.rc{margin-top:0}
+.plans-grid,.pay-grid,.ev-list,.wsp-grid{margin-top:0}
+.sh+.lede+.plans-grid,.sh+.lede+.pay-grid,.sh+.lede+.ev-list{margin-top:8px}
+.faq-grid .sh,.ba-grid .sh{margin:0}
+.statement{font-size:clamp(22px,2.5vw,34px)}
+.intro-center .statement{max-width:30ch}
+/* icons */
+.ico{display:block;width:100%;height:100%}
+.ic{display:inline-grid;place-items:center;flex:none;width:48px;height:48px;margin:0 0 22px;border-radius:calc(var(--r-card) * .8 + 4px);background:color-mix(in srgb,var(--ink),transparent 88%);color:var(--ink)}
+.ic .ico{width:24px;height:24px}
+.ic-emo{background:none;width:auto;height:auto;font-size:40px;border-radius:0}
+.glyph{display:inline-grid;place-items:center;width:1em;height:1em;vertical-align:-.14em;color:var(--ink)}
+.glyph .ico{stroke-width:1.6}
+.emo-big .glyph,.ht-emo .glyph{vertical-align:middle}.emo-big .glyph .ico,.ht-emo .glyph .ico{stroke-width:1.1}
+.emo-big{font-size:clamp(44px,5vw,64px);line-height:1}
+.btn .ico{width:17px;height:17px;flex:none}
+/* services: cards */
+.services-grid .sv{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.services-grid .sv li,.services-numbered .sv li{display:flex;flex-direction:column;align-items:flex-start;padding:30px 28px 28px;border-radius:var(--r-card);background:color-mix(in srgb,var(--fg),transparent 95%);border:1px solid color-mix(in srgb,var(--fg),transparent 89%);transition:transform .3s var(--ease),box-shadow .3s,border-color .3s}
+.services-grid .sv li::before{display:none}
+.services-grid .sv li:hover,.services-numbered .sv li:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--ink),transparent 55%);box-shadow:0 22px 44px -30px rgba(0,0,0,.5)}
+.sv h3{font-size:clamp(19px,1.6vw,22px);font-weight:600;line-height:1.2;margin:0 0 10px;letter-spacing:-.01em}
+.wst-bold .sv h3{font-weight:800;letter-spacing:.01em}
+.sv p{margin:0;font-size:15px;line-height:1.6;max-width:52ch}
+.from{display:block;margin-top:auto;padding-top:16px;font:600 12px/1.2 var(--body);letter-spacing:.1em;text-transform:uppercase;color:color-mix(in srgb,var(--fg),transparent 25%)}
+.services-numbered .sv{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.sv-n{display:block;margin:0 0 26px;font-family:var(--display);font-weight:var(--h-weight,700);font-size:clamp(30px,3vw,42px);line-height:1;color:var(--ink);font-variant-numeric:tabular-nums}
+.services-rows .sv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:clamp(32px,5vw,72px)}
+.services-rows .sv li,.services-feature .sv li{display:flex;gap:20px;align-items:flex-start;padding:26px 0;border-top:1px solid var(--hair)}
+.services-rows .ic,.services-feature .ic,.services-list .ic{margin:0;width:44px;height:44px}
+.services-rows .ic .ico,.services-feature .ic .ico,.services-list .ic .ico{width:22px;height:22px}
+.sv-b{min-width:0;flex:1}
+.sv-b h3{margin:9px 0 6px}
+.sv-b .from{padding-top:10px}
+.services-list .sv li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:24px;align-items:center;padding:24px 0;border-top:1px solid var(--hair)}
+.services-list .sv-b{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr) auto;gap:8px 32px;align-items:baseline}
+.services-list .sv-b h3{margin:0}.services-list .sv-b .from{padding:0;margin:0}
+.svf-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(40px,6vw,88px);align-items:start}
+.svf-img{aspect-ratio:4/5;border-radius:var(--r-img);position:sticky;top:96px}
+.svf-solo .svf-grid{grid-template-columns:1fr}
+.svf-solo .sv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:clamp(32px,5vw,72px)}
+.svf-body>.btn{margin-top:32px}
+/* gallery: aligned, one gutter, one radius */
+.g-wrap{display:grid;gap:clamp(8px,1.1vw,14px);align-items:stretch}
+.gallery .g-wrap>figure{position:relative;border-radius:var(--r-img);overflow:hidden;height:auto;min-height:0;flex:none}
+.g-wrap>figure>img{position:absolute;inset:0}
+.g-wrap>figure img{transition:transform .7s var(--ease)}
+.g-wrap>figure:hover img{transform:scale(1.035)}
+.gallery-strip .g-wrap{grid-template-columns:1.5fr 1fr 1fr;grid-template-rows:clamp(260px,30vw,440px)}
+.gallery-strip.gn2 .g-wrap{grid-template-columns:1.4fr 1fr}
+.gallery-strip.gn1 .g-wrap,.gallery-bento.gn1 .g-wrap{grid-template-columns:1fr;grid-template-rows:clamp(260px,40vw,520px)}
+.gallery-bento .g-wrap{grid-template-columns:1.6fr 1fr;grid-template-rows:repeat(2,clamp(150px,17vw,250px))}
+.gallery-bento .g0{grid-row:span 2}
+.gallery-bento.gn2 .g-wrap{grid-template-columns:1fr 1fr;grid-template-rows:clamp(240px,30vw,420px)}
+.gallery-bento.gn2 .g0{grid-row:auto}
+.gallery-grid .g-wrap{grid-template-columns:repeat(4,1fr);grid-auto-rows:clamp(150px,16vw,240px)}
+/* steps */
+.steps-grid{gap:clamp(24px,3vw,40px)}
+.steps-grid .step{border-top:1px solid var(--hair);padding-top:24px}
+.steps-grid .step-n{font-size:clamp(28px,2.8vw,38px);margin-bottom:14px;color:var(--ink)}
+.step-t{font-size:clamp(19px,1.7vw,23px)}
+.step-d{max-width:46ch}
+.steps-line .step{position:relative;border-top:0;padding-top:0}
+.steps-line .step::before{content:"";position:absolute;top:20px;left:56px;right:0;height:1px;background:color-mix(in srgb,var(--fg),transparent 78%)}
+.steps-line .step:last-child::before{display:none}
+.steps-line .step-n{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;border:1.5px solid var(--ink);font:600 15px/1 var(--body);margin-bottom:22px}
+/* reviews: cards */
+.rc{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.rc blockquote{margin:0;height:100%;display:flex;flex-direction:column;padding:30px 28px 26px;border-radius:var(--r-card);background:color-mix(in srgb,var(--fg),transparent 95%);border:1px solid color-mix(in srgb,var(--fg),transparent 89%)}
+.rc-mark{display:block;height:28px;font:700 60px/1 Georgia,'Times New Roman',serif;color:var(--ink)}
+.rc p{flex:1;margin:12px 0 24px;font-size:17px;line-height:1.6}
+.reviews .rc footer{display:flex;align-items:center;gap:12px;margin:0;font:600 14px/1.3 var(--body);letter-spacing:0;text-transform:none;color:var(--fg)}
+.rc-av{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;flex:none;background:var(--accent);color:var(--accent-text);font:700 15px/1 var(--body)}
+.reviews-wall .rw blockquote{padding:26px 0}
+/* call to action: a rounded card */
+.cc-box{position:relative;overflow:hidden;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:28px 48px;padding:clamp(36px,5vw,64px);border-radius:calc(var(--r-card) * 1.6)}
+.cc-box::before{content:"";position:absolute;inset:0;background:radial-gradient(700px 360px at 90% -20%,color-mix(in srgb,var(--pop-text),transparent 86%),transparent 60%);pointer-events:none}
+.cc-copy,.cc-box .actions{position:relative}
+.cc-box .h2{font-size:clamp(28px,3.4vw,46px)}
+.cta .cc-copy p{margin:14px 0 0}
+.btn-line{background:transparent;color:var(--fg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--fg),transparent 50%)}
+.btn-line:hover{background:color-mix(in srgb,var(--fg),transparent 90%)}
+/* intro in two columns */
+.ic-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(28px,6vw,96px);align-items:start}
+.ic-grid .sh{margin:0}
+.ic-text{margin:0;max-width:56ch;font-size:clamp(18px,1.6vw,21px);line-height:1.65;color:var(--fg)}
+.ic-meta{display:flex;align-items:center;gap:8px;margin:24px 0 0;font-size:14px;color:color-mix(in srgb,var(--fg),transparent 30%)}
+.ic-meta .ico{width:18px;height:18px;color:var(--ink)}
+/* visit: address, live status, hours with today, map */
+.visit .addr{margin:18px 0 14px}
+.v-status{display:flex;align-items:center;gap:10px;margin:0 0 26px;font-size:15px;color:var(--fg)}
+.v-status:has([data-status]:empty){display:none}
+.v-dot{width:8px;height:8px;border-radius:50%;flex:none;background:color-mix(in srgb,var(--fg),transparent 50%)}
+.v-status.is-open .v-dot{background:#2a9d62;box-shadow:0 0 0 4px rgba(42,157,98,.2)}
+.v-info .actions{margin:0 0 36px}
+.v-info .actions:last-child{margin-bottom:0}
+.hours tr.today th::after{content:"Today";display:inline-block;margin-left:10px;padding:4px 7px;border-radius:999px;font:600 10px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;vertical-align:1px;background:var(--accent);color:var(--accent-text)}
+.hours tr.today th,.hours tr.today td{font-weight:700}
+.v-map{position:relative;min-height:340px;border-radius:var(--r-img);overflow:hidden;background:var(--surface)}
+.v-map .mapf{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto;margin:0;border-radius:0;filter:grayscale(.3)}
+.vm-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:28px;text-align:center;color:var(--fg);background-color:color-mix(in srgb,var(--fg),transparent 95%);background-image:linear-gradient(118deg,transparent 46%,color-mix(in srgb,var(--accent),transparent 78%) 46%,color-mix(in srgb,var(--accent),transparent 78%) 49%,transparent 49%),repeating-linear-gradient(0deg,transparent 0 54px,color-mix(in srgb,var(--fg),transparent 91%) 54px 56px),repeating-linear-gradient(90deg,transparent 0 70px,color-mix(in srgb,var(--fg),transparent 91%) 70px 72px)}
+.vm-pin{display:grid;place-items:center;width:54px;height:54px;border-radius:50%;background:var(--accent);color:var(--accent-text);box-shadow:0 12px 26px -10px rgba(0,0,0,.45)}
+.vm-pin .ico{width:24px;height:24px}
+.vm-a{margin:0;max-width:28ch;font-weight:600;font-size:16px;padding:4px 10px;border-radius:6px;background:color-mix(in srgb,var(--bg),transparent 12%)}
+.vm-n{margin:0;font-size:12px;padding:2px 8px;border-radius:6px;background:color-mix(in srgb,var(--bg),transparent 12%);color:color-mix(in srgb,var(--fg),transparent 25%)}
+.vm-load{margin-top:4px}
+/* heroes: legible text over any photo, new layouts */
+.hero-media::after{background:linear-gradient(180deg,rgba(0,0,0,.36) 0%,rgba(0,0,0,0) 24%,rgba(0,0,0,.1) 46%,rgba(0,0,0,.68) 100%),linear-gradient(90deg,rgba(0,0,0,.4) 0%,rgba(0,0,0,.1) 55%,rgba(0,0,0,0) 100%)}
+.hero-center .hero-media::after{background:linear-gradient(180deg,rgba(0,0,0,.46) 0%,rgba(0,0,0,.36) 45%,rgba(0,0,0,.52) 100%)}
+.hero-photo:not(.hero-noimg) .name,.hero-photo:not(.hero-noimg) .tag,.hero-photo:not(.hero-noimg) .status{text-shadow:0 2px 22px rgba(0,0,0,.3)}
+.acc-dark .hero-photo:not(.hero-noimg) .btn:not(.ghost){background:#fff;color:#111}
+.acc-dark .hero-photo:not(.hero-noimg) .btn:not(.ghost):hover{background:#f0f0f0}
+.hero-center{align-items:center;text-align:center}
+.hero-center .hero-in{display:flex;flex-direction:column;align-items:center;padding-top:110px;padding-bottom:clamp(56px,8vh,96px)}
+.hero-center .name .ln>span{display:block}
+.hero-center .tag{margin:26px auto 32px}
+.hero-center .actions{justify-content:center}
+.hero-frame{padding:clamp(130px,17vh,170px) 0 var(--sp-m)}
+.hero-frame .name{font-size:clamp(46px,6.6vw,108px)}
+.hero-frame .tag{margin:26px 0 30px}
+.hf-pic{position:relative;padding:0 0 26px 26px}
+.hf-pic::before{content:"";position:absolute;left:0;bottom:0;width:70%;height:70%;border-radius:var(--r-img);background:color-mix(in srgb,var(--ink),transparent 82%)}
+.hf-pic .hs-img{position:relative;aspect-ratio:4/5;min-height:0;border-radius:var(--r-img);box-shadow:0 34px 60px -34px rgba(0,0,0,.45)}
+.hf-pic:has(>.slot[hidden]){display:none}
+.hero-minimal{padding:clamp(120px,16vh,170px) 0 var(--sp-s)}
+.hm-row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:24px 56px;align-items:end;margin-bottom:clamp(36px,5vw,64px)}
+.hero-minimal .name{font-size:clamp(48px,8vw,128px)}
+.hm-side .tag{margin:0 0 24px}
+.hm-img{aspect-ratio:21/9;border-radius:var(--r-img)}
+/* header over a photo opening: light text on a soft scrim until it turns solid */
+.top.over:not(.solid){color:#fff}
+.top.over:not(.solid)::before{content:"";position:absolute;inset:0 0 -32px;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.5),rgba(0,0,0,.2) 62%,rgba(0,0,0,0))}
+.top.over:not(.solid) .mark{text-shadow:0 1px 14px rgba(0,0,0,.3)}
+.top.over:not(.solid) nav a{color:rgba(255,255,255,.88)}
+.top.over:not(.solid) nav a:hover,.top.over:not(.solid) nav a.active{color:#fff}
+.top.over:not(.solid) .pill{color:#fff;border-color:rgba(255,255,255,.7)}
+.top.over:not(.solid) .pill:hover{background:#fff;color:#111}
+.nav-open .top.over{color:var(--base-text)}.nav-open .top.over::before{display:none}
+/* motion: added by the runtime only (content is visible without JS); never in the editor */
+.js .reveal{opacity:1;transform:none}
+.rv{opacity:0;transform:translateY(18px);transition:opacity .75s var(--ease),transform .75s var(--ease);transition-delay:var(--rv,0ms)}
+.rv.in{opacity:1;transform:none}
+.edit .rv{opacity:1!important;transform:none!important}
+.btn{transition:background .2s,color .2s,transform .2s,box-shadow .2s}
+.btn:hover{transform:translateY(-1px)}
+.plan{transition:transform .3s var(--ease),box-shadow .3s}
+.plan:hover{transform:translateY(-3px);box-shadow:0 22px 44px -30px rgba(0,0,0,.45)}
+/* phone action bar */
+.ws-bar{display:none}
+@media (min-width:901px){
+  .hero-frame .hs-grid{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr)}
+  .visit-grid{grid-template-columns:minmax(0,6fr) minmax(0,5fr);gap:clamp(40px,6vw,88px)}
+  .visit-geo .visit-grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr);align-items:stretch}
+}
+@media (max-width:900px){
+  .ic-grid,.svf-grid,.hm-row{grid-template-columns:1fr}
+  .svf-img{position:relative;top:0;aspect-ratio:4/3}
+  .services-rows .sv,.svf-solo .sv{grid-template-columns:1fr}
+  .services-list .sv-b{grid-template-columns:1fr;gap:4px}
+  .hm-img{aspect-ratio:4/3}
+  .hf-pic{padding:0}.hf-pic::before{display:none}.hf-pic .hs-img{aspect-ratio:4/3}
+  .gallery-grid .g-wrap{grid-template-columns:1fr 1fr}
+  .v-map{min-height:280px}
+  .steps-line .steps-grid{grid-template-columns:1fr;gap:28px}
+  .steps-line .step{padding-left:60px}
+  .steps-line .step-n{position:absolute;left:0;top:0;margin:0}
+  .steps-line .step::before{top:48px;bottom:-24px;left:20px;right:auto;width:1px;height:auto}
+}
+@media (max-width:700px){
+  .rail{display:grid!important;grid-auto-flow:column;grid-auto-columns:84%;grid-template-columns:none!important;grid-template-rows:none!important;gap:12px;height:auto!important;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-left:-20px;margin-right:-20px;padding:2px 20px 10px;scroll-padding:0 20px}
+  .rail::-webkit-scrollbar{display:none}
+  .rail:focus-visible{outline:2px solid var(--ink);outline-offset:4px;border-radius:var(--r-card)}
+  .rail>*{scroll-snap-align:start;min-width:0}
+  .rail:has(>:only-child){grid-auto-columns:100%}
+  .g-wrap.rail>figure{aspect-ratio:4/5;grid-row:auto!important;grid-column:auto!important}
+  .services-grid .sv li,.services-numbered .sv li{padding:26px 22px 24px}
+  .cc-box{flex-direction:column;align-items:flex-start}
+  body.has-bar{--bar-h:calc(64px + env(safe-area-inset-bottom,0px))}
+  body.has-bar .credits{padding-bottom:calc(26px + var(--bar-h))}
+  .ws-bar{position:fixed;left:0;right:0;bottom:0;z-index:8500;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:8px;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--base),transparent 3%);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--hair);box-shadow:0 -10px 28px -16px rgba(0,0,0,.28)}
+  .ws-bar.one{grid-template-columns:1fr}
+  .ws-bar a{display:flex;align-items:center;justify-content:center;gap:8px;min-width:0;height:48px;padding:0 12px;border-radius:var(--btn-radius,8px);font:600 15px/1 var(--body);text-decoration:none}
+  .ws-bar a span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ws-bar .ico{width:18px;height:18px;flex:none}
+  .wb-call{color:var(--base-text);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--base-text),transparent 65%)}
+  .wb-main{background:var(--accent);color:var(--accent-text)}
+  .wsr-sharp .ws-bar a{border-radius:0}.wsr-soft .ws-bar a{border-radius:10px}.wsr-round .ws-bar a{border-radius:999px}
+  body.has-bar .ws-top{bottom:calc(18px + var(--bar-h))}
+  body.has-bar .wsp-cart{bottom:calc(20px + var(--bar-h))}
+  .nav-open .ws-bar{display:none}
+}
+.edit .ws-bar{display:none!important}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.js .reveal{opacity:1;transform:none}}
 `;
 })(globalThis.WS = globalThis.WS || {});
@@ -1411,7 +1899,7 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
     if (bu) return bu;
     const pages = WS.pagesOf(site);
     if (pages && pages.length > 1) {
-      const bp = pages.find((pg) => /^(book|reserve|quote)$/.test(pg.path || ''));
+      const bp = pages.find((pg) => /^(book|reserve|quote|order)$/.test(pg.path || ''));
       const cp = bp || pages.find((pg) => pg.path && /contact|visit|reach/i.test((pg.path || '') + ' ' + (pg.title || '')));
       if (cp) return '#/' + cp.path;
     } else {
@@ -1427,7 +1915,7 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
     const b = (site && site.biz) || {};
     const pages = WS.pagesOf(site);
     if (pages && pages.length > 1) {
-      const cp = pages.find((pg) => pg.path && /contact|reach/i.test((pg.path || '') + ' ' + (pg.title || ''))) || pages.find((pg) => /^(book|reserve|quote)$/.test(pg.path || ''));
+      const cp = pages.find((pg) => pg.path && /contact|reach/i.test((pg.path || '') + ' ' + (pg.title || ''))) || pages.find((pg) => /^(book|reserve|quote|order)$/.test(pg.path || ''));
       if (cp) return '#/' + cp.path;
     } else {
       const secs = WS.layoutSections(site);
@@ -1468,6 +1956,7 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
     const rd = WS.redirectsOf(site);
     return {
       site, mode, biz: site.biz,
+      iconStyle: /^(line|emoji)$/.test(site.iconStyle || '') ? site.iconStyle : WS._icoSite === site ? WS._icoVal : WS.iconStyleOf(site),
       name: WS.bizName(site),
       book: e(WS.bookHref(site)),
       contact: e(WS.contactHref(site)),
@@ -1530,7 +2019,7 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
       for(i=0;i<links.length;i++)links[i].classList.toggle('active',(links[i].getAttribute('data-page')||'')===pth);
       try{window.scrollTo(0,0);}catch(e){}
       try{document.body.classList.remove('nav-open');var tgl=document.querySelector('.navtoggle');if(tgl)tgl.setAttribute('aria-expanded','false');}catch(e){}
-      try{var t=document.querySelector('[data-top]');if(t){t.classList.remove('solid');t.style.removeProperty('--top-offset');}}catch(e){}
+      try{var t=document.querySelector('[data-top]');if(t){t.classList.remove('solid');t.style.removeProperty('--top-offset');}if(window.__wsOver)window.__wsOver();}catch(e){}
       try{parent.postMessage({ws:true,type:'wsPageShown',path:pth},'*');}catch(e){}
     }
     window.__wsShowPage=show;
@@ -1650,6 +2139,7 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
 
   WS.renderSite = (site, { mode = 'live', activePath = null } = {}) => {
     const p = WS.withAccent(WS.palette(site.palette), site.accent);
+    WS._icoSite = site; WS._icoVal = WS.iconStyleOf(site);
     const b = site.biz || (site.biz = {});
     const name = WS.bizName(site);
     // C1: site.pages is the source of truth whenever present (even a single page); legacy sites use site.sections.
@@ -1749,7 +2239,15 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
     const tt = (WS.typeTheme ? WS.typeTheme(site.typeset) : null) || { fonts: WS.styleFonts, vars: {} };
     const ttFonts = (tt.fonts && tt.fonts.length) ? tt.fonts : WS.styleFonts;
     const ttVars = Object.keys(tt.vars || {}).map((k) => k + ':' + tt.vars[k]).join(';');
-    const ttClass = ' wst-' + e(site.typeset || 'bold');
+    const ttClass = ' wst-' + (WS.typeThemes && WS.typeThemes[site.typeset] ? site.typeset : 'bold');
+    // Header over a photo opening: light text on a soft scrim until it turns solid (the runtime re-checks per page).
+    const firstSec = ((allPages ? (allPages[0] && allPages[0].sections) : site.sections) || []).filter((x) => x && !x.hidden && x.type !== 'announce')[0];
+    const overHero = !!(firstSec && firstSec.type === 'hero' && /^(photo|center)$/.test(firstSec.variant || 'photo') && (site.photos || {})[firstSec.id + '.photo']);
+    // Phone action bar: Call + the main action (never two buttons that do the same thing). Not in the editor.
+    const telHref = WS.str(b.phone).replace(/[^\d+]/g, '').length >= 7 ? WS.tel(b.phone) : '';
+    const mainHref = pillHref && pillHref !== telHref ? pillHref : '';
+    const mainLabel = WS.str(b.bookLabel).length && WS.str(b.bookLabel).length <= 20 ? WS.str(b.bookLabel) : (WS.str(b.bookShort) || 'Get in touch');
+    const bar = mode === 'edit' || (!telHref && !mainHref) ? '' : `<div class="ws-bar${telHref && mainHref ? '' : ' one'}">${telHref ? `<a class="wb-call" href="${e(telHref)}">${WS.iconSvg('phone')}<span>Call</span></a>` : ''}${mainHref ? `<a class="wb-main" href="${e(mainHref)}">${WS.iconSvg(/^mailto:/.test(mainHref) ? 'message-circle' : 'calendar-check')}<span>${e(mainLabel)}</span></a>` : ''}</div>`;
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1766,14 +2264,15 @@ ${ldScript}${rdScript}
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?${ttFonts.map((f) => 'family=' + f).join('&')}&display=swap">
 <style>:root{${WS.paletteCss(p)};${ttVars}}${WS.styleCss}${WS.emojiCss}${ttVars ? `body{${ttVars};font-family:var(--body)}` : ''}</style>
 </head>
-<body class="es-${e(site.emojiStyle || 'color')}${ttClass}${/^(sharp|soft|round)$/.test(site.corners || '') ? ' wsr-' + site.corners : ''}${mode === 'edit' ? ' edit' : ''}${multi ? ' multipage' : ''}${navMany ? ' nav-many' : ''}${top ? ' has-announce' : ''}">
+<body class="es-${e(site.emojiStyle || 'color')}${ttClass}${/^(sharp|soft|round)$/.test(site.corners || '') ? ' wsr-' + site.corners : ''}${mode === 'edit' ? ' edit' : ''}${multi ? ' multipage' : ''}${navMany ? ' nav-many' : ''}${top ? ' has-announce' : ''}${bar ? ' has-bar' : ''}${WS.contrast(p.accent, '#000000') < 3 ? ' acc-dark' : ''}">
 ${top}
-<header class="top" data-top><a class="mark${logoOk ? ' has-logo' : ''}${name.length > 18 ? ' mark-long' : ''}" href="${markHref}">${logoOk ? `<img class="mark-logo" src="${e(b.logo)}" alt="${e(name)}" onerror="var a=this.parentNode;if(a)a.classList.remove('has-logo');this.replaceWith(document.createTextNode(this.alt||''));">` : e(name)}</a><nav aria-label="Main">${nav}</nav>${pillHref ? `<a class="pill" href="${e(pillHref)}">${e(b.bookShort || 'Book')}</a>` : '<span></span>'}${multi ? '<button class="navtoggle" type="button" aria-label="Menu" aria-expanded="false"><svg width="23" height="23" viewBox="0 0 23 23" fill="none" aria-hidden="true"><path d="M3 7h17M3 11.5h17M3 16h17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' : ''}</header>
+<header class="top${overHero ? ' over' : ''}" data-top><a class="mark${logoOk ? ' has-logo' : ''}${name.length > 18 ? ' mark-long' : ''}" href="${markHref}">${logoOk ? `<img class="mark-logo" src="${e(b.logo)}" alt="${e(name)}" onerror="var a=this.parentNode;if(a)a.classList.remove('has-logo');this.replaceWith(document.createTextNode(this.alt||''));">` : e(name)}</a><nav aria-label="Main">${nav}</nav>${pillHref ? `<a class="pill" href="${e(pillHref)}">${e(b.bookShort || 'Book')}</a>` : '<span></span>'}${multi ? '<button class="navtoggle" type="button" aria-label="Menu" aria-expanded="false"><svg width="23" height="23" viewBox="0 0 23 23" fill="none" aria-hidden="true"><path d="M3 7h17M3 11.5h17M3 16h17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' : ''}</header>
 <main${mainPad ? ' class="ws-padtop"' : ''}>
 ${body}
 </main>
 <footer class="foot"><div class="foot-brand"><b>${e(name)}</b>${footSub}</div>${multi ? `<nav class="foot-col" aria-label="Pages"><h4>Pages</h4>${pageLinks}</nav>` : `<div class="foot-col"></div>`}<div class="foot-col">${footReach ? `<h4>Contact</h4>${footReach}` : ''}</div></footer>
 <p class="credits"><a href="https://websprout.app/?ref=site">Made with ${e(brand)}</a>${photoCredit}${usesEmoji ? ` &nbsp;·&nbsp; Animated emoji: <a href="https://googlefonts.github.io/noto-emoji-animation/">Noto Emoji by Google</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>` : ''}</p>
+${bar}
 <script>${runtime}${mode === 'edit' ? WS.editBridge : ''}</script>
 </body>
 </html>`;
@@ -1791,15 +2290,33 @@ document.documentElement.classList.add('js');document.body.classList.add('js');
   // Desktop nav that does not fit (many or long page names) folds into the menu button instead of overflowing.
   try{var nvb=document.body,nvn=top.querySelector('nav');var navFit=function(){if(!nvn||!nvb.classList.contains('multipage')||nvb.classList.contains('nav-open')||nvn.querySelectorAll('a').length>6)return;nvb.classList.remove('nav-many');if(window.innerWidth>900&&top.scrollWidth>top.clientWidth+2)nvb.classList.add('nav-many');};navFit();window.addEventListener('resize',navFit);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(navFit);}catch(e){}
   function seen(els,fn){if(!('IntersectionObserver' in window)||EDIT){els.forEach(fn);return}var io=new IntersectionObserver(function(es){es.forEach(function(x){if(x.isIntersecting){fn(x.target);io.unobserve(x.target)}})},{rootMargin:'0px 0px -10% 0px'});els.forEach(function(el){io.observe(el)})}
-  seen(document.querySelectorAll('.reveal'),function(el){el.classList.add('in')});
+  // Header over a photo opening (light text until it turns solid), re-checked when a page shows or a photo fails.
+  function overCheck(){try{var root=document.querySelector('.ws-page.on')||document.querySelector('main');var f=null,k=root?root.children:[];for(var i=0;i<k.length;i++){if(k[i].offsetHeight>0){f=k[i];break}}top.classList.toggle('over',!!(f&&f.classList.contains('hero-photo')&&!f.classList.contains('hero-noimg')&&!f.querySelector('.hero-media.empty')))}catch(e){}}
+  window.__wsOver=function(){overCheck();railKeys()};overCheck();document.addEventListener('error',function(ev){if(ev.target&&ev.target.tagName==='IMG')setTimeout(overCheck,0)},true);
+  // Fade-and-rise on scroll, once: only for things below the first screen, added here so content is visible without JS.
+  // Cards in a phone carousel reveal together with their row. Never in the editor or with reduced motion.
+  try{var RM=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(!EDIT&&!RM&&('IntersectionObserver' in window)){
+      var vh=window.innerHeight||800,groups=[],rvSel='main section .sh,.sv>li,.steps-grid>li,.plan,.rw>blockquote,.rc>li,.g-wrap>figure,.tp>li,.tr>li,.qa,.v-map,.cc-box,.intro .statement,.ic-grid>div,.reveal,.stat,.wsp-card,.pay-card,.ev-row';
+      [].slice.call(document.querySelectorAll(rvSel)).forEach(function(el){if(el.classList.contains('rv')||el.closest('.rv'))return;var r=el.getBoundingClientRect();if(!r.height||r.top<vh*0.92)return;var i=[].indexOf.call(el.parentNode.children,el);el.style.setProperty('--rv',Math.min(i,4)*80+'ms');el.classList.add('rv');var g=el.closest('.rail')||el;if(groups.indexOf(g)<0)groups.push(g);});
+      var done=function(el){el.classList.add('in');setTimeout(function(){el.classList.remove('rv','in');el.style.removeProperty('--rv')},1300)};
+      var rio=new IntersectionObserver(function(es){es.forEach(function(x){if(!x.isIntersecting)return;rio.unobserve(x.target);if(x.target.classList.contains('rv'))done(x.target);[].slice.call(x.target.querySelectorAll('.rv')).forEach(done)})},{rootMargin:'0px 0px -8% 0px'});
+      groups.forEach(function(g){rio.observe(g)});
+      window.addEventListener('beforeprint',function(){[].slice.call(document.querySelectorAll('.rv')).forEach(done)});
+    }}catch(e){}
+  // Phone carousels scroll sideways: make them reachable by keyboard while (and only while) they scroll.
+  function railKeys(){[].slice.call(document.querySelectorAll('.rail')).forEach(function(r){if(r.scrollWidth>r.clientWidth+2)r.setAttribute('tabindex','0');else r.removeAttribute('tabindex')})}
+  railKeys();window.addEventListener('resize',railKeys);window.addEventListener('load',railKeys);
+  // Map placeholder: load Google's map only when the visitor asks for it.
+  document.addEventListener('click',function(ev){var b=ev.target&&ev.target.closest?ev.target.closest('.vm-load'):null;if(!b||EDIT)return;var ph=b.closest('.vm-ph');if(!ph)return;var fr=document.createElement('iframe');fr.className='mapf';fr.title=ph.getAttribute('data-map-title')||'Map';fr.src=ph.getAttribute('data-map');fr.setAttribute('referrerpolicy','no-referrer-when-downgrade');fr.setAttribute('allowfullscreen','');ph.parentNode.replaceChild(fr,ph);});
   // open / closed status
   function f(t){var p=t.split(':'),h=+p[0],m=p[1];var s=h>=12?'pm':'am';h=h%12||12;return h+(m!=='00'?':'+m:'')+' '+s}
   function toM(t){var p=String(t||'0:0').split(':');return (+p[0]||0)*60+(+p[1]||0)}
   var now=new Date(),d=(now.getDay()+6)%7,mins=now.getHours()*60+now.getMinutes();
-  document.querySelectorAll('.hours').forEach(function(t){var r=t.querySelectorAll('tr');if(r[d])r[d].classList.add('today')});
+  document.querySelectorAll('.hours:not(.reach)').forEach(function(t){var r=t.querySelector('tr[data-day="'+d+'"]')||(t.querySelector('tr[data-day]')?null:t.querySelectorAll('tr')[d]);if(r)r.classList.add('today')});
   document.querySelectorAll('[data-status]').forEach(function(el){
     if(!HOURS.length)return;var t=HOURS[d];
-    if(t&&t.open&&t.close&&(toM(t.close)>toM(t.open)?(mins>=toM(t.open)&&mins<toM(t.close)):(mins>=toM(t.open)||mins<toM(t.close)))){el.innerHTML='<b>Open now</b> until '+f(t.close)+(WALKIN?'. Walk-ins welcome':'');return}
+    if(t&&t.open&&t.close&&(toM(t.close)>toM(t.open)?(mins>=toM(t.open)&&mins<toM(t.close)):(mins>=toM(t.open)||mins<toM(t.close)))){var vs=el.closest&&el.closest('.v-status');if(vs)vs.classList.add('is-open');el.innerHTML='<b>Open now</b> until '+f(t.close)+(WALKIN?'. Walk-ins welcome':'');return}
     for(var i=0;i<8;i++){var k=(d+i)%7,h=HOURS[k];if(h&&h.open&&(i>0||mins<toM(h.open))){el.innerHTML='<b>Closed now.</b> Opens '+(i===0?'today':i===1?'tomorrow':h.d)+' at '+f(h.open);return}}
   });
   // stats: years update themselves; Google numbers come live from the stats API, typed numbers stay as typed
@@ -1827,7 +2344,7 @@ document.documentElement.classList.add('js');document.body.classList.add('js');
       box.hidden=false;
       var rw=box.querySelector('.rw'),sum=box.querySelector('.gr-sum'),at=box.querySelector('.gr-attr');
       function star(n){var o='';for(var i=0;i<5;i++)o+=i<Math.round(n)?'★':'☆';return o}
-      function esc(s){return String(s==null?'':s).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;')}
+      function esc(s){return String(s==null?'':s).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;').split('"').join('&quot;')}
       rw.innerHTML=items.map(function(v){return '<blockquote><div class="gr-stars" aria-label="'+v.rating+' out of 5 stars">'+star(v.rating)+'</div><p>'+esc(v.text.length>320?v.text.slice(0,317)+'…':v.text)+'</p><footer>'+esc(v.name)+(v.when?' · '+esc(v.when):'')+(/^https:\\/\\//.test(v.link||'')?' · <a href="'+esc(v.link)+'" target="_blank" rel="noopener nofollow">on Google</a>':'')+'</footer></blockquote>'}).join('');
       if(j.rating&&sum){sum.hidden=false;sum.innerHTML='<b>'+j.rating.toFixed(1)+'</b> <span class="gr-stars">'+star(j.rating)+'</span> <span>'+(j.reviews||0).toLocaleString()+' Google reviews</span>'}
       if(at){at.hidden=false;at.innerHTML=(cut?'Selected reviews from Google, chosen by the business':'Reviews from Google')+(/^https:\\/\\//.test(j.url||'')?' · <a href="'+esc(j.url)+'" target="_blank" rel="noopener">See all on Google</a>':'')}

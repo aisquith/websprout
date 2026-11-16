@@ -33,17 +33,11 @@ async function doCheckout(request, env){
   if (!Array.isArray(products) || pIdx >= products.length) return errPage('That product is no longer available.', slug);
   var product = products[pIdx];
   if (!product || !product.name) return errPage('That product is no longer available.', slug);
-  var owner = ''; try { owner = ((await env.KV.get('notify:' + siteId)) || '').toLowerCase(); } catch(e){}
-  if (!owner) return errPage('This store is not set up to take payments yet.', slug);
-  var u = null; try { u = JSON.parse(await env.KV.get('user:' + owner) || 'null'); } catch(e){}
-  var isPlatformOwner = owner === SUPPORT_EMAIL.toLowerCase();
-  var isPro = isPlatformOwner || (u && u.plan === 'pro');
-  if (!isPro) return errPage('This store is not currently accepting online payments.', slug);
-  var stripeAccount = '';
-  if (!isPlatformOwner) {
-    if (!(u && u.stripeConnect && u.stripeConnectReady)) return errPage('This store has not finished connecting its payment account.', slug);
-    stripeAccount = u.stripeConnect;
-  }
+  // Payouts follow the site's recorded owner account (Pro + ready Stripe Connect, or the platform owner's own site).
+  var payee = await wsPayee(env, siteId);
+  if (!payee) return errPage('This store is not currently accepting online payments.', slug);
+  var stripeAccount = payee.platform ? '' : payee.account;
+  if (!payee.platform && !stripeAccount) return errPage('This store has not finished connecting its payment account.', slug);
   var amount = priceToCents(product.price);
   if (!amount || amount < 50) return errPage('This product is not priced for online checkout.', slug);
   var appFee = 0;
@@ -68,6 +62,7 @@ async function doCheckout(request, env){
     var r = await fetch('https://api.stripe.com/v1/checkout/sessions', { method: 'POST', headers: sHeaders, body: bodyStr });
     var j = await r.json();
     if (!r.ok || j.error || !j.url) return errPage('We could not start checkout. Please try again in a moment.', slug);
+    try { await logEvent(request, env, 'store_checkout', { site: siteId, anon: true, props: { amount: amount, fee: appFee, items: 1 } }); } catch(e){}
     return new Response(null, { status: 302, headers: { 'Location': j.url } });
   } catch(e) { return errPage('We could not start checkout. Please try again in a moment.', slug); }
 }
@@ -149,8 +144,9 @@ async function doCartCheckout(request, env){
   try{
     if(!env.KV) return fail('Storage not configured');
     var b = await request.json();
-    var siteId = (b.site||'').trim();
-    var items = Array.isArray(b.items) ? b.items : [];
+    var siteId = String(b.site||'').trim();
+    if(!/^[A-Za-z0-9_-]{4,40}$/.test(siteId)) return fail('Your cart is empty');
+    var items = Array.isArray(b.items) ? b.items.slice(0, 50) : [];
     if(!siteId || !items.length) return fail('Your cart is empty');
     var sk = (env.STRIPE_SECRET_KEY||'').trim();
     if(!sk) return fail('Payments are not configured yet');
@@ -158,19 +154,11 @@ async function doCartCheckout(request, env){
     try{ var raw = await env.KV.get('products:'+siteId); if(raw){ products = JSON.parse(raw); } }catch(e){}
     if(!products.length){ try{ var raw3 = await env.KV.get('v3products:'+siteId); if(raw3){ products = JSON.parse(raw3); } }catch(e){} }
     if(!products.length) return fail('This store has no products');
-    var owner = '';
-    try{ owner = ((await env.KV.get('notify:'+siteId))||'').toLowerCase(); }catch(e){}
-    if(!owner) return fail('This store is not set up to take payments yet');
-    var u = null;
-    try{ u = JSON.parse(await env.KV.get('user:'+owner)||'null'); }catch(e){}
-    var isPlatformOwner = owner === SUPPORT_EMAIL.toLowerCase();
-    var isPro = isPlatformOwner || (u && u.plan==='pro');
-    if(!isPro) return fail('This store is not currently accepting online payments');
-    var stripeAccount = '';
-    if(!isPlatformOwner){
-      if(!(u && u.stripeConnect && u.stripeConnectReady)) return fail('This store has not finished connecting its payment account');
-      stripeAccount = u.stripeConnect;
-    }
+    // Payouts follow the site's recorded owner account (Pro + ready Stripe Connect, or the platform owner's own site).
+    var payee = await wsPayee(env, siteId);
+    if(!payee) return fail('This store is not currently accepting online payments');
+    var stripeAccount = payee.platform ? '' : payee.account;
+    if(!payee.platform && !stripeAccount) return fail('This store has not finished connecting its payment account');
     var lines = []; var total = 0;
     for(var i=0;i<items.length;i++){
       var idx = parseInt(items[i].p,10);
@@ -205,8 +193,9 @@ async function doCartCheckout(request, env){
     var r = await fetch('https://api.stripe.com/v1/checkout/sessions', { method:'POST', headers:sHeaders, body:body });
     var j = await r.json();
     if(!r.ok || j.error || !j.url) return fail('We could not start checkout. Please try again.');
+    try { await logEvent(request, env, 'store_checkout', { site: siteId, anon: true, props: { amount: total, fee: appFee, items: lines.length } }); } catch(e){}
     return succeed({ url:j.url });
-  }catch(e){ return fail(e.message); }
+  }catch(e){ return wsErr(e); }
 }
 function renderProductGrid(products, siteId, checkoutEnabled, inquireHref){
   if (!Array.isArray(products) || !products.length) return '<div style="text-align:center;opacity:.6;padding:40px 0;font-size:1rem">Products coming soon.</div>';
@@ -233,14 +222,14 @@ async function doProducts(request, env){
     if (request.method === 'GET') {
       const siteId = url.searchParams.get('siteId') || '';
       const key = url.searchParams.get('key') || '';
-      if (!siteId || key !== (await siteKey(siteId, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
+      if (!siteId || !(await siteKeyOk(siteId, key, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
       let products = [];
       try { const raw = await env.KV.get('products:' + siteId); if (raw) products = JSON.parse(raw); } catch(e){}
       return succeed({ ok:true, products: products });
     }
     const b = await request.json();
     if (!b.siteId || !b.key) return fail('Missing data');
-    if (b.key !== (await siteKey(b.siteId, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
+    if (!(await siteKeyOk(b.siteId, b.key, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
     let _pro = false;
     try { const _s = await getSession(request, env); if (_s){ const _u = JSON.parse((await env.KV.get('user:'+(_s.email||'').toLowerCase()))||'{}'); _pro = !!(_u && _u.plan==='pro') || ((_s.email||'').toLowerCase()===SUPPORT_EMAIL.toLowerCase()); } } catch(e){}
     if (!_pro) return fail('PRO_REQUIRED');
@@ -248,7 +237,7 @@ async function doProducts(request, env){
     products = products.map(function(p){ var pu=String(p.payUrl||'').trim().slice(0,600); if(!/^https:\/\//i.test(pu)) pu=''; return { name:String(p.name||'').slice(0,140), price:String(p.price||'').slice(0,40), img:String(p.img||'').slice(0,600), desc:String(p.desc||'').slice(0,500), payUrl:pu, category:String(p.category||'').slice(0,40) }; }).filter(function(p){ return p.name; });
     await env.KV.put('products:' + b.siteId, JSON.stringify(products));
     return succeed({ ok:true, products: products });
-  } catch(e){ return fail(e.message); }
+  } catch(e){ return wsErr(e); }
 }
 async function doStorePreview(request, env){
   try {
@@ -256,7 +245,7 @@ async function doStorePreview(request, env){
     const url = new URL(request.url);
     const siteId = url.searchParams.get("siteId") || "";
     const key = url.searchParams.get("key") || "";
-    if (!siteId || key !== (await siteKey(siteId, env))) return new Response("", {status:403});
+    if (!siteId || !(await siteKeyOk(siteId, key, env))) return new Response("", {status:403});
     let products = [];
     try { const raw = await env.KV.get("products:" + siteId); if (raw) products = JSON.parse(raw); } catch(e){}
     const cart = (products && products.length) ? cartInjection(products, siteId, true) : "";

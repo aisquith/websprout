@@ -442,7 +442,7 @@
     function pslug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40);}
     function bizName(){
       try{var info=JSON.parse(localStorage.getItem('ws_info_'+site())||'{}');if(info.brand)return info.brand;}catch(e){}
-      try{var pf=$('pf');var d=pf&&(pf.contentDocument||pf.contentWindow.document);if(d){var bd=d.querySelector('[data-ws-field="brand"]');if(bd&&bd.textContent.trim())return bd.textContent.trim();}}catch(e){}
+      try{var d=window.wsPfDocSafe&&window.wsPfDocSafe();if(d){var bd=d.querySelector('[data-ws-field="brand"]');if(bd&&bd.textContent.trim())return bd.textContent.trim();}}catch(e){}
       var h=curHtml();var a=h.indexOf('<title>'),z=h.indexOf('</title>');if(a>-1&&z>a){var tt=h.slice(a+7,z).split('|')[0].trim();if(tt)return tt;}
       var st=$('stitle');return st?st.textContent:'';
     }
@@ -502,9 +502,10 @@
         return;
       }
       goBtn.textContent='Publishing...';goBtn.disabled=true;
-      fetch('/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:window._wsSiteData||undefined,html:curHtml(),slug:s,siteId:site(),key:key(),pages:(window._wsPages&&window._wsPages.length>1)?(window.wsSyncPages&&window.wsSyncPages(),window._wsPages.map(function(p){return{path:p.path,html:p.html};})):undefined})}).then(function(r){return r.json();}).then(function(j){
+      var _lc=0;try{if(window.wsLaunchCheck)_lc=window.wsLaunchCheck().length;}catch(e){}
+      fetch('/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({launch:{issues:_lc},site:window._wsSiteData||undefined,html:curHtml(),slug:s,siteId:site(),key:key(),pages:(window._wsPages&&window._wsPages.length>1)?(window.wsSyncPages&&window.wsSyncPages(),window._wsPages.map(function(p){return{path:p.path,html:p.html};})):undefined})}).then(function(r){return r.json();}).then(function(j){
         goBtn.textContent='Publish live \u2192';goBtn.disabled=false;
-        if(j.error){avail.innerHTML='<span style="color:#f87171">'+j.error+'</span>';return;}
+        if(j.error){avail.innerHTML='<span style="color:#f87171">'+String(j.error).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];})+'</span>';return;}
         try{localStorage.setItem('ws_slug_'+site(),j.slug);}catch(e){}
         try{if(window.wsAfterPublish)window.wsAfterPublish();}catch(e){}
         showLive(j.slug);
@@ -591,7 +592,7 @@
   </script>
   <div class="s-body">
     <div class="preview-frame-wrap" id="previewWrap">
-      <iframe id="pf" title="Live site preview" style="width:100%;height:4000px;border:none;display:block;background:#fff"></iframe>
+      <iframe id="pf" title="Live site preview" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width:100%;height:4000px;border:none;display:block;background:#fff"></iframe>
       <div class="preview-label">live preview</div>
       <!-- Loading skeleton -->
       <div class="skeleton-wrap" id="skelWrap">
@@ -681,7 +682,7 @@
         <button class="fs-close" id="fsNewTab" style="margin-left:auto">&#8599; Open in new tab</button>
         <button class="fs-close" id="fsClose">✕ Exit full screen</button>
       </div>
-      <iframe id="pfFull" style="border:none;width:100%;flex:1"></iframe>
+      <iframe id="pfFull" title="Full-screen site preview" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox" style="border:none;width:100%;flex:1"></iframe>
     </div>
 
     <div class="chat">
@@ -1236,12 +1237,16 @@
   function goPro(){
     var link='${SUB_LINK}';
     if(!link||link.indexOf('PASTE_YOUR')>-1){if(window.toast)toast('Payments are not set up yet.',5000);return;}
-    var email=(window._wsUser&&window._wsUser.email)||'';
-    window.location.href=link+'?client_reference_id='+encodeURIComponent(email)+'&prefilled_email='+encodeURIComponent(email);
+    // The server creates the checkout for the signed-in account (an opaque reference, never the typed email).
+    fetch('/billing/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(function(r){return r.json();}).then(function(j){
+      if(j&&j.url){window.location.href=j.url;return;}
+      if(j&&j.pro){if(window.toast)toast('You are already Pro. Everything is unlocked!',5000);return;}
+      if(window.toast)toast((j&&j.error)||'Could not start checkout. Please try again.',5000);
+    }).catch(function(){if(window.toast)toast('Could not start checkout. Please try again.',5000);});
   }
   function openBilling(){
     var b=$('pfBilling'); if(b){b.disabled=true;b.textContent='Opening Stripe...';}
-    fetch('/account/billing-portal',{method:'POST'}).then(function(r){return r.json();}).then(function(j){
+    fetch('/account/billing-portal',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(function(r){return r.json();}).then(function(j){
       if(j&&j.url){window.location.href=j.url;}
       else{if(b){b.disabled=false;b.innerHTML='Manage billing &amp; cancel plan';}if(window.toast)toast((j&&j.error)||'Could not open billing right now.',5000);}
     }).catch(function(){if(b){b.disabled=false;b.innerHTML='Manage billing &amp; cancel plan';}if(window.toast)toast('Could not open billing right now.',5000);});
@@ -1326,7 +1331,7 @@
     self.disabled=true;self.textContent='Sending...';
     fetch('/auth/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em})}).then(function(r){return r.json();}).then(function(j){
       self.disabled=false;self.textContent='Email me a sign-in link';
-      if(j.error){msg.innerHTML='<span style="color:#f87171">'+j.error+'</span>';}
+      if(j.error){msg.innerHTML='<span style="color:#f87171">'+String(j.error).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];})+'</span>';}
       else{msg.innerHTML='<span style="color:#4ade80">Check your email for the sign-in link.</span>';}
     }).catch(function(){self.disabled=false;self.textContent='Email me a sign-in link';msg.innerHTML='<span style="color:#f87171">Could not send — try again</span>';});
   });
@@ -1396,7 +1401,7 @@
   function stored(){try{return JSON.parse(localStorage.getItem('ws_info_'+site())||'{}');}catch(e){return {};}}
   function setStored(o){try{localStorage.setItem('ws_info_'+site(),JSON.stringify(o));}catch(e){}}
   function detectBrand(){
-    try{var pf=$('pf');var d=pf&&(pf.contentDocument||pf.contentWindow.document);if(d){var bd=d.querySelector('[data-ws-field="brand"]');if(bd&&bd.textContent.trim())return bd.textContent.trim();}}catch(e){}
+    try{var d=window.wsPfDocSafe&&window.wsPfDocSafe();if(d){var bd=d.querySelector('[data-ws-field="brand"]');if(bd&&bd.textContent.trim())return bd.textContent.trim();}}catch(e){}
     var h=curHtml();var a=h.indexOf('<title>'),b=h.indexOf('</title>');if(a>-1&&b>a){var t=h.slice(a+7,b);return t.split('|')[0].split(' - ')[0].split(' \u2013 ')[0].trim();}
     return '';
   }
@@ -1642,11 +1647,24 @@
     fetch('/my-sites').then(function(r){return r.json();}).then(function(j){
       if(!j||!j.auth)return;
       var local=getProjects().filter(function(p){return p.key;});
-      if(local.length){
+      // Only attach this browser's sites to the signed-in account after the owner agrees (once per account and set of sites).
+      var acct=(window._wsUser&&window._wsUser.email)||j.email||'';var ck='ws_claimok_'+acct;var askedFor='';try{askedFor=localStorage.getItem(ck)||'';}catch(e){}
+      var ids=local.map(function(p){return p.siteId;}).sort().join(',');
+      var known={};(j.sites||[]).forEach(function(s){if(s&&s.siteId)known[s.siteId]=1;});
+      local=local.filter(function(p){return !known[p.siteId];});
+      if(local.length&&askedFor!==ids){
+        var go=function(ok){try{localStorage.setItem(ck,ids);}catch(e){}if(!ok){mergeServer(j.sites);if(modalOpen())render();return;}doClaim();};
+        var nm=local.length===1?'1 site':local.length+' sites';
+        if(window.wsConfirm){window.wsConfirm({title:'Add your sites to this account?',message:'This browser has '+nm+' you built. Add '+(local.length===1?'it':'them')+' to '+(acct||'this account')+' so you can edit '+(local.length===1?'it':'them')+' anywhere? Only do this if this is your account.',okLabel:'Add to my account',cancelLabel:'Not now'}).then(go);}
+        else go(false);
+        return;
+      }
+      mergeServer(j.sites);if(modalOpen())render();
+      function doClaim(){
         fetch('/my-sites/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sites:local})}).then(function(r){return r.json();}).then(function(){
           fetch('/my-sites').then(function(r){return r.json();}).then(function(j2){if(j2&&j2.sites){mergeServer(j2.sites);if(modalOpen())render();}});
         }).catch(function(){mergeServer(j.sites);if(modalOpen())render();});
-      }else{mergeServer(j.sites);if(modalOpen())render();}
+      }
     }).catch(function(){});
   }
   function upsert(sid,k,nm){var p=getProjects(),f=null;for(var i=0;i<p.length;i++){if(p[i].siteId===sid){f=p[i];break;}}if(f){f.name=nm;f.key=k||f.key;f.ts=Date.now();}else{p.push({siteId:sid,key:k,name:nm,ts:Date.now()});}p.sort(function(a,b){return b.ts-a.ts;});setProjects(p);}
@@ -1732,9 +1750,17 @@
     var Q=new URLSearchParams(location.search);
     if(Q.get('site')&&Q.get('key')){
       var dsid=Q.get('site'),dk=Q.get('key');
-      fetch('/load?site='+encodeURIComponent(dsid)+'&key='+encodeURIComponent(dk)).then(function(r){return r.json();}).then(function(j){
-        if(j&&j.html){try{localStorage.setItem('wsh',j.html);localStorage.setItem('ws_site',dsid);localStorage.setItem('ws_key',dk);sessionStorage.setItem('ws_studio','1');if(j.site&&j.site.sections)localStorage.setItem('ws_sd',JSON.stringify(j.site));else localStorage.removeItem('ws_sd');}catch(e){}window._wsSite=dsid;window._wsKey=dk;history.replaceState(null,'',location.pathname);location.reload();}
-      }).catch(function(){});
+      // Get the site key out of the address bar / history / referrers right away.
+      try{Q.delete('site');Q.delete('key');var _qs=Q.toString();history.replaceState(null,'',location.pathname+(_qs?'?'+_qs:'')+location.hash);}catch(e){}
+      // A link to a site that isn't one of this browser's/account's sites could come from anyone: ask before switching
+      // the editor to it (it replaces the local draft, and the page is untrusted until the owner trusts the sender).
+      var _mine=false;try{_mine=(localStorage.getItem('ws_site')===dsid&&localStorage.getItem('ws_key')===dk)||getProjects().some(function(x){return x&&x.siteId===dsid&&x.key===dk;});}catch(e){}
+      var _go=function(){fetch('/load?site='+encodeURIComponent(dsid)+'&key='+encodeURIComponent(dk)).then(function(r){return r.json();}).then(function(j){
+        if(j&&j.html){try{localStorage.setItem('wsh',j.html);localStorage.setItem('ws_site',dsid);localStorage.setItem('ws_key',dk);sessionStorage.setItem('ws_studio','1');if(j.site&&j.site.sections)localStorage.setItem('ws_sd',JSON.stringify(j.site));else localStorage.removeItem('ws_sd');}catch(e){}window._wsSite=dsid;window._wsKey=dk;window._wsNavOK=true;location.reload();}
+        else if(window.toast)toast('Could not open that site. The link may have expired.',4000);
+      }).catch(function(){});};
+      if(_mine)_go();
+      else{var _ask=function(){wsConfirm({title:'Open a site someone shared with you?',message:'Only continue if you trust the sender. Opening it replaces the site currently open in this browser.',okLabel:'Open site',cancelLabel:'Cancel'}).then(function(ok){if(ok)_go();});};if(document.body)_ask();else document.addEventListener('DOMContentLoaded',_ask);}
     }
   }catch(e){}
   setTimeout(accountSync,1600);

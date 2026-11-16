@@ -102,7 +102,7 @@ window.wsAfterPublish=function(){_wsPubFresh=Date.now();wsSetUnpub(false);};
 function wsPublishPayload(slug){
   var html=(typeof gHTML==='string'&&gHTML)||localStorage.getItem('wsh')||'';
   try{if(window._wsSiteData&&typeof wsSyncHome==='function')wsSyncHome();}catch(e){}
-  return {site:window._wsSiteData||undefined,html:html,slug:slug,siteId:wsSid(),key:window._wsKey||localStorage.getItem('ws_key')||'',pages:(window._wsPages&&window._wsPages.length>1)?(window.wsSyncPages&&window.wsSyncPages(),window._wsPages.map(function(p){return{path:p.path,html:p.html};})):undefined};
+  return {launch:{issues:+window._wsLaunchIssues||0},site:window._wsSiteData||undefined,html:html,slug:slug,siteId:wsSid(),key:window._wsKey||localStorage.getItem('ws_key')||'',pages:(window._wsPages&&window._wsPages.length>1)?(window.wsSyncPages&&window.wsSyncPages(),window._wsPages.map(function(p){return{path:p.path,html:p.html};})):undefined};
 }
 // Put the current draft on the live site. Runs the launch checks first; blocking problems open a styled
 // "Fix / Publish anyway" dialog. Resolves true when the live site was updated.
@@ -110,7 +110,7 @@ window.wsPublishUpdate=function(opts){
   opts=opts||{};
   var slug=wsLiveSlug()||window._wsSlug||'';
   if(!slug){var pb=document.getElementById('publishBtn');if(pb)pb.click();return Promise.resolve(false);}
-  var probs=[];try{if(!opts.force&&window._wsSiteData&&typeof wsSiteProblems==='function')probs=wsSiteProblems();}catch(e){probs=[];}
+  var probs=wsLaunchCheck();if(opts.force)probs=[];
   var btn=document.getElementById('wsUpdBtn');
   var go=function(){
     if(btn){btn.setAttribute('data-busy','1');btn.disabled=true;btn.textContent='Updating…';}
@@ -161,7 +161,12 @@ function wsSnapSiteData(html){try{if(window._wsSiteData&&typeof html==='string')
 function wsRestoreSiteData(html){try{var s=_wsSdSnaps.get(html);if(s){window._wsSiteData=JSON.parse(s);try{wsPersistSiteData();}catch(e){}try{if(document.getElementById('wsEdHost'))wsOpenEditor();}catch(e){}}}catch(e){}}
 function wsPersistSiteData(){try{if(window._wsSiteData){try{wsSyncHome();}catch(_e){}localStorage.setItem('ws_sd',JSON.stringify(window._wsSiteData));}}catch(e){}}
 function wsLoadSiteData(sid){try{if(window._wsSiteData)return;var raw=localStorage.getItem('ws_sd');if(!raw)return;var o=JSON.parse(raw);if(o&&o.sections&&(!sid||!o.siteId||o.siteId===sid))window._wsSiteData=o;}catch(e){}}
-function wsTrackOnce(ev,scope){try{var k='ws_tr_'+ev+'_'+(scope||'');if(localStorage.getItem(k))return;localStorage.setItem(k,'1');}catch(e){}try{fetch('/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:ev,url:location.href,ref:document.referrer})});}catch(e){}}
+function wsTrackOnce(ev,scope){try{var k='ws_tr_'+ev+'_'+(scope||'');if(localStorage.getItem(k))return;localStorage.setItem(k,'1');}catch(e){}try{fetch('/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:ev,url:location.href,ref:document.referrer,site:window._wsSite||localStorage.getItem('ws_site')||''})}).catch(function(){});}catch(e){}}
+// Funnel: the first keystroke in the business-name field starts setup (once per page load).
+document.addEventListener('input',function wsSetupStart(e){if(!e.target||e.target.id!=='bizName')return;document.removeEventListener('input',wsSetupStart,true);try{fetch('/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'setup_start',url:location.href})}).catch(function(){});}catch(_e){}},true);
+// Launch checks at publish time: how many problems the owner published with (once per publish attempt).
+function wsLaunchCheck(){var p=[];try{if(window._wsSiteData&&typeof wsSiteProblems==='function')p=wsSiteProblems()||[];}catch(e){p=[];}window._wsLaunchIssues=p.length;try{fetch('/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'launch_check',site:wsSid(),issues:p.length,kinds:p.map(function(x){return x.id;})})}).catch(function(){});}catch(e){}return p;}
+window.wsLaunchCheck=wsLaunchCheck;
 function pushUndo(html){
   wsSnapSiteData(html);
   if(undoStack.length>=1)wsTrackOnce('first_edit',window._wsSite||localStorage.getItem('ws_site')||'');
@@ -241,13 +246,56 @@ function wsFrameContentH(d){
     return Math.ceil(max)||d.body.scrollHeight||0;
   }catch(e){return (d&&d.body&&d.body.scrollHeight)||0;}
 }
-// Continuous resize: the preview posts its height on any layout change (edits, page switches); fit to it.
+// ── Editor <-> preview channel ──
+// SECURITY: page HTML that did not come from WS.renderSite (legacy raw-HTML drafts from the server / localStorage, or
+// a link someone shared) is UNTRUSTED. It only ever runs in an opaque-origin sandboxed frame (no allow-same-origin),
+// so its scripts can't touch websprout.app cookies/storage/DOM. Every frame<->editor message goes over postMessage:
+// the editor only accepts messages whose source is #pf's own window and that carry this session's random nonce, from
+// a fixed set of types, and treats every field as untrusted data (never eval'd or innerHTML'd).
+var _wsPfN=(function(){try{var a=new Uint32Array(4);crypto.getRandomValues(a);return Array.prototype.map.call(a,function(x){return x.toString(36);}).join('');}catch(e){return (Math.random().toString(36)+Date.now().toString(36)).slice(2);}})();
+window._wsPfSafe=false; // true while #pf shows untrusted HTML in the opaque-origin sandbox
+var WS_PF_SANDBOX='allow-scripts allow-popups allow-popups-to-escape-sandbox';
+function wsPfMsg(ev){var f=document.getElementById('pf');if(!f||!ev||!f.contentWindow||ev.source!==f.contentWindow)return null;var m=ev.data;if(!m||typeof m!=='object'||m.n!==_wsPfN||typeof m.type!=='string')return null;return m;}
+function wsPfSend(m){try{var f=document.getElementById('pf');if(f&&f.contentWindow){m.n=_wsPfN;f.contentWindow.postMessage(m,'*');}}catch(e){}}
+function wsPfCmd(op,o){var m=o||{};m.type='wsCmd';m.op=op;wsPfSend(m);}
+function wsHE(s){return String(s==null?'':s).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;').split('"').join('&quot;').split("'").join('&#39;');}
+// Show untrusted HTML (no editor bridge) in a fresh opaque-origin sandboxed iframe: fullscreen preview + new-tab preview.
+function wsSandboxFrame(fr,html){fr.setAttribute('sandbox',WS_PF_SANDBOX);fr.srcdoc=String(html||'');}
+function wsPreviewHtml(){var sd=window._wsSiteData;if(sd&&(sd.sections||sd.pages)&&window.WS&&window.WS.renderSite){try{return window.WS.renderSite(sd,{mode:'live',activePath:wsActivePath()});}catch(e){}}return gHTML||'';}
+// Legacy preview DOM came back from the frame: parse it inertly (DOMParser runs no scripts, loads nothing) and clean it.
+function wsApplyFrameHtml(raw){
+  if(window._wsSiteData||typeof raw!=='string'||raw.length<50)return false;
+  try{var d=new DOMParser().parseFromString(raw,'text/html');var h=wsCleanDocHtml(d);
+    var sc=h.indexOf('<script id="_wsInject">');if(sc>-1){var se=h.indexOf('</'+'script>',sc)+9;if(se>8)h=h.slice(0,sc)+h.slice(se);}
+    gHTML=h;try{localStorage.setItem('wsh',gHTML);}catch(e){}pushUndo(gHTML);bumpEditCount();return true;}catch(e){return false;}
+}
 if(!window._wsHWired){window._wsHWired=true;window.addEventListener('message',function(ev){
-  var m=ev&&ev.data;if(!m||typeof m.wsH!=='number')return;
-  var f=document.getElementById('pf');if(f&&m.wsH>80)f.style.height=m.wsH+'px';
+  var m=wsPfMsg(ev);if(!m)return;var f=document.getElementById('pf');
+  if(m.type==='wsH'){var h=+m.h;if(!(h>80&&h<200000))return;f.style.height=Math.round(h)+'px';if(h>120){var sk=document.getElementById('skelWrap');if(sk&&sk.classList.contains('show')){sk.classList.remove('show');setStudioReady(true);}}return;}
+  if(m.type==='wsSlotClick'){openSlotPicker(String(m.slotId||'image').slice(0,120),String(m.label||'Add photo').slice(0,80));return;}
+  if(m.type==='wsSelect'){window._wsCvSel={rot:(typeof m.rot==='string'?m.rot.slice(0,1000):null),href:String(m.href||'').slice(0,2000),txt:String(m.txt||'').slice(0,300)};wsShowBar(String(m.kind||'text'),String(m.tag||'').slice(0,12),String(m.slotId||'').slice(0,120));return;}
+  if(m.type==='wsNav'){var ok=false;try{ok=!!(window.wsNavClick&&window.wsNavClick(String(m.href||'').slice(0,2000),String(m.text||'').slice(0,300)));}catch(e){}if(!ok)wsPfCmd('navfb',{h:String(m.href||'').slice(0,2000)});return;}
+  if(m.type==='wsSync'){
+    var e=String(m.ev||'');
+    if(e==='noslot'){toast('Could not find that slot. Try regenerating the site.',4000);return;}
+    if(!window._wsPfSafe&&wsPfDoc()){wsSyncFromFrame();}else if(!wsApplyFrameHtml(m.html))return;
+    if(e==='text')addMsg('ai','Text updated! Double-click anything else to keep editing.');
+    else if(e==='photo'){addMsg('ai','Photo placed! Click it to swap, or click another slot to add more.');toast('Photo added!',3000);}
+    else if(e==='del')toast('Deleted',2500);
+    else if(e==='align'&&['left','center','right'].indexOf(m.x)>-1)toast('Aligned '+m.x,1600);
+    else if(e==='link')toast(m.x==='clear'?'Link cleared':'Link set ✓',2200);
+    else if(e==='rotate'){try{setPreview(gHTML);}catch(_e){}toast('Typewriter words updated',2500);}
+  }
 });}
 function setPreview(html){
-  var f=document.getElementById('pf');if(!f||!html)return;
+  var f=document.getElementById('pf');if(!f)return;
+  // Structured (v3) sites: the preview is ALWAYS rebuilt locally from the site data by WS.renderSite (which escapes all
+  // owner content) — never taken from stored/remote HTML. Only that output may run same-origin (needed for inline editing).
+  var safe=true,sd=window._wsSiteData;
+  if(sd&&(sd.sections||sd.pages)&&window.WS&&window.WS.renderSite){try{var _r=window.WS.renderSite(sd,{mode:'live',activePath:wsActivePath()});if(_r){html=_r;safe=false;}}catch(e){}}
+  if(!html)return;
+  window._wsPfSafe=safe;
+  if(safe)f.setAttribute('sandbox',WS_PF_SANDBOX);else f.removeAttribute('sandbox');
   // Keep the studio top-bar title in sync with the site's current <title> (renames, edits, etc.)
   try{var _ts=html.indexOf('<title>'),_te=html.indexOf('</title>');if(_ts>-1&&_te>_ts){var _tt=html.slice(_ts+7,_te).trim();var _st=document.getElementById('stitle');if(_st&&_tt)_st.textContent=_tt.slice(0,50);}}catch(e){}
   var skel=document.getElementById('skelWrap');
@@ -256,13 +304,51 @@ function setPreview(html){
   // Inject slot click handler + nav fix into preview
   // Build combined injection script (slots + edit mode)
   var slotScript='<scr'+'ipt id=\"_wsInject\">'+
+    // Channel to the editor: postMessage only (the frame may be opaque-origin). Every message carries the session
+    // nonce, goes only to the editor's origin, and incoming commands must come from the editor window with the nonce.
+    'var N='+JSON.stringify(_wsPfN)+',PO='+JSON.stringify(location.origin)+';'+
+    'function P(m){m.n=N;try{parent.postMessage(m,PO);}catch(e){}}'+
+    'function _wsSync(ev,x){try{document.querySelectorAll("[data-wsfloat]").forEach(function(b){b.remove();});P({type:"wsSync",ev:ev||"",x:x||"",html:document.documentElement.outerHTML});}catch(e){}}'+
+    'function _wsFill(id,src){'+
+      'var slot=document.querySelector("[data-ws-active]");'+
+      'if(!slot){var all=document.querySelectorAll("[data-slot]");for(var i=0;i<all.length;i++){if(all[i].getAttribute("data-slot")===id){slot=all[i];break;}}if(!slot&&all.length===1)slot=all[0];}'+
+      'if(!slot||!slot.parentNode){P({type:"wsSync",ev:"noslot"});return;}'+
+      'var c=document.createElement("div");c.setAttribute("data-slot-filled",id);c.style.cssText="width:100%;height:"+(slot.style.height||"320px")+";border-radius:"+(slot.style.borderRadius||"8px")+";overflow:hidden;position:relative";'+
+      // A positioned background slot (full-bleed hero bg) stays positioned so the photo sits BEHIND the content.
+      'try{var co=getComputedStyle(slot);if(co.position==="absolute"||co.position==="fixed"){c.style.position=co.position;["top","left","right","bottom","width","height","zIndex","inset"].forEach(function(p){if(slot.style[p])c.style[p]=slot.style[p];});if(!slot.style.top&&!slot.style.inset){c.style.top="0";c.style.left="0";c.style.right="0";c.style.bottom="0";}if(co.zIndex&&co.zIndex!=="auto"&&!slot.style.zIndex)c.style.zIndex=co.zIndex;}}catch(e){}'+
+      'var im=document.createElement("img");im.src=src;im.style.cssText="width:100%;height:100%;object-fit:cover;display:block";c.appendChild(im);'+
+      'slot.parentNode.replaceChild(c,slot);_wsSync("photo");'+
+    '}'+
+    // Legacy canvas toolbar commands (the editor can't reach into an opaque-origin frame, so the edits happen here)
+    'function _wsCmd(d){'+
+      'var op=d.op,S=document.querySelector("[data-wssel]");'+
+      'if(op==="sync"){_wsSync("");return;}'+
+      'if(op==="navfb"){try{var h=String(d.h||""),t=(h.length>1&&h.charAt(0)==="#")?document.getElementById(h.slice(1)):null;if(!t)t=document.querySelector("form");if(t&&t.scrollIntoView)t.scrollIntoView({behavior:"smooth"});}catch(err){}return;}'+
+      'if(op==="fill"){_wsFill(String(d.slot||""),String(d.src||""));return;}'+
+      'if(!S)return;'+
+      'if(op==="desel"){S.style.outline="";S.style.outlineOffset="";S.removeAttribute("data-wssel");return;}'+
+      'if(op==="del"){if(S.parentNode)S.parentNode.removeChild(S);_wsSync("del");return;}'+
+      'var cs=getComputedStyle(S);'+
+      'if(op==="font"){var px=parseInt(cs.fontSize)||16;S.style.fontSize=Math.max(9,Math.min(180,px+(d.d<0?-3:3)))+"px";}'+
+      'else if(op==="bold"){var w=cs.fontWeight;S.style.fontWeight=(w==="700"||w==="bold"||parseInt(w)>=600)?"400":"800";}'+
+      'else if(op==="color")S.style.color=String(d.v||"");'+
+      'else if(op==="bg")S.style.background=String(d.v||"");'+
+      'else if(op==="move"){var p=S.parentNode;if(!p)return;if(d.d<0){var pv=S.previousElementSibling;if(pv)p.insertBefore(S,pv);}else{var nx=S.nextElementSibling;if(nx)p.insertBefore(nx,S);}_wsSync("");if(S.scrollIntoView)S.scrollIntoView({block:"center"});return;}'+
+      'else if(op==="align"){var o=["left","center","right"],ai=o.indexOf(cs.textAlign),na=ai<0?"center":o[(ai+1)%3];S.style.textAlign=na;_wsSync("align",na);return;}'+
+      'else if(op==="edit"){S.contentEditable="true";S.focus();var dn=function(){S.removeAttribute("contenteditable");S.removeEventListener("blur",dn);_wsSync("");};S.addEventListener("blur",dn);return;}'+
+      'else if(op==="rotate"){var wl=[].concat(d.w||[]).map(String).filter(Boolean);if(!wl.length)return;S.setAttribute("data-ws-rotate",wl.join("|"));S.textContent=wl[0];_wsSync("rotate");return;}'+
+      'else if(op==="link"){var v=String(d.v||"");if(!v){S.removeAttribute("href");_wsSync("link","clear");return;}S.setAttribute("href",v);if(S.tagName==="A"&&v.toLowerCase().indexOf("http")===0){S.setAttribute("target","_blank");S.setAttribute("rel","noopener");}_wsSync("link","set");return;}'+
+      'else return;'+
+      '_wsSync("");'+
+    '}'+
 
     // Edit mode toggle
     'window._wsEM=false;'+
     'window.addEventListener(\"message\",function(e){'+
-      'if(!e.data||typeof e.data!==\"object\")return;'+
+      'if(e.source!==parent||!e.data||typeof e.data!==\"object\"||e.data.n!==N)return;'+
+      'if(e.data.type===\"wsCmd\"){_wsCmd(e.data);return;}'+
       'if(e.data.type===\"wsSetEditMode\"){'+
-        'window._wsEM=e.data.active;'+
+        'window._wsEM=!!e.data.active;'+
         'var s=document.getElementById(\"_wsES\");'+
         'if(e.data.active&&!s){'+
           's=document.createElement(\"style\");s.id=\"_wsES\";'+
@@ -283,7 +369,7 @@ function setPreview(html){
       'el.contentEditable=\"true\";el.style.outline=\"2px solid #3dba52\";el.focus();'+
       'el.addEventListener(\"blur\",function(){'+
         'el.contentEditable=\"false\";el.style.outline=\"\";'+
-        'if(el.outerHTML!==oldOuter)parent.postMessage({type:\"wsTextEdit\",oldOuter:oldOuter,newOuter:el.outerHTML},\"*\");'+
+        'if(el.outerHTML!==oldOuter)_wsSync(\"text\");'+
       '},{once:true});'+
       'el.addEventListener(\"keydown\",function(ev){'+
         'if(ev.key===\"Enter\"&&!ev.shiftKey){ev.preventDefault();el.blur();}'+
@@ -305,7 +391,7 @@ function setPreview(html){
       'else if(el.tagName==="SECTION"||el.tagName==="HEADER"||el.tagName==="FOOTER")kind="section";'+
       'else if(el.tagName==="DIV"){var rr=el.getBoundingClientRect();if(rr.height>160&&el.children.length>=2)kind="section";}'+
       'var cs=getComputedStyle(el);'+
-      'parent.postMessage({type:"wsSelect",kind:kind,tag:el.tagName,fontSize:parseInt(cs.fontSize)||16,slotId:(el.getAttribute("data-slot")||el.getAttribute("data-slot-filled")||"")},"*");'+
+      'P({type:"wsSelect",kind:kind,tag:el.tagName,fontSize:parseInt(cs.fontSize)||16,slotId:(el.getAttribute("data-slot")||el.getAttribute("data-slot-filled")||""),rot:el.getAttribute("data-ws-rotate"),href:el.getAttribute("href")||"",txt:(el.textContent||"").trim().slice(0,300)});'+
     '},true);'+
 
     // Wire image slots - direct listeners, no innerHTML, no quote escaping issues
@@ -316,7 +402,7 @@ function setPreview(html){
         's.style.cssText+=\";cursor:pointer!important;pointer-events:auto!important\";'+
         's.onclick=function(e){e.preventDefault();e.stopPropagation();'+
           'try{document.querySelectorAll(\"[data-ws-active]\").forEach(function(x){x.removeAttribute(\"data-ws-active\")});s.setAttribute(\"data-ws-active\",\"1\");}catch(_e){}'+
-          'parent.postMessage({type:\"wsSlotClick\",slotId:s.getAttribute(\"data-slot\")||\"image\",label:s.getAttribute(\"data-label\")||\"Add photo\"},\"*\");'+
+          'P({type:\"wsSlotClick\",slotId:s.getAttribute(\"data-slot\")||\"image\",label:s.getAttribute(\"data-label\")||\"Add photo\"});'+
         '};'+
       '});'+
       // Filled slots - click to change photo, show overlay on hover
@@ -334,7 +420,7 @@ function setPreview(html){
         's.onmouseleave=function(){ov.style.opacity=\"0\";};'+
         's.onclick=function(e){e.preventDefault();e.stopPropagation();'+
           'try{document.querySelectorAll(\"[data-ws-active]\").forEach(function(x){x.removeAttribute(\"data-ws-active\")});s.setAttribute(\"data-ws-active\",\"1\");}catch(_e){}'+
-          'parent.postMessage({type:\"wsSlotClick\",slotId:s.getAttribute(\"data-slot-filled\")||\"image\",label:\"Change photo\"},\"*\");'+
+          'P({type:\"wsSlotClick\",slotId:s.getAttribute(\"data-slot-filled\")||\"image\",label:\"Change photo\"});'+
         '};'+
       '});'+
     '}'+
@@ -358,7 +444,7 @@ function setPreview(html){
             'btn._slot=s;'+
             'btn.textContent=\"\\uD83D\\uDCF7 Add background photo\";'+
             'btn.style.cssText=\"position:absolute;z-index:2147483600;padding:9px 16px;background:rgba(17,17,17,.85);color:#fff;font:600 13px -apple-system,BlinkMacSystemFont,sans-serif;border-radius:100px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.35);white-space:nowrap\";'+
-            'btn.onclick=function(e){e.preventDefault();e.stopPropagation();try{document.querySelectorAll(\"[data-ws-active]\").forEach(function(x){x.removeAttribute(\"data-ws-active\")});s.setAttribute(\"data-ws-active\",\"1\");}catch(_e){}parent.postMessage({type:\"wsSlotClick\",slotId:s.getAttribute(\"data-slot\")||\"image\",label:s.getAttribute(\"data-label\")||\"Add photo\"},\"*\");};'+
+            'btn.onclick=function(e){e.preventDefault();e.stopPropagation();try{document.querySelectorAll(\"[data-ws-active]\").forEach(function(x){x.removeAttribute(\"data-ws-active\")});s.setAttribute(\"data-ws-active\",\"1\");}catch(_e){}P({type:\"wsSlotClick\",slotId:s.getAttribute(\"data-slot\")||\"image\",label:s.getAttribute(\"data-label\")||\"Add photo\"});};'+
             'document.body.appendChild(btn);'+
             's._wsFloatBtn=btn;'+
           '}'+
@@ -381,7 +467,7 @@ function setPreview(html){
       'var a=e.target.closest(\"a\");'+
       'if(!a)return;'+
       'var h=a.getAttribute(\"href\")||\"\";'+
-      'if(h.indexOf(\"mailto:\")===0||h.indexOf(\"tel:\")===0||h.indexOf(\"javascript:\")===0)return;'+
+      'if(h.indexOf(\"mailto:\")===0||h.indexOf(\"tel:\")===0)return;'+
       // Block EVERYTHING else from navigating the srcdoc preview away — empty, "#", "/", and full URLs
       // all resolve to websprout.app inside an srcdoc iframe and would load the whole app in the preview.
       // For genuine in-page hash links, scroll to the target manually instead of letting it navigate.
@@ -391,15 +477,16 @@ function setPreview(html){
       // would resolve to websprout.app and load the app, so we keep them in-page: scroll to the matching
       // section, or fall back to the contact form so the button always does something.
       'if((h.indexOf(\"http://\")===0||h.indexOf(\"https://\")===0)&&h.indexOf(\"websprout.app\")===-1){try{window.open(h,\"_blank\",\"noopener\");}catch(err){}return;}'+
-      'try{if(window.parent.wsNavClick&&window.parent.wsNavClick(h,(a.textContent||\"\"))){return;}}catch(_pe){}'+
-      'try{var t=(h.length>1&&h.charAt(0)===\"#\")?document.getElementById(h.slice(1)):null;if(!t)t=document.querySelector(\"form\");if(t&&t.scrollIntoView)t.scrollIntoView({behavior:\"smooth\"});}catch(err){}'+
+      'if(h.indexOf(\"#/\")===0&&window.__wsShowPage)return;'+
+      // Ask the editor (page switch on multi-page legacy sites); it answers navfb when it didn't handle it, and we scroll.
+      'P({type:\"wsNav\",href:h,text:(a.textContent||\"\").slice(0,300)});'+
     '},true);'+
     // Never let a form submission navigate the preview away (it was loading the whole app inside the preview)
     'document.addEventListener(\"submit\",function(e){e.preventDefault();},true);'+
 
     // Auto-resize: report true content height to the parent on any layout change (edits, page switches).
     'function wsCH(){try{var max=0,kids=document.body.children;for(var i=0;i<kids.length;i++){var el=kids[i],tn=el.tagName;if(tn===\"SCRIPT\"||tn===\"STYLE\"||tn===\"LINK\")continue;var cs=getComputedStyle(el);if(cs&&cs.position===\"fixed\")continue;var r=el.getBoundingClientRect();var mb=parseFloat(cs.marginBottom)||0;if(r.height>0&&r.bottom+mb>max)max=r.bottom+mb;}return Math.ceil(max)||document.body.scrollHeight||0;}catch(e){return document.body.scrollHeight||0;}}'+
-    'var _wsLH=0;function wsPostH(){try{var h=wsCH();if(h>60&&Math.abs(h-_wsLH)>1){_wsLH=h;parent.postMessage({wsH:h},\"*\");}}catch(e){}}'+
+    'var _wsLH=0;function wsPostH(){try{var h=wsCH();if(h>60&&Math.abs(h-_wsLH)>1){_wsLH=h;P({type:\"wsH\",h:h});}}catch(e){}}'+
     'if(window.ResizeObserver){try{new ResizeObserver(wsPostH).observe(document.body);}catch(e){}}'+
     'window.addEventListener(\"load\",wsPostH);window.addEventListener(\"hashchange\",function(){setTimeout(wsPostH,60);setTimeout(wsPostH,450);});'+
     'setTimeout(wsPostH,80);setTimeout(wsPostH,400);setTimeout(wsPostH,1000);setTimeout(wsPostH,2200);'+
@@ -421,7 +508,7 @@ function setPreview(html){
   var timer=setInterval(function(){
     attempts++;
     try{
-      var d=f.contentDocument||f.contentWindow.document;
+      var d=window._wsPfSafe?null:f.contentDocument||f.contentWindow.document;
       if(d&&d.body){
         // Measure the true content height from the bottom edge of the body's own children. This is
         // immune to the 4000px placeholder inflating documentElement.scrollHeight on short pages.
@@ -655,7 +742,7 @@ document.addEventListener('DOMContentLoaded',function(){
     var pfFull=document.getElementById('pfFull');
     var title=document.getElementById('stitle').textContent;
     document.getElementById('fsTitle').textContent=title;
-    pfFull.srcdoc=gHTML;
+    wsSandboxFrame(pfFull,wsPreviewHtml());
     overlay.classList.add('on');
   });
   document.getElementById('fsClose').addEventListener('click',function(){
@@ -667,7 +754,8 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!gHTML){toast('Generate a site first!');return;}
     var w=window.open('','_blank');
     if(!w){toast('Allow pop-ups to open the preview in a new tab',5000);return;}
-    w.document.open();w.document.write(gHTML);w.document.close();
+    // The new tab is a websprout.app about:blank, so the page goes in an opaque-origin sandboxed iframe inside it.
+    try{w.opener=null;var wd=w.document;wd.title=(document.getElementById('stitle')||{}).textContent||'Preview';wd.body.style.cssText='margin:0;overflow:hidden';var fr=wd.createElement('iframe');fr.style.cssText='border:0;width:100vw;height:100vh;display:block';fr.title='Site preview';wsSandboxFrame(fr,wsPreviewHtml());wd.body.appendChild(fr);}catch(e){try{w.close();}catch(_e){}}
   });
 
   // -- Color palette swatches ------------------------------------
@@ -687,7 +775,7 @@ document.addEventListener('DOMContentLoaded',function(){
     var urlInput=document.getElementById('shareUrlInput');
     urlInput.value='Generating link...';
     modal.classList.add('on');
-    fetch('/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html:gHTML})})
+    fetch('/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({html:gHTML,siteId:window._wsSite||localStorage.getItem('ws_site')||'',key:window._wsKey||localStorage.getItem('ws_key')||''})})
     .then(function(r){return r.json();})
     .then(function(d){
       if(d.url){urlInput.value=d.url;}
@@ -1348,7 +1436,7 @@ document.addEventListener('DOMContentLoaded',function(){
   }catch(domErr){
     // Show error visually so we can debug
     console.error('DOMContentLoaded error:', domErr);
-    document.body.insertAdjacentHTML('beforeend','<div style="position:fixed;bottom:10px;left:10px;background:red;color:white;padding:10px;z-index:999999;font-size:12px;max-width:400px;word-break:break-all">JS Error: '+domErr.message+'</div>');
+    var _ed=document.createElement('div');_ed.style.cssText='position:fixed;bottom:10px;left:10px;background:red;color:white;padding:10px;z-index:999999;font-size:12px;max-width:400px;word-break:break-all';_ed.textContent='JS Error: '+domErr.message;document.body.appendChild(_ed);
     // Try to bind essential buttons anyway
     try{document.querySelectorAll('.type-btn').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.type-btn').forEach(function(x){x.classList.remove('sel');});b.classList.add('sel');selectedType=b.dataset.type==='OTHER'?'':b.dataset.type;document.getElementById('next1').classList.add('on');});});}catch(e2){}
     try{}catch(e2){}
@@ -1370,7 +1458,7 @@ function buildSummary(){
     {l:'Notes',v:extra||'-'}
   ];
   document.getElementById('summaryGrid').innerHTML=rows.map(function(r){
-    return '<div class="s-row"><div class="s-lbl">'+r.l+'</div><div class="s-val">'+r.v+'</div></div>';
+    return '<div class="s-row"><div class="s-lbl">'+wsHE(r.l)+'</div><div class="s-val">'+wsHE(r.v)+'</div></div>';
   }).join('');
 }
 
@@ -1461,7 +1549,7 @@ function wsAddRedirect(from,to){
 }
 function wsGotoPreviewPage(path){try{var f=document.getElementById('pf');if(f&&f.contentWindow)f.contentWindow.postMessage({ws:true,type:'wsGoPage',path:path||''},'*');}catch(e){}}
 // Keep the editor's active page in sync when the user clicks the nav inside the live preview.
-if(!window._wsPageMsgWired){window._wsPageMsgWired=true;window.addEventListener('message',function(ev){var m=ev&&ev.data;if(!m||!m.ws||m.type!=='wsPageShown'||!wsIsMulti())return;var pth=m.path||'',idx=-1,pgs=window._wsSiteData.pages;for(var i=0;i<pgs.length;i++){if((pgs[i].path||'')===pth){idx=i;break;}}if(idx>=0&&idx!==window._wsPageIdx){window._wsPageIdx=idx;wsEdSel=-1;try{if(document.getElementById('wsEdHost'))wsOpenEditor();}catch(e){}}});}
+if(!window._wsPageMsgWired){window._wsPageMsgWired=true;window.addEventListener('message',function(ev){var _f=document.getElementById('pf');if(!_f||ev.source!==_f.contentWindow||window._wsPfSafe)return;var m=ev&&ev.data;if(!m||typeof m!=='object'||!m.ws||m.type!=='wsPageShown'||typeof m.path!=='string'||!wsIsMulti())return;var pth=m.path,idx=-1,pgs=window._wsSiteData.pages;for(var i=0;i<pgs.length;i++){if((pgs[i].path||'')===pth){idx=i;break;}}if(idx>=0&&idx!==window._wsPageIdx){window._wsPageIdx=idx;wsEdSel=-1;try{if(document.getElementById('wsEdHost'))wsOpenEditor();}catch(e){}}});}
 function wsRerender(structural){
   try{
     if(!window.WS||!window._wsSiteData)return;
@@ -1915,7 +2003,7 @@ function wsPreviewCss(d){
 }
 function wsBindPreview(){
   var sd=window._wsSiteData;var f=document.getElementById('pf');if(!sd||!f)return;
-  var d;try{d=f.contentDocument||f.contentWindow.document;}catch(e){return;}
+  if(window._wsPfSafe)return;var d;try{d=f.contentDocument||f.contentWindow.document;}catch(e){return;}
   if(!d||!d.body)return;
   wsPreviewCss(d);
   // Label every editable piece of text with the data path it came from.
@@ -2404,7 +2492,7 @@ function wsRenderDesign(pad){
   pad.appendChild(bc);
   pad.appendChild(wseEl('div','wse-label','Fonts'));
   var tsSel=wseEl('select','wse-field');tsSel.setAttribute('aria-label','Fonts');
-  [['bold','Bold condensed'],['editorial','Editorial serif'],['clean','Clean sans']].forEach(function(o){var op=wseEl('option',null,o[1]);op.value=o[0];if((sd.typeset||'bold')===o[0])op.selected=true;tsSel.appendChild(op);});
+  wsTypeOpts('').forEach(function(o){var op=wseEl('option',null,o[1]);op.value=o[0];if((sd.typeset||'bold')===o[0])op.selected=true;tsSel.appendChild(op);});
   tsSel.addEventListener('change',function(){sd.typeset=tsSel.value;wsRerender();});
   pad.appendChild(tsSel);
   pad.appendChild(wseEl('div','wse-label','Corners'));
@@ -2416,10 +2504,15 @@ function wsRenderDesign(pad){
   pad.appendChild(seg);
   pad.appendChild(wseEl('div','wse-label','Icons'));
   var esSel=wseEl('select','wse-field');esSel.setAttribute('aria-label','Icon style');
-  [['color','Full color'],['soft','Soft'],['mono','Monochrome'],['badge','Badge']].forEach(function(o){var op=wseEl('option',null,o[1]);op.value=o[0];if((sd.emojiStyle||'color')===o[0])op.selected=true;esSel.appendChild(op);});
-  esSel.addEventListener('change',function(){sd.emojiStyle=esSel.value;wsRerender();});
+  wsIconOpts('').forEach(function(o){var op=wseEl('option',null,o[1]);op.value=o[0];if(wsIconVal(sd)===o[0])op.selected=true;esSel.appendChild(op);});
+  esSel.addEventListener('change',function(){wsSetIcons(sd,esSel.value);wsRerender();});
   pad.appendChild(esSel);
 }
+// Look controls: font pairings from the engine, and line icons vs emoji (with the emoji look when emoji are on).
+function wsTypeOpts(pre){var n=(window.WS&&window.WS.typeNames)||{bold:'Bold condensed',editorial:'Editorial serif',clean:'Clean sans'};return Object.keys(n).map(function(k){return [k,pre+n[k]];});}
+function wsIconOpts(pre){return [['line',pre+'Line icons'],['color',pre+'Emoji, full color'],['soft',pre+'Emoji, soft'],['mono',pre+'Emoji, monochrome'],['badge',pre+'Emoji in a badge']];}
+function wsIconVal(sd){var st='line';try{st=window.WS.iconStyleOf(sd);}catch(e){}return st==='line'?'line':(sd.emojiStyle||'color');}
+function wsSetIcons(sd,v){if(v==='line'){sd.iconStyle='line';}else{sd.iconStyle='emoji';sd.emojiStyle=v;}}
 function wsHasShop(){return wsAllSections().some(function(s){return s&&s.type==='products'&&(s.items||[]).length;});}
 // Site tab: whether visitors can pay online, and the one next step to get there.
 function wsRenderPayments(pad){
@@ -2475,12 +2568,12 @@ function wsOpenEditor(){
   });
   pad.appendChild(palRow);
   var esSel=wseEl('select','wse-field');esSel.style.marginTop='12px';
-  [['color','Emoji: full color'],['soft','Emoji: soft'],['mono','Emoji: monochrome'],['badge','Emoji: badge']].forEach(function(o){var op=wseEl('option',null,o[1]);op.value=o[0];if((window._wsSiteData.emojiStyle||'color')===o[0])op.selected=true;esSel.appendChild(op);});
-  esSel.addEventListener('change',function(){window._wsSiteData.emojiStyle=esSel.value;wsRerender();});
+  wsIconOpts('Icons: ').forEach(function(o){var op=wseEl('option',null,o[1]);op.value=o[0];if(wsIconVal(window._wsSiteData)===o[0])op.selected=true;esSel.appendChild(op);});
+  esSel.addEventListener('change',function(){wsSetIcons(window._wsSiteData,esSel.value);wsRerender();});
   pad.appendChild(esSel);
   // Type style: swap the whole font system (bold condensed / editorial serif / clean sans).
   var tsSel=wseEl('select','wse-field');tsSel.style.marginTop='9px';
-  [['bold','Type: Bold condensed'],['editorial','Type: Editorial serif'],['clean','Type: Clean sans']].forEach(function(o){var op=wseEl('option',null,o[1]);op.value=o[0];if((window._wsSiteData.typeset||'bold')===o[0])op.selected=true;tsSel.appendChild(op);});
+  wsTypeOpts('Type: ').forEach(function(o){var op=wseEl('option',null,o[1]);op.value=o[0];if((window._wsSiteData.typeset||'bold')===o[0])op.selected=true;tsSel.appendChild(op);});
   tsSel.addEventListener('change',function(){window._wsSiteData.typeset=tsSel.value;wsRerender();});
   pad.appendChild(tsSel);
   }
@@ -2631,7 +2724,7 @@ function doCreateV3(){
   var type=val('bizType').trim()||((typeof selectedType!=='undefined'&&selectedType)?selectedType:'');
   var payload={name:val('bizName').trim(),type:type,about:val('customPrompt').trim().slice(0,400),city:val('bizCity').trim().slice(0,80),phone:val('bizPhone').trim().slice(0,40)};
   if(window._wsLook)payload.look=window._wsLook;
-  var gp=window._wsPlace;if(gp&&gp.googlePlaceId){payload.googlePlaceId=gp.googlePlaceId;payload.googleName=gp.name||'';payload.address=gp.address||'';payload.hours=gp.hours||[];payload.reviews=gp.reviews||[];}
+  var gp=window._wsPlace;if(gp&&gp.googlePlaceId){payload.googlePlaceId=gp.googlePlaceId;payload.googleName=gp.name||'';payload.address=gp.address||'';payload.hours=gp.hours||[];payload.reviews=gp.reviews||[];if(typeof gp.rating==='number'&&isFinite(gp.rating))payload.rating=gp.rating;if(typeof gp.count==='number'&&isFinite(gp.count))payload.count=gp.count;}
   var btn=document.getElementById('gbtn'),gt=document.getElementById('gbtnTxt'),ld=document.getElementById('loading');
   if(btn)btn.disabled=true;if(gt)gt.textContent='Growing...';if(ld)ld.classList.add('on');
   if(window.wsQaShow)try{wsQaShow();}catch(e){}
@@ -2774,7 +2867,7 @@ function doGenerate(){
       if(name){
         updated=rep(updated,['[Your Business Name]','[Business Name]','[Company Name]','[Your Company]','[Your Name]'],name);
         var oldBrand='';
-        try{var _pf=document.getElementById('pf');var _pd=_pf&&(_pf.contentDocument||_pf.contentWindow.document);if(_pd){var _bd=_pd.querySelector('[data-ws-field="brand"]');if(_bd&&_bd.textContent.trim())oldBrand=_bd.textContent.trim();}}catch(e){}
+        try{var _pd=window.wsPfDocSafe&&window.wsPfDocSafe();if(_pd){var _bd=_pd.querySelector('[data-ws-field="brand"]');if(_bd&&_bd.textContent.trim())oldBrand=_bd.textContent.trim();}}catch(e){}
         if(!oldBrand){var _a=updated.indexOf('<title>'),_b=updated.indexOf('</title>');if(_a>-1&&_b>_a){var _t=updated.slice(_a+7,_b);_t=_t.split('|')[0];_t=_t.split(' - ')[0];oldBrand=_t.trim();}}
         if(oldBrand&&oldBrand.length>1&&oldBrand!==name){updated=updated.split(oldBrand).join(name);count++;}
         // Refresh the tab favicon so it matches the new name (mirrors the server monogram)
@@ -2897,31 +2990,15 @@ function toggleEditMode(){
   if(btn)btn.classList.toggle('on',editModeOn);
   if(ind)ind.classList.toggle('on',editModeOn);
   // Tell iframe to enable/disable edit mode
-  if(pf&&pf.contentWindow){
-    pf.contentWindow.postMessage({type:'wsSetEditMode',active:editModeOn},'*');
-  }
+  wsPfSend({type:'wsSetEditMode',active:editModeOn});
   if(!editModeOn){try{wsCvDeselect();}catch(e){}}
 }
 
-// Receive text edits from iframe
-window.addEventListener('message',function(e){
-  if(!e.data||typeof e.data!=='object')return;
-  if(e.data.type==='wsTextEdit'&&e.data.oldOuter&&e.data.newOuter){
-    // Save from the live preview DOM. (Matching oldOuter against gHTML missed whenever the element had
-    // just been click-selected — the selection outline is part of its outerHTML — so edits were dropped.)
-    wsSyncFromFrame();
-    // Don't re-render - edit is already visible in iframe
-    addMsg('ai','Text updated! Double-click anything else to keep editing.');
-  }
-  if(e.data.type==='wsSlotClick'){
-    openSlotPicker(e.data.slotId||'image',e.data.label||'Add photo');
-  }
-});
+// Text edits, slot clicks and selections from the preview arrive on the nonce-checked channel next to setPreview().
 
 // ── Canva-style click-to-edit (parent side: all the real editing lives here) ──
 var wsBarKind=null, wsBarSlot='';
-function wsPfDoc(){var pf=document.getElementById('pf');return (pf&&(pf.contentDocument||(pf.contentWindow&&pf.contentWindow.document)))||null;}
-function wsSelEl(){var d=wsPfDoc();return d?d.querySelector('[data-wssel]'):null;}
+function wsPfDoc(){if(window._wsPfSafe)return null;try{var pf=document.getElementById('pf');return (pf&&(pf.contentDocument||(pf.contentWindow&&pf.contentWindow.document)))||null;}catch(e){return null;}}
 // Serialize the preview document WITHOUT anything the editor added (edit-mode CSS, selection outlines,
 // photo-slot hover overlays, injected scripts, preview-only product grid / cart), keeping the doctype.
 function wsCleanDocHtml(d){
@@ -2941,7 +3018,7 @@ function wsCleanDocHtml(d){
   return '<!DOCTYPE html>'+String.fromCharCode(10)+h;
 }
 function wsSyncFromFrame(){
-  var d=wsPfDoc();if(!d)return;
+  var d=wsPfDoc();if(!d){wsPfCmd('sync');return;}
   try{
     var sel=d.querySelector('[data-wssel]'),so='',sf='';
     if(sel){so=sel.style.outline;sf=sel.style.outlineOffset;sel.style.outline='';sel.style.outlineOffset='';sel.removeAttribute('data-wssel');}
@@ -2983,7 +3060,7 @@ function wsShowBar(kind,tag,slotId){
     wsCvBtn(acts,'\u2B07',function(){wsCvMove(1);},'Move down');
     wsCvBtn(acts,'\uD83D\uDDD1 Delete',wsCvDelete,'Delete section');
   }else{
-    var _selR=wsSelEl();if(_selR&&_selR.getAttribute&&_selR.getAttribute('data-ws-rotate')!==null){wsCvBtn(acts,'\u270F Edit words',wsCvRotate,'Edit the typing words');}else{wsCvBtn(acts,'\u270F Edit',wsCvEdit,'Edit the words');}
+    var _selR=window._wsCvSel||{};if(typeof _selR.rot==='string'){wsCvBtn(acts,'\u270F Edit words',wsCvRotate,'Edit the typing words');}else{wsCvBtn(acts,'\u270F Edit',wsCvEdit,'Edit the words');}
     var _T=(tag||'').toUpperCase();
     if(_T==='A'||_T==='BUTTON')wsCvBtn(acts,'\uD83D\uDD17 Link',wsCvLink,'Set where this button goes');
     wsCvBtn(acts,'A+',function(){wsCvFont(1);},'Bigger');
@@ -2996,34 +3073,29 @@ function wsShowBar(kind,tag,slotId){
   wsCvBtn(acts,'\u2713 Done',wsCvDeselect,'Finish editing this');
   bar.style.display='flex';
 }
-function wsCvDeselect(){var el=wsSelEl();if(el){el.style.outline='';el.style.outlineOffset='';el.removeAttribute('data-wssel');}var bar=document.getElementById('wsCanvaBar');if(bar)bar.style.display='none';}
-function wsCvDelete(){var el=wsSelEl();if(!el)return;if(el.parentNode)el.parentNode.removeChild(el);wsSyncFromFrame();wsCvDeselect();toast('Deleted',2500);}
-function wsCvFont(dir){var el=wsSelEl();if(!el)return;var d=wsPfDoc();var px=parseInt(d.defaultView.getComputedStyle(el).fontSize)||16;px=Math.max(9,Math.min(180,px+dir*3));el.style.fontSize=px+'px';wsSyncFromFrame();}
-function wsCvBold(){var el=wsSelEl();if(!el)return;var d=wsPfDoc();var w=d.defaultView.getComputedStyle(el).fontWeight;var bold=(w==='700'||w==='bold'||parseInt(w)>=600);el.style.fontWeight=bold?'400':'800';wsSyncFromFrame();}
+function wsCvDeselect(){wsPfCmd('desel');var bar=document.getElementById('wsCanvaBar');if(bar)bar.style.display='none';}
+function wsCvDelete(){wsPfCmd('del');wsCvDeselect();}
+function wsCvFont(dir){wsPfCmd('font',{d:dir});}
+function wsCvBold(){wsPfCmd('bold');}
 function wsCvColorInput(cb){var i=document.createElement('input');i.type='color';i.style.cssText='position:fixed;left:-9999px;top:0';document.body.appendChild(i);i.addEventListener('input',function(){cb(i.value);});i.addEventListener('change',function(){cb(i.value);setTimeout(function(){if(i.parentNode)i.parentNode.removeChild(i);},60);});i.click();}
-function wsCvColor(){var el=wsSelEl();if(!el)return;wsCvColorInput(function(v){el.style.color=v;wsSyncFromFrame();});}
-function wsCvBg(){var el=wsSelEl();if(!el)return;wsCvColorInput(function(v){el.style.background=v;wsSyncFromFrame();});}
-function wsCvMove(dir){var el=wsSelEl();if(!el||!el.parentNode)return;var p=el.parentNode;if(dir<0){var pv=el.previousElementSibling;if(pv)p.insertBefore(el,pv);}else{var nx=el.nextElementSibling;if(nx)p.insertBefore(nx,el);}wsSyncFromFrame();if(el.scrollIntoView)el.scrollIntoView({block:'center'});}
-function wsCvEdit(){var el=wsSelEl();if(!el)return;el.contentEditable='true';el.focus();var done=function(){el.removeAttribute('contenteditable');el.removeEventListener('blur',done);wsSyncFromFrame();};el.addEventListener('blur',done);toast('Type to edit — click away when done',3500);}
-function wsCvRotate(){var el=wsSelEl();if(!el)return;var NL=String.fromCharCode(10);var raw=el.getAttribute('data-ws-rotate')||'';var cur=[];raw.split('|').forEach(function(w){w=w.trim();if(w)cur.push(w);});if(!cur.length){var t=(el.textContent||'').trim();if(t)cur.push(t);}
+function wsCvColor(){wsCvColorInput(function(v){wsPfCmd('color',{v:v});});}
+function wsCvBg(){wsCvColorInput(function(v){wsPfCmd('bg',{v:v});});}
+function wsCvMove(dir){wsPfCmd('move',{d:dir});}
+function wsCvEdit(){wsPfCmd('edit');toast('Type to edit — click away when done',3500);}
+function wsCvRotate(){var sel=window._wsCvSel||{};var NL=String.fromCharCode(10);var raw=sel.rot||'';var cur=[];raw.split('|').forEach(function(w){w=w.trim();if(w)cur.push(w);});if(!cur.length){var t=(sel.txt||'').trim();if(t)cur.push(t);}
   window.wsPrompt({title:'Typewriter words',message:'One per line. These type out and cycle in your headline. Press Ctrl+Enter to save.',label:'Words',multiline:true,value:cur.join(NL),okLabel:'Save words',maxLength:600,validate:function(v){return v.split(NL).join('|').split('|').some(function(w){return w.trim();})?'':'Add at least one word.';}}).then(function(v){
     if(v===null)return;var words=[];v.split(NL).join('|').split('|').forEach(function(w){w=w.trim().slice(0,60);if(w)words.push(w);});if(!words.length){toast('Add at least one word',2500);return;}
-    el.setAttribute('data-ws-rotate',words.join('|'));el.textContent=words[0];wsSyncFromFrame();try{if(window.setPreview)window.setPreview(gHTML);}catch(e){}toast('Typewriter words updated',2500);
+    sel.rot=words.join('|');wsPfCmd('rotate',{w:words});
   });}
-function wsCvAlign(){var el=wsSelEl();if(!el)return;var d=wsPfDoc();if(!d)return;var cur=d.defaultView.getComputedStyle(el).textAlign;var order=['left','center','right'];var idx=order.indexOf(cur);var next=order[(idx+1)%3];if(idx===-1)next='center';el.style.textAlign=next;wsSyncFromFrame();toast('Aligned '+next,1600);}
+function wsCvAlign(){wsPfCmd('align');}
 function wsCvLink(){
-  var el=wsSelEl();if(!el)return;
-  var cur=el.getAttribute('href')||'';
+  var cur=(window._wsCvSel||{}).href||'';
   window.wsPrompt({title:'Where should this button go?',message:'Examples: https://calendly.com/you, (555) 123-4567, you@email.com, or #contact-form for your contact form. Leave empty to remove the link.',label:'Button link',value:cur,placeholder:'https://...',okLabel:'Save link',maxLength:500,validate:function(v){var r=wsNormUrl(v);return r.ok?'':r.err;}}).then(function(v){
     if(v===null)return;
     var r=wsNormUrl(v);if(!r.ok){toast(r.err,3500);return;}
-    if(r.value===''){el.removeAttribute('href');wsSyncFromFrame();toast('Link cleared',2000);return;}
-    el.setAttribute('href',r.value);
-    if((el.tagName||'').toUpperCase()==='A'&&r.value.toLowerCase().indexOf('http')===0){el.setAttribute('target','_blank');el.setAttribute('rel','noopener');}
-    wsSyncFromFrame();toast('Link set ✓',2200);
+    if(window._wsCvSel)window._wsCvSel.href=r.value;wsPfCmd('link',{v:r.value});
   });
 }
-window.addEventListener('message',function(e){if(e.data&&e.data.type==='wsSelect'){wsShowBar(e.data.kind,e.data.tag,e.data.slotId);}});
 
 // -- Instant color replacement ---------------------------------
 function extractSiteColors(){
@@ -3222,8 +3294,8 @@ function renderSectionList(){
   }
   list.innerHTML=parsedSections.map(function(sec,i){
     return '<div class="sec-item'+(sec.hidden?' hidden-sec':'')+'" data-idx="'+i+'">'+
-      '<span class="sec-tag">'+sec.tag+'</span>'+
-      '<span class="sec-name">'+sec.label+'</span>'+
+      '<span class="sec-tag">'+wsHE(sec.tag)+'</span>'+
+      '<span class="sec-name">'+wsHE(sec.label)+'</span>'+
       '<button class="sec-btn'+(sec.hidden?' eye-off':'')+'" data-action="toggle" data-idx="'+i+'" title="'+(sec.hidden?'Show':'Hide')+'">'+
         (sec.hidden?'&#128065;':'&#128065;')+'</button>'+
       '<button class="sec-btn" data-action="up" data-idx="'+i+'" title="Move up">&#8679;</button>'+
@@ -3358,13 +3430,6 @@ function swapSections(idxA,idxB){
 // -- Image Slot System -----------------------------------------
 var currentSlotId=null;
 
-// Listen for slot clicks from inside the preview iframe
-window.addEventListener('message',function(e){
-  if(!e.data||typeof e.data!=='object')return;
-  if(e.data.type==='wsSlotClick'){
-    openSlotPicker(e.data.slotId||'image',e.data.label||'Add photo');
-  }
-});
 
 function openSlotPicker(slotId,label){
   currentSlotId=slotId;
@@ -3405,79 +3470,9 @@ function fillSlot(dataUrl){
       wsRerender();toast('Photo added');return;
     }
   }catch(e){}
-  var pf=document.getElementById('pf');
-
-  try{
-    var doc=pf.contentDocument||pf.contentWindow.document;
-    var slot=doc.querySelector('[data-ws-active]');
-    if(!slot)slot=doc.querySelector('[data-slot="'+currentSlotId+'"]');
-    if(!slot)slot=doc.querySelector("[data-slot='"+currentSlotId+"']");
-    if(!slot){
-      // The AI may have created the slot with a different id than what was clicked.
-      // If exactly one unfilled image slot exists, fill that one rather than erroring.
-      try{var cands=doc.querySelectorAll('[data-slot]');if(cands.length===1)slot=cands[0];}catch(e){}
-    }
-
-    if(slot){
-      var h=slot.style.height||'320px';
-      var br=slot.style.borderRadius||'8px';
-
-      // Replace slot in live DOM - user sees it immediately, no re-render needed
-      var container=doc.createElement('div');
-      container.setAttribute('data-slot-filled',currentSlotId);
-      container.style.cssText='width:100%;height:'+h+';border-radius:'+br+';overflow:hidden;position:relative';
-      // If the slot was a positioned background layer (e.g. full-bleed hero bg), keep it
-      // positioned so the photo stays BEHIND the content instead of popping into the flow.
-      try{
-        var iwin=pf.contentWindow;
-        var csOld=iwin&&iwin.getComputedStyle?iwin.getComputedStyle(slot):null;
-        if(csOld&&(csOld.position==='absolute'||csOld.position==='fixed')){
-          container.style.position=csOld.position;
-          ['top','left','right','bottom','width','height','zIndex','inset'].forEach(function(p){
-            if(slot.style[p])container.style[p]=slot.style[p];
-          });
-          if(!slot.style.top&&!slot.style.inset){container.style.top='0';container.style.left='0';container.style.right='0';container.style.bottom='0';}
-          if(csOld.zIndex&&csOld.zIndex!=='auto'&&!slot.style.zIndex)container.style.zIndex=csOld.zIndex;
-        }
-      }catch(e){}
-      var img=doc.createElement('img');
-      img.src=dataUrl;
-      img.style.cssText='width:100%;height:100%;object-fit:cover;display:block';
-      container.appendChild(img);
-      slot.parentNode.replaceChild(container,slot);
-
-      // Wire the new filled slot immediately (hover overlay + click to replace)
-      var ov=doc.createElement('div');ov.setAttribute('data-wsov','1');
-      ov.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;border-radius:inherit;pointer-events:none';
-      var lb=doc.createElement('span');
-      lb.style.cssText='background:rgba(255,255,255,.92);color:#111;padding:7px 18px;border-radius:100px;font-size:13px;font-weight:700';
-      lb.textContent='Change photo';
-      ov.appendChild(lb);container.appendChild(ov);
-      container.onmouseenter=function(){ov.style.opacity='1';};
-      container.onmouseleave=function(){ov.style.opacity='0';};
-      container.onclick=function(e){
-        e.preventDefault();e.stopPropagation();
-        parent.postMessage({type:'wsSlotClick',slotId:currentSlotId,label:'Change photo'},'*');
-      };
-
-      // Sync gHTML from live DOM (strip injected script + floating buttons first)
-      try{doc.querySelectorAll('[data-wsfloat]').forEach(function(b){b.remove();});}catch(e){}
-      var newHtml=wsCleanDocHtml(doc);
-      var sc=newHtml.indexOf('<script id="_wsInject">');
-      if(sc===-1)sc=newHtml.indexOf("<script id='_wsInject'>");
-      if(sc>-1){var se=newHtml.indexOf('</'+'script>',sc)+9;if(se>8)newHtml=newHtml.slice(0,sc)+newHtml.slice(se);}
-      gHTML=newHtml;
-      localStorage.setItem('wsh',gHTML);
-      pushUndo(gHTML);bumpEditCount();
-      // Do NOT call setPreview here - image is already live in the DOM
-      addMsg('ai','Photo placed! Click it to swap, or click another slot to add more.');
-      toast('Photo added!',3000);
-      return;
-    }
-  }catch(err){
-  }
-  // Slot not found - do NOT add to bottom, just tell user
-  toast('Could not find that slot. Try regenerating the site.',4000);
+  // Legacy raw-HTML site: the preview is an opaque-origin sandbox, so the frame swaps the slot itself and sends back its
+  // DOM (handled as untrusted in wsApplyFrameHtml); "noslot" comes back when there is nothing to fill.
+  wsPfCmd('fill',{slot:currentSlotId,src:String(dataUrl)});
 }
 
 function addImageAsSection(dataUrl){
@@ -3512,7 +3507,7 @@ function setStudioReady(ready){
   if(ready){
     studio.classList.remove('studio-loading');
     if(intro)intro.innerHTML='Your site is ready 🌱 Open the visual editor below to change text, sections, colors and photos — or use the tools here for business info. Everything applies live.';
-    try{editModeOn=false;var _eb=document.getElementById('editModeBtn');if(_eb)_eb.classList.remove('on');var _ei=document.getElementById('editIndicator');if(_ei)_ei.classList.remove('on');var _pf=document.getElementById('pf');var _em=function(){if(_pf&&_pf.contentWindow)_pf.contentWindow.postMessage({type:'wsSetEditMode',active:false},'*');};setTimeout(_em,300);setTimeout(_em,900);}catch(e){}
+    try{editModeOn=false;var _eb=document.getElementById('editModeBtn');if(_eb)_eb.classList.remove('on');var _ei=document.getElementById('editIndicator');if(_ei)_ei.classList.remove('on');var _em=function(){wsPfSend({type:'wsSetEditMode',active:false});};setTimeout(_em,300);setTimeout(_em,900);}catch(e){}
     try{ if(!localStorage.getItem('ws_edhint')){ var _efh=document.getElementById('edFirstHint'); if(_efh)_efh.style.display='flex'; } }catch(e){}
   } else {
     studio.classList.add('studio-loading');
@@ -3769,7 +3764,12 @@ function doPayment(){
     var link='${SUB_LINK}';
     if(!link||link.indexOf('PASTE_YOUR')>-1){toast('Payments are not set up yet — add your Stripe subscription link as the STRIPE_SUB_LINK variable in your Worker.',6500);return;}
     localStorage.setItem('wsh',gHTML);
-    window.location.href=link+'?client_reference_id='+encodeURIComponent(em)+'&prefilled_email='+encodeURIComponent(em);
+    // The server creates the checkout for the signed-in account (an opaque reference, never the typed email).
+    fetch('/billing/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(function(r){return r.json();}).then(function(j){
+      if(j&&j.url){window.location.href=j.url;return;}
+      if(j&&j.pro){unlockNow();return;}
+      toast((j&&j.error)||'Could not start checkout. Please try again.',5000);
+    }).catch(function(){toast('Could not start checkout. Please try again.',5000);});
   }
   function unlockNow(){unlocked=true;try{sessionStorage.setItem('wsu','1');}catch(e){}try{applyUnlock();}catch(e){}toast('You are already Pro. Everything is unlocked!',5000);}
   // Never send an already-Pro or comped member to Stripe.

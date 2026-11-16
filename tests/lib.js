@@ -80,4 +80,25 @@ async function openStudioWith(page, base, name, type, extra) {
 
 function previewFrame(page) { return page.frames().find((f) => f !== page.mainFrame() && f.name() !== 'pfFull'); }
 
-module.exports = { sleep, waitFor, launchBrowser, tracker, post, createSite, openPage, renderHtml, openStudioWith, previewFrame };
+// Sign in through the real email-link flow (the test server records mail instead of sending it). Sessions are reused per
+// email for the whole run so the per-address sign-in limit is never hit. fresh=true forces a new session.
+const SESS = '__Host-ws_sess';
+const _sessions = new Map();
+async function signIn(base, email, fresh) {
+  if (!fresh && _sessions.has(email)) return _sessions.get(email);
+  const ip = '10.' + Math.floor(Math.random() * 250) + '.' + Math.floor(Math.random() * 250) + '.' + Math.floor(Math.random() * 250);
+  await post(base, '/auth/email', { email }, { 'x-ws-test-ip': ip });
+  const m = await (await fetch(base + '/__test/mail?to=' + encodeURIComponent(email))).json();
+  const token = (((m && m.html) || '').match(/token=([A-Za-z0-9_-]+)/) || [])[1];
+  if (!token) return '';
+  const r = await fetch(base + '/auth/verify', { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Origin: base }, body: 'token=' + token });
+  const c = (r.headers.get('set-cookie') || '').match(/__Host-ws_sess=([^;]+)/);
+  const sess = c ? c[1] : '';
+  if (sess) _sessions.set(email, sess);
+  return sess;
+}
+const cookie = (sess) => SESS + '=' + sess;
+// Puppeteer cookie for a session (__Host- cookies must be Secure with Path=/ and no Domain).
+const browserCookie = (base, sess) => ({ name: SESS, value: sess, url: base, path: '/', secure: true, httpOnly: true });
+
+module.exports = { sleep, waitFor, launchBrowser, tracker, post, createSite, openPage, renderHtml, openStudioWith, previewFrame, signIn, cookie, browserCookie, SESS };

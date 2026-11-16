@@ -28,6 +28,16 @@ watch_dir = "src"
 binding = "KV"
 id = "f5def57998654229973b809dd4f3a463"
 
+# Analytics database (Cloudflare D1, free tier). Create it once, paste its id below, apply the migration:
+#   npx wrangler d1 create websprout-analytics
+#   npx wrangler d1 migrations apply websprout-analytics --remote
+# Until the binding works the worker falls back to the old KV event log, so nothing breaks.
+[[d1_databases]]
+binding = "DB"
+database_name = "websprout-analytics"
+database_id = "1fcf24a1-d24d-4172-8db5-d38f4ad8ee62"
+migrations_dir = "migrations"
+
 # Your secrets (GEMINI_API_KEY, RESEND_API_KEY, FORM_SECRET, GODADDY_KEY,
 # GODADDY_SECRET, GODADDY_AFFILIATE) are NOT listed here. Keep them in the
 # Cloudflare dashboard (Settings -> Variables and Secrets) — they persist

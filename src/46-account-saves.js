@@ -1,3 +1,36 @@
+// ── Site ownership ──
+// siteowner:<siteId> = the account that first saved, claimed or published the site while signed in with its key.
+// Payouts, "can take payments", review management and owner alerts follow this record, never the editable notify address.
+async function wsAccountHasSite(env, email, siteId){
+  if (!email || !siteId || !env || !env.KV) return false;
+  let list = []; try { list = JSON.parse((await env.KV.get('usersites:' + email)) || '[]'); } catch(e){}
+  if (!Array.isArray(list)) return false;
+  for (const it of list){ if (it && it.siteId === siteId) { try { return await siteKeyOk(siteId, it.key, env); } catch(e){ return false; } } }
+  return false;
+}
+async function wsSiteOwner(env, siteId){
+  if (!siteId || !env || !env.KV) return '';
+  try {
+    const o = await env.KV.get('siteowner:' + siteId); if (o) return o;
+    // Sites from before ownership records: the notify address counts only if that account holds the site (with its key).
+    const n = ((await env.KV.get('notify:' + siteId)) || '').trim().toLowerCase();
+    if (n && await wsAccountHasSite(env, n, siteId)) { await env.KV.put('siteowner:' + siteId, n); return n; }
+  } catch(e){}
+  return '';
+}
+async function wsSetSiteOwner(env, siteId, email){
+  if (!siteId || !email || !env || !env.KV) return;
+  try { if (!(await env.KV.get('siteowner:' + siteId))) await env.KV.put('siteowner:' + siteId, String(email).toLowerCase()); } catch(e){}
+}
+async function wsPlanOf(env, email){ try{ const u=JSON.parse((await env.KV.get('user:'+String(email).toLowerCase()))||'{}'); return u.plan||'free'; }catch(e){ return ''; } }
+// Is this subscription still live? Out-of-order events (a late invoice.paid after customer.subscription.deleted) must
+// not re-grant Pro: a "dead" marker from the delete wins, and when Stripe is reachable its current status decides.
+async function wsSubLive(env, sub){
+  if (!sub) return true;
+  try { if (await env.KV.get('subdead:' + sub)) return false; } catch(e){}
+  const sk = (env.STRIPE_SECRET_KEY || '').trim(); if (!sk) return true;
+  try { const r = await fetch('https://api.stripe.com/v1/subscriptions/' + encodeURIComponent(sub), { headers:{ 'Authorization':'Bearer ' + sk } }); if (!r.ok) return true; const j = await r.json(); return ['active', 'trialing', 'past_due'].indexOf(String(j && j.status)) > -1; } catch(e){ return true; }
+}
 async function doStripeWebhook(request, env){
   const raw = await request.text();
   const secrets = [env.STRIPE_WEBHOOK_SECRET, env.STRIPE_WEBHOOK_SECRET_TEST].filter(Boolean);
@@ -7,24 +40,53 @@ async function doStripeWebhook(request, env){
   for(const sec of secrets){ if(await verifyStripeSig(raw, sig, sec)){ okSig = true; break; } }
   if(!okSig) return new Response('bad signature', { status:400 });
   let ev={}; try{ ev=JSON.parse(raw); }catch(e){ return new Response('bad json', { status:400 }); }
+  const done = new Response('{"received":true}', { headers:{ 'Content-Type':'application/json' } });
+  // Stripe retries and may deliver an event twice: handle each event id once (remembered for 3 days).
+  const evId = String(ev.id || '').slice(0, 100);
+  try{ if(evId && env.KV){ if(await env.KV.get('stripeev:' + evId)) return done; await env.KV.put('stripeev:' + evId, '1', { expirationTtl: 3*86400 }); } }catch(e){}
   try{
     const obj=(ev.data&&ev.data.object)||{};
     const cust=obj.customer||'';
+    const created = parseInt(ev.created, 10) || 0;
+    // Per subscription, ignore events older than the newest one already applied.
+    const subId = ev.type==='checkout.session.completed' ? '' : String((ev.type||'').indexOf('customer.subscription.')===0 ? (obj.id||'') : (obj.subscription||''));
+    if(subId && created && env.KV){ const last = parseInt((await env.KV.get('subts:' + subId)) || '0', 10) || 0; if(created < last) return done; await env.KV.put('subts:' + subId, String(created), { expirationTtl: 400*86400 }); }
     if(ev.type==='checkout.session.completed'){
-      if(obj.mode!=='subscription') return new Response('{"received":true}', { headers:{ 'Content-Type':'application/json' } });
-      const email=(obj.client_reference_id||obj.customer_email||(obj.customer_details&&obj.customer_details.email)||'').toLowerCase();
-      if(email) await setUserPlan(env, email, 'pro', cust, obj.subscription||'');
-      try{ await logEvent(request, env, 'pro_start', { email: email }); }catch(e){}
+      if(obj.mode!=='subscription') return done;
+      // The account comes ONLY from the opaque reference our server created for the signed-in user (POST /billing/checkout),
+      // never from an email typed at checkout.
+      const ref = String(obj.client_reference_id || (obj.metadata && obj.metadata.ws_ref) || '');
+      const email = /^wsp_[a-f0-9]{32}$/.test(ref) ? ((await env.KV.get('proref:' + ref)) || '').toLowerCase() : '';
+      if(!email){
+        try{ console.warn('stripe: checkout ' + evId + ' has no valid account reference; Pro not granted'); await env.KV.put('prounmatched:' + evId, JSON.stringify({ ts: Date.now(), customer: cust, sub: obj.subscription || '', ref: ref.slice(0, 80), typed: String((obj.customer_details && obj.customer_details.email) || obj.customer_email || '').slice(0, 120) }), { expirationTtl: 90*86400 }); }catch(e){}
+        return done;
+      }
+      await setUserPlan(env, email, 'pro', cust, obj.subscription||'');
+      try{ await logEvent(request, env, 'pro_start', { email: email, server: true, dedupe: ev.id, props:{ amount: obj.amount_total || 0 } }); }catch(e){}
+      _wsUsers = null;
     } else if((ev.type==='invoice.paid'||ev.type==='invoice.payment_succeeded') && obj.subscription){
-      const em=cust?await env.KV.get('stripecust:'+cust):''; if(em) await setUserPlan(env, em, 'pro', cust, obj.subscription||'');
+      const em=cust?await env.KV.get('stripecust:'+cust):'';
+      if(em && await wsSubLive(env, obj.subscription)) await setUserPlan(env, em, 'pro', cust, obj.subscription||'');
     } else if(ev.type==='customer.subscription.deleted'){
-      const em=cust?await env.KV.get('stripecust:'+cust):''; if(em) await setUserPlan(env, em, 'free', cust, '');
+      try{ if(obj.id) await env.KV.put('subdead:' + obj.id, '1', { expirationTtl: 400*86400 }); }catch(e){}
+      const em=cust?await env.KV.get('stripecust:'+cust):'';
+      if(em){ let _cur=''; try{ _cur=(JSON.parse((await env.KV.get('user:'+em.toLowerCase()))||'{}').stripeSub)||''; }catch(e){}
+        // Only the subscription the account is on can end its Pro (an old, replaced subscription ending changes nothing).
+        if(!_cur || !obj.id || _cur===obj.id){ const was=await wsPlanOf(env, em); await setUserPlan(env, em, 'free', cust, ''); if(was==='pro') try{ await logEvent(request, env, 'pro_cancel', { email: em, server: true, dedupe: ev.id, props:{ reason: String((obj.cancellation_details&&(obj.cancellation_details.feedback||obj.cancellation_details.reason))||'').slice(0,40) } }); }catch(e){} } }
     } else if(ev.type==='customer.subscription.updated'){
       const st=obj.status||''; const em=cust?await env.KV.get('stripecust:'+cust):'';
-      if(em) await setUserPlan(env, em, (st==='active'||st==='trialing'||st==='past_due')?'pro':'free', cust, obj.id||'');
+      let now=(st==='active'||st==='trialing'||st==='past_due')?'pro':'free';
+      if(now==='pro' && obj.id){ try{ if(await env.KV.get('subdead:' + obj.id)) now='free'; }catch(e){} }
+      if(em){ const was=await wsPlanOf(env, em); await setUserPlan(env, em, now, cust, obj.id||'');
+        try{ if(was==='pro'&&now==='free') await logEvent(request, env, 'pro_cancel', { email: em, server: true, dedupe: ev.id, props:{ status: st } });
+          const pa=(ev.data&&ev.data.previous_attributes)||{}; if(obj.cancel_at_period_end===true&&pa.cancel_at_period_end===false) await logEvent(request, env, 'pro_cancel_scheduled', { email: em, server: true, dedupe: ev.id }); }catch(e){} }
+    } else if(ev.type==='invoice.payment_failed'){
+      const em=cust?await env.KV.get('stripecust:'+cust):'';
+      try{ await logEvent(request, env, 'payment_failed', { email: em||'', server: true, dedupe: ev.id, props:{ amount: obj.amount_due || 0, attempt: obj.attempt_count || 0 } }); }catch(e){}
     }
-  }catch(e){}
-  return new Response('{"received":true}', { headers:{ 'Content-Type':'application/json' } });
+    _wsUsers = null;
+  }catch(e){ try{ console.error('stripe webhook', (e && e.stack) || e); }catch(_){} }
+  return done;
 }
 
 // ── Saved sites: let users return and keep editing ──
@@ -33,7 +95,7 @@ async function doSave(request, env){
     if (!env.KV) return fail('KV not configured');
     const b = await request.json();
     if (!b.siteId || !b.key || !b.html) return fail('Missing data');
-    if (b.key !== (await siteKey(b.siteId, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
+    if (!(await siteKeyOk(b.siteId, b.key, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
     if (b.html.length > 4*1024*1024) return fail('Site too large');
     var _dft = { html: b.html, name: (b.name||'My site').slice(0,90), ts: Date.now() };
     if (b.site && typeof b.site === 'object' && Array.isArray(b.site.sections)) { try { const _sj = JSON.stringify(b.site); if (_sj.length <= 6*1024*1024) _dft.site = b.site; } catch(e){} }
@@ -57,7 +119,9 @@ async function doSave(request, env){
     } catch(e){}
     try {
       const s = await getSession(request, env);
+      wsTouchSites(request, env, s && s.email, [b.siteId]);
       if (s && s.email) {
+        await wsSetSiteOwner(env, b.siteId, s.email);
         const lk = 'usersites:' + s.email;
         let list = []; try { list = JSON.parse(await env.KV.get(lk) || '[]'); } catch(e){}
         let found = false;
@@ -69,14 +133,14 @@ async function doSave(request, env){
       }
     } catch(e){}
     return succeed({ ok:true });
-  } catch(e){ return fail(e.message); }
+  } catch(e){ return wsErr(e); }
 }
 async function doVersions(request, env){
   try {
     if (!env.KV) return fail('KV not configured');
     const url = new URL(request.url);
     const site = url.searchParams.get('site') || '', key = url.searchParams.get('key') || '', ts = url.searchParams.get('ts') || '';
-    if (!site || key !== (await siteKey(site, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
+    if (!site || !(await siteKeyOk(site, key, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
     if (ts) {
       if (!/^[0-9]{10,16}$/.test(ts)) return fail('Bad version');
       const v = await env.KV.get('ver:' + site + ':' + ts);
@@ -86,7 +150,7 @@ async function doVersions(request, env){
     const keys = await kvAllKeys(env, 'ver:' + site + ':', 2);
     const list = keys.map(function(k){ const t = parseInt(k.name.split(':')[2], 10) || 0; const m = k.metadata || {}; return { ts: t, name: m.name || '', size: m.size || 0, label: m.label || '' }; }).sort(function(a, b){ return b.ts - a.ts; });
     return succeed({ versions: list });
-  } catch(e){ return fail(e.message); }
+  } catch(e){ return wsErr(e); }
 }
 async function doMySites(request, env){
   const s = await getSession(request, env);
@@ -100,21 +164,25 @@ async function doMySitesClaim(request, env){
     if (!s || !s.email) return fail('Not signed in');
     const b = await request.json();
     if (!Array.isArray(b.sites)) return succeed({ ok:true });
+    b.sites = b.sites.slice(0, 100);
     const lk = 'usersites:'+s.email;
     let list = []; try { list = JSON.parse(await env.KV.get(lk) || '[]'); } catch(e){}
-    const map = {}; list.forEach(function(p){ map[p.siteId]=p; });
+    const map = Object.create(null); list.forEach(function(p){ map[p.siteId]=p; });
     for (const it of b.sites){
       if (!it || !it.siteId || !it.key) continue;
-      if (it.key !== (await siteKey(it.siteId, env))) continue;
+      if (typeof it.siteId !== 'string' || !/^[A-Za-z0-9_-]{4,40}$/.test(it.siteId)) continue;
+      if (!(await siteKeyOk(it.siteId, it.key, env))) continue;
+      await wsSetSiteOwner(env, it.siteId, s.email);
       const ex = map[it.siteId];
-      if (!ex || (it.ts||0) > (ex.ts||0)) map[it.siteId] = { siteId:it.siteId, key:it.key, name:(it.name||'My site'), ts:(it.ts||Date.now()) };
+      if (!ex || (it.ts||0) > (ex.ts||0)) map[it.siteId] = { siteId:it.siteId, key:it.key, name:wsClean(it.name||'My site').slice(0,90), ts:(Math.min(+it.ts||0, Date.now())||Date.now()) };
     }
     let merged = Object.keys(map).map(function(k){ return map[k]; });
     merged.sort(function(a,c){ return (c.ts||0)-(a.ts||0); });
     if (merged.length>100) merged = merged.slice(0,100);
     await env.KV.put(lk, JSON.stringify(merged));
+    wsTouchSites(request, env, s.email, b.sites.filter(function(it){ return it && map[it.siteId] && map[it.siteId].key === it.key; }).map(function(it){ return it.siteId; }));
     return succeed({ ok:true, count:merged.length });
-  } catch(e){ return fail(e.message); }
+  } catch(e){ return wsErr(e); }
 }
 async function doMySitesDelete(request, env){
   try {
@@ -127,7 +195,7 @@ async function doMySitesDelete(request, env){
     list = list.filter(function(x){ return x.siteId !== b.siteId; });
     await env.KV.put(lk, JSON.stringify(list));
     return succeed({ ok:true });
-  } catch(e){ return fail(e.message); }
+  } catch(e){ return wsErr(e); }
 }
 
 async function doBillingPortal(request, env){
@@ -181,6 +249,7 @@ async function doAccountExport(request, env){
     out.sites.push(site);
   }
   try{ out.activity=[]; let _c=undefined,_g=0; do{ const _r=await env.KV.list({ prefix:'evt:', cursor:_c, limit:1000 }); for(const _k of _r.keys){ if(_k.metadata && (_k.metadata.e||'')===eml) out.activity.push(_k.metadata); } _c=_r.list_complete?null:_r.cursor; _g++; }while(_c && _g<5 && out.activity.length<2000); }catch(e){}
+  try{ const _db=await wsDb(env); if(_db){ const _r=await _db.prepare('SELECT ts, type, site_id, source, medium, campaign, country, device FROM events WHERE email = ? ORDER BY id DESC LIMIT 5000').bind(eml).all(); out.activity=(out.activity||[]).concat(_r.results||[]); } }catch(e){}
   return new Response(JSON.stringify(out, null, 2), { status:200, headers:{ 'Content-Type':'application/json; charset=utf-8', 'Content-Disposition':'attachment; filename="websprout-my-data.json"', 'Cache-Control':'no-store' } });
 }
 
@@ -215,18 +284,29 @@ async function doAccountDelete(request, env){
       await del('pub:'+slug); await del('pubpages:'+slug); await del('pubmeta:'+slug); await del('slugof:'+sid); await del('featured:'+slug);
       for(const _dk of _domKeys){ try{ if((await gt(_dk.name))===slug) await del(_dk.name); }catch(e){} }
     }
-    await del('draft:'+sid); await del('products:'+sid); await del('notify:'+sid); await del('revnotify:'+sid); await del('reviewsPub:'+sid);
-    await delPrefix('form:'+sid+':'); await delPrefix('review:'+sid+':'); await delPrefix('views:'+sid+':');
+    // Custom domain: drop the mappings and the Cloudflare hostnames so the domain cannot keep serving (or be re-pointed).
+    try{ await wsDropDomain(env, sid); }catch(e){}
+    await del('draft:'+sid); await del('products:'+sid); await del('v3products:'+sid); await del('notify:'+sid); await del('revnotify:'+sid); await del('reviewsPub:'+sid);
+    await del('site:'+sid); await del('verlast:'+sid); await del('autoreply:'+sid); await del('slugof:'+sid);
+    if(((await gt('siteowner:'+sid))||'')===eml) await del('siteowner:'+sid);
+    await delPrefix('form:'+sid+':'); await delPrefix('review:'+sid+':'); await delPrefix('views:'+sid+':'); await delPrefix('ver:'+sid+':'); await delPrefix('arsent:'+sid+':'); await delPrefix('arcount:'+sid+':');
     n++;
   }
   await delPrefix('invoice:'+eml+':'); await delPrefix('invoice:'+em+':');
   try{ let _c=undefined,_g=0; do{ const _r=await env.KV.list({ prefix:'evt:', cursor:_c, limit:1000 }); for(const _k of _r.keys){ if(_k.metadata && (_k.metadata.e||'')===eml){ await del(_k.name); } } _c=_r.list_complete?null:_r.cursor; _g++; }while(_c && _g<6); }catch(e){}
+  try{ const _db=await wsDb(env); if(_db){ await _db.batch([_db.prepare('DELETE FROM events WHERE email = ?').bind(eml), _db.prepare('UPDATE sites SET email = NULL WHERE email = ?').bind(eml), _db.prepare('DELETE FROM activity WHERE k = ?').bind('u:'+eml)]); } }catch(e){}
+  try{ await logEvent(request, env, 'account_delete', { server: true, props:{ sites: n } }); }catch(e){}
+  _wsUsers = null;
   await del('user:'+eml); await del('user:'+em);
   await del('gencount:'+eml); await del('gencount:'+em);
   await del('bcount:'+eml); await del('bcount:'+em);
   await del('usersites:'+em); await del('usersites:'+eml);
-  try{ const t=parseCookies(request)['ws_sess']; if(t) await del('sess:'+t); }catch(e){}
-  return new Response(JSON.stringify({ ok:true, deletedSites:n }), { status:200, headers:{ 'Content-Type':'application/json', 'Set-Cookie':'ws_sess=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0', 'Cache-Control':'no-store' } });
+  await del('stripeconflict:'+eml);
+  // Sign out everywhere: every session created before now is refused (sessions live 30 days).
+  await wsRevokeSessions(env, eml);
+  try{ await wsDropSessionCookie(request, env); }catch(e){}
+  const _h=new Headers({ 'Content-Type':'application/json', 'Cache-Control':'no-store' }); clearSessionCookies().forEach(function(c){ _h.append('Set-Cookie', c); });
+  return new Response(JSON.stringify({ ok:true, deletedSites:n }), { status:200, headers:_h });
 }
 
 async function doLoad(request, env){
@@ -236,11 +316,11 @@ async function doLoad(request, env){
     const site = url.searchParams.get('site') || '';
     const key = url.searchParams.get('key') || '';
     if (!site) return fail('Missing site');
-    if (key !== (await siteKey(site, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
+    if (!(await siteKeyOk(site, key, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
     const v = await env.KV.get('draft:' + site);
     if (!v) return fail('Not found');
     return new Response(v, { headers: { 'Content-Type':'application/json' } });
-  } catch(e){ return fail(e.message); }
+  } catch(e){ return wsErr(e); }
 }
 
 // Auto-detect the business type from the prompt and inject an industry-specific

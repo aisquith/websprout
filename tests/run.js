@@ -20,7 +20,10 @@ async function main() {
   const state = fs.mkdtempSync(path.join(os.tmpdir(), 'ws-test-'));
   const wranglerBin = path.join(ROOT, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
   const cmd = fs.existsSync(wranglerBin) ? [process.execPath, [wranglerBin]] : [process.platform === 'win32' ? 'npx.cmd' : 'npx', ['wrangler']];
-  const server = spawn(cmd[0], cmd[1].concat(['dev', '--local', '--port', String(PORT), '--ip', '127.0.0.1', '--persist-to', state, '--var', 'STRIPE_SECRET_KEY:sk_test_websprout_dummy', '--var', 'WS_TEST_MODE:1', '--config', path.join(ROOT, 'wrangler.toml')]), { cwd: ROOT, env: Object.assign({}, process.env, { CI: '1' }), shell: process.platform === 'win32' && !fs.existsSync(wranglerBin) });
+  // Local D1: apply migrations/ to the same persisted state the dev server uses (the worker also creates tables lazily).
+  try { require('child_process').execFileSync(cmd[0], cmd[1].concat(['d1', 'migrations', 'apply', 'websprout-analytics', '--local', '--persist-to', state, '--config', path.join(ROOT, 'wrangler.toml')]), { cwd: ROOT, env: Object.assign({}, process.env, { CI: '1' }), stdio: 'pipe', shell: process.platform === 'win32' && !fs.existsSync(wranglerBin), timeout: 60000 }); }
+  catch (e) { console.error('Could not apply local D1 migrations: ' + String((e.stdout || '') + (e.stderr || '')).slice(-1500)); }
+  const server = spawn(cmd[0], cmd[1].concat(['dev', '--local', '--port', String(PORT), '--ip', '127.0.0.1', '--persist-to', state, '--var', 'STRIPE_SECRET_KEY:sk_test_websprout_dummy', '--var', 'WS_TEST_MODE:1', '--var', 'FORM_SECRET:test-form-secret-not-for-production', '--var', 'STRIPE_WEBHOOK_SECRET:whsec_test_websprout', '--config', path.join(ROOT, 'wrangler.toml')]), { cwd: ROOT, env: Object.assign({}, process.env, { CI: '1' }), shell: process.platform === 'win32' && !fs.existsSync(wranglerBin) });
   let log = '';
   server.stdout.on('data', (d) => { log += d; });
   server.stderr.on('data', (d) => { log += d; });

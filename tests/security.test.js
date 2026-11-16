@@ -1,7 +1,7 @@
 // Security guards and pure helper logic.
 const fs = require('fs');
 const path = require('path');
-const { post, createSite } = require('./lib');
+const { post, createSite, signIn, cookie } = require('./lib');
 
 module.exports = async function (ctx, t) {
   const { base } = ctx;
@@ -17,10 +17,17 @@ module.exports = async function (ctx, t) {
   r = await post(base, '/api/review', { site: 'abcd1234:x', text: 'spam' });
   t.eq(r.status, 400, 'review siteId with ":" is rejected');
   // user HTML on the app origin is sandboxed
-  const fd = new FormData(); fd.append('html', '<b>x</b>');
+  const sess = await signIn(base, 'render.' + Date.now().toString(36) + '@sec.test');
+  let fd = new FormData(); fd.append('html', '<b>x</b>');
   r = await fetch(base + '/render', { method: 'POST', body: fd });
-  t.ok(/sandbox/.test(r.headers.get('content-security-policy') || ''), '/render is sandboxed');
-  const pv = await post(base, '/preview', { html: '<p>hi</p>' });
+  t.eq(r.status, 401, '/render needs a signed-in user');
+  fd = new FormData(); fd.append('html', '<b>x</b>');
+  r = await fetch(base + '/render', { method: 'POST', body: fd, headers: { Cookie: cookie(sess) } });
+  t.ok(r.status === 200 && /sandbox/.test(r.headers.get('content-security-policy') || ''), '/render is sandboxed');
+  t.eq((await post(base, '/preview', { html: '<p>hi</p>' })).status, 401, 'share previews need a session or the site key');
+  const ps = await createSite(base, { name: 'P', type: 'Bakery' });
+  t.ok(!!((await post(base, '/preview', { html: '<p>hi</p>', siteId: ps.siteId, key: ps.formKey })).json || {}).url, 'the site key can create a share preview');
+  const pv = await post(base, '/preview', { html: '<p>hi</p>' }, { Cookie: cookie(sess) });
   const id = (pv.json.url || '').split('id=')[1];
   r = await fetch(base + '/preview?id=' + id);
   t.ok(/sandbox/.test(r.headers.get('content-security-policy') || ''), 'share previews are sandboxed');
@@ -33,7 +40,7 @@ module.exports = async function (ctx, t) {
   r = await fetch(base + '/auth/verify?token=' + 'ab'.repeat(20), { redirect: 'manual' });
   t.ok(r.status === 302 && /login=expired/.test(r.headers.get('location') || ''), 'unknown sign-in token redirects to "expired"');
   r = await fetch(base + '/auth/verify', { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Origin: 'https://evil.example' }, body: 'token=' + 'ab'.repeat(20) });
-  t.ok(r.status === 302 && /login=error/.test(r.headers.get('location') || ''), 'cross-site sign-in POST is refused');
+  t.ok(r.status === 403 || (r.status === 302 && /login=error/.test(r.headers.get('location') || '')), 'cross-site sign-in POST is refused');
 
   // Pure helpers, loaded from the built worker
   const src = fs.readFileSync(path.join(__dirname, '..', 'dist', 'worker.js'), 'utf8');

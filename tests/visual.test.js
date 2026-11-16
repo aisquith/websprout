@@ -62,6 +62,15 @@ function inspect(opts) {
     const txt = [...first.querySelectorAll('h1,h2,h3,p,.eyebrow,.status,.btn')].find((x) => vis(x) && x.getBoundingClientRect().height > 0);
     if (txt && txt.getBoundingClientRect().top < hb - 1) out.push({ k: 'header-overlap', m: name(txt) + ' top ' + Math.round(txt.getBoundingClientRect().top) + 'px is under the header (bottom ' + Math.round(hb) + 'px)' });
   }
+  // 6. sections never collide: each band starts where the previous ends, and its buttons and headings stay inside it
+  const secs = [...root.children].filter((x) => x.tagName === 'SECTION' && vis(x) && x.offsetHeight > 0);
+  secs.forEach((sx, i) => {
+    const r = sx.getBoundingClientRect();
+    if (i && r.top < secs[i - 1].getBoundingClientRect().bottom - 1) out.push({ k: 'overlap', m: name(sx) + ' starts above the end of the band before it' });
+    sx.querySelectorAll('.btn,h2,h3').forEach((el) => { if (!vis(el) || el.closest('.rail')) return; const b = el.getBoundingClientRect(); if (b.height && (b.bottom > r.bottom + 1 || b.top < r.top - 1)) out.push({ k: 'overlap', m: name(el) + ' sticks out of ' + name(sx) }); });
+  });
+  // 7. no blank icons: every card icon draws a line icon or shows an emoji
+  root.querySelectorAll('.ic,.glyph').forEach((el) => { if (!vis(el)) return; const svg = el.querySelector('svg'); const ok = (svg && svg.children.length && svg.getBoundingClientRect().width > 8) || el.querySelector('.emo'); if (!ok) out.push({ k: 'blank-icon', m: name(el.closest('li,section') || el) }); });
   return out;
 }
 
@@ -144,10 +153,52 @@ module.exports = async function (ctx, t) {
     await prep(phone, html); await show(phone, '');
     const ks = new Set((await phone.evaluate(inspect, { width: 390 })).map((x) => x.k));
     t.eq(['header-overlap', 'empty-section', 'text-overflow', 'overflow', 'broken-image'].filter((k) => !ks.has(k)).join(','), '', 'visual checks catch planted faults (header overlap, empty section, clipped text, sideways scroll, broken image)');
+    const bad2 = '<section class="on-base" style="height:60px;padding:0;overflow:visible"><div class="wrap"><h2>Tall</h2><a class="btn" style="margin-top:80px" href="#">Spill</a></div></section><section class="on-alt"><div class="wrap"><h2>Icon</h2><ul class="sv"><li><span class="ic"></span>x</li></ul></div></section>';
+    await prep(phone, WS.renderSite(site, { mode: 'live' }).replace(/(<div class="ws-page on[^>]*>)/, (m) => m + bad2)); await show(phone, '');
+    const ks2 = new Set((await phone.evaluate(inspect, { width: 390 })).map((x) => x.k));
+    t.ok(ks2.has('overlap') && ks2.has('blank-icon'), 'visual checks catch a button hanging out of its band and a blank icon');
+  }
+  // Header over a photo opening: light text on any palette until it turns solid, then the palette's own colours.
+  // Phone action bar: never covers the back-to-top button, the cart or the free-plan badge.
+  {
+    const src43 = fs.readFileSync(path.join(__dirname, '..', 'src', '43-publish-domains.js'), 'utf8');
+    const withBadge = new Function(src43.slice(src43.indexOf('function withBadge'), src43.indexOf('function normalizePagePath')) + ';return withBadge;')();
+    const base0 = (await createSite(base, { name: 'Harbor Light Cafe', type: 'Coffee shop', city: 'Austin', phone: '512-555-0100', address: '1200 Riverside Dr, Austin, TX' })).site;
+    const lum = (c) => { const m = String(c).match(/[0-9.]+/g).map(Number).slice(0, 3).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]; };
+    const hexRgb = (h) => 'rgb(' + [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)).join(',') + ')';
+    const bad = [];
+    for (const pal of ['w_mono', 'w_amber', 'b_teal', 'linen', 'butter']) {
+      const site = JSON.parse(JSON.stringify(base0)); site.palette = pal;
+      const hero = WS.allSections(site).find((x) => x.type === 'hero'); hero.variant = pal === 'linen' ? 'center' : 'photo'; site.photos = site.photos || {}; site.photos[hero.id + '.photo'] = 'https://images.unsplash.com/photo-dark?w=1680';
+      const html = WS.renderSite(site, { mode: 'live' });
+      for (const [page, w] of [[desk, 1280], [phone, 390]]) {
+        await prep(page, html); await show(page, '');
+        const r = await page.evaluate(async () => { const tick = () => new Promise((z) => setTimeout(z, 120)); window.scrollTo({ top: 0, behavior: 'instant' }); window.dispatchEvent(new Event('scroll')); await tick(); const h = document.querySelector('header.top'); const mk = h.querySelector('.mark'); const tg = h.querySelector('.navtoggle') || h.querySelector('.pill'); const a = [getComputedStyle(mk).color, getComputedStyle(tg).color, h.className]; window.scrollTo({ top: 900, behavior: 'instant' }); window.dispatchEvent(new Event('scroll')); await tick(); return a.concat([getComputedStyle(mk).color, h.className]); });
+        if (!/over/.test(r[2]) || lum(r[0]) < 0.8 || lum(r[1]) < 0.8) bad.push(pal + ' ' + w + 'px top: ' + r[0] + ' / ' + r[1] + ' [' + r[2] + ']');
+        if (!/solid/.test(r[4]) || Math.abs(lum(r[3]) - lum(hexRgb(WS.palette(pal).baseText))) > 0.05) bad.push(pal + ' ' + w + 'px solid: ' + r[3] + ' [' + r[4] + ']');
+      }
+    }
+    t.eq(bad.join(' | '), '', 'header text over a photo opening is light on every palette, and switches to the palette colour once solid');
+    // a shop on the free plan: bar + cart + badge + back-to-top all at once
+    const shop = JSON.parse(JSON.stringify((await createSite(base, { name: 'Bright Goods', type: 'Gift shop', city: 'Austin', phone: '512-555-0100', ecommerce: true, products: [{ name: 'Candle', price: '$18' }, { name: 'Mug', price: '$15' }] })).site));
+    await prep(phone, withBadge(WS.renderSite(shop, { mode: 'live' }))); await show(phone, '');
+    const cover = await phone.evaluate(async () => {
+      const b = document.querySelector('.wsp-buy'); if (b) b.click();
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }); window.dispatchEvent(new Event('scroll')); await new Promise((r) => setTimeout(r, 400));
+      const bar = document.querySelector('.ws-bar'); if (!bar || !bar.getClientRects().length) return 'no action bar';
+      const br = bar.getBoundingClientRect(); const out = [];
+      if (br.bottom > innerHeight + 1 || br.height < 40) out.push('bar not docked at the bottom');
+      ['.ws-top.on', '.wsp-cart.on', '#ws-badge'].forEach((sel) => { const el = document.querySelector(sel); if (!el) { out.push(sel + ' missing'); return; } const r = el.getBoundingClientRect(); if (r.bottom > br.top + 1 && r.top < br.bottom && r.right > br.left && r.left < br.right) out.push(sel + ' is under the bar'); });
+      const cr = document.querySelector('.credits'); const last = cr.getBoundingClientRect(); if (last.bottom - parseFloat(getComputedStyle(cr).paddingBottom) > br.top + 1) out.push('page end hidden behind the bar');
+      return out.join(', ');
+    });
+    t.eq(cover, '', 'phone action bar sits at the bottom without covering back-to-top, the cart, the free-plan badge or the page end');
+    await prep(desk, WS.renderSite(shop, { mode: 'live' })); await show(desk, '');
+    t.ok(await desk.evaluate(() => { const b = document.querySelector('.ws-bar'); return !!b && !b.getClientRects().length; }), 'the action bar exists but is hidden on desktop');
   }
   for (const pg of [phone, desk]) { pg._errs.forEach((m) => note('js-error', 'page', m)); await pg.close(); }
-  const kinds = ['overflow', 'text-overflow', 'text-offscreen', 'empty-section', 'broken-image', 'header-overlap', 'contrast', 'js-error'];
-  const labels = { overflow: 'no page scrolls sideways', 'text-overflow': 'no text spills out of its box', 'text-offscreen': 'no text runs off the screen', 'empty-section': 'no empty or zero-height sections', 'broken-image': 'no broken images', 'header-overlap': 'the header never covers the first section', contrast: 'text contrast meets AA (axe color-contrast)', 'js-error': 'no JS errors' };
+  const kinds = ['overflow', 'text-overflow', 'text-offscreen', 'empty-section', 'broken-image', 'header-overlap', 'overlap', 'blank-icon', 'contrast', 'js-error'];
+  const labels = { overflow: 'no page scrolls sideways', 'text-overflow': 'no text spills out of its box', 'text-offscreen': 'no text runs off the screen', 'empty-section': 'no empty or zero-height sections', 'broken-image': 'no broken images', 'header-overlap': 'the header never covers the first section', overlap: 'sections never collide (nothing hangs over into the next band)', 'blank-icon': 'no blank icons', contrast: 'text contrast meets AA (axe color-contrast)', 'js-error': 'no JS errors' };
   kinds.forEach((k) => { const f = found[k] || []; t.ok(!f.length, labels[k] + (f.length ? ' (' + f.length + ') e.g. ' + f.slice(0, 4).join(' || ') : '')); });
   t.ok(checked > 0, 'visual QA checked ' + checked + ' page views across ' + types.length + ' business types in ' + Math.round((Date.now() - t0) / 1000) + 's');
 };

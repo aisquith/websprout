@@ -10,7 +10,7 @@ function withBadge(html){
   if (!html || html.indexOf('ws-badge') > -1) return html;
   // The cart pill (engine .wsp-cart, legacy #wsCartBtn) also sits bottom-right: lift it above the badge, and hide
   // the badge while the cart drawer is open so it never covers the drawer.
-  const b = '<style id="ws-badge-css">.wsp-cart,#wsCartBtn{bottom:64px!important}.wsp-draw.on~#ws-badge{display:none!important}@media(max-width:480px){#ws-badge{font-size:11px!important;padding:6px 10px!important;bottom:10px!important;right:10px!important}.wsp-cart,#wsCartBtn{bottom:56px!important;right:12px!important}}</style><a href="https://websprout.app/?utm_source=badge&utm_medium=referral&ref=badge" target="_blank" rel="noopener" id="ws-badge" style="position:fixed;bottom:14px;right:14px;z-index:2147483600;display:flex;align-items:center;gap:6px;background:rgba(15,26,13,.92);color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif;font-size:12px;font-weight:600;padding:7px 12px;border-radius:100px;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.14);line-height:1">🌱 Built with Websprout — make yours free</a>';
+  const b = '<style id="ws-badge-css">.wsp-cart,#wsCartBtn{bottom:64px!important}.wsp-draw.on~#ws-badge{display:none!important}@media(max-width:480px){#ws-badge{font-size:11px!important;padding:6px 10px!important;bottom:10px!important;right:10px!important}.wsp-cart,#wsCartBtn{bottom:56px!important;right:12px!important}}@media(max-width:700px){body.has-bar #ws-badge{bottom:calc(var(--bar-h,64px) + 10px)!important}body.has-bar .wsp-cart,body.has-bar #wsCartBtn{bottom:calc(var(--bar-h,64px) + 56px)!important}body.has-bar .ws-top{bottom:calc(var(--bar-h,64px) + 18px)}}</style><a href="https://websprout.app/?utm_source=badge&utm_medium=referral&ref=badge" target="_blank" rel="noopener" id="ws-badge" style="position:fixed;bottom:14px;right:14px;z-index:2147483600;display:flex;align-items:center;gap:6px;background:rgba(15,26,13,.92);color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif;font-size:12px;font-weight:600;padding:7px 12px;border-radius:100px;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.14);line-height:1">🌱 Built with Websprout — make yours free</a>';
   const i = html.lastIndexOf('</body>');
   return i > -1 ? html.slice(0,i) + b + html.slice(i) : html + b;
 }
@@ -51,17 +51,21 @@ function pubBranded404(home, base){
   h = h.replace(/<head>/i, '<head><meta name="robots" content="noindex">');
   return h;
 }
-// Can this site take card payments right now? (Pro owner with a ready Stripe Connect account, or the platform owner.)
-async function pubCanCheckout(env, sid){
-  if (!sid || !env || !env.KV) return false;
+// Who gets paid for this site's sales, if anyone. Bound to the server-recorded site OWNER account (wsSiteOwner), never to the
+// owner-editable notify address. { platform:true } = the platform owner's own site (charges on the platform account);
+// { account:'acct_...' } = a Pro owner with a ready Stripe Connect account; null = this site cannot take payments.
+async function wsPayee(env, sid){
+  if (!sid || !env || !env.KV) return null;
   try {
-    const own = ((await env.KV.get('notify:' + sid)) || '').toLowerCase();
-    if (!own) return false;
-    if (own === SUPPORT_EMAIL.toLowerCase()) return true;
+    const own = await wsSiteOwner(env, sid);
+    if (!own) return null;
+    if (own === SUPPORT_EMAIL.toLowerCase()) return { owner: own, platform: true, account: '' };
     const u = JSON.parse((await env.KV.get('user:' + own)) || 'null');
-    return !!(u && u.plan === 'pro' && u.stripeConnect && u.stripeConnectReady);
-  } catch(e){ return false; }
+    if (u && u.plan === 'pro' && u.stripeConnect && u.stripeConnectReady) return { owner: own, platform: false, account: u.stripeConnect };
+  } catch(e){}
+  return null;
 }
+async function pubCanCheckout(env, sid){ return !!(await wsPayee(env, sid)); }
 // Where a legacy shop's "Inquire" button goes: an on-page contact form, else phone, else email ('' = no button).
 function pubInquireHref(html){
   if (/\sid="contact-form"/.test(html)) return '#contact-form';
@@ -184,12 +188,12 @@ async function servePublished(slug, env, path, opts){
 }
 
 async function doPublish(request, env){
-  try{ const _ps=await getSession(request,env); await logEvent(request, env, 'publish', { email:_ps&&_ps.email }); }catch(e){}
+  // Analytics: the router logs 'publish' after a successful response (wsAfter in 40-router.js).
   try {
     if (!env.KV) return fail('Publishing storage is not configured');
     const b = await request.json();
     if (!b.html || !b.siteId || !b.key) return fail('Missing data');
-    if (b.key !== (await siteKey(b.siteId, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
+    if (!(await siteKeyOk(b.siteId, b.key, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
     const slug = slugify(b.slug || '');
     if (slug.length < 3) return fail('Pick a name with at least 3 letters/numbers');
     if (RESERVED_SLUGS.indexOf(slug) > -1) return fail('That name is reserved — choose another');
@@ -217,8 +221,9 @@ async function doPublish(request, env){
       pubHtml = pubHtml.replace(/href="\[Pay Link:[^\]]*\]"/g, 'href="#"');
       if (pubHtml.indexOf('</body>') > -1) pubHtml = pubHtml.replace('</body>', formJS + errJS + '</body>'); else pubHtml = pubHtml + formJS + errJS;
     } catch(e){ pubHtml = html; } return pubHtml; };
-    // Default the lead-notification email to the owner's account email (only if not already set)
-    try { const _s2 = await getSession(request, env); if (_s2 && _s2.email) { const _cur = await env.KV.get('notify:' + b.siteId); if (!_cur) await env.KV.put('notify:' + b.siteId, _s2.email); } } catch(e){}
+    // Default the lead-notification email to the owner's account email (only if not already set); a signed-in publisher
+    // holding the key becomes the site's recorded owner if it has none yet.
+    try { const _s2 = await getSession(request, env); if (_s2 && _s2.email) { await wsSetSiteOwner(env, b.siteId, _s2.email); const _cur = await env.KV.get('notify:' + b.siteId); if (!_cur) await env.KV.put('notify:' + b.siteId, _s2.email); } } catch(e){}
     // Multi-page if b.pages provided, else single home page (backward compatible).
     var _pages = (Array.isArray(b.pages) && b.pages.length) ? b.pages.slice() : [{ path:'', html: b.html }];
     if (!_pages.some(function(p){ return normalizePagePath(p.path)===''; })) _pages.unshift({ path:'', html: b.html });
@@ -251,9 +256,22 @@ async function doPublish(request, env){
         if (_prods.length) await env.KV.put('v3products:' + b.siteId, JSON.stringify(_prods)); else await env.KV.delete('v3products:' + b.siteId);
       }
     } catch(e){}
+    // Renamed (published under a new address): take the old address down and move the custom domain to the new one.
+    try {
+      const _prev = await env.KV.get('slugof:' + b.siteId);
+      if (_prev && _prev !== slug) {
+        let _pm = null; try { _pm = JSON.parse((await env.KV.get('pubmeta:' + _prev)) || 'null'); } catch(e){}
+        if (_pm && _pm.siteId === b.siteId) {
+          try { const _oi = JSON.parse((await env.KV.get('pubpages:' + _prev)) || '[]'); if (Array.isArray(_oi)) for (const _op of _oi) if (_op) await env.KV.delete('pub:' + _prev + ':' + _op); } catch(e){}
+          await env.KV.delete('pubpages:' + _prev); await env.KV.delete('pub:' + _prev); await env.KV.delete('pubmeta:' + _prev); try { await env.KV.delete('featured:' + _prev); } catch(e){}
+        }
+        const _dh = await env.KV.get('domainof:' + b.siteId);
+        if (_dh) for (const _h of [_dh, 'www.' + _dh]) { if ((await env.KV.get('domain:' + _h)) === _prev) await env.KV.put('domain:' + _h, slug); }
+      }
+    } catch(e){}
     try { await env.KV.put('slugof:' + b.siteId, slug); } catch(e){}
     return succeed({ ok:true, slug: slug, url: 'https://' + slug + '.websprout.app', pathUrl: 'https://websprout.app/s/' + slug, nobadge: _pro, pages: _paths });
-  } catch(e){ return fail(e.message); }
+  } catch(e){ return wsErr(e); }
 }
 
 async function doUnpublish(request, env){
@@ -261,7 +279,7 @@ async function doUnpublish(request, env){
     if (!env.KV) return fail('KV not configured');
     const b = await request.json();
     if (!b.slug || !b.siteId || !b.key) return fail('Missing data');
-    if (b.key !== (await siteKey(b.siteId, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
+    if (!(await siteKeyOk(b.siteId, b.key, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
     b.slug = slugify(b.slug);
     const m = await env.KV.get('pubmeta:' + b.slug);
     if (!m) return fail('That site is not published');
@@ -270,8 +288,10 @@ async function doUnpublish(request, env){
     try { var _idx = await env.KV.get('pubpages:' + b.slug); if (_idx){ var _arr = JSON.parse(_idx); if (Array.isArray(_arr)){ for (var _k=0;_k<_arr.length;_k++){ var _p=_arr[_k]; if (_p) { try { await env.KV.delete('pub:' + b.slug + ':' + _p); } catch(e){} } } } } } catch(e){}
     try { await env.KV.delete('pubpages:' + b.slug); } catch(e){}
     await env.KV.delete('pub:' + b.slug); await env.KV.delete('pubmeta:' + b.slug); try { await env.KV.delete('slugof:' + b.siteId); } catch(e){}
+    try { await wsDropDomain(env, b.siteId, b.slug); } catch(e){}
+    try { await env.KV.delete('featured:' + b.slug); } catch(e){}
     return succeed({ ok:true });
-  } catch(e){ return fail(e.message); }
+  } catch(e){ return wsErr(e); }
 }
 
 async function doSlugCheck(request, env){
@@ -286,7 +306,7 @@ async function doSlugCheck(request, env){
     let avail = !existing;
     if (existing && sid){ try { if (JSON.parse(existing).siteId === sid) avail = true; } catch(e){} }
     return succeed({ available: avail, slug: slug });
-  } catch(e){ return fail(e.message); }
+  } catch(e){ return wsErr(e); }
 }
 
 async function doDomainCheck(request, env){
@@ -304,7 +324,7 @@ async function doDomainCheck(request, env){
       } catch(e){ return succeed({ ok:true, domain: domain, available: null, buyUrl: buyUrl }); }
     }
     return succeed({ ok:true, domain: domain, available: null, buyUrl: buyUrl });
-  } catch(e){ return fail(e.message); }
+  } catch(e){ return wsErr(e); }
 }
 
 // ── Custom domains ──
@@ -316,7 +336,7 @@ async function doDomainCheck(request, env){
 const DOMAIN_TARGET = 'sites.websprout.app';
 async function domainToken(siteId, host, env){
   const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', enc.encode(env.FORM_SECRET || 'websprout-domain'), { name:'HMAC', hash:'SHA-256' }, false, ['sign']);
+  const key = await crypto.subtle.importKey('raw', enc.encode(wsSecret(env)), { name:'HMAC', hash:'SHA-256' }, false, ['sign']);
   const sig = await crypto.subtle.sign('HMAC', key, enc.encode('domain|' + siteId + '|' + host));
   return Array.from(new Uint8Array(sig)).map(function(b){ return b.toString(16).padStart(2, '0'); }).join('').slice(0, 32);
 }
@@ -336,7 +356,26 @@ async function cfAddHostname(env, hostname){
     if (j && j.success) return { configured:true, ok:true, status: (j.result && j.result.status) || 'pending' };
     const dup = ((j && j.errors) || []).some(function(e){ return e && (e.code === 1406 || /already exists/i.test(e.message || '')); });
     return { configured:true, ok:dup, status: dup ? 'exists' : 'error', error: dup ? '' : (((j && j.errors) || [])[0] || {}).message || 'Cloudflare error' };
-  } catch(e){ return { configured:true, ok:false, status:'error', error:e.message }; }
+  } catch(e){ try { console.error('cf hostname add failed', (e && e.message) || e); } catch(_){} return { configured:true, ok:false, status:'error', error:'Cloudflare error' }; }
+}
+// Mirror of cfAddHostname: remove a custom hostname from Cloudflare for SaaS. Failures are logged, never fatal.
+async function cfRemoveHostname(env, hostname){
+  if (!env.CF_API_TOKEN || !env.CF_ZONE_ID || !hostname) return;
+  try {
+    const base = 'https://api.cloudflare.com/client/v4/zones/' + env.CF_ZONE_ID + '/custom_hostnames', h = { 'Authorization':'Bearer ' + env.CF_API_TOKEN, 'Content-Type':'application/json' };
+    const r = await fetch(base + '?hostname=' + encodeURIComponent(hostname), { headers: h });
+    const j = await r.json();
+    for (const it of ((j && j.result) || [])) { if (it && it.id && it.hostname === hostname) { const d = await fetch(base + '/' + encodeURIComponent(it.id), { method:'DELETE', headers: h }); if (!d.ok) console.error('cf hostname delete failed', hostname, d.status); } }
+  } catch(e){ try { console.error('cf hostname delete failed', hostname, (e && e.message) || e); } catch(_){} }
+}
+// A site's custom domain stops pointing anywhere: mappings (only those still aimed at this site's slug) and Cloudflare hostnames go.
+async function wsDropDomain(env, siteId, slug){
+  if (!env || !env.KV || !siteId) return;
+  const host = await env.KV.get('domainof:' + siteId);
+  if (!host) return;
+  for (const h of [host, 'www.' + host]) { try { const cur = await env.KV.get('domain:' + h); if (cur && (!slug || cur === slug)) await env.KV.delete('domain:' + h); } catch(e){} }
+  await cfRemoveHostname(env, 'www.' + host); await cfRemoveHostname(env, host);
+  try { await env.KV.delete('domainof:' + siteId); } catch(e){}
 }
 async function doConnectDomain(request, env){
   try {
@@ -345,7 +384,7 @@ async function doConnectDomain(request, env){
     if (!b.domain || !b.slug || !b.siteId || !b.key) return fail('Missing data');
     let _dpro = false; try { const _ds = await getSession(request, env); if (_ds) { const _du = JSON.parse((await env.KV.get('user:' + (_ds.email||'').toLowerCase())) || '{}'); _dpro = !!(_du && _du.plan === 'pro') || ((_ds.email||'').toLowerCase() === SUPPORT_EMAIL.toLowerCase()); } } catch(e){}
     if (!_dpro) return fail('Custom domains are a Pro feature.');
-    if (b.key !== (await siteKey(b.siteId, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
+    if (!(await siteKeyOk(b.siteId, b.key, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
     const slug = slugify(b.slug);
     const m = await env.KV.get('pubmeta:' + slug);
     if (!m) return fail('Publish your site first, then connect the domain');
@@ -360,6 +399,7 @@ async function doConnectDomain(request, env){
     const steps = { txtName: txtName, txtHost: '_websprout', txtValue: txtValue, cnameHost: 'www', cnameTarget: DOMAIN_TARGET };
     if (!verified) return succeed({ ok:true, verified:false, host: host, steps: steps });
     // Verified: this owner controls the domain, so it may replace any earlier (unverified or stale) mapping.
+    try { const _old = await env.KV.get('domainof:' + b.siteId); if (_old && _old !== host) await wsDropDomain(env, b.siteId); } catch(e){}
     await env.KV.put('domain:' + host, slug);
     await env.KV.put('domain:www.' + host, slug);
     await env.KV.put('domainof:' + b.siteId, host);
@@ -369,5 +409,5 @@ async function doConnectDomain(request, env){
     const pointed = www.indexOf(DOMAIN_TARGET) > -1;
     if (!cfA.configured) { try { if (env.RESEND_API_KEY) await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[SUPPORT_EMAIL], subject:'Custom domain to finish: ' + host, html:'<p>' + host + ' was verified for ' + slug + '.websprout.app. Add it as a Cloudflare for SaaS custom hostname (or set CF_API_TOKEN + CF_ZONE_ID to automate this).</p>' }) }); } catch(e){} }
     return succeed({ ok:true, verified:true, host: host, pointed: pointed, https: cfA.configured ? (cfA.ok ? 'pending' : 'error') : 'manual', httpsError: cfA.error || '', steps: steps, url: 'https://www.' + host });
-  } catch(e){ return fail(e.message); }
+  } catch(e){ return wsErr(e); }
 }

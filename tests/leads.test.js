@@ -1,16 +1,8 @@
 // Leads: a signed-in owner sees every form submission from all their sites in one inbox, replies from their
 // own email app or phone (mailto: / sms: / tel:), and can mark leads replied or archived. Other people cannot.
-const { createSite, post, openPage, sleep } = require('./lib');
+const { createSite, post, openPage, sleep, signIn, cookie, browserCookie } = require('./lib');
 
-async function signIn(base, email) {
-  await post(base, '/auth/email', { email });
-  const m = await (await fetch(base + '/__test/mail?to=' + encodeURIComponent(email))).json();
-  const token = ((m && m.html) || '').match(/token=([A-Za-z0-9_-]+)/)[1];
-  const r = await fetch(base + '/auth/verify', { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'token=' + token });
-  const c = (r.headers.get('set-cookie') || '').match(/ws_sess=([^;]+)/);
-  return c ? c[1] : '';
-}
-const api = (base, path, sess, body) => fetch(base + path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: 'ws_sess=' + sess }, body: JSON.stringify(body) } : { headers: { Cookie: 'ws_sess=' + sess } });
+const api = (base, path, sess, body) => fetch(base + path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: cookie(sess) }, body: JSON.stringify(body) } : { headers: { Cookie: cookie(sess) } });
 
 module.exports = async function (ctx, t) {
   const { base, browser } = ctx;
@@ -50,14 +42,14 @@ module.exports = async function (ctx, t) {
   t.eq((await (await api(base, '/api/leads', intruder)).json()).leads.length, 0, "someone else sees none of the owner's leads");
   r = await api(base, '/api/leads/status', sess, { id: 'form:../x', status: 'replied' });
   t.eq(r.status, 400, 'malformed lead ids are refused');
-  r = await fetch(base + '/api/leads/status', { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: 'ws_sess=' + sess, 'Sec-Fetch-Site': 'cross-site' }, body: JSON.stringify({ id: ana.id, status: 'new' }) });
+  r = await fetch(base + '/api/leads/status', { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: cookie(sess), 'Sec-Fetch-Site': 'cross-site' }, body: JSON.stringify({ id: ana.id, status: 'new' }) });
   t.eq(r.status, 403, 'other websites cannot change lead status');
   await api(base, '/api/leads/status', sess, { id: ana.id, status: 'new' });
 
   // the page, signed in, on desktop and phone
   for (const mobile of [false, true]) {
     const page = await openPage(browser, { mobile });
-    await page.setCookie({ name: 'ws_sess', value: sess, url: base });
+    await page.setCookie(browserCookie(base, sess));
     await page.goto(base + '/leads', { waitUntil: 'networkidle2' });
     const info = await page.evaluate(() => {
       const cards = [...document.querySelectorAll('.lead')];
@@ -100,7 +92,7 @@ module.exports = async function (ctx, t) {
   }
   // archive from the page; it leaves the New tab and stays archived after reload
   const page = await openPage(browser, {});
-  await page.setCookie({ name: 'ws_sess', value: sess, url: base });
+  await page.setCookie(browserCookie(base, sess));
   await page.goto(base + '/leads', { waitUntil: 'networkidle2' });
   await page.evaluate(() => { const c = [...document.querySelectorAll('.lead')].find((x) => /Bo/.test(x.innerText)); [...c.querySelectorAll('button')].find((x) => x.textContent === 'Archive').click(); });
   await sleep(700);
@@ -109,7 +101,7 @@ module.exports = async function (ctx, t) {
   t.eq(j.leads.find((x) => x.contact.name === 'Bo').status, 'archived', 'archive is saved');
   // signed out: a sign-in prompt, not an error
   const out = await openPage(browser, {});
-  await out.deleteCookie({ name: 'ws_sess', url: base });
+  await out.deleteCookie({ name: '__Host-ws_sess', url: base });
   await out.goto(base + '/leads', { waitUntil: 'networkidle2' });
   t.ok(await out.evaluate(() => /Sign in/.test(document.body.innerText) && !!document.querySelector('a[href="/?signin=1"]')), 'signed-out visitors get a sign-in button');
   await out.close();

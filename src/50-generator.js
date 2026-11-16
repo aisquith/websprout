@@ -37,7 +37,7 @@ function v3StarterBase(type) {
     about: 'Good coffee, a calm room and a welcome that makes you want to stay. Whether it is a quick cup or a slow afternoon, you are in the right place.',
     servicesTitle: 'On the menu', ctaTitle: 'See you in the morning.', ctaText: 'Swing by or order ahead and skip the line.',
     services: [['Espresso', 'Pulled fresh from beans we actually care about.', '2615'], ['Pour Over', 'Single-origin coffee brewed slow and clean.', '2615'], ['Pastries', 'A short, fresh case to go with your cup.', '1f950'], ['Cold Brew', 'Smooth, steeped overnight, served over ice.', '1f9ca']] };
-  if (M(/restaurant|kitchen|grill|bbq|barbecue|taco|pizza|sushi|diner|eatery|bistro|catering|food truck|cuisine|steakhouse/) && !M(/remodel|renovat|cabinet|countertop/)) return {
+  if (M(/restaurant|kitchen|grill|bbq|barbecue|taco|taqueria|cantina|burrito|pizz|sushi|ramen|izakaya|trattoria|diner|eatery|bistro|catering|food truck|cuisine|steakhouse|smokehouse|burger/) && !M(/remodel|renovat|cabinet|countertop/)) return {
     category: 'restaurant', tagline: 'Food worth coming back for.',
     about: 'Honest cooking made from good ingredients, served by people who are glad you came in. Pull up a seat — we saved you one.',
     servicesTitle: 'Why people come back', ctaTitle: 'Hungry yet?', ctaText: 'Reserve a table or order ahead for pickup.',
@@ -159,13 +159,118 @@ function v3StarterBase(type) {
 // category never read identically. The base v3StarterBase value is kept as the first option.
 // Copy pools live in 49-copy.js (V3_COPYBOOK, refined by V3_SUBTYPES).
 const V3_FLAVORS = V3_COPYBOOK;
-function v3FlavorPick(arr) { return (arr && arr.length) ? arr[Math.floor(Math.random() * arr.length)] : ''; }
+// Seeded randomness: every copy and layout pick goes through v3Rand. buildV3Site seeds it from the business
+// (name, type, city) around each synchronous step, so regenerating the same business gives the same site and
+// two businesses of the same type still look different. Outside a seeded step it is plain Math.random.
+let V3_RNG = Math.random;
+function v3Rand() { return V3_RNG(); }
+function v3Seeded(seed) { let a = parseInt(v3Hash(seed), 36) >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function v3WithSeed(seed, fn) { const prev = V3_RNG; V3_RNG = v3Seeded(seed); try { return fn(); } finally { V3_RNG = prev; } }
+function v3FlavorPick(arr) { return (arr && arr.length) ? arr[Math.floor(v3Rand() * arr.length)] : ''; }
+
+// Business families: decide the page recipe, the main action and the CTA voice.
+const V3_FAMILY = {
+  restaurant: 'food', cafe: 'food', bakery: 'food',
+  lawn: 'trades', cleaning: 'trades', home: 'trades', moving: 'trades', locksmith: 'trades', appliance: 'trades', auto: 'trades',
+  barber: 'beauty', salon: 'beauty', spa: 'beauty', tattoo: 'beauty', fitness: 'beauty', pet: 'beauty', tailor: 'beauty',
+  legal: 'pro', finance: 'pro', realestate: 'pro', dental: 'pro', health: 'pro', studio: 'pro', education: 'pro', childcare: 'pro', generic: 'pro',
+  photo: 'creative', events: 'creative', retail: 'retail', marine: 'retail',
+};
+const V3_DRINKS_RE = /\bbar\b|\bpub\b|brewery|brewpub|winery|taproom|tavern|\bdeli\b|juice|smoothie|ice cream|gelato|creamery|bubble tea|boba|tea ?house|tea room|frozen yogurt/;
+function v3Family(cat, type) { return (cat === 'generic' && V3_DRINKS_RE.test(String(type || '').toLowerCase())) ? 'food' : (V3_FAMILY[cat] || 'pro'); }
+// The one thing each kind of business wants a visitor to do. Booking-form variant, page path, nav name,
+// header button, page heading, main button, form intro, thank-you line, CTA copy kind. A null variant means
+// no request page: the button goes to the Contact page (visit us / get in touch) or the shop.
+const V3_ACTIONS = {
+  reserve: ['reservation', 'reserve', 'Reserve', 'Reserve', 'Reserve a table', 'Reserve a table', 'Tell us when you’d like to come and how many of you there are, and we’ll confirm your table.', 'Thanks. Your request is in and we’ll confirm your table shortly.', 'food'],
+  order: ['order', 'order', 'Order', 'Order', 'Order ahead', 'Order ahead', 'Tell us what you’d like and when you’ll pick it up, and we’ll confirm your order.', 'Thanks. We’ll confirm your order shortly.', 'order'],
+  flowers: ['order', 'order', 'Order', 'Order', 'Order flowers', 'Order flowers', 'Tell us the occasion, the date and roughly what you’d like to spend, and we’ll confirm the details.', 'Thanks. We’ll be in touch to confirm your order.', 'order'],
+  truck: ['quote', 'quote', 'Book the Truck', 'Book us', 'Book the truck', 'Book the truck', 'Tell us the date, the place and roughly how many guests, and we’ll send a quote.', 'Thanks. We’ll check the date and send you a quote soon.', 'truck'],
+  cater: ['quote', 'quote', 'Get a Quote', 'Quote', 'Plan your catering', 'Request a quote', 'Tell us the date, the number of guests and the kind of food you have in mind.', 'Thanks. We’ll look at the details and send you a quote soon.', 'truck'],
+  quote: ['quote', 'quote', 'Get a Quote', 'Quote', 'Get a quote', 'Get a quote', 'Tell us about the job and we’ll send you a clear price.', 'Thanks. We’ll look at the details and send you a quote soon.', 'onsite'],
+  estimate: ['quote', 'quote', 'Estimate', 'Estimate', 'Request an estimate', 'Request an estimate', 'Tell us about the project, with photos if you have them, and we’ll arrange an estimate.', 'Thanks. We’ll be in touch to arrange your estimate.', 'onsite'],
+  service: ['appointment', 'book', 'Schedule', 'Schedule', 'Schedule a visit', 'Schedule a visit', 'Tell us what’s going on and when suits you, and we’ll confirm a time.', 'Thanks. We’ll confirm your visit shortly.', 'onsite'],
+  garage: ['appointment', 'book', 'Book', 'Book', 'Book a service', 'Book a service', 'Tell us about your car and when suits you, and we’ll confirm a time.', 'Thanks. We’ll confirm your booking shortly.', 'onsite'],
+  inquire: ['quote', 'quote', 'Inquire', 'Inquire', 'Ask about a boat', 'Send an inquiry', 'Tell us what you’re looking for, or what your boat needs, and we’ll get back to you.', 'Thanks. We’ll get back to you soon.', 'onsite'],
+  appt: ['appointment', 'book', 'Book', 'Book', 'Book an appointment', 'Book an appointment', 'Choose a time that suits you and we’ll confirm by text or email.', 'Thanks. We’ll confirm your appointment shortly.', 'visit'],
+  klass: ['appointment', 'book', 'Book', 'Book', 'Book a class', 'Book a class', 'Pick a class and a time, and we’ll confirm your place.', 'Thanks. We’ll confirm your place shortly.', 'klass'],
+  lesson: ['appointment', 'book', 'Book', 'Book', 'Book a first lesson', 'Book a first lesson', 'Tell us about the student and when suits you, and we’ll confirm a time.', 'Thanks. We’ll be in touch to confirm your lesson.', 'learn'],
+  tour: ['appointment', 'book', 'Book a Tour', 'Book a tour', 'Book a tour', 'Book a tour', 'Choose a day and time to visit, meet the team and see the rooms.', 'Thanks. We’ll be in touch to confirm your tour.', 'tour'],
+  patient: ['appointment', 'book', 'Appointments', 'Book', 'Request an appointment', 'Request an appointment', 'Tell us when suits you and we’ll be in touch to confirm.', 'Thanks. We’ll be in touch to confirm your appointment.', 'visit'],
+  consult: ['appointment', 'book', 'Consultation', 'Consult', 'Book a consultation', 'Book a consultation', 'Tell us a little about your situation and when suits you, and we’ll confirm a time.', 'Thanks. We’ll be in touch to confirm your consultation.', 'project'],
+  call: ['appointment', 'book', 'Book a Call', 'Book a call', 'Book a call', 'Book a call', 'Choose a time that suits you and we’ll call you then.', 'Thanks. We’ll confirm your call shortly.', 'project'],
+  project: ['quote', 'quote', 'Start a Project', 'Start', 'Tell us about your project', 'Start a project', 'Share what you have in mind, however rough, and we’ll reply with next steps.', 'Thanks. We’ll read it carefully and reply with next steps.', 'project'],
+  avail: ['appointment', 'book', 'Availability', 'Check dates', 'Check availability', 'Check availability', 'Tell us your date and what you have in mind, and we’ll let you know if we’re free.', 'Thanks. We’ll check the date and get back to you.', 'project'],
+  visitus: [null, '', '', 'Visit', '', 'Visit us', '', '', 'drop'],
+  contact: [null, '', '', 'Contact', '', 'Get in touch', '', '', 'contact'],
+};
+// Which action fits the business, from its category and the words the owner typed. [action, main button override]
+function v3ActionFor(cat, type, fam) {
+  const t = String(type || '').toLowerCase();
+  const M = (re) => re.test(t);
+  switch (cat) {
+    case 'restaurant': return M(/food truck|street food/) ? ['truck'] : M(/cater/) ? ['cater'] : M(/pizz|bbq|barbecue|smokehouse|taco|taqueria|burrito|burger|diner|sandwich|take-?out|fast food|chicken|wings|hot dog|poke|noodle bar/) ? ['order'] : ['reserve'];
+    case 'bakery': return ['order'];
+    case 'cafe': return ['visitus'];
+    case 'lawn': return M(/landscap|design|irrigation|tree service|hardscap/) ? ['estimate'] : ['quote'];
+    case 'cleaning': case 'moving': case 'locksmith': return ['quote'];
+    case 'appliance': return ['service'];
+    case 'home': return M(/plumb|electric|hvac|heating|air condition|furnace|cooling|pest|pool|garage door/) ? ['service'] : M(/roof|remodel|renovat|construction|contractor|builder|paint|floor|fence|deck|siding|cabinet|countertop|drywall/) ? ['estimate'] : ['quote'];
+    case 'auto': return M(/car ?wash|hand wash/) ? ['visitus'] : M(/body shop|collision|\bdent/) ? ['estimate', 'Request an estimate'] : M(/detail/) ? ['garage', 'Book a detail'] : ['garage'];
+    case 'marine': return ['inquire'];
+    case 'barber': return ['appt', 'Book a cut'];
+    case 'salon': return ['appt'];
+    case 'spa': return M(/massage/) ? ['appt', 'Book a massage'] : M(/nail|lash|brow|wax/) ? ['appt'] : ['appt', 'Book a treatment'];
+    case 'tattoo': return ['consult'];
+    case 'fitness': return M(/yoga|pilates|barre|spin|cycle|dance|martial|karate|jiu|bjj|taekwondo|judo|boxing|mma|kickbox/) ? ['klass'] : ['appt', 'Book a first session'];
+    case 'pet': return M(/\bvet|veterinar|animal hospital/) ? ['patient'] : M(/groom/) ? ['appt', 'Book a groom'] : M(/walk/) ? ['appt', 'Book a walk'] : M(/train/) ? ['appt', 'Book a session'] : M(/board|kennel|daycare|sitt/) ? ['appt', 'Book a stay'] : ['appt', 'Book a visit'];
+    case 'tailor': return ['appt', 'Book a fitting'];
+    case 'legal': return ['consult'];
+    case 'finance': case 'realestate': return ['call'];
+    case 'dental': return ['patient'];
+    case 'health': return M(/counsel|therap|psycholog|mental/) && !M(/physical|massage/) ? ['consult', 'Book a first session'] : ['patient'];
+    case 'studio': return ['project'];
+    case 'education': return M(/tutor/) ? ['lesson', 'Book a session'] : ['lesson'];
+    case 'childcare': return ['tour'];
+    case 'photo': return ['avail'];
+    case 'events': return M(/florist|flower/) ? ['flowers'] : ['avail'];
+    case 'retail': return ['visitus'];
+  }
+  return [fam === 'food' ? 'visitus' : 'contact'];
+}
+// What the main page (and its nav entry) is called.
+function v3MainLabel(cat, type, fam, isShop) {
+  const t = String(type || '').toLowerCase();
+  if (isShop) return 'Shop';
+  if (fam === 'food') return 'Menu';
+  if (cat === 'spa') return /nail|lash|brow|wax/.test(t) ? 'Services' : 'Treatments';
+  if (cat === 'fitness') return /yoga|pilates|barre|spin|cycle|dance|martial|karate|jiu|bjj|taekwondo|judo|boxing|mma|kickbox/.test(t) ? 'Classes' : 'Training';
+  return ({ education: /tutor/.test(t) ? 'Tutoring' : 'Lessons', childcare: 'Programs', legal: 'Practice Areas', tailor: 'Alterations', dental: 'Treatments', retail: 'In Store', events: /florist|flower/.test(t) ? 'Flowers' : 'Services' })[cat] || 'Services';
+}
+// Everything a site needs to label itself coherently: header button, hero/CTA buttons, nav and page names.
+function v3Labels(cat, type, isShop) {
+  const fam = isShop ? 'retail' : v3Family(cat, type);
+  const pick = isShop ? ['shop'] : v3ActionFor(cat, type, fam);
+  const a = V3_ACTIONS[pick[0]] || null;
+  const main = v3MainLabel(cat, type, fam, isShop);
+  const out = { family: (fam === 'trades' && pick[0] === 'visitus') ? 'retail' : fam, act: pick[0], main: main, mainPath: main.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''), bk: null };
+  if (isShop) return Object.assign(out, { bookLabel: 'Shop now', bookShort: 'Shop', ctaKind: 'shop' });
+  out.bookLabel = pick[1] || a[5];
+  out.bookShort = a[3];
+  out.ctaKind = (pick[0] === 'visitus' && fam === 'food') ? 'cafe' : a[8];
+  if (a[0]) out.bk = { mode: a[0], path: a[1], title: a[2], short: a[3], head: pick[1] || a[4], btn: out.bookLabel, sub: a[6], ok: a[7] };
+  return out;
+}
 
 // Structural copy pools used across every generated site (steps, page CTAs, pageheads, forms).
 // These are the lines that used to be identical on every site — now each one is picked fresh.
 const V3_COPY = {
   featured: ['Popular right now', 'A few favorites', 'Customer favorites', 'Where to start', 'Most requested', 'Our most popular'],
-  whatWeDo: ['What we do', 'What we offer', 'How we can help', 'Our services', 'What we’re known for', 'Ways we can help'],
+  whatWeDo: ['What we do', 'What we offer', 'How we can help', 'Ways we can help'],
+  // Home teaser titles for places whose own titles just say "Menu" (the main page already carries that name).
+  menuTeaser: { restaurant: ['On the menu', 'What we’re known for', 'From the kitchen', 'House favorites'], cafe: ['On the menu', 'What we’re known for', 'Behind the counter'] },
+  teamTitle: ['Meet the team', 'The team', 'Who you’ll meet'],
+  faqTitle: ['Quick answers', 'Good to know', 'Common questions'],
   stepsTitle: ['How it works', 'What to expect', 'Getting started', 'How we work', 'From first message to finished', 'Simple from start to finish'],
   stepsSets: [
     [['Get in touch', 'Tell us what you need and when suits you.'], ['Get a clear plan', 'We confirm the details and give you an honest price.'], ['Consider it done', 'We do the work and check you’re happy with it.']],
@@ -176,13 +281,21 @@ const V3_COPY = {
   // Calls to action that fit the kind of business: somewhere you eat, somewhere you visit, someone who comes
   // to you, or a professional service.
   pageCta: {
-    food: { title: ['Hungry yet?', 'Join us soon.', 'Book a table.', 'Come and eat with us.', 'Order ahead.'], text: ['Reserve a table, or order ahead for pickup.', 'Book online, call us, or just walk in.', 'Planning a group meal? Get in touch and we’ll help you arrange it.'] },
+    food: { title: ['Hungry yet?', 'Join us soon.', 'Book a table.', 'Come and eat with us.'], text: ['Reserve a table, or call us with any questions.', 'Book online, call us, or just walk in.', 'Planning a group meal? Get in touch and we’ll help you arrange it.'] },
     visit: { title: ['Book your visit.', 'Ready when you are.', 'Find a time that suits you.', 'Come and see us.', 'Book your appointment.'], text: ['Choose a time online, or call us and we’ll find one together.', 'Book ahead to get the time you want.', 'Not sure what to book? Send us a message and we’ll help you choose.'] },
-    onsite: { title: ['Get a free quote.', 'Tell us about the job.', 'Need a hand?', 'Book a visit.', 'Let’s get it sorted.'], text: ['Send a few details, and photos if you have them, and we’ll reply with a clear price.', 'Tell us what you need and when, and we’ll arrange the rest.', 'Get in touch for a no-obligation quote.'] },
-    project: { title: ['Let’s talk.', 'Book a consultation.', 'Have a question?', 'Get in touch.', 'Start the conversation.'], text: ['Tell us a little about what you need and we’ll suggest the next steps.', 'Book a short call and we’ll talk through your options.', 'Send us a message. We usually reply within one business day.'] },
+    onsite: { title: ['Get a quote.', 'Tell us about the job.', 'Need a hand?', 'Book a visit.', 'Let’s get it sorted.'], text: ['Send a few details, and photos if you have them, and we’ll reply with a clear price.', 'Tell us what you need and when, and we’ll arrange the rest.', 'Get in touch for a no-obligation quote.'] },
+    project: { title: ['Let’s talk.', 'Have a question?', 'Get in touch.', 'Start the conversation.'], text: ['Tell us a little about what you need and we’ll suggest the next steps.', 'Book a short call and we’ll talk through your options.', 'Send us a message. We usually reply within one business day.'] },
+    order: { title: ['Order ahead.', 'Planning something?', 'Get your order in.', 'Something for the weekend?'], text: ['Tell us what you’d like and when you’ll pick it up, and we’ll have it ready.', 'Larger orders need a little notice. Get in touch and we’ll help you plan.', 'Order ahead for pickup, or stop by and see what’s fresh today.'] },
+    truck: { title: ['Planning an event?', 'Feeding a crowd?', 'Bring us to your event.'], text: ['Tell us the date, the place and roughly how many guests, and we’ll send a quote.', 'Parties, offices and private events: get in touch and we’ll plan the menu with you.'] },
+    cafe: { title: ['Come in for a coffee.', 'See you soon.', 'Stop by.', 'Pull up a chair.'], text: ['Stop by for a quick cup, or stay a while.', 'Come in and say hello. Questions? Send us a message.', 'Find a seat and make yourself at home.'] },
+    drop: { title: ['Come and see us.', 'Stop by.', 'Visit us soon.'], text: ['Stop by during opening hours, or send us a message with any questions.', 'Have a question first? Call or message us.'] },
+    klass: { title: ['Try a class.', 'Ready to start?', 'Find a class that suits you.'], text: ['Pick a class and a time, and we’ll confirm your place.', 'New here? Tell us where you’re starting from and we’ll suggest a class.'] },
+    learn: { title: ['Book a first lesson.', 'Ready to start?', 'Let’s make a plan.'], text: ['Tell us about the student and their goals, and we’ll suggest the right lessons.', 'Get in touch to check availability and times.'] },
+    tour: { title: ['Come and visit.', 'Book a tour.', 'See the rooms for yourself.'], text: ['Book a tour and meet the people who would look after your child.', 'Ask about availability and we’ll walk you through how enrollment works.'] },
+    contact: { title: ['Get in touch.', 'How can we help?', 'Talk to us.'], text: ['Send us a message and we’ll get back to you soon.', 'Call or message us with any questions.'] },
   },
   aboutCtaBy: {
-    food: { title: ['Come and visit.', 'See you soon.', 'Pull up a chair.', 'Join us for a meal.'], text: ['We’d love to cook for you. Book a table or just drop in.', 'Have a question about the menu or a booking? Get in touch.', 'Find us, book a table or order ahead.'] },
+    food: { title: ['Come and visit.', 'See you soon.', 'Pull up a chair.', 'Join us for a meal.'], text: ['We’d love to cook for you. Book a table or just drop in.', 'Have a question about the menu or a booking? Get in touch.', 'Find us, or book a table for your next visit.'] },
     visit: { title: ['Come and meet us.', 'We’d love to see you.', 'Say hello.', 'Book your first visit.'], text: ['Book a visit, or send us a message with any questions first.', 'New here? Tell us what you’re looking for and we’ll help you choose.', 'Call, message or stop by. We’re happy to help.'] },
     onsite: { title: ['Let’s work together.', 'Ready when you are.', 'Talk to us.', 'Get a quote.'], text: ['Tell us about your job and we’ll get back to you with a clear price.', 'Questions before you book? We’re a message away.', 'Send us a few details and we’ll take it from there.'] },
     project: { title: ['Let’s work together.', 'Talk to us.', 'Get in touch.', 'Questions? Just ask.'], text: ['Tell us a little about what you need and we’ll explain how we can help.', 'Book a call or send us a message, whichever suits you.', 'We’re happy to answer questions before you commit to anything.'] },
@@ -212,6 +325,20 @@ const V3_STEPS_BY_KIND = {
   ],
   // projects and professional services
   project: V3_COPY.stepsSets.slice(0, 3),
+  // clinics and practices
+  care: [
+    [['Request an appointment', 'Choose a time online or give us a call.'], ['Talk it through', 'We listen first and explain what we find before any treatment.'], ['A clear plan', 'You leave knowing your options and what comes next.']],
+    [['Get in touch', 'Call or send a request, and tell us if anything is urgent.'], ['Your first visit', 'Unhurried, with time for your questions.'], ['Follow-up', 'We check in and adjust the plan as you go.']],
+  ],
+  // lessons and tutoring
+  learn: [
+    [['Get in touch', 'Tell us about the student, their level and their goals.'], ['A first session', 'A relaxed start so we can see where things are.'], ['Build from there', 'A clear plan, with progress you can see.']],
+    [['Tell us the goal', 'An exam, a new skill or more confidence: we start there.'], ['Find a regular time', 'Lessons that fit around school and work.'], ['Keep going', 'We review progress together and adjust as you improve.']],
+  ],
+  // childcare
+  tour: [
+    [['Book a tour', 'Visit, meet the staff and see the rooms.'], ['Ask your questions', 'We explain the daily routine, meals and how enrollment works.'], ['Settle in', 'A gentle start so your child feels at home.']],
+  ],
 };
 // "Colorful" look: richer two-color themes that suit each category.
 const V3_COLORFUL = {
@@ -227,12 +354,15 @@ const V3_COLORFUL = {
   appliance: ['sky', 'harbor', 'graphite'], tailor: ['linen', 'plum', 'espresso'], childcare: ['citrus', 'sky', 'mint'],
 };
 function v3StepsKind(cat) {
-  if (['barber', 'salon', 'spa', 'tattoo', 'fitness', 'pet', 'dental', 'health', 'education', 'tailor', 'childcare'].indexOf(cat) > -1) return 'visit';
+  if (cat === 'dental' || cat === 'health') return 'care';
+  if (cat === 'education') return 'learn';
+  if (cat === 'childcare') return 'tour';
+  if (['barber', 'salon', 'spa', 'tattoo', 'fitness', 'pet', 'tailor'].indexOf(cat) > -1) return 'visit';
   if (['lawn', 'cleaning', 'home', 'moving', 'locksmith', 'appliance'].indexOf(cat) > -1) return 'onsite';
   return 'project';
 }
 function v3StepsItems(cat) { const sets = V3_STEPS_BY_KIND[v3StepsKind(cat || '')] || V3_COPY.stepsSets; const set = v3FlavorPick(sets) || sets[0]; return set.map((x) => ({ name: x[0], text: x[1] })); }
-function v3Pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function v3Pick(arr) { return arr[Math.floor(v3Rand() * arr.length)]; }
 
 function v3Starter(type) {
   const r = v3StarterBase(type);
@@ -245,6 +375,12 @@ function v3Starter(type) {
   if (C.servicesTitle) r.servicesTitle = v3FlavorPick(C.servicesTitle) || r.servicesTitle;
   if (C.services && C.services.length) { r.services = v3PickSome(C.services, 4, 2); r.servicePool = C.services; }
   if (C.photo) r.photoQuery = C.photo;
+  r.servicesTitlePool = C.servicesTitle || [r.servicesTitle];
+  // Labels follow what this business actually asks visitors to do (a counter-service taqueria takes orders,
+  // a bistro takes reservations), so its CTA and FAQ never promise the other thing.
+  const L = v3Labels(r.category, type, false);
+  r.labels = L;
+  if ((r.category === 'restaurant' && L.act !== 'reserve') || (r.category === 'generic' && L.family === 'food')) { const k = V3_COPY.pageCta[L.ctaKind] || V3_COPY.pageCta.order; r.ctaTitle = v3FlavorPick(k.title); r.ctaText = v3FlavorPick(k.text); }
   // Clean single-accent themes (white + one color). A few fitting options per category → picked at
   // random per site for variety, never a clashing two-hue scheme. Owners can switch to a Noir (black +
   // color) twin or any other theme in the editor.
@@ -280,22 +416,22 @@ function v3Starter(type) {
     tailor: ['w_coffee', 'w_charcoal', 'w_plum'],
     childcare: ['w_amber', 'w_teal', 'w_rose'],
   };
-  // Type theme per category: 'bold' (condensed Monochrome look), 'editorial' (serif), 'clean' (Plex).
+  // Type themes that suit each category, first one most often: 'bold' (condensed), 'grotesk' (Inter Tight),
+  // 'clean' (Plex), 'editorial' (Newsreader), 'refined' (DM Serif), 'classic' (Playfair), 'friendly' (Nunito).
   const TYPE_BY_CAT = {
-    barber: 'bold', tattoo: 'bold', auto: 'bold', fitness: 'bold', marine: 'bold', home: 'bold',
-    salon: 'editorial', spa: 'editorial', bakery: 'editorial', cafe: 'editorial', restaurant: 'editorial', photo: 'editorial', retail: 'editorial',
-    lawn: 'clean', cleaning: 'clean', pet: 'clean', generic: 'clean',
-    legal: 'editorial', dental: 'clean', health: 'clean', finance: 'clean', realestate: 'editorial', education: 'clean', events: 'editorial', moving: 'bold', studio: 'bold',
-    locksmith: 'bold', appliance: 'clean', tailor: 'editorial', childcare: 'clean',
+    barber: ['bold', 'bold', 'grotesk'], tattoo: ['bold', 'grotesk'], auto: ['bold', 'grotesk'], fitness: ['grotesk', 'bold'], marine: ['bold', 'clean'], home: ['grotesk', 'bold', 'clean'],
+    salon: ['refined', 'refined', 'editorial'], spa: ['refined', 'editorial', 'clean'], bakery: ['refined', 'editorial', 'friendly'], cafe: ['editorial', 'refined', 'grotesk'], restaurant: ['classic', 'editorial', 'refined'],
+    photo: ['editorial', 'grotesk'], retail: ['editorial', 'refined', 'grotesk'], lawn: ['grotesk', 'clean', 'friendly'], cleaning: ['friendly', 'clean', 'grotesk'], pet: ['friendly', 'friendly', 'clean'], generic: ['clean', 'grotesk'],
+    legal: ['classic', 'classic', 'editorial'], dental: ['clean', 'friendly'], health: ['clean', 'friendly', 'refined'], finance: ['classic', 'clean'], realestate: ['classic', 'editorial'], education: ['friendly', 'clean'],
+    events: ['refined', 'editorial'], moving: ['grotesk', 'bold'], studio: ['grotesk', 'bold', 'clean'], locksmith: ['bold', 'grotesk'], appliance: ['clean', 'grotesk'], tailor: ['editorial', 'refined', 'classic'], childcare: ['friendly', 'friendly', 'clean'],
   };
-  // A second type style that also suits each category, used some of the time for variety.
-  const TYPE_ALT = { bold: 'clean', editorial: 'clean', clean: 'editorial' };
-  const _tb = TYPE_BY_CAT[r.category] || 'bold';
-  r.typeset = Math.random() < 0.7 ? _tb : TYPE_ALT[_tb];
+  const _tt = (typeof WSENGINE !== 'undefined' && WSENGINE.typeThemes) || {};
+  const _ts = (TYPE_BY_CAT[r.category] || ['bold', 'clean']).filter((x) => _tt[x]);
+  r.typeset = v3FlavorPick(_ts.length ? _ts : ['bold']);
   r.palette = v3FlavorPick(PAL_SETS[r.category] || ['w_mono', 'w_slate', 'w_charcoal']);
   // Now and then use the dark (Noir) twin of the chosen light theme, when it exists.
-  try { if (Math.random() < 0.2) { const _dk = 'b_' + r.palette.slice(2); if (WSENGINE.palettes.some((p) => p.id === _dk)) r.palette = _dk; } } catch (e) {}
-  r.faq = v3PickSome(C.faq || V3_COPYBOOK.generic.faq, 3, 1);
+  try { if (v3Rand() < 0.2) { const _dk = 'b_' + r.palette.slice(2); if (WSENGINE.palettes.some((p) => p.id === _dk)) r.palette = _dk; } } catch (e) {}
+  r.faq = v3PickSome((C.faq || V3_COPYBOOK.generic.faq).filter((q) => L.act === 'reserve' || !/reserv|book a table/i.test(q.join(' '))), 3, 1);
   return r;
 }
 
@@ -313,9 +449,18 @@ const PHOTO_QUERY = {
 };
 // One Unsplash search → normalized photos, best match first. null = the request failed (no point retrying),
 // [] = it worked but found nothing.
+// Unsplash's API allows a fixed number of calls per hour. Count every real call in KV and stop at UNSPLASH_HOURLY_CAP
+// (default 45): new sites then fall back to the designed gradients instead of failing.
+async function unsplashSpend(env) {
+  if (!env || !env.KV) return true;
+  const cap = parseInt(env.UNSPLASH_HOURLY_CAP, 10); const max = isNaN(cap) || cap < 0 ? 45 : cap;
+  try { const k = 'unsplash:budget:' + new Date().toISOString().slice(0, 13); const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= max) return false; await env.KV.put(k, String(n + 1), { expirationTtl: 2 * 3600 }); } catch (e) {}
+  return true;
+}
 async function unsplashSearch(query, env, ms) {
   try {
     if (!env || !env.UNSPLASH_ACCESS_KEY || !query) return null;
+    if (!(await unsplashSpend(env))) return null;
     const url = 'https://api.unsplash.com/search/photos?per_page=30&orientation=landscape&content_filter=high&query=' + encodeURIComponent(query);
     const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
     const to = ctrl ? setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, ms || 4500) : 0;
@@ -378,6 +523,14 @@ async function unsplashPhotos(query, env, n) {
 const GPLACE_RE = /^[A-Za-z0-9_-]{10,300}$/;
 const GPHOTO_FB_RE = /^https:\/\/images\.unsplash\.com\/[A-Za-z0-9._~\/?&=%+-]{1,400}$/;
 function v3Hash(s) { s = String(s || ''); let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
+// Billed Place Details / Text Search calls (reviews widget, setup lookups): a hard monthly cap like the photo cap,
+// inside Google's free tier (PLACES_MONTHLY_CAP, default 4500). Cached answers never count.
+function placesCap(env) { const n = parseInt(env && env.PLACES_MONTHLY_CAP, 10); return isNaN(n) || n < 0 ? 4500 : n; }
+async function placesSpend(env) {
+  if (!env || !env.KV) return true;
+  try { const k = 'places:count:' + new Date().toISOString().slice(0, 7); const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= placesCap(env)) return false; await env.KV.put(k, String(n + 1), { expirationTtl: 40 * 86400 }); } catch (e) {}
+  return true;
+}
 function gphotoKey() { return 'gphoto:count:' + new Date().toISOString().slice(0, 7); }
 function gphotoCap(env) { const n = parseInt(env && env.GPHOTO_MONTHLY_CAP, 10); return isNaN(n) || n < 0 ? 900 : n; }
 // Billed Google calls left this month (0 without KV: no counter, no calls).
@@ -472,11 +625,14 @@ async function doPlace(request, env) {
   try {
     const ck = 'place2:' + id; // v2: reviews carry an id (so owners can hide one) and a link to it on Google
     if (env.KV) { const c = await env.KV.get(ck); if (c) return new Response(c, { headers: cors }); }
+    const busy = function () { return new Response(JSON.stringify({ error: 'busy' }), { status: 429, headers: Object.assign({}, cors, { 'Cache-Control': 'no-store' }) }); };
+    if (!(await wsRate(env, 'plrate:' + wsClientIp(request, env), 30, 3600))) return busy();
+    if (!(await placesSpend(env))) return busy();
     const r = await fetch('https://places.googleapis.com/v1/places/' + encodeURIComponent(id), { headers: { 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY, 'X-Goog-FieldMask': 'displayName,rating,userRatingCount,googleMapsUri,reviews' } });
     if (!r.ok) return new Response(JSON.stringify({ error: 'google error' }), { status: 502, headers: cors });
     const p = await r.json();
     const out = JSON.stringify({
-      name: (p.displayName && p.displayName.text) || '', rating: typeof p.rating === 'number' ? p.rating : null, reviews: typeof p.userRatingCount === 'number' ? p.userRatingCount : null, url: p.googleMapsUri || '',
+      name: (p.displayName && p.displayName.text) || '', rating: typeof p.rating === 'number' ? p.rating : null, reviews: typeof p.userRatingCount === 'number' ? p.userRatingCount : null, url: /^https:\/\/[^\s"'<>]+$/.test(String(p.googleMapsUri || '')) ? String(p.googleMapsUri).slice(0, 400) : '',
       items: (p.reviews || []).slice(0, 5).map(function (v) { const rid = String(v.name || '').split('/').pop().replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80); return { id: rid, link: /^https:\/\/[^\s"'<>]+$/.test(String(v.googleMapsUri || '')) ? String(v.googleMapsUri).slice(0, 400) : '', rating: v.rating || 0, text: String((v.text && v.text.text) || (v.originalText && v.originalText.text) || '').slice(0, 600), name: (v.authorAttribution && v.authorAttribution.displayName) || 'Google user', when: v.relativePublishTimeDescription || '' }; }).filter(function (v) { return v.text; }),
     });
     if (env.KV) await env.KV.put(ck, out, { expirationTtl: 6 * 3600 });
@@ -489,7 +645,8 @@ async function doPlaceFind(request, env) {
   if (!env.GOOGLE_PLACES_KEY) return jsonR({ ok: false, error: 'Google lookups are not available yet.', results: [] });
   if (q.length < 3) return jsonR({ ok: true, results: [] });
   try {
-    if (env.KV) { const ip = request.headers.get('cf-connecting-ip') || '0'; const k = 'pfrate:' + ip; const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= 30) return jsonR({ ok: false, error: 'Too many lookups. Try again later.', results: [] }, 429); await env.KV.put(k, String(n + 1), { expirationTtl: 3600 }); }
+    if (env.KV) { const ip = wsClientIp(request, env); const k = 'pfrate:' + ip; const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= 30) return jsonR({ ok: false, error: 'Too many lookups. Try again later.', results: [] }, 429); await env.KV.put(k, String(n + 1), { expirationTtl: 3600 }); }
+    if (!(await placesSpend(env))) return jsonR({ ok: false, error: 'Google lookups are busy this month. Please fill in your details by hand.', results: [] }, 429);
     const r = await fetch('https://places.googleapis.com/v1/places:searchText', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY, 'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount' }, body: JSON.stringify({ textQuery: q, pageSize: 5 }) });
     const j = await r.json();
     return jsonR({ ok: true, results: ((j && j.places) || []).map(function (p) { return { id: p.id, name: (p.displayName && p.displayName.text) || '', address: p.formattedAddress || '', rating: p.rating || null, count: p.userRatingCount || 0 }; }) });
@@ -544,7 +701,8 @@ async function doPlaceDetails(request, env) {
   if (!/^[A-Za-z0-9_-]{10,300}$/.test(id)) return jsonR({ ok: false, error: 'Bad place.' }, 400);
   if (!env.GOOGLE_PLACES_KEY) return jsonR({ ok: false, error: 'Google lookups are not available yet.' });
   try {
-    if (env.KV) { const ip = request.headers.get('cf-connecting-ip') || '0'; const k = 'pdrate:' + ip; const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= 20) return jsonR({ ok: false, error: 'Too many lookups. Try again later.' }, 429); await env.KV.put(k, String(n + 1), { expirationTtl: 3600 }); }
+    if (env.KV) { const ip = wsClientIp(request, env); const k = 'pdrate:' + ip; const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= 20) return jsonR({ ok: false, error: 'Too many lookups. Try again later.' }, 429); await env.KV.put(k, String(n + 1), { expirationTtl: 3600 }); }
+    if (!(await placesSpend(env))) return jsonR({ ok: false, error: 'Google lookups are busy this month. Please fill in your details by hand.' }, 429);
     const r = await fetch('https://places.googleapis.com/v1/places/' + encodeURIComponent(id), { headers: { 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY, 'X-Goog-FieldMask': 'id,displayName,primaryTypeDisplayName,formattedAddress,shortFormattedAddress,addressComponents,nationalPhoneNumber,internationalPhoneNumber,regularOpeningHours,editorialSummary,rating,userRatingCount,reviews' } });
     if (!r.ok) return jsonR({ ok: false, error: 'Google could not find that listing.' }, 502);
     return jsonR(Object.assign({ ok: true }, placeToSetup(await r.json())));
@@ -564,6 +722,7 @@ async function doPhotoSearch(request, env) {
       if (n >= 60) return jsonR({ ok: false, error: 'Too many searches. Please wait a few minutes.', results: [] }, 429);
       await env.KV.put(k, String(n + 1), { expirationTtl: 3600 });
     }
+    if (!(await unsplashSpend(env))) return jsonR({ ok: false, error: 'Photo search is busy. Try again soon.', results: [] });
     const r = await fetch('https://api.unsplash.com/search/photos?per_page=18&content_filter=high&query=' + encodeURIComponent(q), { headers: { 'Authorization': 'Client-ID ' + env.UNSPLASH_ACCESS_KEY, 'Accept-Version': 'v1' } });
     if (!r.ok) return jsonR({ ok: false, error: 'Photo search is busy. Try again soon.', results: [] });
     const j = await r.json();
@@ -584,10 +743,56 @@ async function doPhotoUse(request, env) {
   return jsonR({ ok: true });
 }
 
-// Split a finished flat section stack into a real multi-page site (Home + Shop/Menu/Services, About, Contact)
-// with cross-page nav. Each section object is MOVED to exactly one page (photos/ids preserved); home gets a
-// lightweight "featured" teaser and sub-pages get their own header + call-to-action. Keeps site.sections as a
-// single-page fallback so legacy/one-page consumers still work.
+// Home page recipes per business family. Each key names a block built in v3Pages; a block with nothing real
+// to show (no reviews, no team, no stats) drops out, so a recipe never renders an empty or invented section.
+// Two businesses of the same family get different recipes and layouts (seeded per business).
+const V3_RECIPES = {
+  food: [['intro', 'menu', 'gallery', 'reviews', 'visit', 'cta'], ['menu', 'intro', 'gallery', 'reviews', 'visit', 'cta'], ['intro', 'gallery', 'menu', 'reviews', 'visit', 'cta']],
+  trades: [['stats', 'menu', 'steps', 'reviews', 'visit', 'cta'], ['stats', 'menu', 'reviews', 'steps', 'visit', 'cta'], ['menu', 'stats', 'steps', 'reviews', 'faq', 'visit', 'cta']],
+  beauty: [['menu', 'intro', 'gallery', 'team', 'reviews', 'visit', 'cta'], ['menu', 'gallery', 'intro', 'team', 'reviews', 'visit', 'cta'], ['gallery', 'menu', 'intro', 'team', 'reviews', 'visit', 'cta']],
+  pro: [['intro', 'stats', 'menu', 'steps', 'reviews', 'faq', 'cta'], ['intro', 'menu', 'steps', 'faq', 'reviews', 'cta'], ['menu', 'intro', 'stats', 'steps', 'reviews', 'faq', 'cta']],
+  creative: [['gallery', 'intro', 'menu', 'reviews', 'steps', 'cta'], ['intro', 'gallery', 'menu', 'steps', 'reviews', 'cta']],
+  retail: [['menu', 'intro', 'gallery', 'reviews', 'visit', 'cta'], ['menu', 'gallery', 'intro', 'reviews', 'visit', 'cta']],
+};
+// Page order per family (nav order). Professionals lead with who they are; trades put the quote last.
+const V3_PAGE_ORDER = {
+  food: ['home', 'main', 'book', 'about', 'contact'], beauty: ['home', 'main', 'book', 'about', 'contact'],
+  trades: ['home', 'main', 'about', 'book', 'contact'], pro: ['home', 'about', 'main', 'book', 'contact'],
+  creative: ['home', 'main', 'about', 'book', 'contact'], retail: ['home', 'main', 'about', 'book', 'contact'],
+};
+// Layout options per family (repeats weight a choice). Photo-led layouts only when that section has a photo;
+// v3Look drops any option the engine doesn't offer.
+const V3_LOOKS = {
+  heroPhoto: { food: ['photo', 'center', 'split', 'minimal'], trades: ['frame', 'frame', 'photo', 'split'], beauty: ['center', 'split', 'photo', 'minimal'], pro: ['frame', 'frame', 'split', 'photo'], creative: ['photo', 'center', 'minimal'], retail: ['minimal', 'photo', 'split'] },
+  heroPlain: { food: ['photo', 'center', 'type'], trades: ['photo', 'type'], beauty: ['center', 'type', 'photo'], pro: ['photo', 'center'], creative: ['center', 'type'], retail: ['type', 'photo'] },
+  menu: { food: ['grid', 'list', 'feature'], trades: ['numbered', 'list', 'grid'], beauty: ['grid', 'list'], pro: ['grid', 'numbered', 'list'], creative: ['grid', 'feature', 'list'], retail: ['grid', 'grid', 'list'] },
+  mainList: { food: ['list', 'feature', 'grid'], trades: ['grid', 'rows', 'numbered'], beauty: ['list', 'rows', 'grid'], pro: ['rows', 'rows', 'grid', 'list'], creative: ['grid', 'feature'], retail: ['grid'] },
+  gallery: { food: ['bento', 'strip'], trades: ['strip'], beauty: ['bento', 'strip'], pro: ['strip'], creative: ['bento', 'bento', 'strip'], retail: ['strip', 'bento'] },
+  steps: { food: ['grid'], trades: ['line', 'line', 'grid'], beauty: ['grid'], pro: ['line', 'grid'], creative: ['grid', 'line'], retail: ['grid'] },
+  intro: { food: ['center'], trades: ['center'], beauty: ['center'], pro: ['columns', 'center'], creative: ['center'], retail: ['center'] },
+  cta: { food: ['card', 'band'], trades: ['band', 'card'], beauty: ['card', 'band'], pro: ['card', 'band'], creative: ['card', 'band'], retail: ['band', 'card'] },
+  reviews: { food: ['feature', 'wall'], trades: ['wall', 'feature'], beauty: ['wall', 'feature'], pro: ['feature', 'wall'], creative: ['feature', 'wall'], retail: ['wall', 'feature'] },
+  stats: { food: ['row'], trades: ['band', 'row'], beauty: ['row'], pro: ['row', 'band'], creative: ['row'], retail: ['row'] },
+};
+function v3Look(type, opts) {
+  const ok = (WSENGINE.sections[type] && WSENGINE.sections[type].variants) || {};
+  const list = (opts || []).filter((v) => ok[v]);
+  return list.length ? v3Pick(list) : Object.keys(ok)[0];
+}
+// Heading for the location/hours band. Never built from a truncated street name ("Find us on India.").
+function v3VisitTitle(fam, act, b, cat) {
+  const city = String(b.city || '').trim();
+  if (act === 'truck') return city ? 'Find us around ' + city + '.' : 'Where to find us.';
+  if (fam === 'trades' && !(cat === 'auto' && b.address)) return city ? v3Pick(['Serving ' + city + ' and nearby.', 'Working in and around ' + city + '.']) : (b.address ? 'Where to find us.' : 'Get in touch.');
+  if (!b.address) return city ? v3Pick(['Based in ' + city + '.', 'Find us in ' + city + '.']) : 'Get in touch.';
+  const pools = { food: cat === 'restaurant' ? ['Come and eat with us.', 'Find us.', 'Visit us.'] : ['Come by.', 'Find us.', 'Visit us.'], beauty: ['Visit us.', 'Find us.', 'Come and see us.'], pro: ['Visit our office.', 'Find us.', 'Where to find us.'], retail: cat === 'retail' ? ['Visit the shop.', 'Find us.', 'Come and see us.'] : ['Visit us.', 'Find us.', 'Come and see us.'] };
+  return v3Pick(pools[fam] || ['Find us.', 'Visit us.']);
+}
+
+// Split a finished flat section stack into a real multi-page site (Home + Shop/Menu/Services, booking page,
+// About, Contact) with cross-page nav. Each section object is MOVED to exactly one page (photos/ids preserved);
+// home follows its family's recipe and sub-pages get their own header + call-to-action. Keeps site.sections
+// as a single-page fallback so legacy/one-page consumers still work.
 function v3Pages(site, sc, isShop) {
   try {
     const all = (site.sections || []).slice();
@@ -613,86 +818,91 @@ function v3Pages(site, sc, isShop) {
     const beforeafter = many('beforeafter');
 
     const cat = (sc && sc.category) || '';
-    const isFood = /restaurant|cafe|bakery|food|coffee|truck|donut|kitchen|deli|pizza|bar\b/i.test(cat + ' ' + (b.type || ''));
-    const mainLabel = isShop ? 'Shop' : (isFood ? 'Menu' : 'Services');
-    const mainPath = isShop ? 'shop' : (isFood ? 'menu' : 'services');
-    // A real "do something" page by type: reservation (food), quote (project trades), appointment (personal
-    // services). Shops already have the cart as their action, so they get none.
-    const quoteCats = ['lawn', 'cleaning', 'home', 'marine', 'auto', 'moving', 'events', 'studio', 'finance', 'locksmith', 'appliance'];
-    let bk = null;
-    if (isShop) bk = null;
-    else if (isFood) bk = { mode: 'reservation', path: 'reserve', title: 'Reserve', short: 'Reserve', head: 'Reserve a table', btn: 'Reserve a table', sub: 'Tell us when you’d like to come and we’ll confirm your table.', ok: 'Thanks. Your request is in and we’ll confirm your table shortly.' };
-    else if (quoteCats.indexOf(cat) >= 0) bk = { mode: 'quote', path: 'quote', title: 'Get a Quote', short: 'Quote', head: 'Get a free quote', btn: 'Request a quote', sub: 'Tell us about the job and we’ll send you a clear price.', ok: 'Thanks. We’ll look at the details and send you a quote soon.' };
-    else bk = { mode: 'appointment', path: 'book', title: 'Book', short: 'Book', head: 'Book an appointment', btn: 'Request appointment', sub: 'Choose a time that suits you and we’ll confirm by text or email.', ok: 'Thanks. We’ll confirm your appointment shortly.' };
+    const L = (sc && sc.labels) || v3Labels(cat, b.type, isShop);
+    const fam = L.family;
+    const isFood = fam === 'food';
+    const mainLabel = L.main, mainPath = L.mainPath;
+    const bk = L.bk;
+    if (bk) { b.bookShort = bk.short; b.bookLabel = bk.btn; } else { b.bookShort = L.bookShort; b.bookLabel = L.bookLabel; }
+    const actLink = bk ? ('#/' + bk.path) : (isShop ? '#/' + mainPath : '#/contact');
+    const ctaPool = (k, by) => (by && V3_COPY.aboutCtaBy[k]) || V3_COPY.pageCta[k] || V3_COPY.serviceCta;
 
-    const pages = [];
-
-    // ----- HOME: one of several complete layouts. Variants are picked from what the site really has
-    // (photo layouts only when there is a photo), so every combination renders finished, never empty. -----
+    // ----- HOME: the family's recipe, filled only with what the site really has. Layouts are picked here,
+    // after photos are known, so photo-led variants only go where there is a photo. -----
     const photos = site.photos || {};
     const hasPhoto = (sec) => !!(sec && photos[sec.id + '.photo']);
     const home = [];
     announce.forEach((s) => home.push(s));
     if (hero) {
-      const _formal = ['legal', 'dental', 'health', 'finance', 'realestate', 'studio', 'generic'].indexOf(cat) > -1;
-      hero.variant = hasPhoto(hero) ? v3Pick(['photo', 'photo', 'split']) : (_formal ? 'photo' : v3Pick(['photo', 'photo', 'type']));
+      hero.variant = v3Look('hero', (hasPhoto(hero) ? V3_LOOKS.heroPhoto : V3_LOOKS.heroPlain)[fam]);
       if (hero.variant === 'type' && !hero.emoji) { try { hero.emoji = (WSENGINE.emojiRecsFor(b.type) || [])[0] || ''; } catch (e) {} }
+      if (hero.variant === 'type' && !hero.emoji) hero.variant = 'photo';
       home.push(hero);
     }
     const mainSrc = products || services;
-    const teaserItems = mainSrc ? (mainSrc.items || []).slice(0, 3).map((it) => ({ emoji: it.emoji || '', name: it.name || it.title || '', text: it.text || it.desc || '', from: it.price || it.from || '' })) : [];
-    const teaser = teaserItems.length ? mk('services', { variant: v3Pick(['grid', 'grid', 'list']), title: v3FlavorPick(products ? V3_COPY.featured : V3_COPY.whatWeDo), items: teaserItems }) : null;
+    const srcItems = mainSrc ? (mainSrc.items || []) : [];
+    // Beauty businesses that typed real prices get a price board up front; everyone else a short teaser.
+    const priced = !products && fam === 'beauty' && srcItems.length >= 3 && srcItems.every((it) => String(it.from || it.price || '').trim());
+    let menu = null;
+    if (priced) menu = mk('prices', { variant: v3Look('prices', ['board']), title: v3FlavorPick(sc && sc.servicesTitlePool) || 'Prices', note: '', items: srcItems.slice(0, 8).map((it) => ({ name: it.name || '', price: it.from || it.price || '', meta: '' })) });
+    else if (srcItems.length) {
+      const tpool = (sc && sc.servicesTitlePool) || [];
+      const teaserTitle = products ? v3FlavorPick(V3_COPY.featured) : (isFood && tpool.indexOf('Menu') > -1) ? v3FlavorPick(V3_COPY.menuTeaser[cat] || V3_COPY.menuTeaser.restaurant) : (v3FlavorPick(tpool) || v3FlavorPick(V3_COPY.whatWeDo));
+      menu = mk('services', { variant: v3Look('services', V3_LOOKS.menu[fam]), title: teaserTitle, items: srcItems.slice(0, 3).map((it) => ({ emoji: it.emoji || '', name: it.name || it.title || '', text: it.text || it.desc || '', from: it.price || it.from || '' })) });
+    }
     // A short story band for home, using a different line than the About page will (no repeated paragraph).
     let homeUsedIntro = false;
     let homeIntro = null;
     const V3_PROMISE = {
-      visit: ['Every visit starts with a conversation about what you want.', 'We take our time, do it properly and make you feel welcome.', 'Friendly people, careful work and a place you’ll look forward to coming back to.'],
-      onsite: ['We arrive when we say we will, do the job properly and leave everything tidy.', 'Clear prices, careful work and good communication from start to finish.', 'A local team that takes pride in every job.'],
-      project: ['Clear answers, fair prices and work we’re proud to put our name on.', 'We listen first, keep you informed and deliver what we promised.', 'Small enough to care, experienced enough to get it right.'],
+      beauty: ['Every visit starts with a conversation about what you want.', 'We take our time, do it properly and make you feel welcome.', 'Friendly people, careful work and a place you’ll look forward to coming back to.'],
+      trades: ['We arrive when we say we will, do the job properly and leave everything tidy.', 'Clear prices, careful work and good communication from start to finish.', 'A local team that takes pride in every job.'],
+      pro: ['Clear answers, fair prices and work we’re proud to put our name on.', 'We listen first, keep you informed and deliver what we promised.', 'Small enough to care, experienced enough to get it right.'],
     };
-    const aboutPool = (((sc && sc.aboutPool) || (V3_FLAVORS[cat] && V3_FLAVORS[cat].about) || []).concat(isShop || isFood ? [] : V3_PROMISE[v3StepsKind(cat)])).filter((t) => t && t !== (intro && intro.text));
-    if (!teaser && intro) { homeIntro = intro; homeUsedIntro = true; }
-    else if (aboutPool.length) homeIntro = mk('intro', { variant: 'center', text: v3Pick(aboutPool), emoji: '' });
-    const steps = (!isShop && !isFood && (services || prices)) ? mk('steps', { title: v3FlavorPick(V3_COPY.stepsTitle), items: v3StepsItems(cat) }) : null;
+    V3_PROMISE.creative = V3_PROMISE.pro;
+    const aboutPool = (((sc && sc.aboutPool) || (V3_FLAVORS[cat] && V3_FLAVORS[cat].about) || []).concat(V3_PROMISE[fam] || [])).filter((t) => t && t !== (intro && intro.text));
+    if (!menu && intro) { homeIntro = intro; homeUsedIntro = true; }
+    else if (aboutPool.length) homeIntro = mk('intro', { variant: v3Look('intro', V3_LOOKS.intro[fam]), title: '', text: v3Pick(aboutPool), emoji: '' });
+    const steps = (!isShop && !isFood && fam !== 'retail' && cat !== 'generic' && (services || prices)) ? mk('steps', { variant: v3Look('steps', V3_LOOKS.steps[fam]), title: v3FlavorPick(V3_COPY.stepsTitle), items: v3StepsItems(cat) }) : null;
     const gal = gallery[0] || null;
-    const faqTop = faq && (faq.items || []).length >= 2 ? mk('faq', { variant: 'accordion', title: v3Pick(['Quick answers', 'Good to know', 'Common questions']), items: (faq.items || []).slice(0, 3) }) : null;
+    if (gal) gal.variant = v3Look('gallery', V3_LOOKS.gallery[fam]);
+    const faqTop = faq && (faq.items || []).length >= 2 ? mk('faq', { variant: 'accordion', title: v3Pick(V3_COPY.faqTitle), items: (faq.items || []).slice(0, 3) }) : null;
     const hasReach = !!(b.address || (b.hours || []).some((h) => h && h.open) || b.phone);
-    const visitHome = (hasReach && visit) ? mk('visit', { variant: b.address ? v3Pick(['hours', 'map']) : 'hours', title: '' }) : null;
-    const recipes = [
-      [teaser, homeIntro, steps, reviews, gal, cta],
-      [homeIntro, teaser, gal, steps, reviews, faqTop, cta],
-      [teaser, gal, homeIntro, reviews, visitHome, cta],
-      [teaser, steps, homeIntro, reviews, faqTop, cta],
-    ];
-    if (isFood) recipes.push([homeIntro, teaser, gal, reviews, visitHome, cta], [teaser, homeIntro, gal, visitHome, cta]);
+    const visitHome = (hasReach && visit) ? mk('visit', { variant: b.address ? v3Look('visit', ['hours', 'map']) : 'hours', title: v3VisitTitle(fam, L.act, b, cat) }) : null;
+    const st = stats[0] || null;
+    if (st) st.variant = v3Look('stats', V3_LOOKS.stats[fam]);
+    const tm = team[0] || null;
+    team.forEach((s) => { if (!String(s.title || '').trim()) s.title = v3Pick(V3_COPY.teamTitle); });
+    if (reviews && reviews.variant !== 'google') reviews.variant = v3Look('reviews', ((reviews.items || []).length >= 3 ? ['cards', 'cards'] : []).concat(V3_LOOKS.reviews[fam]));
+    const blocks = { intro: homeIntro, menu: menu, gallery: gal, reviews: reviews, visit: visitHome, cta: cta, steps: steps, faq: faqTop, stats: st, team: tm };
     const seen = new Set();
-    v3Pick(recipes).filter(Boolean).forEach((s) => { if (!seen.has(s)) { seen.add(s); home.push(s); } });
-    // Gallery went to the home page; keep it off the About page so section ids stay unique.
-    if (gal && home.indexOf(gal) > -1) gallery.splice(gallery.indexOf(gal), 1);
+    v3Pick(V3_RECIPES[fam] || V3_RECIPES.pro).map((k) => blocks[k]).filter(Boolean).forEach((s) => { if (!seen.has(s)) { seen.add(s); home.push(s); } });
+    // Sections the home page claimed stay off the About page so section ids stay unique.
+    [[gallery, gal], [stats, st], [team, tm]].forEach((x) => { if (x[1] && home.indexOf(x[1]) > -1) x[0].splice(x[0].indexOf(x[1]), 1); });
     const hasMain = !!(products || services || prices);
-    // Home CTA drives to the booking/reserve/quote page when there is one, else the main page or contact.
+    // Home CTA drives to the booking/reserve/order/quote page when there is one, else the shop or contact.
     if (cta) {
-      cta.link = bk ? ('#/' + bk.path) : (hasMain ? ('#/' + mainPath) : '#/contact');
-      cta.button = bk ? bk.btn : (isShop ? 'Shop now' : 'Get in touch');
+      cta.link = bk ? ('#/' + bk.path) : (isShop && hasMain ? ('#/' + mainPath) : '#/contact');
+      cta.button = b.bookLabel;
+      cta.variant = v3Look('cta', V3_LOOKS.cta[fam]);
       if (cta.variant === 'split' && !hasPhoto(cta)) cta.variant = 'band';
     }
-    pages.push({ id: 'pg-home', path: '', title: 'Home', nav: true, sections: home });
+    const P = {};
+    P.home = { id: 'pg-home', path: '', title: 'Home', nav: true, sections: home };
 
     // ----- MAIN: Shop / Menu / Services (full catalog + its own CTA) -----
     const mainSection = products || services || prices;
     if (mainSection) {
       const mainSecs = [];
       mainSecs.push(mk('pagehead', { title: mainLabel, text: v3FlavorPick(isShop ? V3_COPY.shopHead : (isFood ? V3_COPY.menuHead : V3_COPY.servicesHead)), emoji: '' }));
-      if (mainSection.type === 'services') mainSection.variant = v3Pick(['grid', 'list']);
+      if (mainSection.type === 'services') mainSection.variant = v3Look('services', V3_LOOKS.mainList[fam]);
       mainSecs.push(mainSection);
       if (prices && prices !== mainSection) mainSecs.push(prices);
-      const ctaKind = isFood ? 'food' : (['auto', 'marine'].indexOf(cat) > -1 ? 'onsite' : v3StepsKind(cat));
-      const mcta = isShop ? V3_COPY.shopCta : (V3_COPY.pageCta[ctaKind] || V3_COPY.serviceCta);
-      mainSecs.push(mk('cta', { variant: 'band', title: v3FlavorPick(mcta.title), text: v3FlavorPick(mcta.text), button: b.bookLabel || 'Get in touch', link: bk ? ('#/' + bk.path) : '#/contact', emoji: '' }));
-      pages.push({ id: 'pg-main', path: mainPath, title: mainLabel, nav: true, sections: mainSecs });
+      const mcta = isShop ? V3_COPY.shopCta : ctaPool(L.ctaKind);
+      mainSecs.push(mk('cta', { variant: 'band', title: v3FlavorPick(mcta.title), text: v3FlavorPick(mcta.text), button: b.bookLabel, link: isShop ? '#/contact' : actLink, emoji: '' }));
+      P.main = { id: 'pg-main', path: mainPath, title: mainLabel, nav: true, sections: mainSecs };
     }
 
-    // ----- BOOK / RESERVE / QUOTE: a real request form (→ owner's inbox), by business type -----
+    // ----- BOOK / RESERVE / ORDER / QUOTE: a real request form (→ owner's inbox), by business type -----
     if (bk) {
       const svcNames = (((services && services.items) || (prices && prices.items) || [])).map((it) => ({ name: it.name || it.title || '' })).filter((x) => x.name);
       const bsecs = [
@@ -701,9 +911,7 @@ function v3Pages(site, sc, isShop) {
           ? mk('embed', { title: bk.head, text: '', url: b.bookingUrl, height: '720' })
           : mk('booking', { variant: bk.mode, title: '', text: '', button: bk.btn, services: svcNames, success: bk.ok }),
       ];
-      pages.push({ id: 'pg-book', path: bk.path, title: bk.title, nav: true, sections: bsecs });
-      b.bookShort = bk.short;
-      b.bookLabel = bk.btn;
+      P.book = { id: 'pg-book', path: bk.path, title: bk.title, nav: true, sections: bsecs };
     }
 
     // ----- ABOUT: always present (story + any team/stats/gallery) so every site has a real About page -----
@@ -715,36 +923,45 @@ function v3Pages(site, sc, isShop) {
     team.forEach((s) => aboutSecs.push(s));
     gallery.forEach((s) => aboutSecs.push(s));
     beforeafter.forEach((s) => aboutSecs.push(s));
-    const _ac = (!isShop && V3_COPY.aboutCtaBy[isFood ? 'food' : (['auto', 'marine'].indexOf(cat) > -1 ? 'onsite' : v3StepsKind(cat))]) || V3_COPY.aboutCta;
-    aboutSecs.push(mk('cta', { variant: 'band', title: v3FlavorPick(_ac.title), text: v3FlavorPick(_ac.text), button: b.bookLabel || 'Get in touch', link: '#/contact', emoji: '' }));
-    pages.push({ id: 'pg-about', path: 'about', title: 'About', nav: true, sections: aboutSecs });
+    const _ac = isShop ? V3_COPY.aboutCta : ctaPool(L.ctaKind, true);
+    aboutSecs.push(mk('cta', { variant: 'band', title: v3FlavorPick(_ac.title), text: v3FlavorPick(_ac.text), button: b.bookLabel, link: actLink, emoji: '' }));
+    P.about = { id: 'pg-about', path: 'about', title: 'About', nav: true, sections: aboutSecs };
 
     // ----- CONTACT: form (to inbox), visit (hours/map), faq -----
     const contactSecs = [];
     const chText = b.city ? v3FlavorPick(V3_COPY.contactHead.textCity).replace('CITY', b.city) : v3FlavorPick(V3_COPY.contactHead.textNoCity);
     contactSecs.push(mk('pagehead', { title: v3FlavorPick(V3_COPY.contactHead.title), text: chText, emoji: '' }));
     contactSecs.push(mk('contact', { showPhone: true, title: v3FlavorPick(V3_COPY.formTitle), text: v3FlavorPick(V3_COPY.formText), success: v3FlavorPick(V3_COPY.formSuccess) }));
-    if (visit && hasReach) { if (b.address) visit.variant = 'map'; contactSecs.push(visit); }
+    if (visit && hasReach) { if (b.address) visit.variant = 'map'; visit.title = (visitHome && visitHome.title) || v3VisitTitle(fam, L.act, b, cat); contactSecs.push(visit); }
     if (faq) contactSecs.push(faq);
-    pages.push({ id: 'pg-contact', path: 'contact', title: 'Contact', nav: true, sections: contactSecs });
+    P.contact = { id: 'pg-contact', path: 'contact', title: 'Contact', nav: true, sections: contactSecs };
 
-    site.pages = pages;
+    site.pages = (V3_PAGE_ORDER[fam] || V3_PAGE_ORDER.pro).map((k) => P[k]).filter(Boolean);
     site.sections = home.slice();
   } catch (e) {}
   return site;
 }
 
 async function doCreate(request, env) {
+  // Per-IP limits (20 an hour, 60 a day). Test servers apply them only to requests that name a test IP.
+  if (env.WS_TEST_MODE !== '1' || request.headers.get('x-ws-test-ip')) {
+    const ip = wsClientIp(request, env), d = new Date().toISOString();
+    if (!(await wsRate(env, 'crrate:h:' + d.slice(0, 13) + ':' + ip, 20, 3600)) || !(await wsRate(env, 'crrate:d:' + d.slice(0, 10) + ':' + ip, 60, 86400))) return new Response(JSON.stringify({ error: 'You have made a lot of sites in a short time. Please try again in a little while.' }), { status: 429, headers: { 'Content-Type': 'application/json' } });
+  }
   let body; try { body = await request.json(); } catch { return fail('Invalid request'); }
+  const _t0 = Date.now();
   try {
     const r = await buildV3Site(body || {}, env);
     const site = r.site, siteId = r.siteId, html = r.html;
     const formKey = await siteKey(siteId, env);
     try { if (env.KV) await env.KV.put('site:' + siteId, JSON.stringify(site), { expirationTtl: 60 * 60 * 24 * 30 }); } catch (e) {}
     try { if (env.KV) { const _sgC = await env.KV.get('stat:sitesgrown'); if (_sgC !== null) await env.KV.put('stat:sitesgrown', String((parseInt(_sgC, 10) || 0) + 1)); } } catch (e) {}
-    try { await logEvent(request, env, 'create_v3', { type: site.biz.type, shop: r.isShop }); } catch (e) {}
+    try { const _s = await getSession(request, env); const _ty = String(site.biz.type || ''); if (env.UNSPLASH_ACCESS_KEY) wsCount(env, 'unsplash_gen', wsHour(), request); await logEvent(request, env, 'generate', { site: siteId, email: _s && _s.email, bizType: _ty, category: v3StarterBase(_ty).category || 'generic', props: { look: /^(light|dark|colorful)$/.test(String(body.look || '')) ? String(body.look) : 'default', google: site.biz.googlePlaceId ? 1 : 0, shop: r.isShop ? 1 : 0, ms: Date.now() - _t0 } }); } catch (e) {}
     return succeed({ html: html, siteId: siteId, formKey: formKey, site: site, inboxUrl: 'https://websprout.app/inbox?site=' + siteId + '&key=' + formKey });
-  } catch (e) { return fail(e.message); }
+  } catch (e) {
+    try { await logEvent(request, env, 'generate_fail', { bizType: String((body && body.type) || ''), props: { err: String((e && e.message) || e).slice(0, 120), ms: Date.now() - _t0 } }); } catch (e2) {}
+    return wsErr(e);
+  }
 }
 
 // Example sites for the landing page, built by the exact same generator customers get.
@@ -821,21 +1038,25 @@ async function buildV3Site(d, env) {
       team: Array.isArray(d.team) ? d.team.slice(0, 12).map(function (t) { return { name: (t.name || '').toString().slice(0, 60), specialty: (t.role || t.specialty || '').toString().slice(0, 80) }; }) : [],
       reviews: Array.isArray(d.reviews) ? d.reviews.slice(0, 12).map(function (r) { return { quote: (r.quote || '').toString().slice(0, 240), name: (r.name || '').toString().slice(0, 60) }; }) : [],
     };
-    const sc = v3Starter(biz.type);
+    // One seed per business: the same name, type and city always get the same copy and layout.
+    const seed = String(d.seed || [biz.name, biz.type, biz.city].join('|')).toLowerCase().slice(0, 300);
+    const sc = v3WithSeed(seed + '|copy', function () { return v3Starter(biz.type); });
+    if (isShop) sc.labels = v3Labels(sc.category, biz.type, true);
+    biz.bookLabel = sc.labels.bookLabel; biz.bookShort = sc.labels.bookShort;
     // Look picked on the first step: Light, Dark or Colorful (otherwise the category default).
     const look = /^(light|dark|colorful)$/.test(String(d.look || '')) ? String(d.look) : '';
     let lookPal = '';
     const scKey = /^[wb]_/.test(sc.palette || '') ? sc.palette.slice(2) : 'mono';
     if (look === 'light') lookPal = 'w_' + scKey;
     else if (look === 'dark') lookPal = 'b_' + scKey;
-    else if (look === 'colorful') lookPal = v3FlavorPick(V3_COLORFUL[sc.category] || V3_COLORFUL.generic);
+    else if (look === 'colorful') lookPal = v3WithSeed(seed + '|look', function () { return v3FlavorPick(V3_COLORFUL[sc.category] || V3_COLORFUL.generic); });
     if (lookPal && !WSENGINE.palettes.some((p) => p.id === lookPal)) lookPal = '';
     const palette = (d.palette || '').toString() || lookPal || sc.palette || 'w_mono';
     const typeset = (d.typeset || '').toString() || sc.typeset || 'bold';
     const emojiStyle = (d.emojiStyle || 'color').toString();
     const knownType = /barber|salon|tattoo|groom|nail|spa|beauty|bak|cafe|coffee|food|restaurant|kitchen|donut|truck|lawn|landscap|garden|clean|pressure|pool|window|pest|gutter|handy|plumb|electric|hvac|heating|roof|paint|lock|appliance|junk|haul|tailor|alteration|daycare|child|preschool|tutor|music|piano|guitar|flor|flower|massage|yoga|pilates|car ?wash|detail|walk|sitter/i.test(biz.type);
     const has = function (a) { return Array.isArray(a) && a.length; };
-    const site = { biz: biz, palette: palette, typeset: typeset, emojiStyle: emojiStyle, photos: {}, sections: [], statsApi: 'https://websprout.app/api/place' };
+    const site = { biz: biz, palette: palette, typeset: typeset, emojiStyle: emojiStyle, iconStyle: 'line', photos: {}, sections: [], statsApi: 'https://websprout.app/api/place' };
     const add = function (type, ov) { site.sections.push(Object.assign({ id: type + '-' + WSENGINE.uid(), type: type }, WSENGINE.sections[type].create(site), ov || {})); };
     // Fill a finished-feeling site from deterministic, type-aware starter content. The owner edits any of it.
     const heroTag = biz.tagline || sc.tagline || '';
@@ -862,6 +1083,22 @@ async function buildV3Site(d, env) {
     else if (sc.services && sc.services.length) { add('services', { variant: 'grid', title: sc.servicesTitle || 'What we do', items: sc.services.map(function (s) { return { emoji: s[2] || '', name: s[0], text: s[1], from: '' }; }) }); }
     if (biz.googlePlaceId) add('reviews', { variant: 'google', title: 'What people say' });
     else if (has(biz.reviews)) add('reviews', { variant: 'wall' });
+    // Numbers only from real data (years since the founding year the owner gave, the linked Google listing's
+    // rating and review count). Never a starter number: with fewer than two real figures there is no band.
+    {
+      const _now = new Date().getFullYear(), _f = parseInt(biz.founded, 10);
+      const _yrs = /^\d{4}$/.test(biz.founded) && _f > 1800 && _f <= _now ? _now - _f : 0;
+      const _rn = parseFloat(d.rating), _cn = parseInt(d.count, 10);
+      const _rt = /^\s*\d+(\.\d+)?\s*$/.test(String(d.rating)) && _rn >= 1 && _rn <= 5 ? _rn : 0;
+      const _ct = /^\s*\d+\s*$/.test(String(d.count)) && _cn >= 5 ? _cn : 0;
+      const _st = [];
+      if (_yrs >= 2) _st.push({ label: 'Years in business', source: 'years', value: String(_yrs), suffix: '', emoji: '' });
+      if (biz.googlePlaceId && _rt) _st.push({ label: 'Google rating', source: 'google_rating', value: _rt.toFixed(1), suffix: '★', emoji: '' });
+      if (biz.googlePlaceId && _rt && _ct) _st.push({ label: 'Google reviews', source: 'google_reviews', value: String(_ct), suffix: '', emoji: '' });
+      if (_st.length >= 2) add('stats', { variant: 'row', title: '', items: _st });
+    }
+    // The team, only when the owner listed real people.
+    if (has(biz.team) && biz.team.some(function (x) { return x.name; })) add('team', { variant: 'rows', title: '', items: biz.team.filter(function (x) { return x.name; }).map(function (x) { return { name: x.name, text: x.specialty }; }) });
     if (has(d.faq)) add('faq', { variant: 'accordion', items: d.faq.slice(0, 10).map(function (q) { return { q: (q.q || '').toString().slice(0, 160), a: (q.a || '').toString().slice(0, 400) }; }) });
     else if (sc.faq && sc.faq.length) add('faq', { variant: 'accordion', items: sc.faq.map(function (x) { return { q: x[0], a: x[1] }; }) });
     add('cta', isShop
@@ -913,7 +1150,7 @@ async function buildV3Site(d, env) {
     const siteId = 'ws' + Math.random().toString(36).slice(2, 9);
     site.siteId = siteId;
     // Build a real multi-page site (Home + Shop/Menu/Services + About + Contact) with cross-page nav.
-    v3Pages(site, sc, isShop);
+    v3WithSeed(seed + '|layout', function () { v3Pages(site, sc, isShop); });
     const html = WSENGINE.renderSite(site, { mode: 'live' });
     return { site: site, siteId: siteId, html: html, isShop: isShop };
   }

@@ -1,5 +1,8 @@
 // Shops: products published with the site, checkout charges server-side prices, the live cart works.
-const { createSite, post, openPage, sleep } = require('./lib');
+const fs = require('fs');
+const path = require('path');
+const { createSite, post, openPage, sleep, signIn, cookie } = require('./lib');
+const OWNER = (fs.readFileSync(path.join(__dirname, '../src/00-header.js'), 'utf8').match(/SUPPORT_EMAIL\s*=\s*'([^']+)'/) || [])[1];
 
 module.exports = async function (ctx, t) {
   const { base, browser } = ctx;
@@ -14,8 +17,17 @@ module.exports = async function (ctx, t) {
   t.ok(r.status === 400 && /not set up|not currently|payment/i.test((r.json && r.json.error) || ''), 'checkout explains when payments are not set up: ' + r.text.slice(0, 100));
   t.eq(r.headers.get('access-control-allow-origin'), '*', 'checkout answers sandboxed published pages (CORS)');
 
-  // Owner able to take payments (the platform account): a real product reaches Stripe, an unknown one never does
-  await post(base, '/api/inbox/notify', { site: s.siteId, key: s.formKey, email: 'michael.aisquith@gmail.com' });
+  // The editable notify address never decides who gets paid: pointing it at the platform owner changes nothing
+  await post(base, '/api/inbox/notify', { site: s.siteId, key: s.formKey, email: OWNER });
+  r = await post(base, '/cart-checkout', { site: s.siteId, items: [{ n: 'Linen Shirt', qty: 1 }] });
+  t.ok(r.status === 400 && /not set up|not currently|payment/i.test((r.json && r.json.error) || ''), 'notify address set to the platform owner does not enable checkout: ' + r.text.slice(0, 100));
+  r = await fetch(base + '/checkout?site=' + encodeURIComponent(s.siteId) + '&p=0');
+  t.ok(/not currently accepting|not set up|no longer available/i.test(await r.text()), 'single-product checkout is refused too');
+
+  // Owner able to take payments (the platform account, recorded as the site's owner): a real product reaches Stripe, an unknown one never does
+  const own = await signIn(base, OWNER);
+  r = await post(base, '/my-sites/claim', { sites: [{ siteId: s.siteId, key: s.formKey, name: 'Thread & Co', ts: Date.now() }] }, { Cookie: cookie(own) });
+  t.eq(r.status, 200, 'the platform owner saves the shop to their account (becomes its recorded owner)');
   r = await post(base, '/cart-checkout', { site: s.siteId, items: [{ n: 'Nonexistent', qty: 1, price: '$0.01' }] });
   t.ok(/Nothing in your cart/i.test((r.json && r.json.error) || ''), 'items that are not in the published shop are refused: ' + r.text.slice(0, 100));
   r = await post(base, '/cart-checkout', { site: s.siteId, items: [{ n: 'Linen Shirt', qty: 2 }] });
