@@ -151,6 +151,41 @@ module.exports = async function (ctx, t) {
     t.ok([...heroes].every((u) => +u.match(/photo-u(\d+)/)[1] < 10), 'heroes come from the 10 most relevant results');
   }
   {
+    // relevance check: Unsplash's words for each photo (alt text, description, tags) decide what fits
+    const ph = (id, words) => Object.assign({ id, urls: { regular: 'https://images.unsplash.com/photo-' + id + '?ixid=1' }, user: { name: 'U', links: { html: 'https://unsplash.com/@u' } }, links: { download_location: 'https://api.unsplash.com/photos/' + id + '/download' } }, words);
+    const PLUMB = { results: [ph('elec1', { alt_description: 'electrician working on an electrical panel' }), ph('elec2', { alt_description: 'man installing wiring in a breaker box', tags: [{ title: 'electrician' }] }), ph('desk', { alt_description: 'woman typing on a laptop in an office' }), ph('pose', { alt_description: 'smiling man posing for a portrait' }),
+      ph('pl1', { alt_description: 'man fixing a pipe under the kitchen sink' }), ph('pl2', { description: 'Plumber repairing a leaking faucet with a wrench' }), ph('pl3', { alt_description: 'copper pipes', tags: [{ title: 'plumbing' }] }), ph('pl4', { alt_description: 'bathroom toilet and sink being installed' }), ph('pl5', { alt_description: 'water heater in a basement' })] };
+    const heroes = new Set(), used = new Set(); let qs = [];
+    for (let i = 0; i < 12; i++) {
+      const B = builder((u) => (u.indexOf('/search/photos') > -1 ? json(PLUMB) : json({})));
+      const s = (await B.build({ name: 'Ridgeline Plumbing ' + i, type: 'Plumber', city: 'Asheville, NC', servicesText: 'Leak repairs\nDrain cleaning' }, KEYS())).site;
+      heroes.add(Object.entries(s.photos).find(([k]) => /^hero-/.test(k))[1].match(/photo-(\w+)/)[1]);
+      Object.values(s.photos).forEach((u) => used.add(u.match(/photo-(\w+)/)[1]));
+      qs = B.calls.filter((u) => /search\/photos/.test(u));
+    }
+    t.ok([...heroes].every((h) => /^pl/.test(h)) && heroes.size >= 2, 'electrician photos listed first, plumbing photos later: a plumber always gets a plumbing hero, with variety (' + [...heroes] + ')');
+    t.ok(![...used].some((h) => /elec|desk|pose/.test(h)), 'electrician, office and posed-portrait photos are never used for a plumber (' + [...used] + ')');
+    t.ok(/query=(plumber%20fixing%20pipe%20under%20sink|plumbing%20pipes%20wrench|plumber%20repair%20sink)/.test(qs[0]) && qs.every((u) => /content_filter=high/.test(u)), 'a plumber searches a hand-written plumbing scene first, still with content_filter=high (' + decodeURIComponent(qs[0].split('query=')[1]) + ')');
+    const ELEC = { results: [ph('p1', { alt_description: 'plumber fixing pipe under sink' }), ph('e1', { alt_description: 'electrician wiring a panel' }), ph('e2', { alt_description: 'electrical outlet repair' }), ph('e3', { alt_description: 'man installing light switch' }), ph('e4', { description: 'circuit breaker panel' })] };
+    const Be = builder((u) => (u.indexOf('/search/photos') > -1 ? json(ELEC) : json({})));
+    const se = (await Be.build({ name: 'Spark', type: 'Electrician' }, KEYS())).site;
+    t.ok(Object.values(se.photos).length === 4 && !Object.values(se.photos).some((u) => /photo-p1/.test(u)), 'an electrician never gets the plumbing photo');
+    const BAKE = { results: [ph('pz', { alt_description: 'pepperoni pizza on a wooden table' }), ph('b1', { alt_description: 'fresh bread loaves' }), ph('b2', { alt_description: 'croissants and pastries in a bakery' }), ph('b3', { alt_description: 'baker shaping sourdough' }), ph('b4', { alt_description: 'cakes in a bakery window' })] };
+    const bk = (await builder((u) => (u.indexOf('/search/photos') > -1 ? json(BAKE) : json({}))).build({ name: 'Crumb', type: 'Bakery' }, KEYS())).site;
+    t.ok(!Object.values(bk.photos).some((u) => /photo-pz/.test(u)), 'a bakery doesn’t get a pizza photo');
+    const pzb = (await builder((u) => (u.indexOf('/search/photos') > -1 ? json(BAKE) : json({}))).build({ name: 'Crust', type: 'Pizza bakery' }, KEYS())).site;
+    t.ok(Object.values(pzb.photos).some((u) => /photo-pz/.test(u)), '…unless the type says pizza');
+    // reporting: only the photos actually used are pinged, and the hourly cap still holds
+    const Bd = builder((u) => (u.indexOf('/search/photos') > -1 ? json(PLUMB) : json({})));
+    const sd = (await Bd.build({ name: 'Drip', type: 'Plumber' }, KEYS())).site;
+    const pinged = Bd.calls.filter((u) => /\/download$/.test(u)).map((u) => u.split('/photos/')[1].split('/')[0]);
+    t.ok(pinged.length === Object.keys(sd.photos).length && pinged.every((id) => /^pl/.test(id)), 'download events go to the photos used (' + pinged + ')');
+    const capped = builder((u) => (u.indexOf('/search/photos') > -1 ? json(PLUMB) : json({})));
+    const K0 = KEYS(); K0.UNSPLASH_HOURLY_CAP = '0';
+    const sc0 = (await capped.build({ name: 'Drip', type: 'Plumber' }, K0)).site;
+    t.ok(!capped.calls.some((u) => /search\/photos/.test(u)) && !Object.keys(sc0.photos).length, 'the hourly Unsplash cap still stops searches');
+  }
+  {
     const K = routeKit(fetch, undefined);
     const sc = (type) => ({ photoQuery: K.v3StarterBase(type) && (K.V3_COPYBOOK[K.v3StarterBase(type).category] || {}).photo });
     t.eq(K.v3PhotoQueries({ type: 'Local Business', services: [] }, sc('')).join('|'), 'small business owner shop', 'a vague type uses the category search');

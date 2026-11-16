@@ -1029,7 +1029,7 @@ const WSENGINE = (function(){
       const hrs = (c.biz.hours || []).filter((h) => h && h.d);
       const hasHours = hrs.some((h) => h.open);
       const ig = WS.igHandle(c.biz.instagram);
-      const title = WS.str(s.title) || (st ? `Find us on ${st}.` : addr ? 'Come see us.' : (c.biz.city ? `Serving ${c.biz.city}.` : 'Get in touch.'));
+      const title = WS.str(s.title) || (st ? `Find us on ${st}.` : addr ? 'Come see us.' : (c.biz.city ? `Serving ${WS.cityName(c.biz.city)}.` : 'Get in touch.'));
       const reach = [c.biz.phone ? `<tr><th scope="row">Call</th><td><a href="${WS.tel(c.biz.phone)}">${e(c.biz.phone)}</a></td></tr>` : '', c.biz.email ? `<tr><th scope="row">Email</th><td><a href="mailto:${e(c.biz.email)}">${e(c.biz.email)}</a></td></tr>` : '', ig ? `<tr><th scope="row">Instagram</th><td><a href="https://instagram.com/${e(ig)}">@${e(ig)}</a></td></tr>` : '', c.biz.city ? `<tr><th scope="row">Area</th><td>${e(c.biz.city)}</td></tr>` : ''].join('');
       const dayIx = (d, i) => { const k = DAYS.indexOf(String(d).slice(0, 3).toLowerCase()); return k > -1 ? k : i; };
       const hours = hasHours
@@ -1059,6 +1059,17 @@ const WSENGINE = (function(){
     raw.forEach((x) => { const t = WS.str(x).replace(/\s+/g, ' ').replace(/^(and|&)\s+/i, '').slice(0, 40).trim(); const k = t.toLowerCase(); if (t && !seen[k] && out.length < 12) { seen[k] = 1; out.push(t); } });
     return out;
   };
+  // The city as said in a sentence: "Asheville, NC" / "Austin, TX 78701" / "Asheville North Carolina" -> "Asheville".
+  // Prose uses this; contact details, the footer and structured data keep the full city.
+  const ST_ABBR = 'AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|DC';
+  const ST_NAME = 'Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New Hampshire|New Jersey|New Mexico|New York|North Carolina|North Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode Island|South Carolina|South Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West Virginia|Wisconsin|Wyoming|District of Columbia';
+  const CITY_TAIL = new RegExp('\\s+(?:(?:' + ST_ABBR + ')|(?:' + ST_NAME.replace(/(\w)(\w*)/g, (m, a, b) => '[' + a.toUpperCase() + a.toLowerCase() + ']' + b) + '))\\.?$');
+  WS.cityName = (v) => {
+    const full = WS.str(v).replace(/\s+/g, ' ');
+    let c = full.replace(/[\s,]*\b\d{5}(?:-\d{4})?$/, '').trim();
+    c = c.indexOf(',') > 0 ? c.slice(0, c.indexOf(',')).trim() : c.replace(CITY_TAIL, '').trim();
+    return c || full;
+  };
   // A section's own towns when the owner typed some there, else the ones from setup (biz.towns).
   const townsOf = (s, c) => { const own = WS.townList(s && s.towns); return own.length ? own : WS.townList(c.biz && c.biz.towns); };
   // The founding year as a number when it is a real past year (else 0).
@@ -1081,7 +1092,9 @@ const WSENGINE = (function(){
     const g = s.showRating === false ? null : WS.googleScore(site);
     if (g) out.push({ k: 'rating', icon: 'star', label: g.rating.toFixed(1) + ' on Google', sub: g.count ? g.count.toLocaleString('en-US') + ' review' + (g.count === 1 ? '' : 's') : 'Google rating' });
     const t = s.showArea === false ? [] : townsOf(s, { biz: b });
-    if (t.length) out.push({ k: 'area', icon: 'map-pin', label: 'Serving ' + t[0], sub: t.length > 1 ? '& ' + (t.length - 1) + ' nearby town' + (t.length > 2 ? 's' : '') : '& nearby areas' });
+    // "Serving Asheville & 3 nearby towns": the home city leads, and only the other towns are counted.
+    const city = WS.cityName(b.city), lc = city.toLowerCase(), near = t.filter((x) => x.toLowerCase() !== lc), lead = city && (near.length < t.length || !WS.townList(s.towns).length) ? city : t[0], more = lead === t[0] ? near.filter((x) => x !== t[0]) : near;
+    if (t.length) out.push({ k: 'area', icon: 'map-pin', label: 'Serving ' + lead, sub: more.length ? '& ' + more.length + ' nearby town' + (more.length > 1 ? 's' : '') : '& nearby areas' });
     return out;
   };
   const yrsSpan = (x) => (x.yrs ? `<span data-yrs="${x.yrs}">${new Date().getFullYear() - x.yrs}</span> years in business` : e(x.sub));

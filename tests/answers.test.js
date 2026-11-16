@@ -71,11 +71,35 @@ module.exports = async function (ctx, t) {
     const s = await site(base('Plumber', ANS));
     const w = secs(s).find((x) => x.type === 'why');
     t.ok(w && w.items.length >= 3 && w.items.length <= 4 && /^grid|split$/.test(w.variant) && w.title, 'a plumber gets a why section with 3 or 4 points');
-    t.eq(w.items.map((i) => i.source).join(','), 'unique,licensed,years,local', 'real answers fill the points first, in order');
+    t.eq(w.items.map((i) => i.source).join(','), 'unique,starter,starter,starter', 'with the trust strip (licensed, insured, years, towns) and the areas block on the page, the why points don’t repeat them: honest category points fill the rest');
     t.ok(w.items[0].title === 'Family-owned since day one' && w.items[0].text === 'We answer the phone ourselves and turn up when we say.', 'what makes them different: a short lead as the title, their own words as the text');
-    t.ok(w.items[1].title === 'Licensed and insured' && w.items[1].text === 'Fully licensed and insured, so you’re covered.', 'licensed and insured, only because both were answered');
-    t.ok(w.items[2].title === YRS + ' years in Springfield' && /since 2004/.test(w.items[2].text), 'years in the city, from the founding year');
-    t.ok(w.items[3].title === 'Local to Springfield', 'local to the city');
+    t.ok(!w.items.slice(1).some((i) => /licensed|insured|\d|years/i.test(i.title + ' ' + i.text)), 'no why point repeats the licensed, insured or years badges');
+    // no trust strip on the page (a salon): the owner's answers fill the points, in order
+    const sw = secs(await site(base('Hair salon', ANS))).find((x) => x.type === 'why');
+    t.eq(sw.items.map((i) => i.source).join(','), 'unique,licensed,years,local', 'without a trust strip the real answers fill the points first, in order');
+    t.ok(sw.items[1].title === 'Licensed and insured' && sw.items[1].text === 'Fully licensed and insured, so you’re covered.', 'licensed and insured, only because both were answered');
+    t.ok(sw.items[2].title === YRS + ' years in Springfield' && /since 2004/.test(sw.items[2].text), 'years in the city, from the founding year');
+    t.ok(sw.items[3].title === 'Local to Springfield', 'local to the city');
+    // trust strip without towns: licensed is left to the strip, the years point only if three points need it
+    const tw = secs(await site(base('Plumber', { licensed: true, insured: true, founded: '2004', unique: ANS.unique }))).find((x) => x.type === 'why');
+    t.ok(tw.items.map((i) => i.source).join(',') === 'unique,local,starter,starter' && tw.items[1].title === 'Local to Springfield', 'trust strip without towns: no licensed or years point, the local point stays (' + tw.items.map((i) => i.source) + ')');
+    // a short title from the owner's own first clause; a neutral one when there's no clean clause
+    const fo = secs(await site(base('Plumber', { unique: 'Family-owned, we answer the phone ourselves and show up when we say we will', licensed: true, insured: true }))).find((x) => x.type === 'why');
+    t.ok(fo.items[0].title === 'Family-owned' && fo.items[0].text === 'We answer the phone ourselves and show up when we say we will.', 'a one-word hyphenated clause makes the title, the rest their own words (' + fo.items[0].title + ' / ' + fo.items[0].text + ')');
+    const lg = secs(await site(base('Plumber', { unique: 'Three generations of the same family working on these old houses, and we still love it' }))).find((x) => x.type === 'why');
+    t.ok(/sets us apart|makes us different/.test(lg.items[0].title), 'a first clause over 36 characters keeps a neutral title (' + lg.items[0].title + ')');
+    // the city with its state in prose: just the city name
+    const stc = await site(base('Plumber', Object.assign({}, ANS, { city: 'Springfield, IL 62701', towns: 'Springfield, Shelbyville, Ogdenville, Capital City' })));
+    const sal2 = secs(await site(base('Hair salon', Object.assign({}, ANS, { city: 'Springfield, Illinois' })))).find((x) => x.type === 'why');
+    t.ok(sal2.items[2].title === YRS + ' years in Springfield' && sal2.items[2].text === 'Serving Springfield since 2004.' && sal2.items[3].title === 'Local to Springfield', 'why points name the city without the state (' + sal2.items[2].title + ')');
+    const ar2 = stc.pages[0].sections.find((x) => x.type === 'area');
+    t.ok(/^Serving Springfield and nearby towns including Shelbyville and Ogdenville\./.test(ar2.text), 'the home city is not listed again among the nearby towns (' + ar2.text + ')');
+    const prose = JSON.stringify(stc.pages.flatMap((p) => p.sections).map((x) => [x.title, x.text, x.tagline, (x.items || []).map((i) => [i.title, i.text, i.a])]));
+    t.ok(!/\bIL\b|62701|Illinois/.test(prose) && /Springfield/.test(prose), 'no state or zip code in the generated prose');
+    t.eq(stc.biz.city, 'Springfield, IL 62701', 'the full city is kept for the contact details and structured data');
+    const stHtml = (await build(base('Plumber', Object.assign({}, ANS, { city: 'Springfield, IL 62701', towns: 'Springfield, Shelbyville, Ogdenville, Capital City' })))).html;
+    const tb = (stHtml.match(/<section[^>]*id="trust"[\s\S]*?<\/section>/) || [''])[0].replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ');
+    t.ok(/Serving Springfield & 3 nearby towns/.test(tb), 'the trust badge counts only the towns other than the city (' + tb.trim() + ')');
     const hi = homeTypes(s);
     t.ok(hi.indexOf('why') === hi.indexOf('services') + 1, 'why sits right after the services on a trades home page (' + hi + ')');
     const lic = (await site(base('Plumber', { licensed: true }))).pages.flatMap((p) => p.sections).find((x) => x.type === 'why');
@@ -164,7 +188,11 @@ module.exports = async function (ctx, t) {
     t.ok(about.text.indexOf(ANS.unique) === 0, 'the About story opens with what makes them different');
     t.ok(/since 2004/i.test(about.text) && /nearby towns including Shelbyville and Ogdenville/.test(about.text), 'the About story says since when and which towns');
     const cta = s.pages[0].sections.find((x) => x.type === 'cta');
-    t.ok(/^Licensed and insured\. /.test(cta.text), 'the trades call to action leads with licensed and insured (' + cta.text + ')');
+    t.ok(!/licensed|insured/i.test(cta.text), 'with the trust strip on the page the call to action doesn’t repeat licensed and insured (' + cta.text + ')');
+    const home = JSON.stringify(s.pages[0].sections.filter((x) => x.type !== 'trust'));
+    t.ok(!/licensed|insured/i.test(home), 'licensed and insured is said once on the home page: in the trust strip');
+    const lic1 = (await site(base('Plumber', { licensed: true }))).pages[0].sections.find((x) => x.type === 'cta');
+    t.ok(/^Fully licensed\. /.test(lic1.text), 'without a trust strip the trades call to action leads with it (' + lic1.text + ')');
     const plain = await site(base('Plumber', { founded: '2004' }));
     t.ok(!/licensed|insured/i.test(JSON.stringify(plain.pages.flatMap((p) => p.sections).filter((x) => x.type !== 'faq'))), 'never licensed or insured unless the owner said so');
     const own = await site(base('Plumber', Object.assign({ about: 'Our own words.' }, ANS)));

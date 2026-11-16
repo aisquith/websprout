@@ -111,7 +111,7 @@ module.exports = async function (ctx, t) {
     t.eq(bad(/'/).join(' | '), '', 'apostrophes are typographic');
     t.eq(strings.filter((s) => /^[0-9a-f]{4,5}$/.test(s) === false && /^1f|^2[0-9a-f]{3}$/.test(s)).length, 0, 'emoji codes are well formed');
     const cases = [['Pizza restaurant', 'restaurant', 'wood fired pizza'], ['Taqueria', 'restaurant', 'mexican tacos food'], ['Plumber', 'home', 'plumber repair sink'], ['Electrician', 'home', 'electrician wiring'], ['Dog grooming', 'pet', 'dog grooming salon'], ['Yoga studio', 'fitness', 'yoga class studio'], ['Nail salon', 'spa', 'nail salon manicure'], ['Wedding photographer', 'photo', 'wedding photographer'], ['Piano lessons', 'education', 'music lesson piano'], ['Florist', 'events', 'florist flower arrangement']];
-    t.eq(cases.filter(([ty, cat, ph]) => copyFor(ty, cat).photo !== ph).map((x) => x[0]).join(','), '', 'sub-types match the business types owners type');
+    t.eq(cases.filter(([ty, cat, ph]) => [].concat(copyFor(ty, cat).photo).indexOf(ph) < 0).map((x) => x[0]).join(','), '', 'sub-types match the business types owners type');
     const sa = await createSite(base, { name: 'Slice', type: 'Pizza restaurant' });
     const menu = sa.site.pages.find((p) => p.path === 'menu');
     t.ok(menu && /pizza|Margherita/i.test(JSON.stringify(menu.sections)) && !/Made to Order|Local Ingredients/.test(sa.html), 'a pizza place gets pizza services, not generic restaurant values');
