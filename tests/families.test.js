@@ -126,7 +126,8 @@ module.exports = async function (ctx, t) {
     const st = secs(real).find((x) => x.type === 'stats');
     const yrs = String(new Date().getFullYear() - 2004);
     t.ok(st && st.items.map((i) => i.value).join(',') === yrs + ',4.7,85', 'numbers come straight from the business (' + (st && st.items.map((i) => i.value)) + ')');
-    t.ok(homeTypes(real).indexOf('stats') > -1 && before(homeTypes(real), 'stats', 'cta'), 'trades show real numbers on the home page');
+    const aboutTypes = real.pages.find((p) => p.path === 'about').sections.map((x) => x.type);
+    t.ok(homeTypes(real)[1] === 'trust' && homeTypes(real).indexOf('stats') < 0 && aboutTypes.indexOf('stats') > -1, 'trades show real numbers as trust badges under the hero, the numbers band moves to About (' + homeTypes(real) + ')');
     const fake = await build(base('Plumber', { founded: '3020', rating: 9, count: 'lots' }));
     t.ok(!secs(fake).some((x) => x.type === 'stats'), 'impossible numbers are ignored');
     const team = await build(base('Barber shop', { team: [{ name: 'Ana', role: 'Fades and tapers' }, { name: 'Bo', role: 'Beards' }] }));

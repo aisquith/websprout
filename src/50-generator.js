@@ -364,7 +364,7 @@ function v3StepsKind(cat) {
 function v3StepsItems(cat) { const sets = V3_STEPS_BY_KIND[v3StepsKind(cat || '')] || V3_COPY.stepsSets; const set = v3FlavorPick(sets) || sets[0]; return set.map((x) => ({ name: x[0], text: x[1] })); }
 function v3Pick(arr) { return arr[Math.floor(v3Rand() * arr.length)]; }
 
-function v3Starter(type) {
+function v3Starter(type, cred) {
   const r = v3StarterBase(type);
   // Each site draws its own mix from the copy book: the category's pools, refined by sub-type (pizza, plumber...).
   const C = v3CopyFor(type, r.category);
@@ -431,7 +431,7 @@ function v3Starter(type) {
   r.palette = v3FlavorPick(PAL_SETS[r.category] || ['w_mono', 'w_slate', 'w_charcoal']);
   // Now and then use the dark (Noir) twin of the chosen light theme, when it exists.
   try { if (v3Rand() < 0.2) { const _dk = 'b_' + r.palette.slice(2); if (WSENGINE.palettes.some((p) => p.id === _dk)) r.palette = _dk; } } catch (e) {}
-  r.faq = v3PickSome((C.faq || V3_COPYBOOK.generic.faq).filter((q) => L.act === 'reserve' || !/reserv|book a table/i.test(q.join(' '))), 3, 1);
+  r.faq = v3PickSome((C.faq || V3_COPYBOOK.generic.faq).filter((q) => (L.act === 'reserve' || !/reserv|book a table/i.test(q.join(' '))) && v3CredOk(q[0], cred)), 3, 1);
   return r;
 }
 
@@ -789,6 +789,97 @@ function v3VisitTitle(fam, act, b, cat) {
   return v3Pick(pools[fam] || ['Find us.', 'Visit us.']);
 }
 
+// ── The owner's own answers from setup: what makes them different, founding year, licensed/insured, towns ──
+// Plain text only (tags and markup characters dropped), trimmed and capped. Real answers come first everywhere
+// they're used; nothing here is ever filled in when the owner left it blank.
+function v3Clean(s, n) { return String(s == null ? '' : s).replace(/<[^>]*>?/g, ' ').replace(/[<>{}\[\]"`\\]/g, '').replace(/\s+/g, ' ').trim().slice(0, n || 200).trim(); }
+function v3Year(x) { const s = String(x == null ? '' : x).trim(), y = parseInt(s, 10); return /^\d{4}$/.test(s) && y >= 1850 && y <= new Date().getFullYear() ? s : ''; }
+// "springfield, SHELBYVILLE\nst. louis" → ['Springfield', 'Shelbyville', 'St. Louis']: up to 12, de-duplicated, each ≤40 chars.
+function v3Towns(x) {
+  const out = [], seen = {};
+  (Array.isArray(x) ? x.join(',') : String(x == null ? '' : x)).slice(0, 300).split(/[,;\n\r]+/).forEach(function (t) {
+    t = v3Clean(t, 40).replace(/^[\s.,'’&-]+|[\s,&-]+$/g, '');
+    if (!t || !/[a-z]/i.test(t)) return;
+    if (t === t.toLowerCase() || t === t.toUpperCase()) t = t.toLowerCase().replace(/(^|[\s-])([a-z])/g, function (m, a, c) { return a + c.toUpperCase(); });
+    const k = t.toLowerCase(); if (!seen[k]) { seen[k] = 1; out.push(t); }
+  });
+  return out.slice(0, 12);
+}
+// Their words, lightly tidied: a capital at the start and a full stop at the end. Nothing added.
+function v3Sentence(s) { s = String(s || '').trim(); if (!s) return ''; s = s.charAt(0).toUpperCase() + s.slice(1); return /[.!?…]$/.test(s) ? s : s + '.'; }
+function v3And(a) { return a.length < 2 ? (a[0] || '') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]; }
+// Towns other than the home city, for "serving <city> and nearby towns including …".
+function v3Nearby(b) { const c = String(b.city || '').trim().toLowerCase(); return (b.towns || []).filter(function (t) { return t.toLowerCase() !== c; }); }
+function v3ServeLine(b) {
+  const city = String(b.city || '').trim(), near = v3Nearby(b);
+  if (!near.length) return '';
+  if (!city) return 'We work in ' + v3And(near.slice(0, 3)) + (near.length > 3 ? ' and nearby towns.' : '.');
+  return near.length === 1 ? 'Serving ' + city + ' and ' + near[0] + '.' : 'Serving ' + city + ' and nearby towns including ' + near[0] + ' and ' + near[1] + '.';
+}
+function v3Years(b) { return b.founded ? new Date().getFullYear() - parseInt(b.founded, 10) : -1; }
+// Businesses that go to their customers (trades, cleaners, movers, mobile services) get an "Areas we serve" block.
+function v3ServiceArea(fam, cat, type, b) { return (fam === 'trades' && !(cat === 'auto' && b.address && !/mobile/i.test(type))) || /\bmobile\b|dog walk|pet sit|house ?sit|walker|we come to you/i.test(String(type || '')); }
+// Trust badges, from real data only: licensed, insured, founding year, a linked Google rating, the towns served.
+function v3TrustItems(b) {
+  const out = [];
+  if (b.licensed) out.push({ icon: 'shield-check', label: 'Licensed', source: 'licensed' });
+  if (b.insured) out.push({ icon: 'shield', label: 'Insured', source: 'insured' });
+  if (b.founded) { const n = v3Years(b); out.push({ icon: 'calendar', label: n >= 2 ? n + ' years in business' : 'Since ' + b.founded, source: 'years' }); }
+  if (b.googlePlaceId && b.googleRating >= 1) out.push({ icon: 'star', label: b.googleRating.toFixed(1) + ' on Google' + (b.googleReviews ? ' (' + b.googleReviews + ' reviews)' : ''), source: 'google_rating' });
+  if ((b.towns || []).length) out.push({ icon: 'map-pin', label: 'Serving ' + b.towns[0] + (b.towns.length > 1 ? ' and nearby' : ''), source: 'area' });
+  return out;
+}
+// "Why choose us": the owner's own answers first, then honest points for the kind of business. 3–4 items.
+function v3WhyItems(b, cat, fam, hasArea) {
+  const out = [], city = String(b.city || '').trim(), n = v3Years(b);
+  if (b.unique) {
+    const u = String(b.unique).trim();
+    const m = u.match(/^([^,;:.!?–—]+?)\s*(?:[,;:.!?]|\s[–—-]\s)\s*(.*)$/);
+    const lead = m ? m[1].trim() : '', rest = m ? m[2].trim() : '', w = lead ? lead.split(/\s+/).length : 0;
+    const ok = lead && w >= 2 && w <= 7 && !/^(we|i|our|my|us|they|it|you|we’re|we're|i’m|i'm|this|there)\b/i.test(lead);
+    out.push({ icon: 'sparkles', title: ok ? lead.charAt(0).toUpperCase() + lead.slice(1) : v3Pick(['What sets us apart', 'What makes us different']), text: v3Sentence(ok && rest.split(/\s+/).length >= 3 ? rest : u), source: 'unique' });
+  }
+  if (b.licensed || b.insured) out.push(b.licensed && b.insured ? { icon: 'shield-check', title: 'Licensed and insured', text: 'Fully licensed and insured, so you’re covered.', source: 'licensed' } : b.licensed ? { icon: 'shield-check', title: 'Fully licensed', text: 'We’re licensed, and happy to share the details.', source: 'licensed' } : { icon: 'shield-check', title: 'Fully insured', text: 'We’re insured, so you’re covered while we work.', source: 'insured' });
+  if (b.founded) out.push({ icon: 'calendar', title: n >= 2 ? n + ' years in ' + (city || 'business') : 'Since ' + b.founded, text: city ? 'Serving ' + city + ' since ' + b.founded + '.' : 'In business since ' + b.founded + '.', source: 'years' });
+  if (city || (b.towns || []).length) out.push({ icon: 'map-pin', title: city ? 'Local to ' + city : 'Local to the area', text: (hasArea && city && v3Nearby(b).length) ? 'Based in ' + city + ' and working in the towns around it.' : (v3ServeLine(b) || 'We’re based in ' + city + ', close to the people we work for.'), source: 'local' });
+  const have = {}; out.forEach(function (x) { have[x.title.toLowerCase()] = 1; });
+  const pool = (V3_WHY[cat] || []).concat(V3_WHY[cat === 'childcare' ? 'childcare' : fam] || V3_WHY.generic).filter(function (x, i, a) { return a.findIndex(function (y) { return y[1] === x[1]; }) === i && !have[x[1].toLowerCase()] && !(cat === 'cleaning' && /clean up/i.test(x[1])); });
+  while (out.length < 4 && pool.length) { const p = pool.splice(Math.floor(v3Rand() * pool.length), 1)[0]; out.push({ icon: p[0], title: p[1], text: p[2], source: 'starter' }); }
+  const ic = (typeof WSENGINE !== 'undefined' && WSENGINE.ICONS) || null;
+  out.forEach(function (x) { if (ic && !ic[x.icon]) x.icon = 'circle-check'; });
+  return out.slice(0, 4);
+}
+// The mark in the header until the owner uploads a logo: { style, icon }, a valid line-icon id, varied per business.
+const V3_MARK_ICONS = [[/garage door/, ['house', 'wrench']], [/plumb|drain|sewer|water heater/, ['droplet', 'wrench']], [/electric/, ['zap', 'plug', 'lightbulb']], [/hvac|heating|furnace|air condition|cooling/, ['thermometer', 'snowflake', 'wind']], [/roof|gutter|siding/, ['house', 'hammer']], [/paint/, ['paintbrush', 'paint-roller']], [/pest/, ['bug']], [/pool/, ['waves', 'droplets']], [/lock/, ['key-round', 'lock']], [/appliance|washer|dryer|fridge|refrigerat|dishwasher/, ['washing-machine', 'wrench']], [/tree/, ['trees', 'tree-deciduous']], [/lawn|landscap|garden|yard|mow|turf/, ['leaf', 'sprout', 'trees']], [/clean|maid|janitor|housekeep|wash/, ['sparkles', 'spray-can']], [/mov|haul|junk/, ['truck', 'package']], [/auto|mechanic|car\b|tire|garage|detail/, ['car', 'wrench']], [/handy|contract|remodel|renovat|construct|build|carpent|deck|fence|floor|drywall|cabinet|countertop/, ['hammer', 'wrench', 'hard-hat']],
+  [/coffee|cafe|espresso|roaster/, ['coffee']], [/cake|cupcake/, ['cake', 'cake-slice']], [/bak|pastr|patisserie|croissant|bread|bagel|donut/, ['croissant', 'wheat']], [/pizz/, ['pizza']], [/sushi|seafood|fish/, ['fish']], [/bbq|barbecue|smokehouse|grill|steak/, ['flame', 'beef']], [/taco|taqueria|burrito|cantina/, ['utensils-crossed']], [/ice cream|gelato|creamery|frozen yogurt/, ['ice-cream-cone']], [/\bbar\b|pub|brew|winery|wine|tavern|taproom/, ['wine']], [/juice|smoothie|boba|bubble tea/, ['cup-soda']], [/sandwich|deli/, ['sandwich']], [/soup|ramen|noodle|pho/, ['soup']]];
+const V3_MARK_BY_CAT = { barber: ['razor', 'scissors'], salon: ['scissors'], spa: ['hand-heart', 'sparkle'], tattoo: ['pen-tool'], fitness: ['dumbbell'], pet: ['paw-print'], tailor: ['scissors', 'ruler'], legal: ['scale', 'landmark'], finance: ['chart-column', 'briefcase'], realestate: ['house', 'key-round'], dental: ['tooth'], health: ['heart-pulse', 'stethoscope'], studio: ['pen-tool', 'compass'], education: ['graduation-cap', 'book-open'], childcare: ['baby', 'blocks'], photo: ['camera'], events: ['party-popper', 'flower-2'], retail: ['shopping-bag', 'gem'], marine: ['anchor', 'sailboat'] };
+function v3LogoMark(fam, cat, type) {
+  const t = String(type || '').toLowerCase(), ic = WSENGINE.ICONS || {};
+  const hit = V3_MARK_ICONS.find(function (x) { return x[0].test(t); });
+  let opts = (hit ? hit[1] : fam === 'trades' ? ['wrench', 'hammer', 'house'] : fam === 'food' ? ['utensils', 'chef-hat'] : (V3_MARK_BY_CAT[cat] || [])).filter(function (x) { return ic[x]; });
+  if (!opts.length) { let f = ''; try { f = WSENGINE.iconFor({}, type); } catch (e) {} opts = [ic[f] ? f : 'sparkles']; }
+  const style = fam === 'trades' ? v3Pick(['badge', 'icon']) : (fam === 'pro' || fam === 'beauty') ? v3Pick(['wordmark', 'monogram']) : fam === 'food' ? v3Pick(['wordmark', 'icon']) : 'wordmark';
+  return { style: style, icon: v3Pick(opts) };
+}
+// Starter FAQ answers that depend on the owner's answers: a licensing question is answered only from real data
+// (and left out otherwise, see v3Starter), and "what areas do you cover" lists the towns they gave.
+const V3_CRED_Q = /are you (?:fully )?(?:licen[sc]ed|insured)/i;
+function v3CredOk(q, o) { if (!V3_CRED_Q.test(q)) return true; o = o || {}; const l = /licen/i.test(q), i = /insured/i.test(q); return (l && i) ? !!(o.licensed || o.insured) : l ? !!o.licensed : !!o.insured; }
+function v3FaqFit(q, a, b) {
+  if (V3_CRED_Q.test(q)) {
+    if (b.licensed && b.insured) return 'Yes. We’re fully licensed and insured, and happy to share the details.';
+    if (b.licensed) return 'Yes, we’re licensed. Ask us and we’ll share the details.';
+    if (b.insured && /insured/i.test(q)) return 'We’re insured. Ask us and we’ll share the details for your job.';
+    return a;
+  }
+  if (/what areas|where are you based|do you cover|which areas/i.test(q)) {
+    const city = String(b.city || '').trim(), near = v3Nearby(b);
+    if (near.length) return 'We work in ' + v3And((city ? [city] : []).concat(near.slice(0, city ? 4 : 5))) + (near.length > (city ? 4 : 5) ? ' and nearby towns' : '') + '. Not sure about yours? Send us your address and we’ll confirm.';
+    if (city) return 'We’re based in ' + city + '. Send us your address and we’ll confirm we can help.';
+  }
+  return a;
+}
+
 // Split a finished flat section stack into a real multi-page site (Home + Shop/Menu/Services, booking page,
 // About, Contact) with cross-page nav. Each section object is MOVED to exactly one page (photos/ids preserved);
 // home follows its family's recipe and sub-pages get their own header + call-to-action. Keeps site.sections
@@ -800,6 +891,7 @@ function v3Pages(site, sc, isShop) {
     const many = (t) => all.filter((s) => s.type === t);
     const uid = () => WSENGINE.uid();
     const mk = (type, ov) => Object.assign({ id: type + '-' + uid(), type: type }, WSENGINE.sections[type].create(site), ov || {});
+    const can = (type) => !!WSENGINE.sections[type];
     const b = site.biz;
 
     const announce = many('announce');
@@ -851,6 +943,14 @@ function v3Pages(site, sc, isShop) {
       menu = mk('services', { variant: v3Look('services', V3_LOOKS.menu[fam]), title: teaserTitle, items: srcItems.slice(0, 3).map((it) => ({ emoji: it.emoji || '', name: it.name || it.title || '', text: it.text || it.desc || '', from: it.price || it.from || '' })) });
     }
     // A short story band for home, using a different line than the About page will (no repeated paragraph).
+    // Sections built from the owner's answers: trust badges right under the hero (trades and professionals, at least
+    // two real badges), "why choose us" after the services (trades, professionals, beauty), and the towns they serve
+    // near the end for businesses that go to their customers. Each only when the engine offers it and it has content.
+    const trustItems = (fam === 'trades' || fam === 'pro') && can('trust') ? v3TrustItems(b) : [];
+    const trust = trustItems.length >= 2 ? mk('trust', { variant: v3Look('trust', trustItems.length >= 3 ? ['strip', 'strip', 'cards'] : ['strip']), title: '' }) : null;
+    const area = (b.towns || []).length && can('area') && v3ServiceArea(fam, cat, b.type, b) ? mk('area', { variant: v3Look('area', []), title: v3Pick(['Areas we serve', 'Where we work', 'Our service area']), text: [v3ServeLine(b) || (b.city ? 'Based in ' + b.city + '.' : ''), 'Not sure if we cover your address? Get in touch and we’ll let you know.'].filter(Boolean).join(' ') }) : null;
+    const whyItems = (fam === 'trades' || fam === 'pro' || fam === 'beauty') && can('why') ? v3WhyItems(b, cat, fam, !!area) : [];
+    const why = whyItems.length >= 3 ? mk('why', { variant: v3Look('why', ['grid', 'split']), title: v3Pick(['Why choose us', 'Why people choose us', 'Why work with us']), items: whyItems }) : null;
     let homeUsedIntro = false;
     let homeIntro = null;
     const V3_PROMISE = {
@@ -859,23 +959,37 @@ function v3Pages(site, sc, isShop) {
       pro: ['Clear answers, fair prices and work we’re proud to put our name on.', 'We listen first, keep you informed and deliver what we promised.', 'Small enough to care, experienced enough to get it right.'],
     };
     V3_PROMISE.creative = V3_PROMISE.pro;
-    const aboutPool = (((sc && sc.aboutPool) || (V3_FLAVORS[cat] && V3_FLAVORS[cat].about) || []).concat(V3_PROMISE[fam] || [])).filter((t) => t && t !== (intro && intro.text));
+    const aboutPool = (((sc && sc.aboutPool) || (V3_FLAVORS[cat] && V3_FLAVORS[cat].about) || []).concat(V3_PROMISE[fam] || [])).filter((t) => t && t !== (intro && intro.text) && t !== (sc && sc.about));
     if (!menu && intro) { homeIntro = intro; homeUsedIntro = true; }
-    else if (aboutPool.length) homeIntro = mk('intro', { variant: v3Look('intro', V3_LOOKS.intro[fam]), title: '', text: v3Pick(aboutPool), emoji: '' });
+    else if (aboutPool.length) homeIntro = mk('intro', { variant: v3Look('intro', V3_LOOKS.intro[fam]), title: '', text: (b.unique && !why ? v3Sentence(b.unique) + ' ' : '') + v3Pick(aboutPool), emoji: '' });
     const steps = (!isShop && !isFood && fam !== 'retail' && cat !== 'generic' && (services || prices)) ? mk('steps', { variant: v3Look('steps', V3_LOOKS.steps[fam]), title: v3FlavorPick(V3_COPY.stepsTitle), items: v3StepsItems(cat) }) : null;
     const gal = gallery[0] || null;
     if (gal) gal.variant = v3Look('gallery', V3_LOOKS.gallery[fam]);
-    const faqTop = faq && (faq.items || []).length >= 2 ? mk('faq', { variant: 'accordion', title: v3Pick(V3_COPY.faqTitle), items: (faq.items || []).slice(0, 3) }) : null;
+    // Short FAQs on professional and trades sites sit open (every answer visible); longer ones and other families fold.
+    const faqVar = (n) => ((fam === 'pro' || fam === 'trades') && n >= 3 && n <= 4 && (WSENGINE.sections.faq.variants || {}).open) ? 'open' : 'accordion';
+    const faqTop = faq && (faq.items || []).length >= 2 ? mk('faq', { variant: faqVar(Math.min(3, faq.items.length)), title: v3Pick(V3_COPY.faqTitle), items: (faq.items || []).slice(0, 3) }) : null;
     const hasReach = !!(b.address || (b.hours || []).some((h) => h && h.open) || b.phone);
-    const visitHome = (hasReach && visit) ? mk('visit', { variant: b.address ? v3Look('visit', ['hours', 'map']) : 'hours', title: v3VisitTitle(fam, L.act, b, cat) }) : null;
+    // A business that comes to you has no place to "Visit": its location band is labelled as the service area.
+    const visitEb = (fam === 'trades' && !b.address) ? (b.city ? 'Service area' : 'Contact') : null;
+    const visitHome = (hasReach && visit) ? mk('visit', Object.assign({ variant: b.address ? v3Look('visit', ['hours', 'map']) : 'hours', title: v3VisitTitle(fam, L.act, b, cat) }, visitEb ? { eyebrow: visitEb } : {})) : null;
     const st = stats[0] || null;
     if (st) st.variant = v3Look('stats', V3_LOOKS.stats[fam]);
     const tm = team[0] || null;
     team.forEach((s) => { if (!String(s.title || '').trim()) s.title = v3Pick(V3_COPY.teamTitle); });
     if (reviews && reviews.variant !== 'google') reviews.variant = v3Look('reviews', ((reviews.items || []).length >= 3 ? ['cards', 'cards'] : []).concat(V3_LOOKS.reviews[fam]));
-    const blocks = { intro: homeIntro, menu: menu, gallery: gal, reviews: reviews, visit: visitHome, cta: cta, steps: steps, faq: faqTop, stats: st, team: tm };
+    // With a towns list the "Areas we serve" block takes the location band's place (contact details stay on Contact).
+    const blocks = { intro: homeIntro, menu: menu, gallery: gal, reviews: reviews, visit: area || visitHome, cta: cta, steps: steps, faq: faqTop, stats: st, team: tm, why: why };
     const seen = new Set();
-    v3Pick(V3_RECIPES[fam] || V3_RECIPES.pro).map((k) => blocks[k]).filter(Boolean).forEach((s) => { if (!seen.has(s)) { seen.add(s); home.push(s); } });
+    let keys = v3Pick(V3_RECIPES[fam] || V3_RECIPES.pro).slice();
+    // Trust badges carry the real numbers, so the numbers band moves to the About page.
+    if (trust) { keys = keys.filter((k) => k !== 'stats'); home.push(trust); seen.add(trust); }
+    if (why) {
+      const at = (blocks.menu && keys.indexOf('menu') > -1) ? keys.indexOf('menu') : (blocks.intro && keys.indexOf('intro') > -1) ? keys.indexOf('intro') : keys.indexOf('cta') - 1;
+      keys.splice(at + 1, 0, 'why');
+      // Keep the page readable: the generic blocks give way first.
+      (fam === 'beauty' ? ['intro', 'steps'] : ['steps', 'faq']).forEach((k) => { if (keys.filter((x) => blocks[x]).length > 7 && keys.indexOf(k) > -1) keys.splice(keys.indexOf(k), 1); });
+    }
+    keys.map((k) => blocks[k]).filter(Boolean).forEach((s) => { if (!seen.has(s)) { seen.add(s); home.push(s); } });
     // Sections the home page claimed stay off the About page so section ids stay unique.
     [[gallery, gal], [stats, st], [team, tm]].forEach((x) => { if (x[1] && home.indexOf(x[1]) > -1) x[0].splice(x[0].indexOf(x[1]), 1); });
     const hasMain = !!(products || services || prices);
@@ -885,6 +999,8 @@ function v3Pages(site, sc, isShop) {
       cta.button = b.bookLabel;
       cta.variant = v3Look('cta', V3_LOOKS.cta[fam]);
       if (cta.variant === 'split' && !hasPhoto(cta)) cta.variant = 'band';
+      // Only what the owner told us: licensed and/or insured leads the trades call to action.
+      if (fam === 'trades' && (b.licensed || b.insured) && !/licensed|insured/i.test(cta.text || '')) cta.text = (b.licensed && b.insured ? 'Licensed and insured. ' : b.licensed ? 'Fully licensed. ' : 'Fully insured. ') + (cta.text || 'Tell us about the job.');
     }
     const P = {};
     P.home = { id: 'pg-home', path: '', title: 'Home', nav: true, sections: home };
@@ -932,14 +1048,124 @@ function v3Pages(site, sc, isShop) {
     const chText = b.city ? v3FlavorPick(V3_COPY.contactHead.textCity).replace('CITY', b.city) : v3FlavorPick(V3_COPY.contactHead.textNoCity);
     contactSecs.push(mk('pagehead', { title: v3FlavorPick(V3_COPY.contactHead.title), text: chText, emoji: '' }));
     contactSecs.push(mk('contact', { showPhone: true, title: v3FlavorPick(V3_COPY.formTitle), text: v3FlavorPick(V3_COPY.formText), success: v3FlavorPick(V3_COPY.formSuccess) }));
-    if (visit && hasReach) { if (b.address) visit.variant = 'map'; visit.title = (visitHome && visitHome.title) || v3VisitTitle(fam, L.act, b, cat); contactSecs.push(visit); }
-    if (faq) contactSecs.push(faq);
+    if (visit && hasReach) { if (b.address) visit.variant = 'map'; visit.title = (visitHome && visitHome.title) || v3VisitTitle(fam, L.act, b, cat); if (visitEb) visit.eyebrow = visitEb; contactSecs.push(visit); }
+    if (faq) { faq.variant = faqVar((faq.items || []).length); contactSecs.push(faq); }
     P.contact = { id: 'pg-contact', path: 'contact', title: 'Contact', nav: true, sections: contactSecs };
 
     site.pages = (V3_PAGE_ORDER[fam] || V3_PAGE_ORDER.pro).map((k) => P[k]).filter(Boolean);
     site.sections = home.slice();
   } catch (e) {}
   return site;
+}
+
+// ── AI-written copy (Gemini) for real /create generations ──
+// One call per new site, in parallel with the photo lookups, with a hard time limit: anything slow, missing,
+// over the monthly cap or failing the checks below falls back to the template copy for that field only.
+// The AI only rewords: the business name, phone, address, prices, service names and section structure never
+// come from it. Examples (/example) stay on the template copy, so they never spend AI calls.
+const V3_AI_MODEL = 'gemini-2.5-flash';
+const V3_AI_MS = 5000;
+const V3_AI_RULES = 'You write the wording for a small local business website. Use ONLY the facts given. Never invent anything: no prices, numbers, years, durations, opening hours, staff names, awards, certifications, guarantees, warranties, "24/7", emergency or same-day availability, "free" offers, and no superlatives such as best, #1, leading, top-rated or finest. Mention licensed or insured only if the facts say true. Plain, warm and specific to this kind of business and its city; US English with natural contractions; no exclamation marks, no emoji, no markdown, no HTML. Keep every service name exactly as given. Review snippets show what customers value: you may reflect their themes but never quote them, their numbers or their names. Stay within the character limits. The draft shows the tone; make it more specific to this business, not longer. FAQ questions end with a question mark and the answers never promise specifics the facts do not give (say "Call us and we’ll explain" instead).';
+const V3_AI_SCHEMA = { type: 'OBJECT', properties: {
+  tagline: { type: 'STRING' }, intro: { type: 'STRING' }, about: { type: 'STRING' },
+  services: { type: 'ARRAY', items: { type: 'OBJECT', properties: { name: { type: 'STRING' }, text: { type: 'STRING' } }, required: ['name', 'text'] } },
+  why: { type: 'ARRAY', items: { type: 'OBJECT', properties: { title: { type: 'STRING' }, text: { type: 'STRING' } }, required: ['title', 'text'] } },
+  faq: { type: 'ARRAY', items: { type: 'OBJECT', properties: { q: { type: 'STRING' }, a: { type: 'STRING' } }, required: ['q', 'a'] } },
+  cta: { type: 'OBJECT', properties: { title: { type: 'STRING' }, text: { type: 'STRING' } }, required: ['title', 'text'] },
+}, required: ['tagline', 'intro', 'services', 'why', 'faq', 'cta', 'about'] };
+const V3_AI_CAPS = { tagline: 70, intro: 320, about: 600, svc: 140, whyT: 40, whyX: 140, q: 120, a: 240, ctaT: 40, ctaX: 140 };
+const V3_AI_BANNED = /guarantee|warrant|certif|accredit|award|#\s?1\b|number one|\bbest\b|\bfinest\b|\bgreatest\b|\bcheapest\b|\bleading\b|top.rated|world.class|unbeatable|unmatched|unrivaled|\bpremier\b|24\s?\/\s?7|round.the.clock|same.day|\bemergenc|\blowest\b|\bhighest\b|\bexperts?\b/i;
+function v3AiKeys(env) { try { if (typeof geminiKeys === 'function') return geminiKeys(env); } catch (e) {} return env && env.GEMINI_API_KEY ? String(env.GEMINI_API_KEY).split(',').map(function (k) { return k.trim(); }).filter(Boolean) : []; }
+function v3AiCap(env) { const n = parseInt(env && env.AI_MONTHLY_CAP, 10); return isNaN(n) || n < 0 ? 3000 : n; }
+// Count one call against the monthly cap (ai:count:YYYY-MM) before making it. No KV, no counter, no calls.
+async function v3AiSpend(env) {
+  if (!env || !env.KV) return false;
+  try { const k = 'ai:count:' + new Date().toISOString().slice(0, 7); const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= v3AiCap(env)) return false; await env.KV.put(k, String(n + 1), { expirationTtl: 40 * 86400 }); return true; } catch (e) { return false; }
+}
+// The facts the AI may use. Review snippets only from a linked Google listing.
+function v3AiFacts(biz, sc, types) {
+  const yrs = v3Years(biz);
+  return {
+    name: biz.name, type: biz.type, category: sc.category, family: sc.labels && sc.labels.family, city: biz.city || '', towns: biz.towns || [],
+    whatMakesUsDifferent: biz.unique || '', yearStarted: biz.founded || '', yearsInBusiness: yrs >= 1 ? yrs : '', licensed: !!biz.licensed, insured: !!biz.insured,
+    ownerTagline: biz.tagline || '', ownerAbout: biz.about || '',
+    services: (biz.services || []).filter(function (s) { return s.name; }).map(function (s) { return { name: s.name, ownerText: s.desc || '' }; }),
+    reviewSnippets: biz.googlePlaceId ? (biz.reviews || []).filter(function (r) { return r && r.quote; }).slice(0, 5).map(function (r) { return String(r.quote).replace(/\s+/g, ' ').trim().slice(0, 200); }) : [],
+    sections: types,
+  };
+}
+// One field from the AI → clean text, or '' when it breaks a rule (the template text is kept for that field).
+// Only digits that appear in the owner's own facts (and the years since the founding year) are allowed.
+function v3AiText(x, cap, ctx) {
+  const s = String(x == null ? '' : x).replace(/<[^>]*>/g, ' ').replace(/\*\*|__|[*_`#>~]|\]\([^)]*\)|[\[\]]/g, '').replace(/\s+/g, ' ').trim();
+  if (!s || s.length > cap) return '';
+  if (/!|[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/u.test(s) || V3_AI_BANNED.test(s)) return '';
+  if (/\bfree\b/i.test(s) && !/\bfree\b/i.test(ctx.text)) return '';
+  if (/licen[sc]/i.test(s) && !ctx.licensed) return '';
+  if (/\binsur/i.test(s) && !ctx.insured) return '';
+  if ((s.match(/\d+/g) || []).some(function (d) { return ctx.digits.indexOf(d) < 0; })) return '';
+  return s;
+}
+// Ask Gemini once (a second key only if the first is rate-limited). Returns the checked fields, or null when
+// there was no call (no key, cap reached) or it failed or timed out.
+async function v3AiCopy(env, facts, draft) {
+  const keys = v3AiKeys(env);
+  if (!keys.length || !(await v3AiSpend(env))) return null;
+  const t0 = Date.now();
+  const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  let timer = 0;
+  const body = JSON.stringify({
+    systemInstruction: { parts: [{ text: V3_AI_RULES }] },
+    contents: [{ role: 'user', parts: [{ text: JSON.stringify({ facts: facts, draft: draft.copy, limits: { tagline: 70, intro: 320, about: 600, serviceText: 140, whyTitle: 40, whyText: 140, faqQuestion: 120, faqAnswer: 240, ctaTitle: 40, ctaText: 140 }, counts: { why: (draft.copy.why || []).length, faq: (draft.copy.faq || []).length } }) }] }],
+    generationConfig: { responseMimeType: 'application/json', responseSchema: V3_AI_SCHEMA, temperature: 0.7, maxOutputTokens: 2048, thinkingConfig: { thinkingBudget: 0 } },
+  });
+  const call = async function () {
+    for (let i = 0; i < Math.min(2, keys.length); i++) {
+      const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + V3_AI_MODEL + ':generateContent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': keys[i] }, body: body, signal: ctrl ? ctrl.signal : undefined });
+      if (r && r.ok) return await r.json();
+      if (!r || (r.status !== 429 && r.status < 500)) return null;
+    }
+    return null;
+  };
+  // The time limit holds even if the fetch ignores the abort signal.
+  const limit = new Promise(function (res) { timer = setTimeout(function () { try { if (ctrl) ctrl.abort(); } catch (e) {} res(null); }, Math.min(V3_AI_MS, parseInt(env.AI_TIMEOUT_MS, 10) || V3_AI_MS)); });
+  let j = null;
+  try { j = await Promise.race([call().catch(function () { return null; }), limit]); } catch (e) { j = null; } finally { if (timer) clearTimeout(timer); }
+  if (!j) return null;
+  let out; try { out = JSON.parse(((((j.candidates || [])[0] || {}).content || {}).parts || []).map(function (p) { return p.text || ''; }).join('')); } catch (e) { return null; }
+  if (!out || typeof out !== 'object') return null;
+  const ctxT = JSON.stringify([facts.name, facts.type, facts.city, facts.towns, facts.whatMakesUsDifferent, facts.yearStarted, facts.ownerTagline, facts.ownerAbout, facts.services, draft.phone || '', draft.address || '', draft.prices || []]);
+  const ctx = { text: ctxT, licensed: facts.licensed, insured: facts.insured, digits: (ctxT.match(/\d+/g) || []).concat(facts.yearsInBusiness ? [String(facts.yearsInBusiness)] : []) };
+  const C = V3_AI_CAPS, T = function (x, n) { return v3AiText(x, n, ctx); };
+  const res = { ms: Date.now() - t0 };
+  ['tagline', 'intro', 'about'].forEach(function (k) { const v = T(out[k], C[k]); if (v) res[k] = v; });
+  const sv = {}; (Array.isArray(out.services) ? out.services : []).forEach(function (s) { const v = s && T(s.text, C.svc); if (v && s.name) sv[String(s.name).trim().toLowerCase()] = v; }); if (Object.keys(sv).length) res.services = sv;
+  const why = (Array.isArray(out.why) ? out.why : []).map(function (w) { const a = w && T(w.title, C.whyT), b = w && T(w.text, C.whyX); return a && b ? { title: a, text: b } : null; }).filter(Boolean); if (why.length) res.why = why;
+  const nf = (draft.copy.faq || []).length;
+  const faq = (Array.isArray(out.faq) ? out.faq : []).map(function (f) { const a = f && T(f.q, C.q), b = f && T(f.a, C.a); return a && b && /\?$/.test(a) ? { q: a, a: b } : null; }).filter(Boolean); if (nf && faq.length >= nf) res.faq = faq.slice(0, nf);
+  if (out.cta) { const a = T(out.cta.title, C.ctaT), b = T(out.cta.text, C.ctaX); if (a && b) res.cta = { title: a, text: b }; }
+  return res;
+}
+// Put the checked AI fields into the finished pages. Owner-written text, owner-answer why points, names, prices,
+// links and the section structure stay as they are. Returns the fields that came from the AI.
+function v3AiApply(site, ai, biz, starterFaq) {
+  const used = [];
+  if (!ai) return used;
+  const all = (site.pages || []).flatMap(function (p) { return p.sections || []; });
+  const home = (site.pages && site.pages[0] && site.pages[0].sections) || [];
+  const about = ((site.pages || []).find(function (p) { return p.path === 'about'; }) || { sections: [] }).sections;
+  if (ai.tagline && !biz.tagline) { const h = home.find(function (s) { return s.type === 'hero'; }); if (h) { h.tagline = ai.tagline; used.push('tagline'); } }
+  if (ai.intro) { const i = home.find(function (s) { return s.type === 'intro'; }); if (i && !(biz.about && i.text === biz.about)) { i.text = ai.intro; used.push('intro'); } }
+  if (ai.about && !biz.about) { const i = about.find(function (s) { return s.type === 'intro'; }); if (i) { const u = biz.unique ? v3Sentence(biz.unique) : ''; i.text = u && ai.about.indexOf(biz.unique) < 0 ? u + ' ' + ai.about : ai.about; used.push('about'); } }
+  if (ai.services) {
+    let n = 0; const own = {}; (biz.services || []).forEach(function (s) { if (s.desc) own[String(s.name).trim().toLowerCase()] = 1; });
+    all.filter(function (s) { return s.type === 'services'; }).forEach(function (s) { (s.items || []).forEach(function (it) { const k = String(it.name || '').trim().toLowerCase(); if (ai.services[k] && !own[k]) { it.text = ai.services[k]; n++; } }); });
+    if (n) used.push('services');
+  }
+  if (ai.why) { const w = all.find(function (s) { return s.type === 'why'; }); if (w) { let i = 0; (w.items || []).forEach(function (it) { if (it.source === 'starter' && ai.why[i]) { it.title = ai.why[i].title; it.text = ai.why[i].text; it.source = 'ai'; i++; } }); if (i) used.push('why'); } }
+  if (ai.faq && starterFaq) { let n = 0; all.filter(function (s) { return s.type === 'faq'; }).forEach(function (f) { f.items = ai.faq.slice(0, Math.max((f.items || []).length, 1)).map(function (x) { return { q: x.q, a: x.a }; }); n++; }); if (n) used.push('faq'); }
+  if (ai.cta) { const c = home.find(function (s) { return s.type === 'cta'; }); if (c) { const pre = (String(c.text || '').match(/^(Licensed and insured\. |Fully licensed\. |Fully insured\. )/) || [''])[0]; c.title = ai.cta.title; c.text = pre + ai.cta.text; used.push('cta'); } }
+  return used;
 }
 
 async function doCreate(request, env) {
@@ -951,12 +1177,12 @@ async function doCreate(request, env) {
   let body; try { body = await request.json(); } catch { return fail('Invalid request'); }
   const _t0 = Date.now();
   try {
-    const r = await buildV3Site(body || {}, env);
+    const r = await buildV3Site(body || {}, env, { ai: true });
     const site = r.site, siteId = r.siteId, html = r.html;
     const formKey = await siteKey(siteId, env);
     try { if (env.KV) await env.KV.put('site:' + siteId, JSON.stringify(site), { expirationTtl: 60 * 60 * 24 * 30 }); } catch (e) {}
     try { if (env.KV) { const _sgC = await env.KV.get('stat:sitesgrown'); if (_sgC !== null) await env.KV.put('stat:sitesgrown', String((parseInt(_sgC, 10) || 0) + 1)); } } catch (e) {}
-    try { const _s = await getSession(request, env); const _ty = String(site.biz.type || ''); if (env.UNSPLASH_ACCESS_KEY) wsCount(env, 'unsplash_gen', wsHour(), request); await logEvent(request, env, 'generate', { site: siteId, email: _s && _s.email, bizType: _ty, category: v3StarterBase(_ty).category || 'generic', props: { look: /^(light|dark|colorful)$/.test(String(body.look || '')) ? String(body.look) : 'default', google: site.biz.googlePlaceId ? 1 : 0, shop: r.isShop ? 1 : 0, ms: Date.now() - _t0 } }); } catch (e) {}
+    try { const _s = await getSession(request, env); const _ty = String(site.biz.type || ''); if (env.UNSPLASH_ACCESS_KEY) wsCount(env, 'unsplash_gen', wsHour(), request); await logEvent(request, env, 'generate', { site: siteId, email: _s && _s.email, bizType: _ty, category: v3StarterBase(_ty).category || 'generic', props: { look: /^(light|dark|colorful)$/.test(String(body.look || '')) ? String(body.look) : 'default', google: site.biz.googlePlaceId ? 1 : 0, shop: r.isShop ? 1 : 0, ms: Date.now() - _t0, ai: site.copySource === 'ai' ? 1 : 0, aiMs: r.aiMs || 0 } }); } catch (e) {}
     return succeed({ html: html, siteId: siteId, formKey: formKey, site: site, inboxUrl: 'https://websprout.app/inbox?site=' + siteId + '&key=' + formKey });
   } catch (e) {
     try { await logEvent(request, env, 'generate_fail', { bizType: String((body && body.type) || ''), props: { err: String((e && e.message) || e).slice(0, 120), ms: Date.now() - _t0 } }); } catch (e2) {}
@@ -1010,7 +1236,7 @@ function parseServicesText(txt) {
   return out.slice(0, 12);
 }
 
-async function buildV3Site(d, env) {
+async function buildV3Site(d, env, opts) {
   if (d && !Array.isArray(d.services) && typeof d.servicesText === 'string' && d.servicesText.trim()) {
     d = Object.assign({}, d, { services: parseServicesText(d.servicesText) });
   }
@@ -1026,8 +1252,12 @@ async function buildV3Site(d, env) {
       phone: (d.phone || '').toString().slice(0, 40),
       instagram: (d.instagram || '').toString().replace(/[^a-zA-Z0-9_.]/g, '').slice(0, 40),
       bookingUrl: /^https:\/\//.test(String(d.bookingUrl || '')) ? String(d.bookingUrl).slice(0, 300) : '',
-      founded: (d.founded || '').toString().slice(0, 8),
+      founded: v3Year(d.founded),
       about: (d.about || '').toString().slice(0, 400),
+      unique: v3Clean(d.unique, 200),
+      licensed: d.licensed === true,
+      insured: d.insured === true,
+      towns: v3Towns(d.towns),
       googlePlaceId: /^[A-Za-z0-9_-]{10,300}$/.test(String(d.googlePlaceId || '')) ? String(d.googlePlaceId) : '',
       googleName: (d.googleName || '').toString().slice(0, 80),
       bookLabel: isShop ? 'Shop now' : 'Get in touch',
@@ -1040,7 +1270,7 @@ async function buildV3Site(d, env) {
     };
     // One seed per business: the same name, type and city always get the same copy and layout.
     const seed = String(d.seed || [biz.name, biz.type, biz.city].join('|')).toLowerCase().slice(0, 300);
-    const sc = v3WithSeed(seed + '|copy', function () { return v3Starter(biz.type); });
+    const sc = v3WithSeed(seed + '|copy', function () { return v3Starter(biz.type, biz); });
     if (isShop) sc.labels = v3Labels(sc.category, biz.type, true);
     biz.bookLabel = sc.labels.bookLabel; biz.bookShort = sc.labels.bookShort;
     // Look picked on the first step: Light, Dark or Colorful (otherwise the category default).
@@ -1060,7 +1290,9 @@ async function buildV3Site(d, env) {
     const add = function (type, ov) { site.sections.push(Object.assign({ id: type + '-' + WSENGINE.uid(), type: type }, WSENGINE.sections[type].create(site), ov || {})); };
     // Fill a finished-feeling site from deterministic, type-aware starter content. The owner edits any of it.
     const heroTag = biz.tagline || sc.tagline || '';
-    const aboutText = biz.about || sc.about || '';
+    // The starter story opens with what the owner says makes them different, and ends with the year they started
+    // and the towns they serve, when they told us. An About the owner wrote is used exactly as written.
+    const aboutText = biz.about || [v3Sentence(biz.unique), sc.about || '', biz.founded ? (biz.city && !v3ServeLine(biz) ? 'Serving ' + biz.city + ' since ' + biz.founded + '.' : 'In business since ' + biz.founded + '.') : '', v3ServeLine(biz)].filter(Boolean).join(' ');
     if (d.announce) add('announce', { text: String(d.announce).slice(0, 120), emoji: knownType ? '1f389' : '' });
     add('hero', { variant: 'photo', title: '', tagline: heroTag, status: false, emoji: '' });
     if (aboutText) add('intro', { variant: 'center', text: aboutText, emoji: '' });
@@ -1096,11 +1328,15 @@ async function buildV3Site(d, env) {
       if (biz.googlePlaceId && _rt) _st.push({ label: 'Google rating', source: 'google_rating', value: _rt.toFixed(1), suffix: '★', emoji: '' });
       if (biz.googlePlaceId && _rt && _ct) _st.push({ label: 'Google reviews', source: 'google_reviews', value: String(_ct), suffix: '', emoji: '' });
       if (_st.length >= 2) add('stats', { variant: 'row', title: '', items: _st });
+      // A linked listing's real rating rides on biz, where the trust badges read it.
+      if (biz.googlePlaceId && _rt) { biz.googleRating = _rt; if (_ct) biz.googleReviews = _ct; }
     }
     // The team, only when the owner listed real people.
     if (has(biz.team) && biz.team.some(function (x) { return x.name; })) add('team', { variant: 'rows', title: '', items: biz.team.filter(function (x) { return x.name; }).map(function (x) { return { name: x.name, text: x.specialty }; }) });
-    if (has(d.faq)) add('faq', { variant: 'accordion', items: d.faq.slice(0, 10).map(function (q) { return { q: (q.q || '').toString().slice(0, 160), a: (q.a || '').toString().slice(0, 400) }; }) });
-    else if (sc.faq && sc.faq.length) add('faq', { variant: 'accordion', items: sc.faq.map(function (x) { return { q: x[0], a: x[1] }; }) });
+    // Every question has a real answer: owner questions without one are left out, starter answers fit the owner's facts.
+    const _ofaq = has(d.faq) ? d.faq.slice(0, 10).map(function (q) { q = q || {}; return { q: (q.q || '').toString().trim().slice(0, 160), a: (q.a || '').toString().trim().slice(0, 400) }; }).filter(function (q) { return q.q && q.a; }) : [];
+    if (_ofaq.length) add('faq', { variant: 'accordion', items: _ofaq });
+    else if (sc.faq && sc.faq.length) add('faq', { variant: 'accordion', items: sc.faq.map(function (x) { return { q: x[0], a: v3FaqFit(x[0], x[1], biz) }; }) });
     add('cta', isShop
       ? { variant: 'band', title: 'Shop the collection.', text: 'Browse everything and order online.', button: biz.bookLabel, emoji: '' }
       : { variant: 'band', title: sc.ctaTitle || "Let's get started.", text: sc.ctaText || "Reach out and we'll take it from here.", button: biz.bookLabel, emoji: '' });
@@ -1109,6 +1345,10 @@ async function buildV3Site(d, env) {
     // listing supplies the business's own photos for the hero and gallery; Unsplash (searched by type and
     // services) fills any slot Google can't. Both lookups run at once, so linking Google adds no wait.
     // Past the monthly Google cap, Google is skipped entirely. Unsplash fetches spares as each Google slot's backup.
+    // AI wording, asked once and in parallel with the photo lookups (real /create generations only).
+    const _starterFaq = !_ofaq.length;
+    const _aiDraft = { phone: biz.phone, address: biz.address, prices: biz.services.map(function (s) { return s.price; }).filter(Boolean), copy: { tagline: heroTag, intro: aboutText, services: (site.sections.find(function (s) { return s.type === 'services'; }) || { items: [] }).items.map(function (it) { return { name: it.name, text: it.text }; }), why: v3WithSeed(seed + '|whydraft', function () { return v3WhyItems(biz, sc.category, sc.labels.family, false); }).filter(function (w) { return w.source === 'starter'; }).map(function (w) { return { title: w.title, text: w.text }; }), faq: _starterFaq ? (sc.faq || []).map(function (x) { return { q: x[0], a: v3FaqFit(x[0], x[1], biz) }; }) : [], cta: { title: sc.ctaTitle || '', text: sc.ctaText || '' } } };
+    const _aiP = (opts && opts.ai) ? v3AiCopy(env, v3AiFacts(biz, sc, site.sections.map(function (s) { return s.type; })), _aiDraft).catch(function () { return null; }) : Promise.resolve(null);
     try {
       const _gOn = !!biz.googlePlaceId && (await gphotoLeft(env)) > 0;
       const _found = await Promise.all([
@@ -1151,7 +1391,12 @@ async function buildV3Site(d, env) {
     site.siteId = siteId;
     // Build a real multi-page site (Home + Shop/Menu/Services + About + Contact) with cross-page nav.
     v3WithSeed(seed + '|layout', function () { v3Pages(site, sc, isShop); });
+    const _ai = await _aiP;
+    const _aiUsed = v3AiApply(site, _ai, biz, _starterFaq);
+    site.copySource = _aiUsed.length ? 'ai' : 'template';
+    if (_aiUsed.length) site.copyFields = _aiUsed;
+    try { site.logoMark = v3WithSeed(seed + '|mark', function () { return v3LogoMark(sc.labels.family, sc.category, biz.type); }); } catch (e) {}
     const html = WSENGINE.renderSite(site, { mode: 'live' });
-    return { site: site, siteId: siteId, html: html, isShop: isShop };
+    return { site: site, siteId: siteId, html: html, isShop: isShop, aiMs: (_ai && _ai.ms) || 0 };
   }
 }

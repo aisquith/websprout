@@ -60,6 +60,21 @@ const WSENGINE = (function(){
   };
   // Business name with a sensible fallback (title-cased slug, then the business type).
   WS.bizName = (site) => { const b = (site && site.biz) || {}; return WS.str(b.name) || WS.titleCase(WS.str(site && site.slug)) || WS.str(b.type) || 'Welcome'; };
+  // Automatic logo (no uploaded logo): site.logoMark = { style: 'wordmark'|'icon'|'monogram'|'badge', icon: '<line icon>' }.
+  WS.logoStyles = [['wordmark', 'Wordmark'], ['icon', 'Icon + name'], ['monogram', 'Monogram'], ['badge', 'Badge']];
+  WS.logoMarkOf = (site) => {
+    const m = (site && site.logoMark && typeof site.logoMark === 'object') ? site.logoMark : {};
+    const style = /^(wordmark|icon|monogram|badge)$/.test(m.style) ? m.style : 'wordmark';
+    const t = String((site && site.biz && site.biz.type) || '').toLowerCase();
+    const ty = WS.ICON_TYPES ? WS.ICON_TYPES.find((x) => x[0].test(t)) : null;
+    return { style, icon: WS.ICONS && WS.ICONS[m.icon] ? m.icon : (ty ? ty[1] : 'sparkle') };
+  };
+  // Initials for a monogram: first letters of the first two real words ("Hartley & Reed" -> HR, "Bloom" -> B).
+  WS.initials = (name = '') => {
+    const w = String(name).replace(/[^\p{L}\p{N}\s'-]/gu, ' ').split(/\s+/).filter((x) => x && !/^(the|and|of|a|an|co|llc|inc|ltd)$/i.test(x));
+    const ch = (x) => Array.from(x)[0] || '';
+    return (w.length > 1 ? ch(w[0]) + ch(w[1]) : ch(w[0] || String(name).trim() || 'W')).toUpperCase();
+  };
   // The pages a site really renders: site.pages when present (even with one page), else null (legacy site.sections).
   WS.pagesOf = (site) => (site && Array.isArray(site.pages) && site.pages.length ? site.pages : null);
   // Sections of the one-page layout (pages[0] when pages exist, else the legacy flat list).
@@ -257,6 +272,8 @@ const WSENGINE = (function(){
     "app-window": "<rect x='2' y='4' width='20' height='16' rx='2'/><path d='M10 4v4'/><path d='M2 8h20'/><path d='M6 4v4'/>",
     "baby": "<path d='M9 12h.01'/><path d='M15 12h.01'/><path d='M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5'/><path d='M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1'/>",
     "backpack": "<path d='M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z'/><path d='M8 10h8'/><path d='M8 18h8'/><path d='M8 22v-6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v6'/><path d='M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2'/>",
+    "award": "<path d='m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526'/><circle cx='12' cy='8' r='6'/>",
+    "badge-check": "<path d='M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z'/><path d='m9 12 2 2 4-4'/>",
     "bath": "<path d='M10 4 8 6'/><path d='M17 19v2'/><path d='M2 12h20'/><path d='M7 19v2'/><path d='M9 5 7.621 3.621A2.121 2.121 0 0 0 4 5v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5'/>",
     "beef": "<circle cx='12.5' cy='8.5' r='2.5'/><path d='M12.5 2a6.5 6.5 0 0 0-6.22 4.6c-1.1 3.13-.78 3.9-3.18 6.08A3 3 0 0 0 5 18c4 0 8.4-1.8 11.4-4.3A6.5 6.5 0 0 0 12.5 2Z'/><path d='m18.5 6 2.19 4.5a6.48 6.48 0 0 1 .31 2 6.49 6.49 0 0 1-2.6 5.2C15.4 20.2 11 22 7 22a3 3 0 0 1-2.68-1.66L2.4 16.5'/>",
     "bike": "<circle cx='18.5' cy='17.5' r='3.5'/><circle cx='5.5' cy='17.5' r='3.5'/><circle cx='15' cy='5' r='1'/><path d='M12 17.5V14l-3-3 4-3 2 3h2'/>",
@@ -951,7 +968,7 @@ const WSENGINE = (function(){
   R('faq', {
     label: 'Questions',
     blurb: 'Answer what people always ask.',
-    variants: { accordion: 'Expandable list' },
+    variants: { accordion: 'Expandable list', open: 'All answers shown' },
     fields: [
       { key: 'title', label: 'Title', type: 'text' },
       { key: 'items', label: 'Questions', type: 'list', add: 'Add a question', item: [{ key: 'q', label: 'Question', type: 'text' }, { key: 'a', label: 'Answer', type: 'textarea' }] },
@@ -967,6 +984,7 @@ const WSENGINE = (function(){
     render: (s) => {
       const list = WS.filled(s.items, ['q']).map((x) => x.it);
       if (!list.length) return '';
+      if (s.variant === 'open') return `<section class="faq faq-open ${s.tone || 'on-base'}" id="faq"><div class="wrap faq-grid">${head(s, 'Questions', 'FAQ')}<div class="qa qa-open">${list.map((it) => `<div class="qa-i"><h3>${e(it.q)}</h3>${WS.str(it.a) ? `<p>${lines(it.a)}</p>` : ''}</div>`).join('')}</div></div></section>`;
       return `<section class="faq ${s.tone || 'on-base'}" id="faq"><div class="wrap faq-grid">${head(s, 'Questions', 'FAQ')}<div class="qa">${list.map((it) => `<details><summary>${e(it.q)}</summary>${WS.str(it.a) ? `<p>${lines(it.a)}</p>` : ''}</details>`).join('')}</div></div></section>`;
     },
   });
@@ -1028,12 +1046,123 @@ const WSENGINE = (function(){
           : `<div class="vm-ph" data-map="${e(WS.mapEmbed(addr))}" data-map-title="Map to ${e(c.name)}"><span class="vm-pin">${WS.iconSvg('map-pin')}</span><p class="vm-a">${e(addr)}</p><button type="button" class="btn btn-ink vm-load">Show map</button><p class="vm-n">Loads Google Maps</p></div>`;
         return `<section class="visit visit-geo on-base" id="visit"><div class="wrap visit-grid">${info}${hours || reachT}</div><div class="v-map">${map}</div></div></section>`;
       }
-      return `<section class="visit on-base" id="visit"><div class="wrap visit-grid">${info}</div>${hours || reachT}</div></section>`;
+      if (!hours) return `<section class="visit visit-solo on-base" id="visit"><div class="wrap"><div class="v-info v-solo"><div class="sh">${eyebrow(s, 'Contact', title)}<h2 class="h2">${e(title)}</h2></div>${reachT}${acts ? `<div class="actions">${acts}</div>` : ''}</div></div></section>`;
+      return `<section class="visit on-base" id="visit"><div class="wrap visit-grid">${info}</div>${hours}</div></section>`;
+    },
+  });
+
+  // ---------- Trust, why us, service area (built only from the owner's real answers) ----------
+  // Towns the business serves: an array or a comma / newline separated string -> up to 12 tidy, de-duplicated names.
+  WS.townList = (v) => {
+    const raw = Array.isArray(v) ? v : String(v == null ? '' : v).split(/[,;\n]+/);
+    const seen = {}, out = [];
+    raw.forEach((x) => { const t = WS.str(x).replace(/\s+/g, ' ').replace(/^(and|&)\s+/i, '').slice(0, 40).trim(); const k = t.toLowerCase(); if (t && !seen[k] && out.length < 12) { seen[k] = 1; out.push(t); } });
+    return out;
+  };
+  // A section's own towns when the owner typed some there, else the ones from setup (biz.towns).
+  const townsOf = (s, c) => { const own = WS.townList(s && s.towns); return own.length ? own : WS.townList(c.biz && c.biz.towns); };
+  // The founding year as a number when it is a real past year (else 0).
+  WS.foundedYear = (v) => { const s = WS.str(v), y = parseInt(s, 10), now = new Date().getFullYear(); return /^\d{4}$/.test(s) && y >= 1800 && y <= now ? y : 0; };
+  // Google rating + review count: biz.googleRating / biz.googleReviews, else a Numbers band's Google items.
+  WS.googleScore = (site) => {
+    const b = (site && site.biz) || {};
+    let r = parseFloat(b.googleRating), n = parseInt(b.googleReviews, 10);
+    if (!(r >= 1 && r <= 5) && b.googlePlaceId && WS.allSections) WS.allSections(site).forEach((s) => { if (s.type === 'stats') (s.items || []).forEach((it) => { if (it && it.source === 'google_rating' && !(r >= 1 && r <= 5)) r = parseFloat(it.value); if (it && it.source === 'google_reviews' && !(n > 0)) n = parseInt(String(it.value).replace(/,/g, ''), 10); }); });
+    return r >= 1 && r <= 5 ? { rating: Math.round(r * 10) / 10, count: n > 0 ? n : 0 } : null;
+  };
+  // Trust badges, only from real data. A section toggle (true/false) overrides the setup answer.
+  WS.trustBadges = (site, sec) => {
+    const b = (site && site.biz) || {}, s = sec || {}, out = [];
+    const yes = (k) => (typeof s[k] === 'boolean' ? s[k] : b[k] === true);
+    if (yes('licensed')) out.push({ k: 'licensed', icon: 'shield-check', label: 'Licensed', sub: 'Qualified pros' });
+    if (yes('insured')) out.push({ k: 'insured', icon: 'badge-check', label: 'Insured', sub: 'For your peace of mind' });
+    const y = WS.foundedYear(WS.str(s.founded) || b.founded), yrs = y ? new Date().getFullYear() - y : 0;
+    if (y) out.push({ k: 'founded', icon: 'calendar', label: 'Since ' + y, sub: yrs >= 2 ? yrs + ' years in business' : 'Established', yrs: yrs >= 2 ? y : 0 });
+    const g = s.showRating === false ? null : WS.googleScore(site);
+    if (g) out.push({ k: 'rating', icon: 'star', label: g.rating.toFixed(1) + ' on Google', sub: g.count ? g.count.toLocaleString('en-US') + ' review' + (g.count === 1 ? '' : 's') : 'Google rating' });
+    const t = s.showArea === false ? [] : townsOf(s, { biz: b });
+    if (t.length) out.push({ k: 'area', icon: 'map-pin', label: 'Serving ' + t[0], sub: t.length > 1 ? '& ' + (t.length - 1) + ' nearby town' + (t.length > 2 ? 's' : '') : '& nearby areas' });
+    return out;
+  };
+  const yrsSpan = (x) => (x.yrs ? `<span data-yrs="${x.yrs}">${new Date().getFullYear() - x.yrs}</span> years in business` : e(x.sub));
+  R('trust', {
+    label: 'Trust badges',
+    blurb: 'Licensed, insured, years in business, your Google rating and where you work, as a slim band.',
+    variants: { strip: 'Slim row', cards: 'Cards' },
+    fields: [
+      { key: 'title', label: 'Title (cards only, optional)', type: 'text', only: ['cards'] },
+      { key: 'licensed', label: 'Show "Licensed"', type: 'toggle', fallback: (site) => !!(site && site.biz && site.biz.licensed === true) },
+      { key: 'insured', label: 'Show "Insured"', type: 'toggle', fallback: (site) => !!(site && site.biz && site.biz.insured === true) },
+      { key: 'founded', label: 'Year you started', type: 'text', hint: 'e.g. 2008', fallback: (site) => WS.str(site && site.biz && site.biz.founded) },
+      { key: 'showRating', label: 'Show your Google rating (when linked)', type: 'toggle', fallback: () => true },
+      { key: 'showArea', label: 'Show the towns you serve', type: 'toggle', fallback: () => true },
+    ],
+    create: () => ({ variant: 'strip', title: '' }),
+    render: (s, c) => {
+      const list = WS.trustBadges(c.site, s);
+      if (list.length < 2) return '';
+      const v = s.variant === 'cards' ? 'cards' : 'strip';
+      const li = list.map((x) => `<li class="tb-${x.k}"><span class="tb-ic">${WS.iconSvg(x.icon)}</span><span class="tb-t"><b>${e(x.label)}</b><small>${yrsSpan(x)}</small></span></li>`).join('');
+      if (v === 'cards') return `<section class="trust trust-cards on-base" id="trust"><div class="wrap">${WS.str(s.title) ? head(s, '', 'Why trust us') : ''}<ul class="tb-cards tb-n${list.length}" aria-label="Why you can trust us">${li}</ul></div></section>`;
+      return `<section class="trust trust-strip on-base" id="trust"><div class="wrap"><ul class="tb-row tb-n${list.length}" aria-label="Why you can trust us">${li}</ul></div></section>`;
+    },
+  });
+
+  R('why', {
+    label: 'Why choose us',
+    blurb: 'Three or four short reasons people pick you, each with an icon.',
+    variants: { grid: 'Points in a row', split: 'Points beside a photo' },
+    fields: [
+      { key: 'title', label: 'Title', type: 'text' },
+      { key: 'items', label: 'Reasons', type: 'list', add: 'Add a reason', item: [{ key: 'icon', label: 'Icon', type: 'select', options: () => [['', 'Automatic']].concat(WS.iconNames.map((n) => [n, WS.iconLabel(n)])) }, { key: 'title', label: 'Reason', type: 'text' }, { key: 'text', label: 'One line about it', type: 'textarea' }] },
+    ],
+    create: (site) => {
+      const b = (site && site.biz) || {}, it = [];
+      if (WS.str(b.unique)) it.push({ icon: 'sparkles', title: 'What sets us apart', text: WS.str(b.unique).slice(0, 200) });
+      if (b.licensed === true || b.insured === true) it.push({ icon: 'shield-check', title: b.licensed === true && b.insured === true ? 'Licensed and insured' : b.licensed === true ? 'Fully licensed' : 'Fully insured', text: 'Work done properly, with the paperwork to back it up.' });
+      if (WS.foundedYear(b.founded)) it.push({ icon: 'calendar', title: 'Here since ' + WS.foundedYear(b.founded), text: 'Years of experience, and neighbours who keep coming back.' });
+      [['message-circle', 'Straight answers', 'Clear prices and honest advice, before any work starts.'], ['clock', 'On time', 'We turn up when we say we will and keep you posted.'], ['thumbs-up', 'Done right', 'We are not finished until you are happy with it.']].forEach((x) => { if (it.length < 3) it.push({ icon: x[0], title: x[1], text: x[2] }); });
+      return { variant: 'grid', title: 'Why people choose us', items: it };
+    },
+    render: (s, c) => {
+      const list = WS.filled(s.items, ['title', 'text']).map((x) => x.it).slice(0, 4);
+      if (!list.length) return '';
+      const ic = (it) => `<span class="ic">${WS.iconSvg(WS.ICONS[it.icon] ? it.icon : WS.iconFor({ name: it.title }, c.biz && c.biz.type))}</span>`;
+      const pts = list.map((it) => `<li>${ic(it)}<div>${WS.str(it.title) ? `<h3>${e(it.title)}</h3>` : ''}${WS.str(it.text) ? `<p>${lines(it.text)}</p>` : ''}</div></li>`).join('');
+      const hd = head(s, 'Why people choose us', 'Why us');
+      if (s.variant === 'split') {
+        const pic = c.photo('photo') || c.mode === 'edit';
+        return `<section class="why why-split${pic ? '' : ' why-nopic'} on-base" id="why"><div class="wrap wy-grid">${pic ? c.slot('photo', { hint: 'You at work, or a finished job', cls: 'wy-img' }) : `<div class="wy-side">${hd}</div>`}<div class="wy-body">${pic ? hd : ''}<ul class="wy-list">${pts}</ul></div></div></section>`;
+      }
+      return `<section class="why why-grid on-base" id="why"><div class="wrap">${hd}<ul class="wy-cols wy-n${list.length}">${pts}</ul></div></section>`;
+    },
+  });
+
+  R('area', {
+    label: 'Areas we serve',
+    blurb: 'The towns you cover, with a call and a quote button.',
+    variants: { pills: 'Town tags', list: 'Town list in columns' },
+    fields: [
+      { key: 'title', label: 'Title', type: 'text', hint: 'Leave empty for "Areas we serve"' },
+      { key: 'towns', label: 'Towns you serve (one per line or commas)', type: 'textarea', fallback: (site) => WS.townList(site && site.biz && site.biz.towns).join(', ') },
+      { key: 'text', label: 'Note', type: 'textarea' },
+    ],
+    create: (site) => ({ variant: 'pills', title: '', towns: '', text: 'Not sure if we cover you? Give us a call and we will let you know.' }),
+    render: (s, c) => {
+      const towns = townsOf(s, c);
+      if (!towns.length) return '';
+      const t = WS.str(s.title) || 'Areas we serve';
+      const note = WS.str(s.text) || 'Not sure if we cover you? Give us a call and we will let you know.';
+      const tel = WS.str(c.biz.phone).replace(/[^\d+]/g, '').length >= 7 ? `<a class="btn${c.book && !/^tel:/.test(c.book) ? ' ghost' : ''}" href="${WS.tel(c.biz.phone)}">${WS.iconSvg('phone')}Call ${e(c.biz.phone)}</a>` : '';
+      const quote = c.book && !/^tel:/.test(c.book) ? `<a class="btn" href="${c.book}">${e(c.biz.bookLabel || 'Get a quote')}</a>` : '';
+      const v = s.variant === 'list' ? 'list' : 'pills';
+      const items = towns.map((x) => `<li>${WS.iconSvg('map-pin')}<span>${e(x)}</span></li>`).join('') + `<li class="ar-more"><span>and nearby</span></li>`;
+      return `<section class="area area-${v} on-base" id="area"><div class="wrap ar-grid"><div class="ar-copy"><div class="sh">${eyebrow(s, 'Service area', t)}<h2 class="h2">${e(t)}</h2></div><p class="ar-note">${lines(note)}</p>${quote || tel ? `<div class="actions">${quote}${tel}</div>` : ''}</div><ul class="ar-towns" aria-label="Towns we serve">${items}</ul></div></section>`;
     },
   });
 
   // Order the "Add section" library is shown in.
-  WS.sectionOrder = ['pagehead', 'hero', 'announce', 'intro', 'stats', 'services', 'steps', 'prices', 'plans', 'embed', 'payments', 'events', 'gallery', 'beforeafter', 'team', 'reviews', 'faq', 'booking', 'servicearea', 'cta', 'contact', 'visit'];
+  WS.sectionOrder = ['pagehead', 'hero', 'announce', 'intro', 'stats', 'services', 'steps', 'prices', 'plans', 'embed', 'payments', 'events', 'gallery', 'beforeafter', 'team', 'reviews', 'faq', 'trust', 'why', 'area', 'booking', 'servicearea', 'cta', 'contact', 'visit'];
 })(globalThis.WS = globalThis.WS || {});
 
 // Shop / products section for ecommerce sites: a grid of purchasable items + a cart drawer.
@@ -1881,6 +2010,117 @@ main>.on-base:not(.hero-photo):not(.pagehead)+.on-base:not(.hero):not(.pagehead)
 })(globalThis.WS = globalThis.WS || {});
 
 // Page composer: site JSON -> complete HTML document. mode 'live' (published) or 'edit' (inside the editor preview).
+// Automatic logo, header-over-photo contrast, trust badges, why us, service area, open FAQ, one-column visit.
+(function (WS) {
+  WS.styleCss += `
+/* automatic logo: wordmark in the heading font, with an optional icon, monogram or badge */
+.mark.mk{display:flex;align-items:center;gap:12px;justify-self:start;max-width:100%;overflow:visible;-webkit-line-clamp:unset}
+.mk-name{min-width:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;text-wrap:balance;padding-block:.06em}
+.mk-sym{flex:none;display:inline-grid;place-items:center;line-height:1}
+.mk-ico{width:1.08em;height:1.08em;color:var(--accent-ink,var(--accent))}
+.mk-ico .ico{stroke-width:1.9}
+.mk-badge,.mk-mono{width:38px;height:38px;border-radius:clamp(6px,var(--btn-radius,8px),19px);background:var(--accent);color:var(--accent-text);transition:width .35s,height .35s}
+.mk-badge .ico{width:21px;height:21px;stroke-width:2}
+.mk-mono{font-family:var(--display);font-size:17px;font-weight:var(--mark-weight,700);letter-spacing:.02em;text-transform:uppercase;font-style:normal}
+.mk-mono.mk-2{font-size:15px;letter-spacing:.03em}
+.wst-bold .mk-mono{font-size:20px}.wst-bold .mk-mono.mk-2{font-size:18px}
+.wsr-sharp .mk-badge,.wsr-sharp .mk-mono{border-radius:0}.wsr-round .mk-badge,.wsr-round .mk-mono{border-radius:50%}
+.top.solid .mk-badge,.top.solid .mk-mono{width:34px;height:34px}
+.top.over:not(.solid) .mk-ico{color:inherit}
+.top.over:not(.solid) .mk-badge,.top.over:not(.solid) .mk-mono{box-shadow:0 4px 14px rgba(0,0,0,.28)}
+.foot-brand b.mk{display:flex;align-items:center;gap:12px;text-transform:var(--h-transform,none)}
+.why .h2,.area .h2{text-wrap:balance}
+.foot .mk-ico{color:var(--foot-ink)}
+.foot .mk-badge,.foot .mk-mono{width:34px;height:34px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
+.foot .mk-mono{font-size:14px}.foot .mk-badge .ico{width:19px;height:19px}
+/* header over a photo: a firmer scrim and a frosted button, so it reads on light and dark photos alike */
+.top.over:not(.solid)::before{inset:0 0 -48px;background:linear-gradient(180deg,rgba(0,0,0,.62),rgba(0,0,0,.36) 55%,rgba(0,0,0,0))}
+.top.over:not(.solid) nav a,.top.over:not(.solid) .navtoggle{text-shadow:0 1px 10px rgba(0,0,0,.45)}
+.top.over:not(.solid) .pill{background:rgba(12,12,14,.4);-webkit-backdrop-filter:blur(10px) saturate(1.2);backdrop-filter:blur(10px) saturate(1.2);border-color:rgba(255,255,255,.78)}
+.top.over:not(.solid) .pill:hover{background:#fff;color:#111}
+/* trust badges */
+.trust-strip{padding:clamp(22px,3vw,30px) 0!important;border-bottom:1px solid var(--hair)}
+.tb-row{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:14px 0}
+.tb-row li{display:flex;align-items:center;gap:12px;padding:2px clamp(18px,2.6vw,36px);border-left:1px solid var(--hair);min-width:0}
+.tb-row li:first-child{border-left:0}
+.tb-ic{flex:none;width:40px;height:40px;display:grid;place-items:center;border-radius:50%;background:color-mix(in srgb,var(--ink),transparent 90%);color:var(--ink)}
+.tb-ic .ico{width:20px;height:20px}
+.tb-t{display:flex;flex-direction:column;min-width:0}
+.tb-t b{font:600 15px/1.25 var(--body);letter-spacing:-.005em}
+.tb-t small{font-size:13px;line-height:1.35;color:color-mix(in srgb,var(--fg),transparent 36%)}
+.trust-cards{padding:var(--sp-s) 0}
+.tb-cards{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+.tb-cards li{display:flex;align-items:center;gap:16px;padding:24px 22px;border-radius:var(--r-card);background:color-mix(in srgb,var(--fg),transparent 95%);border:1px solid color-mix(in srgb,var(--fg),transparent 89%);min-width:0}
+.tb-cards .tb-ic{width:48px;height:48px;border-radius:calc(var(--r-card) * .8 + 4px)}
+.tb-cards .tb-ic .ico{width:23px;height:23px}
+.tb-cards .tb-t b{font-family:var(--display);font-size:21px;font-weight:var(--h-weight,700);letter-spacing:var(--h-tracking,0);text-transform:var(--h-transform,none);line-height:1.1;margin-bottom:3px}
+/* why choose us */
+.why{padding:var(--sp-m) 0}
+.wy-cols{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(28px,4vw,56px)}
+.wy-cols.wy-n4{grid-template-columns:repeat(4,minmax(0,1fr))}.wy-cols.wy-n2{grid-template-columns:repeat(2,minmax(0,1fr))}.wy-cols.wy-n1{grid-template-columns:minmax(0,640px)}
+.wy-cols li{position:relative;padding-top:28px;border-top:1px solid var(--hair);min-width:0}
+.wy-cols li::before{content:"";position:absolute;top:-1px;left:0;width:44px;height:2px;background:var(--ink)}
+.why .ic{margin:0 0 20px}
+.why h3{font-size:clamp(19px,1.6vw,22px);font-weight:600;line-height:1.2;margin:0 0 10px;letter-spacing:-.01em}
+.wst-bold .why h3{font-weight:800;letter-spacing:.01em}
+.why li p{margin:0;font-size:15px;line-height:1.6;color:color-mix(in srgb,var(--fg),transparent 28%);max-width:46ch}
+.wy-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(40px,6vw,88px);align-items:center}
+.why-nopic .wy-grid{grid-template-columns:minmax(0,4fr) minmax(0,7fr);align-items:start}
+.why-nopic .wy-side .sh{margin:0}
+.wy-img{aspect-ratio:4/5;border-radius:var(--r-img);overflow:hidden;background:var(--surface)}
+.wy-img img{width:100%;height:100%;object-fit:cover}
+.wy-list{list-style:none;margin:0;padding:0}
+.wy-list li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:20px;padding:24px 0;border-top:1px solid var(--hair)}
+.wy-list li:last-child{border-bottom:1px solid var(--hair)}
+.wy-list .ic{margin:0}
+/* service area */
+.area{padding:var(--sp-m) 0}
+.ar-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(40px,6vw,96px);align-items:start}
+.ar-copy .sh{margin-bottom:20px}
+.ar-note{margin:0 0 28px;max-width:40ch;font-size:17px;color:color-mix(in srgb,var(--fg),transparent 28%)}
+.ar-copy .actions{margin-top:0}
+.ar-towns{list-style:none;margin:0;padding:clamp(22px,3vw,34px);display:flex;flex-wrap:wrap;gap:10px;align-content:flex-start;border-radius:var(--r-card);background:color-mix(in srgb,var(--fg),transparent 95%);border:1px solid color-mix(in srgb,var(--fg),transparent 90%)}
+.ar-towns li{display:inline-flex;align-items:center;gap:8px;max-width:100%;padding:10px 16px 10px 13px;border-radius:999px;background:var(--bg);border:1px solid color-mix(in srgb,var(--fg),transparent 85%);font-size:15px;font-weight:500;line-height:1.2}
+.ar-towns li .ico{width:16px;height:16px;flex:none;color:var(--ink)}
+.ar-towns li span{min-width:0;overflow-wrap:anywhere}
+.ar-towns .ar-more{background:none;border-style:dashed;color:color-mix(in srgb,var(--fg),transparent 28%)}
+.area-list .ar-towns{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0 28px;padding:0;background:none;border:0;border-radius:0}
+.area-list .ar-towns li{border:0;border-bottom:1px solid var(--hair);border-radius:0;background:none;padding:15px 2px}
+.area-list .ar-towns .ar-more{border-bottom-style:dashed}
+/* FAQ with every answer showing */
+.qa-i{padding:24px 0;border-top:1px solid var(--hair)}
+.qa-i:last-child{border-bottom:1px solid var(--hair)}
+.qa-i h3{font:600 19px/1.35 var(--body);letter-spacing:-.005em;text-transform:none;margin:0 0 8px}
+.qa-i p{margin:0;max-width:62ch;color:color-mix(in srgb,var(--fg),transparent 25%)}
+/* visit with no address and no hours: one column, heading, contact rows and buttons together */
+.visit-solo .v-solo{max-width:720px}
+.visit-solo .sh{margin-bottom:28px}
+.visit-solo .reach{margin:0 0 32px}
+@media (max-width:900px){
+  .wy-cols.wy-n4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .wy-grid,.why-nopic .wy-grid,.ar-grid{grid-template-columns:1fr;gap:36px}
+  .wy-img{aspect-ratio:4/3}
+}
+@media (max-width:700px){
+  .top{gap:16px}
+  .mark.mk{gap:9px}
+  .mark.mark-long.mk:not(.mks-wordmark){font-size:clamp(15px,4.4vw,18px)}
+  .mk-badge,.mk-mono,.top.solid .mk-badge,.top.solid .mk-mono{width:32px;height:32px}
+  .mk-mono{font-size:14px}.mk-mono.mk-2{font-size:12.5px}.wst-bold .mk-mono{font-size:17px}.wst-bold .mk-mono.mk-2{font-size:15px}
+  .mk-badge .ico{width:18px;height:18px}
+  .tb-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 14px;justify-content:start}
+  .tb-row li{padding:0;border:0;gap:10px}
+  .tb-ic{width:34px;height:34px}.tb-ic .ico{width:17px;height:17px}
+  .tb-t b{font-size:14px}.tb-t small{font-size:12px}
+  .wy-cols,.wy-cols.wy-n4,.wy-cols.wy-n2{grid-template-columns:1fr;gap:0}
+  .wy-cols li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;padding:22px 0 24px}
+  .wy-cols li:last-child{border-bottom:1px solid var(--hair)}
+  .wy-cols .ic,.wy-list .ic{width:44px;height:44px;margin:0}
+  .ar-towns li{font-size:14px;padding:8px 13px 8px 11px}
+}
+`;
+})(globalThis.WS = globalThis.WS || {});
+
 (function (WS) {
   const e = WS.esc;
   const camera =
@@ -2225,12 +2465,18 @@ main>.on-base:not(.hero-photo):not(.pagehead)+.on-base:not(.hero):not(.pagehead)
     const docTitle = seoTitle || [name, sub].filter(Boolean).join(' | ');
     const rd = WS.redirectsOf(site);
     const rdScript = Object.keys(rd).length ? `<script type="application/json" id="ws-redirects">${JSON.stringify(rd).replace(/</g, '\\u003c')}</script>` : '';
+    const tt0 = (WS.typeTheme ? WS.typeTheme(site.typeset) : null) || { vars: {} };
     const logoOk = /^data:image\/(png|jpe?g|webp|gif|svg\+xml);base64,/.test(b.logo || '') || /^https:\/\//.test(b.logo || '');
     const navMany = multi && navCount > 6;
     const pageLinks = multi ? allPages.filter((pg) => pg.nav !== false).map((pg) => `<a href="#/${e(pg.path || '')}">${e(label(pg))}</a>`).join('') : '';
     const footSub = WS.str(b.tagline) ? `<p>${e(WS.str(b.tagline))}</p>` : (WS.str(b.type) ? `<p>${e(WS.str(b.type))}${WS.str(b.city) ? ' in ' + e(WS.str(b.city)) : ''}</p>` : '');
     const footReach = (WS.str(b.phone) ? `<a href="${WS.tel(b.phone)}">${e(b.phone)}</a>` : '') + (WS.str(b.email) ? `<a href="mailto:${e(WS.str(b.email))}">${e(b.email)}</a>` : '') + (WS.str(b.address) ? `<a href="${WS.map(b.address)}">${e(b.address)}</a>` : (WS.str(b.city) ? `<span>${e(b.city)}</span>` : '')) + (ig ? `<a href="https://instagram.com/${e(ig)}">Instagram</a>` : '') + (pillHref ? `<a href="${e(pillHref)}">${e(b.bookLabel || 'Get in touch')}</a>` : '');
-    const favSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="${p.accent}"/><text x="32" y="45" font-family="Inter,Arial,sans-serif" font-size="38" font-weight="700" text-anchor="middle" fill="${p.accentText}">${initial}</text></svg>`;
+    // Automatic logo: the business name in the heading font, with an optional mark (icon, monogram or badge).
+    const lm = WS.logoMarkOf(site), mono = e(WS.initials(name));
+    const sym = lm.style === 'monogram' ? `<span class="mk-sym mk-mono${mono.length > 1 ? ' mk-2' : ''}" aria-hidden="true">${mono}</span>` : lm.style === 'badge' ? `<span class="mk-sym mk-badge" aria-hidden="true">${WS.iconSvg(lm.icon)}</span>` : lm.style === 'icon' ? `<span class="mk-sym mk-ico" aria-hidden="true">${WS.iconSvg(lm.icon)}</span>` : '';
+    const markInner = `${sym}<span class="mk-name">${e(name)}</span>`;
+    const favMark = lm.style === 'icon' || lm.style === 'badge' ? `<g transform="translate(13 13) scale(1.583)" fill="none" stroke="${p.accentText}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${WS.ICONS[lm.icon].replace(/'/g, '"')}</g>` : `<text x="32" y="${lm.style === 'monogram' && mono.length > 1 ? 42 : 45}" font-family="Inter,Arial,sans-serif" font-size="${lm.style === 'monogram' && mono.length > 1 ? 28 : 38}" font-weight="700" text-anchor="middle" fill="${p.accentText}">${lm.style === 'monogram' && !logoOk ? mono : initial}</text>`;
+    const favSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="${lm.style === 'monogram' && /999/.test(String((tt0.vars || {})['--btn-radius'] || '')) ? 32 : 14}" fill="${p.accent}"/>${logoOk ? `<text x="32" y="45" font-family="Inter,Arial,sans-serif" font-size="38" font-weight="700" text-anchor="middle" fill="${p.accentText}">${initial}</text>` : favMark}</svg>`;
     const favicon = `<link rel="icon" href="data:image/svg+xml,${encodeURIComponent(favSvg)}">`;
     const social = `<meta property="og:type" content="website"><meta property="og:site_name" content="${e(name)}">${heroPhoto ? `<meta property="og:image" content="${e(heroPhoto)}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${e(heroPhoto)}">` : `<meta name="twitter:card" content="summary">`}`;
     let ldScript = '';
@@ -2262,15 +2508,15 @@ ${social}
 ${ldScript}${rdScript}
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?${ttFonts.map((f) => 'family=' + f).join('&')}&display=swap">
-<style>:root{${WS.paletteCss(p)};${ttVars}}${WS.styleCss}${WS.emojiCss}${ttVars ? `body{${ttVars};font-family:var(--body)}` : ''}</style>
+<style>:root{${WS.paletteCss(p)};--foot-ink:${WS.fitContrast(p.accent, '#111111', 3)};${ttVars}}${WS.styleCss}${WS.emojiCss}${ttVars ? `body{${ttVars};font-family:var(--body)}` : ''}</style>
 </head>
 <body class="es-${e(site.emojiStyle || 'color')}${ttClass}${/^(sharp|soft|round)$/.test(site.corners || '') ? ' wsr-' + site.corners : ''}${mode === 'edit' ? ' edit' : ''}${multi ? ' multipage' : ''}${navMany ? ' nav-many' : ''}${top ? ' has-announce' : ''}${bar ? ' has-bar' : ''}${WS.contrast(p.accent, '#000000') < 3 ? ' acc-dark' : ''}">
 ${top}
-<header class="top${overHero ? ' over' : ''}" data-top><a class="mark${logoOk ? ' has-logo' : ''}${name.length > 18 ? ' mark-long' : ''}" href="${markHref}">${logoOk ? `<img class="mark-logo" src="${e(b.logo)}" alt="${e(name)}" onerror="var a=this.parentNode;if(a)a.classList.remove('has-logo');this.replaceWith(document.createTextNode(this.alt||''));">` : e(name)}</a><nav aria-label="Main">${nav}</nav>${pillHref ? `<a class="pill" href="${e(pillHref)}">${e(b.bookShort || 'Book')}</a>` : '<span></span>'}${multi ? '<button class="navtoggle" type="button" aria-label="Menu" aria-expanded="false"><svg width="23" height="23" viewBox="0 0 23 23" fill="none" aria-hidden="true"><path d="M3 7h17M3 11.5h17M3 16h17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' : ''}</header>
+<header class="top${overHero ? ' over' : ''}" data-top><a class="mark${logoOk ? ' has-logo' : ' mk mks-' + lm.style}${name.length > 18 ? ' mark-long' : ''}" href="${markHref}">${logoOk ? `<img class="mark-logo" src="${e(b.logo)}" alt="${e(name)}" onerror="var a=this.parentNode;if(a)a.classList.remove('has-logo');this.replaceWith(document.createTextNode(this.alt||''));">` : markInner}</a><nav aria-label="Main">${nav}</nav>${pillHref ? `<a class="pill" href="${e(pillHref)}">${e(b.bookShort || 'Book')}</a>` : '<span></span>'}${multi ? '<button class="navtoggle" type="button" aria-label="Menu" aria-expanded="false"><svg width="23" height="23" viewBox="0 0 23 23" fill="none" aria-hidden="true"><path d="M3 7h17M3 11.5h17M3 16h17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' : ''}</header>
 <main${mainPad ? ' class="ws-padtop"' : ''}>
 ${body}
 </main>
-<footer class="foot"><div class="foot-brand"><b>${e(name)}</b>${footSub}</div>${multi ? `<nav class="foot-col" aria-label="Pages"><h4>Pages</h4>${pageLinks}</nav>` : `<div class="foot-col"></div>`}<div class="foot-col">${footReach ? `<h4>Contact</h4>${footReach}` : ''}</div></footer>
+<footer class="foot"><div class="foot-brand"><b class="mk mks-${logoOk ? 'wordmark' : lm.style}">${logoOk ? `<span class="mk-name">${e(name)}</span>` : markInner}</b>${footSub}</div>${multi ? `<nav class="foot-col" aria-label="Pages"><h4>Pages</h4>${pageLinks}</nav>` : `<div class="foot-col"></div>`}<div class="foot-col">${footReach ? `<h4>Contact</h4>${footReach}` : ''}</div></footer>
 <p class="credits"><a href="https://websprout.app/?ref=site">Made with ${e(brand)}</a>${photoCredit}${usesEmoji ? ` &nbsp;·&nbsp; Animated emoji: <a href="https://googlefonts.github.io/noto-emoji-animation/">Noto Emoji by Google</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>` : ''}</p>
 ${bar}
 <script>${runtime}${mode === 'edit' ? WS.editBridge : ''}</script>
@@ -2296,12 +2542,14 @@ document.documentElement.classList.add('js');document.body.classList.add('js');
   // Fade-and-rise on scroll, once: only for things below the first screen, added here so content is visible without JS.
   // Cards in a phone carousel reveal together with their row. Never in the editor or with reduced motion.
   try{var RM=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if(!EDIT&&!RM&&('IntersectionObserver' in window)){
-      var vh=window.innerHeight||800,groups=[],rvSel='main section .sh,.sv>li,.steps-grid>li,.plan,.rw>blockquote,.rc>li,.g-wrap>figure,.tp>li,.tr>li,.qa,.v-map,.cc-box,.intro .statement,.ic-grid>div,.reveal,.stat,.wsp-card,.pay-card,.ev-row';
+    if(!EDIT&&!RM&&!navigator.webdriver&&('IntersectionObserver' in window)){
+      var vh=window.innerHeight||800,groups=[],rvSel='.v-info,.wy-cols>li,.wy-list>li,.ar-towns,.tb-cards>li,main section .sh,.sv>li,.steps-grid>li,.plan,.rw>blockquote,.rc>li,.g-wrap>figure,.tp>li,.tr>li,.qa,.v-map,.cc-box,.intro .statement,.ic-grid>div,.reveal,.stat,.wsp-card,.pay-card,.ev-row';
       [].slice.call(document.querySelectorAll(rvSel)).forEach(function(el){if(el.classList.contains('rv')||el.closest('.rv'))return;var r=el.getBoundingClientRect();if(!r.height||r.top<vh*0.92)return;var i=[].indexOf.call(el.parentNode.children,el);el.style.setProperty('--rv',Math.min(i,4)*80+'ms');el.classList.add('rv');var g=el.closest('.rail')||el;if(groups.indexOf(g)<0)groups.push(g);});
       var done=function(el){el.classList.add('in');setTimeout(function(){el.classList.remove('rv','in');el.style.removeProperty('--rv')},1300)};
       var rio=new IntersectionObserver(function(es){es.forEach(function(x){if(!x.isIntersecting)return;rio.unobserve(x.target);if(x.target.classList.contains('rv'))done(x.target);[].slice.call(x.target.querySelectorAll('.rv')).forEach(done)})},{rootMargin:'0px 0px -8% 0px'});
       groups.forEach(function(g){rio.observe(g)});
+      var rvPast=function(){var h=window.innerHeight||800;[].slice.call(document.querySelectorAll('.rv:not(.in)')).forEach(function(el){if(el.getBoundingClientRect().top<h*0.6)done(el)})},rvT=0;
+      window.addEventListener('scroll',function(){if(!rvT)rvT=setTimeout(function(){rvT=0;rvPast()},150)},{passive:true});
       window.addEventListener('beforeprint',function(){[].slice.call(document.querySelectorAll('.rv')).forEach(done)});
     }}catch(e){}
   // Phone carousels scroll sideways: make them reachable by keyboard while (and only while) they scroll.
@@ -2321,6 +2569,7 @@ document.documentElement.classList.add('js');document.body.classList.add('js');
   });
   // stats: years update themselves; Google numbers come live from the stats API, typed numbers stay as typed
   var nums=[].slice.call(document.querySelectorAll('[data-count]'));
+  [].slice.call(document.querySelectorAll('[data-yrs]')).forEach(function(el){var y=+el.getAttribute('data-yrs');if(y>1800)el.textContent=String(new Date().getFullYear()-y)});
   nums.forEach(function(el){if(el.dataset.src==='years'&&el.dataset.founded){el.dataset.count=String(new Date().getFullYear()-(+el.dataset.founded));el.textContent=el.dataset.count}});
   function fmt(v,dec){return v.toLocaleString(undefined,{minimumFractionDigits:dec,maximumFractionDigits:dec})}
   function count(el){var target=parseFloat(el.dataset.count);if(isNaN(target)||EDIT){return}var dec=(el.dataset.count.split('.')[1]||'').length,t0=null,dur=1400;

@@ -113,6 +113,39 @@
             <input id="bizPhone" type="hidden">
           </div>
         </div>
+        <details class="more-box" id="moreBox">
+          <summary class="more-sum">Tell us a bit more <span class="more-opt">(optional, makes your site more convincing)</span></summary>
+          <div class="more-body">
+            <div class="detail-grid more-grid">
+              <div class="span2">
+                <div class="field-lbl">What makes you different?</div>
+                <input id="moreUnique" aria-label="What makes you different?" class="dark-input" type="text" maxlength="200" placeholder="e.g. Family-run, friendly and open late">
+              </div>
+              <div>
+                <div class="field-lbl">Year you started</div>
+                <input id="moreFounded" aria-label="Year you started" class="dark-input" type="number" inputmode="numeric" min="1900" max="2100" step="1" placeholder="e.g. 2012">
+              </div>
+              <div id="moreLicWrap" hidden>
+                <div class="field-lbl">Credentials</div>
+                <div class="more-chks">
+                  <label class="more-chk"><input type="checkbox" id="moreLicensed"><span>Licensed</span></label>
+                  <label class="more-chk"><input type="checkbox" id="moreInsured"><span>Insured</span></label>
+                </div>
+              </div>
+              <div class="span2" id="moreAreaWrap" hidden>
+                <div class="field-lbl">Where do you work?</div>
+                <div class="look-pick more-where" id="moreWhere" role="radiogroup" aria-label="Where you work">
+                  <button type="button" class="look-opt" data-where="go" role="radio" aria-checked="true">We come to you</button>
+                  <button type="button" class="look-opt" data-where="come" role="radio" aria-checked="false">Customers come to us</button>
+                </div>
+                <div id="moreTownsWrap" style="margin-top:10px">
+                  <div class="field-lbl">Towns you serve</div>
+                  <input id="moreTowns" aria-label="Towns you serve" class="dark-input" type="text" maxlength="300" placeholder="e.g. Springfield, Shelbyville, Ogdenville">
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
         <div class="panel-foot">
           <span class="p-hint">Free to build &amp; preview</span>
           <button class="gen-btn on" id="next1"><span>Grow my site</span><span>&#127807;</span></button>

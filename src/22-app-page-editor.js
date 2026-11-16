@@ -642,7 +642,8 @@ document.addEventListener('DOMContentLoaded',function(){
     if(window.wsConfirm)ok=await wsConfirm({title:'Start a new site?',message:'Your current site is saved in My sites, so you can come back to it anytime.',okLabel:'Start a new site',cancelLabel:'Keep editing'});
     if(!ok)return;
     wsLeaveStudio();
-    ['bizName','bizType','customPrompt','bizCity','bizPhone','gFillQ'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+    ['bizName','bizType','customPrompt','bizCity','bizPhone','gFillQ','moreUnique','moreFounded','moreTowns'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+    try{['moreLicensed','moreInsured'].forEach(function(id){var el=document.getElementById(id);if(el)el.checked=false;});window._wsWhere='';document.querySelectorAll('#moreWhere .look-opt').forEach(function(b,i){b.setAttribute('aria-checked',i?'false':'true');});var mb=document.getElementById('moreBox');if(mb)mb.open=false;if(window.wsMoreSync)wsMoreSync();}catch(e){}
     try{window._wsLook='';document.querySelectorAll('#lookPick .look-opt').forEach(function(b){b.setAttribute('aria-checked','false');});}catch(e){}
     try{window._wsPlace=null;var gd=document.getElementById('gFillDone'),gb=document.getElementById('gFillBtn'),gx=document.getElementById('gFillBox'),gl=document.getElementById('gFillList');if(gd)gd.style.display='none';if(gb)gb.style.display='';if(gx)gx.style.display='none';if(gl)gl.innerHTML='';}catch(e){}
     try{selectedType='';}catch(e){}
@@ -1670,6 +1671,8 @@ function wsControl(obj,f){
   var wrap=wseEl('div','wse-ctl');
   if(f.label)wrap.appendChild(wseEl('div','wse-ctl-label',f.label));
   var val=obj[f.key];
+  // A field can show a default taken from the business (e.g. trust badges read the setup answers until changed here).
+  if(val==null&&typeof f.fallback==='function'){try{val=f.fallback(window._wsSiteData);}catch(e){}}
   if(f.type==='textarea'){
     var ta=wseEl('textarea','wse-field');ta.value=(val==null?'':val);ta.addEventListener('input',function(){obj[f.key]=ta.value;wsRerender();});wrap.appendChild(ta);return wrap;
   }
@@ -2212,10 +2215,22 @@ function wsLogoAccent(url){
 function wsRenderLogo(pad){
   var sd=window._wsSiteData;
   pad.appendChild(wseEl('div','wse-label','Logo'));
-  var row=wseEl('div','wse-logo');
+  // Automatic logo (used until the owner uploads one): style + icon, saved as site.logoMark.
+  var W=window.WS,lm=W.logoMarkOf?W.logoMarkOf(sd):{style:'wordmark',icon:''},own=!!(sd.biz&&sd.biz.logo);
+  var setMark=function(k,v){var m=(sd.logoMark&&typeof sd.logoMark==='object')?sd.logoMark:{};m[k]=v;if(k==='style'&&!m.icon&&lm.icon)m.icon=lm.icon;sd.logoMark=m;wsRerender();wsOpenEditor();};
+  var tabs=wseEl('div','wse-tabs wse-logo-styles');tabs.setAttribute('role','radiogroup');tabs.setAttribute('aria-label','Logo style');
+  (W.logoStyles||[]).forEach(function(o){var b=wseEl('button','wse-tab'+(lm.style===o[0]?' on':''),o[1]);b.type='button';b.setAttribute('role','radio');b.setAttribute('aria-checked',lm.style===o[0]?'true':'false');b.setAttribute('data-logo-style',o[0]);b.addEventListener('click',function(){setMark('style',o[0]);});tabs.appendChild(b);});
+  pad.appendChild(tabs);
+  if(lm.style==='icon'||lm.style==='badge'){
+    var ic=wsControl({icon:lm.icon},{key:'icon',label:'Logo icon',type:'select',options:function(){return W.iconNames.map(function(n){return [n,W.iconLabel(n)];});}});
+    var isel=ic.querySelector('select');if(isel){isel.className+=' wse-logo-icon';isel.addEventListener('change',function(){setMark('icon',isel.value);});}
+    pad.appendChild(ic);
+  }
+  if(own)pad.appendChild(wseEl('div','wse-hint','Your uploaded logo is showing. Remove it to use the automatic logo above.'));
+  var row=wseEl('div','wse-logo');row.style.marginTop='10px';
   var prev=wseEl('div','wse-logo-prev');if(sd.biz&&sd.biz.logo)prev.style.backgroundImage='url("'+sd.biz.logo+'")';
   var fi=document.createElement('input');fi.type='file';fi.accept='image/png,image/jpeg,image/webp,image/svg+xml';fi.style.display='none';
-  var up=wseEl('button','wse-link go',sd.biz&&sd.biz.logo?'Replace':'Upload logo');up.type='button';up.addEventListener('click',function(){fi.click();});
+  var up=wseEl('button','wse-link go',sd.biz&&sd.biz.logo?'Replace':'Upload my own');up.type='button';up.addEventListener('click',function(){fi.click();});
   fi.addEventListener('change',function(){wsLogoFile(fi.files[0],function(url){sd.biz.logo=url;wsRerender(true);wsOpenEditor();wsLogoAccent(url);});});
   row.appendChild(prev);row.appendChild(up);row.appendChild(fi);
   if(sd.biz&&sd.biz.logo){var rm=wseEl('button','wse-link danger','Remove');rm.type='button';rm.addEventListener('click',function(){delete sd.biz.logo;wsRerender();wsOpenEditor();});row.appendChild(rm);}
@@ -2695,7 +2710,7 @@ function wsBuildPaletteBar(){ wsEdSel = (typeof wsEdSel==='number'?wsEdSel:0); w
     fetch('/api/place/details?place='+encodeURIComponent(p.id)).then(function(r){return r.json();}).then(function(j){
       if(!j||!j.ok){msg((j&&j.error)||'Could not load that listing.');return;}
       window._wsPlace=j;
-      setv('bizName',j.name,true);setv('bizType',j.type);setv('bizCity',j.city,true);setv('bizPhone',j.phone,true);setv('customPrompt',j.about);
+      setv('bizName',j.name,true);setv('bizType',j.type);setv('bizCity',j.city,true);setv('bizPhone',j.phone,true);setv('customPrompt',j.about);if(window.wsMoreSync)wsMoreSync();
       list.innerHTML='';box.style.display='none';btn.style.display='none';done.style.display='block';done.innerHTML='';
       var s=document.createElement('span');s.textContent='Using your Google listing: '+j.name+(j.address?' \u00b7 '+j.address:'')+(j.rating?' \u00b7 '+j.rating+' stars ('+j.count+')':'');done.appendChild(s);
       var x=document.createElement('button');x.type='button';x.className='gfill-link';x.textContent='Remove';x.style.marginLeft='8px';
@@ -2719,11 +2734,38 @@ function wsBuildPaletteBar(){ wsEdSel = (typeof wsEdSel==='number'?wsEdSel:0); w
     window._wsLook=on?'':b.getAttribute('data-look');
   });
 })();
+// "Tell us a bit more": credentials only for types where they matter, towns only for businesses that travel to customers.
+var WS_SA_RE=/plumb|electric|hvac|heating|cooling|air con|furnace|roof|gutter|paint|handyman|contractor|remodel|renovat|construct|carpent|builder|clean|maid|janitor|lawn|landscap|garden|tree|snow|pest|pool|window|pressure|power wash|junk|haul|mov(er|ing)|courier|deliver|locksmith|mobile|appliance|garage door|fenc|deck|pav|concrete|mason|drywall|floor|tile|insulat|solar|septic|irrigat|pet sit|dog walk|chimney|detailing|exterminat|siding|glass|welding|tow/i;
+var WS_LIC_RE=/auto|car |mechanic|tire|body shop|child|daycare|preschool|nanny|health|clinic|dent|doctor|chiro|therap|massage|medical|nurs|vet|pharm|physio|counsel|home care|senior/i;
+function wsMoreSync(){
+  var ty=((document.getElementById('bizType')||{}).value||'').toLowerCase(),sa=WS_SA_RE.test(ty),lic=sa||WS_LIC_RE.test(ty);
+  var lw=document.getElementById('moreLicWrap'),aw=document.getElementById('moreAreaWrap'),tw=document.getElementById('moreTownsWrap'),un=document.getElementById('moreUnique');
+  if(lw)lw.hidden=!lic;if(aw)aw.hidden=!sa;
+  if(tw)tw.hidden=window._wsWhere==='come';
+  if(un)un.placeholder='e.g. '+(/barber|salon|hair|nail|spa|beauty/.test(ty)?'Hot-towel shaves and walk-ins until 8pm':/restaurant|food|cafe|café|coffee|bak|pizza|taco|grill|bar\\b|truck/.test(ty)?'Family recipes, made fresh every morning':/clean|maid/.test(ty)?'Eco-friendly products and the same cleaner every visit':sa?'Upfront prices and same-day visits':/law|attorney|account|tax|financ|insur/.test(ty)?'Free first consultation and 20 years of experience':/yoga|pilates|gym|fitness|studio/.test(ty)?'Small classes and teachers who know your name':'Family-run, friendly and open late');
+}
+(function(){
+  var ty=document.getElementById('bizType');if(ty)ty.addEventListener('input',wsMoreSync);
+  var fo=document.getElementById('moreFounded');if(fo)fo.max=String(new Date().getFullYear());
+  var wh=document.getElementById('moreWhere');
+  if(wh)wh.addEventListener('click',function(e){var b=e.target.closest('.look-opt');if(!b)return;wh.querySelectorAll('.look-opt').forEach(function(x){x.setAttribute('aria-checked',x===b?'true':'false');});window._wsWhere=b.getAttribute('data-where');wsMoreSync();});
+  wsMoreSync();
+})();
+// The optional answers for /create (only the ones that apply to this kind of business).
+function wsMoreAnswers(){
+  var g=function(id){return document.getElementById(id);},out={},ty=((g('bizType')||{}).value||'').toLowerCase(),sa=WS_SA_RE.test(ty);
+  var un=((g('moreUnique')||{}).value||'').trim().slice(0,200);if(un)out.unique=un;
+  var fy=((g('moreFounded')||{}).value||'').trim(),y=parseInt(fy,10);if(/^[0-9]{4}$/.test(fy)&&y>=1900&&y<=new Date().getFullYear())out.founded=fy;
+  if(sa||WS_LIC_RE.test(ty)){if(g('moreLicensed')&&g('moreLicensed').checked)out.licensed=true;if(g('moreInsured')&&g('moreInsured').checked)out.insured=true;}
+  var tw=((g('moreTowns')||{}).value||'').trim().slice(0,300);if(sa&&window._wsWhere!=='come'&&tw)out.towns=tw;
+  return out;
+}
 function doCreateV3(){
   var val=function(id){var el=document.getElementById(id);return el?(el.value||''):'';};
   var type=val('bizType').trim()||((typeof selectedType!=='undefined'&&selectedType)?selectedType:'');
   var payload={name:val('bizName').trim(),type:type,about:val('customPrompt').trim().slice(0,400),city:val('bizCity').trim().slice(0,80),phone:val('bizPhone').trim().slice(0,40)};
   if(window._wsLook)payload.look=window._wsLook;
+  try{Object.assign(payload,wsMoreAnswers());}catch(e){}
   var gp=window._wsPlace;if(gp&&gp.googlePlaceId){payload.googlePlaceId=gp.googlePlaceId;payload.googleName=gp.name||'';payload.address=gp.address||'';payload.hours=gp.hours||[];payload.reviews=gp.reviews||[];if(typeof gp.rating==='number'&&isFinite(gp.rating))payload.rating=gp.rating;if(typeof gp.count==='number'&&isFinite(gp.count))payload.count=gp.count;}
   var btn=document.getElementById('gbtn'),gt=document.getElementById('gbtnTxt'),ld=document.getElementById('loading');
   if(btn)btn.disabled=true;if(gt)gt.textContent='Growing...';if(ld)ld.classList.add('on');
