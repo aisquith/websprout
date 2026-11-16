@@ -151,7 +151,7 @@ module.exports = async function (ctx, t) {
     const c = F.calls[0], sent = JSON.parse(c.body.contents[0].parts[0].text), sys = c.body.systemInstruction.parts[0].text;
     t.ok(sent.facts.city === 'Asheville' && sent.facts.towns.join(',') === 'Weaverville,Black Mountain', 'the AI gets the city without its state, and the other towns (' + sent.facts.city + ' / ' + sent.facts.towns + ')');
     t.ok(/^Drip & Sons is a plumber in Asheville \(also working in Weaverville and Black Mountain\)\./.test(sent.brief) && sent.brief.indexOf('"Family-owned, and we answer the phone ourselves."') > -1 && /since 2004/.test(sent.brief) && !/, NC/.test(c.o.body), 'the brief says who they are, where, since when and the owner’s own words (' + sent.brief.slice(0, 90) + ')');
-    t.ok(/Good: /.test(sys) && /Bad: /.test(sys) && /you can count on/.test(sys) && /look no further/.test(sys) && /taglines: 3 different candidates, 4–9 words/.test(sys) && /exactly one concrete sentence per service/.test(sys), 'the rules show good and bad lines and ask for 3 tagline candidates and one-sentence services');
+    t.ok(/Good: /.test(sys) && /Bad: /.test(sys) && /you can count on/.test(sys) && /look no further/.test(sys) && /taglines: 3 different candidates, 4–9 words/.test(sys) && /exactly one crisp noun-phrase line per service/.test(sys) && /Never start one with You get/.test(sys), 'the rules show good and bad lines and ask for 3 tagline candidates and one-sentence services');
     t.ok(c.body.generationConfig.responseSchema.properties.taglines.type === 'ARRAY' && sent.counts.taglines === 3, 'the schema asks for tagline candidates');
     t.ok(c.body.generationConfig.maxOutputTokens <= 1024 && c.body.generationConfig.thinkingConfig.thinkingBudget === 0, 'no thinking, output capped near 900 tokens');
     const nc = (await fake(Object.assign({}, GOOD, { cta: { title: 'Got a leak?', text: 'We cover Asheville, NC and the towns around it.' } })).build(biz({ city: 'Asheville, NC' }), env())).site;
@@ -186,7 +186,7 @@ module.exports = async function (ctx, t) {
   {
     const s = (await fake(GOOD).build(biz(), env())).site;
     t.ok(!s.pages[0].sections.some((x) => x.type === 'intro') && s.copyRejected.indexOf('intro:no_section') > -1, 'a plumber’s home page has no intro section: recorded as intro:no_section');
-    const acc = (await fake(Object.assign({}, GOOD, { intro: 'We keep the books for small firms in Springfield, and we explain every number. Family-owned, and we answer the phone ourselves.' })).build(biz({ name: 'Ledger Lane', type: 'Accountant', servicesText: 'Bookkeeping\nTax returns' }), env())).site;
+    const acc = (await fake(Object.assign({}, GOOD, { intro: 'We keep the books for small firms in Springfield, and we explain every number in plain words.' })).build(biz({ name: 'Ledger Lane', type: 'Accountant', servicesText: 'Bookkeeping\nTax returns' }), env())).site;
     const ai = acc.pages[0].sections.find((x) => x.type === 'intro');
     t.ok(ai && /^We keep the books/.test(ai.text) && acc.copyFields.indexOf('intro') > -1, 'where the home page has an intro the AI intro is used (' + (ai && ai.text.slice(0, 40)) + ')');
     const half = Object.assign({}, GOOD, { faq: [{ q: 'Do you handle emergencies?', a: 'Yes, emergency call-outs any time.' }, GOOD.faq[1], GOOD.faq[2]] });

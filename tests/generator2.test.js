@@ -169,7 +169,7 @@ module.exports = async function (ctx, t) {
     const ELEC = { results: [ph('p1', { alt_description: 'plumber fixing pipe under sink' }), ph('e1', { alt_description: 'electrician wiring a panel' }), ph('e2', { alt_description: 'electrical outlet repair' }), ph('e3', { alt_description: 'man installing light switch' }), ph('e4', { description: 'circuit breaker panel' })] };
     const Be = builder((u) => (u.indexOf('/search/photos') > -1 ? json(ELEC) : json({})));
     const se = (await Be.build({ name: 'Spark', type: 'Electrician' }, KEYS())).site;
-    t.ok(Object.values(se.photos).length === 4 && !Object.values(se.photos).some((u) => /photo-p1/.test(u)), 'an electrician never gets the plumbing photo');
+    t.ok(new Set(Object.values(se.photos)).size === 4 && !Object.values(se.photos).some((u) => /photo-p1/.test(u)), 'an electrician never gets the plumbing photo');
     const BAKE = { results: [ph('pz', { alt_description: 'pepperoni pizza on a wooden table' }), ph('b1', { alt_description: 'fresh bread loaves' }), ph('b2', { alt_description: 'croissants and pastries in a bakery' }), ph('b3', { alt_description: 'baker shaping sourdough' }), ph('b4', { alt_description: 'cakes in a bakery window' })] };
     const bk = (await builder((u) => (u.indexOf('/search/photos') > -1 ? json(BAKE) : json({}))).build({ name: 'Crumb', type: 'Bakery' }, KEYS())).site;
     t.ok(!Object.values(bk.photos).some((u) => /photo-pz/.test(u)), 'a bakery doesn’t get a pizza photo');
@@ -181,7 +181,7 @@ module.exports = async function (ctx, t) {
     const Bd = builder((u) => (u.indexOf('/search/photos') > -1 ? json(PLUMB) : json({})));
     const sd = (await Bd.build({ name: 'Drip', type: 'Plumber' }, KEYS())).site;
     const pinged = Bd.calls.filter((u) => /\/download$/.test(u)).map((u) => u.split('/photos/')[1].split('/')[0]);
-    t.ok(pinged.length === Object.keys(sd.photos).length && pinged.every((id) => /^pl/.test(id)), 'download events go to the photos used (' + pinged + ')');
+    t.ok(pinged.length === new Set(Object.values(sd.photos)).size && pinged.every((id) => /^pl/.test(id)), 'download events go to the photos used (' + pinged + ')');
     const capped = builder((u) => (u.indexOf('/search/photos') > -1 ? json(PLUMB) : json({})));
     const K0 = KEYS(); K0.UNSPLASH_HOURLY_CAP = '0';
     const sc0 = (await capped.build({ name: 'Drip', type: 'Plumber' }, K0)).site;

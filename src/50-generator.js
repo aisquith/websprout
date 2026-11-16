@@ -118,7 +118,7 @@ function v3StarterBase(type) {
     about: 'You are more than a chart. We take the time to understand what is going on and work with you on a plan that fits your life.',
     servicesTitle: 'How we help', ctaTitle: 'Feel better, sooner.', ctaText: 'Request an appointment and we will be in touch to confirm.',
     services: [['New patient visits', 'An unhurried first visit to understand your history and goals.', '1f44b'], ['Personalized care', 'Treatment shaped around you, explained every step of the way.', '1fa7a'], ['Follow-up support', 'Check-ins that keep your progress on track.', '1f4c5']] };
-  if (M(/account|bookkeep|\btax|\bcpa\b|financ|insurance|mortgage|invest|wealth|payroll/)) return {
+  if (M(/account|bookkeep|\btax(?!i)|\bcpa\b|financ|insurance|mortgage|invest|wealth|payroll/)) return {
     category: 'finance', tagline: 'Numbers you can stop worrying about.',
     about: 'We keep your finances organized, on time and easy to understand, so you can focus on everything else.',
     servicesTitle: 'Services', ctaTitle: 'Let us take this off your plate.', ctaText: 'Book a free call and we will map out what you need.',
@@ -364,6 +364,23 @@ function v3StepsKind(cat) {
 function v3StepsItems(cat) { const sets = V3_STEPS_BY_KIND[v3StepsKind(cat || '')] || V3_COPY.stepsSets; const set = v3FlavorPick(sets) || sets[0]; return set.map((x) => ({ name: x[0], text: x[1] })); }
 function v3Pick(arr) { return arr[Math.floor(v3Rand() * arr.length)]; }
 
+// Palette fit by kind of business. Sub-types refine their category's light themes (a florist isn't a wedding
+// planner, a yoga studio isn't a gym); health and dental get blues, teals and greens, legal and finance navy,
+// slate and deep green, florists and bakeries warm colors, rose and green.
+const V3_PAL_SUB = [
+  [/flor|flower/, ['w_rose', 'w_emerald', 'w_plum']], [/yoga|pilates|meditat|tai chi|barre/, ['w_emerald', 'w_teal', 'w_plum']],
+  [/massage|wellness|acupunct|chiropract|physio|therap/, ['w_teal', 'w_emerald', 'w_ocean']], [/\bbar\b|pub|tavern|brew|winery|wine|taproom|cocktail|lounge/, ['w_amber', 'w_crimson', 'w_coffee']],
+];
+const V3_PAL_CAT = { dental: ['w_teal', 'w_ocean', 'w_emerald'], health: ['w_teal', 'w_emerald', 'w_ocean'], legal: ['w_indigo', 'w_slate', 'w_emerald'], finance: ['w_indigo', 'w_slate', 'w_emerald'], childcare: ['w_amber', 'w_rose', 'w_teal'], bakery: ['w_amber', 'w_rust', 'w_rose'] };
+function v3PalSet(cat, type) { const t = String(type || '').toLowerCase(), hit = V3_PAL_SUB.find(function (x) { return x[0].test(t); }); return hit ? hit[1] : (V3_PAL_CAT[cat] || null); }
+// How often a business gets the dark (Noir) twin. 0 = always light unless the owner picks Dark.
+function v3DarkChance(cat, type) {
+  const t = String(type || '').toLowerCase();
+  if (/yoga|pilates|meditat|barre|massage|wellness|kids|child|family/.test(t)) return 0;
+  if (/\bbar\b|pub|tavern|brew|taproom|cocktail|lounge|nightclub|speakeasy|winery/.test(t)) return 0.45;
+  if (cat === 'restaurant') return /breakfast|brunch|diner|juice|smoothie|cafe|cater|bakery|kids/.test(t) ? 0 : 0.35;
+  return { barber: 0.35, tattoo: 0.45, photo: 0.3, studio: 0.3, auto: 0.3, fitness: 0.2 }[cat] || 0;
+}
 function v3Starter(type, cred) {
   const r = v3StarterBase(type);
   // Each site draws its own mix from the copy book: the category's pools, refined by sub-type (pizza, plumber...).
@@ -382,6 +399,8 @@ function v3Starter(type, cred) {
   // a bistro takes reservations), so its CTA and FAQ never promise the other thing.
   const L = v3Labels(r.category, type, false);
   r.labels = L;
+  // The call-to-action title never just repeats its button ("Book a consultation." over "Book a consultation").
+  if (C.ctaTitle && v3AiSim(r.ctaTitle, L.bookLabel) > 0.75) { const alt = C.ctaTitle.filter((x) => v3AiSim(x, L.bookLabel) <= 0.75); if (alt.length) r.ctaTitle = alt[0]; }
   if ((r.category === 'restaurant' && L.act !== 'reserve') || (r.category === 'generic' && L.family === 'food')) { const k = V3_COPY.pageCta[L.ctaKind] || V3_COPY.pageCta.order; r.ctaTitle = v3FlavorPick(k.title); r.ctaText = v3FlavorPick(k.text); }
   // Clean single-accent themes (white + one color). A few fitting options per category → picked at
   // random per site for variety, never a clashing two-hue scheme. Owners can switch to a Noir (black +
@@ -428,11 +447,14 @@ function v3Starter(type, cred) {
     events: ['refined', 'editorial'], moving: ['grotesk', 'bold'], studio: ['grotesk', 'bold', 'clean'], locksmith: ['bold', 'grotesk'], appliance: ['clean', 'grotesk'], tailor: ['editorial', 'refined', 'classic'], childcare: ['friendly', 'friendly', 'clean'],
   };
   const _tt = (typeof WSENGINE !== 'undefined' && WSENGINE.typeThemes) || {};
-  const _ts = (TYPE_BY_CAT[r.category] || ['bold', 'clean']).filter((x) => _tt[x]);
+  // A yoga or pilates studio is calm, not a condensed gym poster.
+  const _tsub = /yoga|pilates|meditat|barre/i.test(String(type || '')) ? ['refined', 'clean', 'editorial'] : null;
+  const _ts = (_tsub || TYPE_BY_CAT[r.category] || ['bold', 'clean']).filter((x) => _tt[x]);
   r.typeset = v3FlavorPick(_ts.length ? _ts : ['bold']);
-  r.palette = v3FlavorPick(PAL_SETS[r.category] || ['w_mono', 'w_slate', 'w_charcoal']);
-  // Now and then use the dark (Noir) twin of the chosen light theme, when it exists.
-  try { if (v3Rand() < 0.2) { const _dk = 'b_' + r.palette.slice(2); if (WSENGINE.palettes.some((p) => p.id === _dk)) r.palette = _dk; } } catch (e) {}
+  r.palette = v3FlavorPick(v3PalSet(r.category, type) || PAL_SETS[r.category] || ['w_mono', 'w_slate', 'w_charcoal']);
+  // Now and then use the dark (Noir) twin of the chosen light theme, only where a dark site fits the business
+  // (evening food and drink, barbers, tattoo, creative studios, auto, gyms); never health, professional or family care.
+  try { const _dc = v3DarkChance(r.category, type); if (v3Rand() < _dc) { const _dk = 'b_' + r.palette.slice(2); if (WSENGINE.palettes.some((p) => p.id === _dk)) r.palette = _dk; } } catch (e) {}
   r.faq = v3PickSome((C.faq || V3_COPYBOOK.generic.faq).filter((q) => (L.act === 'reserve' || !/reserv|book a table/i.test(q.join(' '))) && v3CredOk(q[0], cred)), 3, 1);
   return r;
 }
@@ -926,7 +948,10 @@ function v3UniqueTitle(u) {
   const rest = m[2].trim(), w = lead.split(/\s+/).length;
   if (!(w >= 2 || /^[A-Za-z]{3,}-[A-Za-z]{3,}$/.test(lead)) || w > 7 || lead.length > 36 || /^(we|i|our|my|us|they|it|you|we’re|we're|i’m|i'm|this|there)\b/i.test(lead) || rest.split(/\s+/).length < 3) return null;
   if (lead === lead.toUpperCase()) lead = lead.toLowerCase();
-  return { title: lead.charAt(0).toUpperCase() + lead.slice(1), text: rest };
+  // A remainder that can't stand on its own ("with evening appointments", "and free estimates") would become a
+  // fragment: the text is then the owner's whole answer, as written.
+  const frag = /^(with|and|plus|including|also|or|but|so|as well as|which|that|while|for|from|in|at|on|to|by|even|especially|without|than|then|&|[a-z]+ing)\b/i.test(rest) || rest.split(/\s+/).length < 4;
+  return { title: lead.charAt(0).toUpperCase() + lead.slice(1), text: frag ? String(u).trim() : rest };
 }
 // "Why choose us": the owner's own answers first, then honest points for the kind of business. 3–4 items.
 // trust: the trust strip is on the same page, so licensed/insured is left to it, and the years point (and the local
@@ -947,15 +972,28 @@ function v3WhyItems(b, cat, fam, hasArea, trust) {
   while (out.length < 3 && spares.length) out.push(spares.shift());
   const ic = (typeof WSENGINE !== 'undefined' && WSENGINE.ICONS) || null;
   out.forEach(function (x) { if (ic && !ic[x.icon]) x.icon = 'circle-check'; });
+  // Each point its own icon (two sparkles side by side read as a mistake).
+  const usedIc = {};
+  out.slice(0, 4).forEach(function (x) { if (usedIc[x.icon]) { const alt = ['circle-check', 'thumbs-up', 'message-circle', 'clock', 'heart', 'star', 'smile', 'handshake'].find(function (k) { return !usedIc[k] && (!ic || ic[k]); }); if (alt) x.icon = alt; } usedIc[x.icon] = 1; });
   return out.slice(0, 4);
 }
 // The mark in the header until the owner uploads a logo: { style, icon }, a valid line-icon id, varied per business.
-const V3_MARK_ICONS = [[/garage door/, ['house', 'wrench']], [/plumb|drain|sewer|water heater/, ['droplet', 'wrench']], [/electric/, ['zap', 'plug', 'lightbulb']], [/hvac|heating|furnace|air condition|cooling/, ['thermometer', 'snowflake', 'wind']], [/roof|gutter|siding/, ['house', 'hammer']], [/paint/, ['paintbrush', 'paint-roller']], [/pest/, ['bug']], [/pool/, ['waves', 'droplets']], [/lock/, ['key-round', 'lock']], [/appliance|washer|dryer|fridge|refrigerat|dishwasher/, ['washing-machine', 'wrench']], [/tree/, ['trees', 'tree-deciduous']], [/lawn|landscap|garden|yard|mow|turf/, ['leaf', 'sprout', 'trees']], [/clean|maid|janitor|housekeep|wash/, ['sparkles', 'spray-can']], [/mov|haul|junk/, ['truck', 'package']], [/auto|mechanic|car\b|tire|garage|detail/, ['car', 'wrench']], [/handy|contract|remodel|renovat|construct|build|carpent|deck|fence|floor|drywall|cabinet|countertop/, ['hammer', 'wrench', 'hard-hat']],
-  [/coffee|cafe|espresso|roaster/, ['coffee']], [/cake|cupcake/, ['cake', 'cake-slice']], [/bak|pastr|patisserie|croissant|bread|bagel|donut/, ['croissant', 'wheat']], [/pizz/, ['pizza']], [/sushi|seafood|fish/, ['fish']], [/bbq|barbecue|smokehouse|grill|steak/, ['flame', 'beef']], [/taco|taqueria|burrito|cantina/, ['utensils-crossed']], [/ice cream|gelato|creamery|frozen yogurt/, ['ice-cream-cone']], [/\bbar\b|pub|brew|winery|wine|tavern|taproom/, ['wine']], [/juice|smoothie|boba|bubble tea/, ['cup-soda']], [/sandwich|deli/, ['sandwich']], [/soup|ramen|noodle|pho/, ['soup']]];
+// Specific kinds first (a dog wash is a pet business, a kindergarten isn't a garden, a photographer isn't pho).
+const V3_MARK_PRE = [[/hot dog|food truck|food stand/, ['utensils', 'chef-hat']], [/yoga|pilates|meditat|barre/, ['yoga', 'flower', 'sun', 'leaf']], [/flor|flower/, ['flower', 'flower-2', 'leaf']], [/financ|wealth|invest/, ['chart-column', 'briefcase', 'landmark']], [/wedding|event plan|party plan|planner/, ['heart', 'calendar-check', 'sparkles']],
+  [/massage/, ['hand-heart', 'leaf', 'flower-2']], [/\bnail/, ['sparkle', 'gem', 'hand-heart']], [/lash|\bbrows?\b|eyebrow/, ['eye', 'sparkle']], [/day ?spa|\bspas?\b|facial|esthet|skin ?care/, ['sparkle', 'flower-2', 'droplet']],
+  [/\bvet|veterinar|animal hosp/, ['paw-print', 'stethoscope']], [/(?<!hot )\bdogs?\b|\bpets?\b|(?<!men['’]?s )groom|kennel|\bcats?\b/, ['paw-print', 'dog', 'bone']],
+  [/daycare|day care|child ?care|preschool|pre-k|nursery|kindergarten|montessori|after.?school|nanny|babysit/, ['baby', 'blocks', 'smile']],
+  [/music|piano|guitar|violin|drum|vocal|singing|voice lesson/, ['music', 'mic']], [/\bdj\b/, ['music', 'mic']], [/danc/, ['music', 'footprints']], [/tutor|test prep|learning center/, ['graduation-cap', 'book-open', 'pencil-ruler']], [/driving school|driving lesson/, ['car', 'route']],
+  [/tailor|alteration|seamstress|dressmak/, ['scissors', 'ruler', 'shirt']], [/photo/, ['camera']], [/video|film|cinemat/, ['video', 'camera']], [/tattoo/, ['pen-tool']], [/pierc|jewel/, ['gem']],
+  [/chiropract|physio|physical therap/, ['heart-pulse', 'hand-heart']], [/optom|optic|eye care/, ['eye']], [/counsel|therapist|psycholog/, ['message-circle', 'heart', 'leaf']], [/dentist|dental|orthodont/, ['tooth']],
+  [/bookkeep|account|\bcpa\b|\btax(es)?\b|tax prep/, ['chart-column', 'receipt', 'briefcase']], [/insurance/, ['shield-check', 'handshake']], [/\blaw\b|lawyer|attorney|legal/, ['scale', 'gavel', 'landmark']], [/real estate|realtor|realty/, ['house', 'key-round']],
+  [/\bbike|bicycle|cycling/, ['bike']], [/book ?(store|shop)|bookseller/, ['book-open']], [/gift/, ['gift']], [/boutique|apparel|clothing/, ['shirt', 'shopping-bag']], [/cater/, ['chef-hat', 'utensils']], [/gym|crossfit|boxing|fitness|personal train/, ['dumbbell']]];
+const V3_MARK_ICONS = [[/garage door/, ['house', 'wrench']], [/plumb|drain|sewer|water heater/, ['droplet', 'wrench']], [/electric/, ['zap', 'plug', 'lightbulb']], [/hvac|heating|furnace|air condition|cooling/, ['thermometer', 'snowflake', 'wind']], [/roof|gutter|siding/, ['house', 'hammer']], [/paint/, ['paintbrush', 'paint-roller']], [/pest/, ['bug']], [/pool/, ['waves', 'droplets']], [/\block/, ['key-round', 'lock']], [/appliance|washer|dryer|fridge|refrigerat|dishwasher/, ['washing-machine', 'wrench']], [/tree/, ['trees', 'tree-deciduous']], [/lawn|landscap|garden|yard|mow|turf/, ['leaf', 'sprout', 'trees']], [/clean|maid|janitor|housekeep|wash/, ['sparkles', 'spray-can']], [/mov|haul|junk/, ['truck', 'package']], [/auto|mechanic|car\b|tire|garage|detail/, ['car', 'wrench']], [/handy|contract|remodel|renovat|construct|build|carpent|deck|fence|floor|drywall|cabinet|countertop/, ['hammer', 'wrench', 'hard-hat']],
+  [/coffee|cafe|espresso|roaster/, ['coffee']], [/cake|cupcake/, ['cake', 'cake-slice']], [/bak|pastr|patisserie|croissant|bread|bagel|donut/, ['croissant', 'wheat']], [/pizz/, ['pizza']], [/sushi|seafood|fish/, ['fish']], [/bbq|barbecue|smokehouse|grill|steak/, ['flame', 'beef']], [/taco|taqueria|burrito|cantina/, ['utensils-crossed']], [/ice cream|gelato|creamery|frozen yogurt/, ['ice-cream-cone']], [/\bbar\b|\bpub\b|brew|winery|wine|tavern|taproom/, ['wine']], [/juice|smoothie|boba|bubble tea/, ['cup-soda']], [/sandwich|\bdeli\b/, ['sandwich']], [/soup|ramen|noodle|\bpho\b/, ['soup']]];
 const V3_MARK_BY_CAT = { barber: ['razor', 'scissors'], salon: ['scissors'], spa: ['hand-heart', 'sparkle'], tattoo: ['pen-tool'], fitness: ['dumbbell'], pet: ['paw-print'], tailor: ['scissors', 'ruler'], legal: ['scale', 'landmark'], finance: ['chart-column', 'briefcase'], realestate: ['house', 'key-round'], dental: ['tooth'], health: ['heart-pulse', 'stethoscope'], studio: ['pen-tool', 'compass'], education: ['graduation-cap', 'book-open'], childcare: ['baby', 'blocks'], photo: ['camera'], events: ['party-popper', 'flower-2'], retail: ['shopping-bag', 'gem'], marine: ['anchor', 'sailboat'] };
 function v3LogoMark(fam, cat, type) {
   const t = String(type || '').toLowerCase(), ic = WSENGINE.ICONS || {};
-  const hit = V3_MARK_ICONS.find(function (x) { return x[0].test(t); });
+  const hit = V3_MARK_PRE.concat(V3_MARK_ICONS).find(function (x) { return x[0].test(t); });
   let opts = (hit ? hit[1] : fam === 'trades' ? ['wrench', 'hammer', 'house'] : fam === 'food' ? ['utensils', 'chef-hat'] : (V3_MARK_BY_CAT[cat] || [])).filter(function (x) { return ic[x]; });
   if (!opts.length) { let f = ''; try { f = WSENGINE.iconFor({}, type); } catch (e) {} opts = [ic[f] ? f : 'sparkles']; }
   const style = fam === 'trades' ? v3Pick(['badge', 'icon']) : (fam === 'pro' || fam === 'beauty') ? v3Pick(['wordmark', 'monogram']) : fam === 'food' ? v3Pick(['wordmark', 'icon']) : 'wordmark';
@@ -981,6 +1019,47 @@ function v3FaqFit(q, a, b) {
 }
 
 // With a trust strip on the page, a licensing question is left out of that page's short FAQ (it's said once).
+// Does a home section show a photo (or a map)? Used to keep text-only runs short.
+function v3SecPic(site, s) {
+  const ph = site.photos || {}, has = function (k) { return !!ph[s.id + '.' + k]; };
+  if (s.type === 'gallery' || s.type === 'beforeafter') return Object.keys(ph).some(function (k) { return k.indexOf(s.id + '.') === 0; });
+  if (s.type === 'hero') return has('photo');
+  if (s.type === 'reviews') return s.variant === 'feature' && has('bg');
+  if (s.type === 'visit') return !!(site.biz && site.biz.address);
+  if (s.type === 'team') return Object.keys(ph).some(function (k) { return k.indexOf(s.id + '.m') === 0; });
+  return has('photo') && /^(split|offset|feature|menu)$/.test(s.variant || '');
+}
+// Spread the spare photos over the home page: the gallery's photos (when the gallery sits on About) go beside the
+// why points (why:split) and the story (intro:offset); with nothing lent yet, the gallery itself moves up to home.
+// Never more than two text-only sections in a row while photos are available. Mutates home and site.photos.
+function v3HomePhotos(site, home, gal) {
+  try {
+    const ph = site.photos || (site.photos = {});
+    const spare = gal && home.indexOf(gal) < 0 ? ['p0', 'p1', 'p2'].map(function (k) { return gal.id + '.' + k; }).filter(function (k) { return ph[k]; }) : [];
+    let lent = 0;
+    const ok = function (t, v) { return !!(WSENGINE.sections[t] && (WSENGINE.sections[t].variants || {})[v]); };
+    const lend = function (s) {
+      const k = spare.shift(); if (!k) return false;
+      const to = s.id + '.photo'; ph[to] = ph[k]; lent++;
+      ['photoCredits', 'photoFallbacks'].forEach(function (f) { if (site[f] && site[f][k]) site[f][to] = site[f][k]; });
+      return true;
+    };
+    // The photo-led services layout only with a photo (half a page of empty space otherwise).
+    home.forEach(function (s) { if (s.type === 'services' && s.variant === 'feature' && !ph[s.id + '.photo'] && !lend(s)) s.variant = ok('services', 'grid') ? 'grid' : 'list'; });
+    if (!spare.length) return;
+    const why = home.find(function (s) { return s.type === 'why'; });
+    if (why && ok('why', 'split') && lend(why)) why.variant = 'split';
+    for (let guard = 0; guard < 4; guard++) {
+      let run = [], bad = null;
+      home.forEach(function (s) { if (bad || /^(announce|trust|cta)$/.test(s.type)) return; if (v3SecPic(site, s)) run = []; else { run.push(s); if (run.length > 2) bad = run.slice(); } });
+      if (!bad) return;
+      const intro = bad.find(function (s) { return s.type === 'intro' && s.variant !== 'offset'; });
+      if (intro && spare.length && ok('intro', 'offset')) { if (lend(intro)) intro.variant = 'offset'; continue; }
+      if (!lent && home.indexOf(gal) < 0) { home.splice(home.indexOf(bad[1]) + 1, 0, gal); continue; }
+      return;
+    }
+  } catch (e) {}
+}
 function v3TrustFaq(items, trust) { const k = (items || []).filter(function (x) { return !trust || !/licen[sc]|insur/i.test(String((x && x.q) || '')); }); return k.length >= 2 ? k : (items || []); }
 
 // Split a finished flat section stack into a real multi-page site (Home + Shop/Menu/Services, booking page,
@@ -1064,7 +1143,14 @@ function v3Pages(site, sc, isShop) {
     V3_PROMISE.creative = V3_PROMISE.pro;
     const aboutPool = (((sc && sc.aboutPool) || (V3_FLAVORS[cat] && V3_FLAVORS[cat].about) || []).concat(V3_PROMISE[fam] || [])).filter((t) => t && t !== (intro && intro.text) && t !== (sc && sc.about));
     if (!menu && intro) { homeIntro = intro; homeUsedIntro = true; }
-    else if (aboutPool.length) homeIntro = mk('intro', { variant: v3Look('intro', V3_LOOKS.intro[fam]), title: '', text: (b.unique && !why ? v3Sentence(b.unique) + ' ' : '') + v3Pick(aboutPool), emoji: '' });
+    else if (aboutPool.length) {
+      // With "why choose us" on the page, the story band says something the points don't (no restating them).
+      const whyT = why ? why.items.map((x) => x.title + '. ' + x.text).join(' ') : '';
+      const said = (t) => { const s = v3SigWords(t); return v3Overlap(t, whyT) >= 0.5 || why.items.some((x) => { const k = Object.keys(v3SigWords(x.title)); return k.length >= 2 && k.every((w) => s[w]); }); };
+      const fresh = why ? aboutPool.filter((t) => !said(t)) : aboutPool;
+      const line = v3Pick(fresh.length ? fresh : aboutPool);
+      if (fresh.length) homeIntro = mk('intro', { variant: v3Look('intro', V3_LOOKS.intro[fam]), title: '', text: (b.unique && !why ? v3Sentence(b.unique) + ' ' : '') + line, emoji: '' });
+    }
     const steps = (!isShop && !isFood && fam !== 'retail' && cat !== 'generic' && (services || prices)) ? mk('steps', { variant: v3Look('steps', V3_LOOKS.steps[fam]), title: v3FlavorPick(V3_COPY.stepsTitle), items: v3StepsItems(cat) }) : null;
     const gal = gallery[0] || null;
     if (gal) gal.variant = v3Look('gallery', V3_LOOKS.gallery[fam]);
@@ -1074,7 +1160,11 @@ function v3Pages(site, sc, isShop) {
     const hasReach = !!(b.address || (b.hours || []).some((h) => h && h.open) || b.phone);
     // A business that comes to you has no place to "Visit": its location band is labelled as the service area.
     const visitEb = (fam === 'trades' && !b.address) ? (b.city ? 'Service area' : 'Contact') : null;
-    const visitHome = (hasReach && visit) ? mk('visit', Object.assign({ variant: b.address ? v3Look('visit', ['hours', 'map']) : 'hours', title: v3VisitTitle(fam, L.act, b, cat) }, visitEb ? { eyebrow: visitEb } : {})) : null;
+    // No address and no hours (and not a business that comes to you): no separate location block on home, just a
+    // "Call" button with the call to action. Contact keeps the details.
+    const foldVisit = !b.address && !(b.hours || []).some((h) => h && h.open) && !v3ServiceArea(fam, cat, b.type, b);
+    if (foldVisit && cta && b.phone) cta.phone = true;
+    const visitHome = (hasReach && visit && !foldVisit) ? mk('visit', Object.assign({ variant: b.address ? v3Look('visit', ['hours', 'map']) : 'hours', title: v3VisitTitle(fam, L.act, b, cat) }, visitEb ? { eyebrow: visitEb } : {})) : null;
     const st = stats[0] || null;
     if (st) st.variant = v3Look('stats', V3_LOOKS.stats[fam]);
     const tm = team[0] || null;
@@ -1093,6 +1183,9 @@ function v3Pages(site, sc, isShop) {
       (fam === 'beauty' ? ['intro', 'steps'] : ['steps', 'faq']).forEach((k) => { if (keys.filter((x) => blocks[x]).length > 7 && keys.indexOf(k) > -1) keys.splice(keys.indexOf(k), 1); });
     }
     keys.map((k) => blocks[k]).filter(Boolean).forEach((s) => { if (!seen.has(s)) { seen.add(s); home.push(s); } });
+    // Photos on home: the gallery's photos (when the gallery itself lives on About) go beside the why points and the
+    // story, so home never runs more than two text-only sections in a row while photos are available.
+    v3HomePhotos(site, home, gal);
     // Sections the home page claimed stay off the About page so section ids stay unique.
     [[gallery, gal], [stats, st], [team, tm]].forEach((x) => { if (x[1] && home.indexOf(x[1]) > -1) x[0].splice(x[0].indexOf(x[1]), 1); });
     const hasMain = !!(products || services || prices);
@@ -1174,8 +1267,10 @@ const V3_AI_RULES = [
   'Good lines are specific, concrete and benefit-led, and sound like the owner talking to a neighbor. Bad lines are generic filler any business could use.',
   'Good: "We pick up the phone and show up when we say." / "Leaks traced and fixed, with the price agreed first." / "Bread baked overnight, on the shelf by morning." / "Your books done, explained in plain English."',
   'Bad: "Plumbing repairs you can count on." / "Quality solutions for all your baking needs." / "Look no further for top-notch, trusted service." / "We pride ourselves on being second to none."',
-  'Never use: you can count on, quality service, trusted, solutions, one-stop, look no further, top-notch, second to none, we pride ourselves, all your … needs, wide range, various.',
-  'Fields. taglines: 3 different candidates, 4–9 words each; never the business name; leave the city out unless it reads naturally; build on what makes them different when the facts give it; never a light rewording of the draft tagline. intro: 2–3 sentences in the owner’s voice ("we") weaving together what makes them different, where they work and what they do. about: 3–4 sentences telling their story from the facts. services: exactly one concrete sentence per service saying what’s included or what the customer gets; no second sentence, no filler. why: only as many as counts.why, a short title and one sentence each, about things the facts or the kind of business support. faq: answer the draft questions in the same order (you may reword a question slightly); direct, useful answers that never promise specifics the facts don’t give (say "Call us and we’ll explain" instead). cta: a short, specific title and one sentence. Stay within the limits; shorter is better.',
+  'Never use: you can count on, quality service, trusted, solutions, one-stop, your one-stop, look no further, top-notch, second to none, we pride ourselves, all your … needs, wide range, various, for your convenience, in no time, and "experience" as a filler noun ("a relaxing experience").',
+  'Service descriptions are crisp noun phrases that say what is included, like a menu line: "Corn tortillas, slow-cooked fillings and fresh salsa." / "A bath, custom cut, nail trim and ear cleaning." / "Leaks traced and fixed, with the price agreed first." Never start one with You get, You’ll get, These, This service, This is, We provide, We offer, Experience, Enjoy or Our.',
+  'Taglines read as a short sentence or a crisp phrase ("Sonoran recipes, hand-pressed tortillas." / "Bread baked overnight, on the shelf by morning."), never a possessive label such as "Your dog’s calm grooming experience" and never ending in experience, solutions or services.',
+  'Fields. taglines: 3 different candidates, 4–9 words each; never the business name; leave the city out unless it reads naturally; build on what makes them different when the facts give it; never a light rewording of the draft tagline. intro: 2–3 sentences in the owner’s voice ("we") weaving together what makes them different, where they work and what they do. about: 3–4 sentences telling their story from the facts. services: exactly one crisp noun-phrase line per service saying what’s included (see the examples above); no second sentence, no filler. why: only as many as counts.why, a short title and one sentence each, about things the facts or the kind of business support. faq: answer the draft questions in the same order (you may reword a question slightly); direct, useful answers that never promise specifics the facts don’t give (say "Call us and we’ll explain" instead). cta: a short, specific title and one sentence. Stay within the limits; shorter is better.',
 ].join('\n');
 const V3_AI_SCHEMA = { type: 'OBJECT', properties: {
   taglines: { type: 'ARRAY', items: { type: 'STRING' } }, intro: { type: 'STRING' }, about: { type: 'STRING' },
@@ -1189,7 +1284,11 @@ const V3_AI_CAPS = { tagline: 70, intro: 320, about: 600, svc: 120, whyT: 40, wh
 const V3_AI_ASK = { taglineWords: '4-9', intro: 280, about: 450, serviceText: 110, whyTitle: 36, whyText: 120, faqQuestion: 100, faqAnswer: 200, ctaTitle: 36, ctaText: 110 };
 const V3_AI_BANNED = /guarantee|warrant|certif|accredit|award|#\s?1\b|number one|\bbest\b|\bfinest\b|\bgreatest\b|\bcheapest\b|\bleading\b|top.rated|world.class|unbeatable|unmatched|unrivaled|\bpremier\b|24\s?\/\s?7|round.the.clock|same.day|\bemergenc|\blowest\b|\bhighest\b|\bexperts?\b/i;
 // Filler any business could say: an AI field with one of these falls back to the template.
-const V3_AI_FILLER = /you can count on|count on us|quality (service|work|workmanship|care)|\btrusted\b|\bsolutions?\b|one.stop|look no further|top.notch|second to none|pride ourselves|all (of )?your [a-z ]{0,24}needs|wide (range|variety|selection)|\bvarious\b|hassle.free/i;
+const V3_AI_FILLER = /you can count on|count on us|quality (service|work|workmanship|care)|\btrusted\b|\bsolutions?\b|one.stop|look no further|top.notch|second to none|pride ourselves|all (of )?your [a-z ]{0,24}needs|wide (range|variety|selection)|\bvarious\b|hassle.free|for your convenience|in no time/i;
+// Service lines that open like a sales pitch instead of saying what's included ("You get…", "This service helps…").
+const V3_AI_SVC_OPEN = /^(you get|you['’]ll get|you will get|these\b|this service|this is\b|we provide|we offer|experience\b|enjoy\b|our\b)/i;
+// Taglines that are a label, not a line: "Your dog's calm grooming experience", "… solutions", "… services".
+const V3_AI_TAG_LABEL = /\b(experience|solutions|services)\W*$|^your [a-z-]+['’]s\b/i;
 function v3AiKeys(env) { try { if (typeof geminiKeys === 'function') return geminiKeys(env); } catch (e) {} return env && env.GEMINI_API_KEY ? String(env.GEMINI_API_KEY).split(',').map(function (k) { return k.trim(); }).filter(Boolean) : []; }
 function v3AiCap(env) { const n = parseInt(env && env.AI_MONTHLY_CAP, 10); return isNaN(n) || n < 0 ? 3000 : n; }
 // Count one call against the monthly cap (ai:count:YYYY-MM) before making it. No KV, no counter, no calls.
@@ -1243,6 +1342,8 @@ function v3AiCheck(x, cap, ctx, kind) {
   if (/\binsur/i.test(s) && !ctx.insured) return { r: 'insured' };
   if ((s.match(/\d+/g) || []).some(function (d) { return ctx.digits.indexOf(d) < 0; })) return { r: 'number' };
   if (kind === 'svc' && v3AiSentences(s) > 1) return { r: 'sentences' };
+  if (kind === 'svc' && V3_AI_SVC_OPEN.test(s)) return { r: 'opening' };
+  if (kind === 'tagline' && V3_AI_TAG_LABEL.test(s)) return { r: 'label' };
   if (kind === 'intro' && v3AiSentences(s) > 3) return { r: 'sentences' };
   if (kind === 'tagline') {
     const w = s.split(/\s+/).length, n = v3AiNorm(s);
@@ -1253,7 +1354,7 @@ function v3AiCheck(x, cap, ctx, kind) {
   return { v: s };
 }
 function v3AiText(x, cap, ctx, kind) { return v3AiCheck(x, cap, ctx, kind).v || ''; }
-// Ask Gemini once (a second key only if the first is rate-limited). Returns the checked fields plus `rejected`
+// Ask Gemini once (one retry, with the next key, only if the first try is rate-limited or overloaded). Returns the checked fields plus `rejected`
 // (short "field:reason" codes, kept on the site as copyRejected), { fail } when the call failed or timed out,
 // or null when there was no call (no key, cap reached).
 async function v3AiCopy(env, facts, draft) {
@@ -1268,17 +1369,23 @@ async function v3AiCopy(env, facts, draft) {
     generationConfig: { responseMimeType: 'application/json', responseSchema: V3_AI_SCHEMA, temperature: 0.7, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } },
   });
   let fail = 'error';
+  const lim = Math.min(V3_AI_MS, parseInt(env.AI_TIMEOUT_MS, 10) || V3_AI_MS);
+  // Rate-limited or overloaded (429/503, or another 5xx): one retry with the next key (the same one when there's only
+  // one) after a short jittered pause, if the time limit leaves room for it. "busy" is recorded only when that fails too.
   const call = async function () {
-    for (let i = 0; i < Math.min(2, keys.length); i++) {
-      const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + V3_AI_MODEL + ':generateContent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': keys[i] }, body: body, signal: ctrl ? ctrl.signal : undefined });
+    for (let i = 0; i < 2; i++) {
+      const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + V3_AI_MODEL + ':generateContent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': keys[i % keys.length] }, body: body, signal: ctrl ? ctrl.signal : undefined });
       if (r && r.ok) return await r.json();
-      if (r && r.status === 429) fail = 'busy';
       if (!r || (r.status !== 429 && r.status < 500)) return null;
+      const busy = r.status === 429 || r.status === 503;
+      const wait = 400 + Math.floor(Math.random() * 400);
+      if (i > 0 || Date.now() - t0 + wait + 1200 > lim) { fail = busy ? 'busy' : 'error'; return null; }
+      await new Promise(function (res) { setTimeout(res, wait); });
     }
     return null;
   };
   // The time limit holds even if the fetch ignores the abort signal.
-  const limit = new Promise(function (res) { timer = setTimeout(function () { fail = 'timeout'; try { if (ctrl) ctrl.abort(); } catch (e) {} res(null); }, Math.min(V3_AI_MS, parseInt(env.AI_TIMEOUT_MS, 10) || V3_AI_MS)); });
+  const limit = new Promise(function (res) { timer = setTimeout(function () { fail = 'timeout'; try { if (ctrl) ctrl.abort(); } catch (e) {} res(null); }, lim); });
   let j = null;
   try { j = await Promise.race([call().catch(function () { return null; }), limit]); } catch (e) { j = null; } finally { if (timer) clearTimeout(timer); }
   if (!j) return { fail: fail, ms: Date.now() - t0 };
@@ -1324,6 +1431,11 @@ function v3AiApply(site, ai, biz, starterFaq) {
   const home = (site.pages && site.pages[0] && site.pages[0].sections) || [];
   const about = ((site.pages || []).find(function (p) { return p.path === 'about'; }) || { sections: [] }).sections;
   if (ai.tagline && !biz.tagline) { const h = home.find(function (s) { return s.type === 'hero'; }); if (h) { h.tagline = ai.tagline; used.push('tagline'); } }
+  // An intro that restates the owner's answer already shown as the first why point keeps the template line instead.
+  const whyU = home.find(function (s) { return s.type === 'why' && (s.items || []).some(function (x) { return x.source === 'unique'; }); });
+  if (ai.intro && whyU && biz.unique && home.some(function (s) { return s.type === 'intro'; }) && v3Overlap(ai.intro, biz.unique) >= 0.5) { rej.push('intro:repeat'); ai.intro = ''; }
+  // AI why points that repeat the owner's answer (shared long words, the same rule as the template points) are skipped.
+  if (ai.why && biz.unique && whyU) { const uw = v3SigWords(biz.unique); ai.why = ai.why.filter(function (w, i) { const ok = !Object.keys(v3SigWords(w.title + ' ' + w.text)).some(function (x) { return x.length >= 6 && uw[x]; }); if (!ok) rej.push('why.' + i + ':repeat'); return ok; }); if (!ai.why.length) delete ai.why; }
   if (ai.intro) { const i = home.find(function (s) { return s.type === 'intro'; }); if (i && !(biz.about && i.text === biz.about)) { i.text = v3Dedupe(ai.intro); used.push('intro'); } else rej.push(i ? 'intro:owner' : 'intro:no_section'); }
   if (ai.about && !biz.about) { const i = about.find(function (s) { return s.type === 'intro'; }); if (i) { const u = biz.unique ? v3Sentence(biz.unique) : ''; i.text = v3Dedupe(u && ai.about.indexOf(biz.unique) < 0 && v3Overlap(u, ai.about) < 0.5 ? u + ' ' + ai.about : ai.about); used.push('about'); } }
   if (ai.services) {

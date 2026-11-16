@@ -164,7 +164,22 @@ const WSENGINE = (function(){
     on = WS.lum(hex) > 0.179 ? '#111111' : '#FFFFFF';
     return Object.assign({}, p, { accent: hex, accentText: on, pop: hex, popText: on, price: hex, accentInk: WS.fitContrast(hex, p.base, 4.5) });
   };
-  WS.paletteCss = (p) =>
+  // Mix two colors (t = share of b, 0..1).
+  WS.mixHex = (a, b, t) => { const h = (x) => String(x || '').replace('#', ''); const A = h(a), B = h(b); if (A.length !== 6 || B.length !== 6) return a; return '#' + [0, 2, 4].map((i) => ('0' + Math.round(parseInt(A.slice(i, i + 2), 16) * (1 - t) + parseInt(B.slice(i, i + 2), 16) * t).toString(16)).slice(-2)).join('').toUpperCase(); };
+  WS.isDark = (p) => WS.lum(p.base) < 0.2;
+  // A dark theme whose alt band is barely different from its base (the Noir twins): alt reads as "the same color".
+  WS.altWeak = (p) => WS.contrast(p.alt, p.base) < 1.25;
+  // Section tones besides base / alt / pop: "soft" is a clearly different band used for page rhythm. On a light theme
+  // it's a light tint of the accent; on a dark theme an inverted light band (dark text) so long dark pages break up.
+  WS.softTone = (p) => {
+    const soft = WS.isDark(p) ? WS.mixHex(p.baseText, p.accent, 0.06) : WS.mixHex(p.base, p.accent, 0.07);
+    const softText = WS.isDark(p) ? (WS.contrast(p.base, soft) >= 7 ? p.base : '#141414') : p.baseText;
+    // Buttons keep the accent unless it disappears into the band (white accent on a near-white band): then ink.
+    const btnOk = WS.contrast(p.accent, soft) >= 2.2;
+    return { soft, softText, softInk: WS.fitContrast(p.accent, soft, 4.5), softSurface: WS.mixHex(soft, softText, 0.07), softBtn: btnOk ? p.accent : softText, softBtnText: btnOk ? p.accentText : soft };
+  };
+  WS.paletteCss = (p) => { const st = WS.softTone(p); const alt = WS.isDark(p) && WS.altWeak(p) ? WS.mixHex(p.base, p.baseText, 0.1) : p.alt; return WS.paletteCss0(Object.assign({}, p, { alt })) + `;--soft:${st.soft};--soft-text:${st.softText};--soft-ink:${st.softInk};--soft-surface:${st.softSurface};--soft-btn:${st.softBtn};--soft-btn-text:${st.softBtnText}`; };
+  WS.paletteCss0 = (p) =>
     `--base:${p.base};--base-text:${p.baseText};--alt:${p.alt};--alt-text:${p.altText};--accent:${p.accent};--accent-text:${p.accentText};--accent-ink:${p.accentInk || WS.fitContrast(p.accent, p.base, 4.5)};--pop:${p.pop};--pop-text:${p.popText};--surface:${p.surface};--price:${p.price || p.pop};--alt-ink:${WS.fitContrast(p.accent, p.alt, 4.5)};--pop-ink:${p.pop === p.accent ? p.popText : WS.fitContrast(p.accent, p.pop, 4.5)}`;
 })(globalThis.WS = globalThis.WS || {});
 
@@ -1002,8 +1017,10 @@ const WSENGINE = (function(){
       const p = WS.str(s.text) ? `<p>${lines(s.text)}</p>` : '';
       const btn = (cls) => (href ? `<a class="btn ${cls}" href="${href}">${e(WS.str(s.button) || 'Book now')}</a>` : '');
       if (c.mode === 'live' && !t && !p && !href) return '';
+      const tel = c.biz.phone && !/^tel:/.test(href) ? `<a class="btn btn-line" href="${WS.tel(c.biz.phone)}">${WS.iconSvg('phone')}${e(c.biz.phone)}</a>` : '';
+      // s.phone: the page has no location block, so the band carries the phone number next to its button.
+      if (s.variant !== 'card' && s.variant !== 'split' && s.phone && tel) return `<section class="cta cta-band on-pop"><div class="wrap cta-row">${h2}<div>${p}<div class="actions">${btn('btn-light')}${tel}</div></div></div></section>`;
       if (s.variant === 'card') {
-        const tel = c.biz.phone && !/^tel:/.test(href) ? `<a class="btn btn-line" href="${WS.tel(c.biz.phone)}">${WS.iconSvg('phone')}${e(c.biz.phone)}</a>` : '';
         return `<section class="cta cta-card on-base"><div class="wrap"><div class="cc-box on-pop"><div class="cc-copy">${h2}${p}</div><div class="actions">${btn('btn-light')}${tel}</div></div></div></section>`;
       }
       return s.variant === 'split'
@@ -1378,6 +1395,7 @@ figure{margin:0}
 .on-base{background:var(--base);color:var(--base-text);--fg:var(--base-text);--bg:var(--base)}
 .on-alt{background:var(--alt);color:var(--alt-text);--fg:var(--alt-text);--bg:var(--alt)}
 .on-pop{background:var(--pop);color:var(--pop-text);--fg:var(--pop-text);--bg:var(--pop)}
+.on-soft{background:var(--soft);color:var(--soft-text);--fg:var(--soft-text);--bg:var(--soft);--accent-ink:var(--soft-ink);--surface:var(--soft-surface)}
 .muted{color:color-mix(in srgb,var(--fg),transparent 42%)}
 .lede{margin:20px 0 40px;max-width:52ch;font-size:17px;color:color-mix(in srgb,var(--fg),transparent 32%)}
 .eyebrow,.kicker{font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:.01em;text-transform:none;color:color-mix(in srgb,var(--fg),transparent 40%)}
@@ -1812,7 +1830,8 @@ figure.slot img{width:100%;height:100%;object-fit:cover}
 body{--sp-l:clamp(80px,10vw,136px);--sp-m:clamp(64px,8vw,112px);--sp-s:clamp(48px,6vw,80px);--sp-join:clamp(28px,3.5vw,48px);--gap-h:clamp(28px,3.4vw,48px);--r-card:10px;--r-img:6px}
 .wst-bold{--r-card:4px;--r-img:3px}
 .wsr-sharp{--r-card:0px;--r-img:0px}.wsr-soft{--r-card:14px;--r-img:12px}.wsr-round{--r-card:24px;--r-img:20px}
-.on-base{--ink:var(--accent-ink,var(--accent))}.on-alt{--ink:var(--alt-ink,var(--alt-text))}.on-pop{--ink:var(--pop-ink,var(--pop-text))}
+.on-base{--ink:var(--accent-ink,var(--accent))}.on-alt{--ink:var(--alt-ink,var(--alt-text))}.on-pop{--ink:var(--pop-ink,var(--pop-text))}.on-soft{--ink:var(--soft-ink)}.on-soft .btn:not(.ghost):not(.btn-ink):not(.btn-line):not(.btn-light){background:var(--soft-btn);color:var(--soft-btn-text)}.on-soft.intro-center .statement::before{background:var(--soft-ink)}
+.on-soft .eyebrow,.on-soft .kicker,.on-soft .num{color:var(--soft-ink);opacity:1}.on-soft .qa summary::after,.on-soft .faq summary::after{color:var(--soft-ink)}
 /* section rhythm: medium by default, small for short bands, joined when two bands share a colour */
 .intro,.services,.stats,.team,.ba,.faq,.reviews-wall,.reviews-cards,.prices-board,.steps,.contactf,.payments,.events,.servicearea,.plans,.embed,.visit,.cta-band{padding:var(--sp-m) 0}
 .intro-center,.cta-card,.gallery{padding:var(--sp-s) 0}
@@ -2019,6 +2038,12 @@ main>.on-base:not(.hero-photo):not(.pagehead)+.on-base:not(.hero):not(.pagehead)
 }
 .edit .ws-bar{display:none!important}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.js .reveal{opacity:1;transform:none}}
+/* rhythm bands: cards on a soft band are lighter than the band; the story beside a photo is a calm landscape pair */
+.on-soft.services-grid .sv li,.on-soft.services-numbered .sv li,.on-soft .rc li,.on-soft .tb-cards li{background:color-mix(in srgb,var(--soft),#fff 62%);border-color:color-mix(in srgb,var(--fg),transparent 88%)}
+.intro-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(36px,6vw,88px)}
+.intro-grid .statement{margin:0;max-width:24ch}
+.intro-grid .intro-img{aspect-ratio:4/3}
+@media (max-width:820px){.intro-grid{grid-template-columns:1fr}}
 `;
 })(globalThis.WS = globalThis.WS || {});
 
@@ -2390,6 +2415,42 @@ main>.on-base:not(.hero-photo):not(.pagehead)+.on-base:not(.hero):not(.pagehead)
   // A JSON-LD <script>; '<' is escaped so owner text can never close the tag.
   WS.ldScript = (obj) => '<script type="application/ld+json">' + JSON.stringify(obj).replace(/</g, String.fromCharCode(92) + 'u003c') + '</script>';
 
+  // Page rhythm: section tones by position, so a page alternates between clearly different bands instead of a run
+  // of same-colored text sections. Fixed: the hero and page header, the trust strip under the hero, forms, call-to-
+  // action bands and anything already loud (pop: reviews feature, numbers band) or given an explicit tone. Light
+  // themes (and themes whose alt band contrasts): the section's own alt band stays (a dark services band on white),
+  // base sections alternate base / soft tint. Dark themes whose alt is nearly the base color alternate base / raised,
+  // with one inverted light band in the middle (two on long pages). out: [{ s, html }], html rewritten in place.
+  WS.TONE_FIXED = { hero: 1, pagehead: 1, announce: 1, cta: 1, trust: 1, contact: 1, booking: 1, embed: 1, payments: 1, servicearea: 1, events: 1, shopcart: 1 };
+  WS.toneSeq = (out, p) => {
+    const rx = /^(\s*<section\b[^>]*?\bclass="[^"]*?)\bon-(base|alt|pop)\b/;
+    const items = out.map((x) => { const m = rx.exec(x.html || ''); return { x, tone: m ? m[2] : '', fixed: !m || m[2] === 'pop' || !!WS.TONE_FIXED[x.s.type] || !!(x.s && x.s.tone) }; });
+    const free = items.filter((it) => !it.fixed);
+    if (!free.length) return out;
+    const darkWeak = WS.isDark(p) && WS.altWeak(p);
+    const softAt = new Set();
+    if (darkWeak && free.length >= 3) {
+      const pref = ['why', 'steps', 'faq', 'services', 'intro', 'reviews', 'team', 'prices', 'gallery', 'area', 'visit', 'stats'];
+      const want = free.length >= 6 ? [free.length / 3, (2 * free.length) / 3] : [(free.length - 1) / 2];
+      want.forEach((w) => {
+        let best = -1, bs = 1e9;
+        free.forEach((it, i) => { if (softAt.has(i) || softAt.has(i - 1) || softAt.has(i + 1) || i === 0 && free.length > 3) return; const r = pref.indexOf(it.x.s.type); const sc = Math.abs(i - w) * 3 + (r < 0 ? 20 : r * 0.4); if (sc < bs) { bs = sc; best = i; } });
+        if (best > -1) softAt.add(best);
+      });
+    }
+    let prev = '';
+    items.forEach((it) => {
+      if (it.fixed) { prev = it.tone || prev; return; }
+      const i = free.indexOf(it);
+      let t;
+      if (darkWeak) t = softAt.has(i) ? 'soft' : (prev === 'base' ? 'alt' : 'base');
+      else if (it.tone === 'alt') t = prev === 'alt' ? 'soft' : 'alt';
+      else t = prev === 'base' ? 'soft' : 'base';
+      if (t !== it.tone) it.x.html = it.x.html.replace(rx, '$1on-' + t);
+      prev = t;
+    });
+    return out;
+  };
   WS.renderSite = (site, { mode = 'live', activePath = null } = {}) => {
     const p = WS.withAccent(WS.palette(site.palette), site.accent);
     WS._icoSite = site; WS._icoVal = WS.iconStyleOf(site);
@@ -2404,6 +2465,7 @@ main>.on-base:not(.hero-photo):not(.pagehead)+.on-base:not(.hero):not(.pagehead)
     // Render a page's sections; returns { html, pad } (pad: the first band has no room for the fixed header).
     const renderList = (secs, pageTitle) => {
       const out = secs.map((s) => ({ s, html: WS.renderSection(site, s, mode) })).filter((x) => x.html);
+      try { WS.toneSeq(out, p); } catch (_t) {}
       if (!out.length && mode === 'live') {
         const tel = WS.str(b.phone).replace(/[^\d+]/g, '') ? WS.tel(b.phone) : '';
         const mail = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(WS.str(b.email)) ? 'mailto:' + WS.str(b.email) : '';
