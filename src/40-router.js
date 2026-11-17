@@ -16,6 +16,10 @@ export default {
     ctx.waitUntil(runErrorAlert(env));
     ctx.waitUntil(runAnalyticsDaily(env));
   },
+  // Mail to support@ / hello@websprout.app (Cloudflare Email Routing -> "Send to a Worker"): forwarded to a person, plus an instant reply.
+  async email(message, env, ctx) {
+    await wsHandleEmail(message, env);
+  },
   async fetch(request, env, ctx) {
     if (ctx) _wsCtx.set(request, ctx);
     const url = new URL(request.url);

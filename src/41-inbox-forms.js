@@ -297,7 +297,7 @@ function siteNameFromHtml(html){
 // One place to send mail. Test servers (WS_TEST_MODE, never set in production) record it instead.
 // Global daily caps per kind of mail (KV counters; override with MAIL_CAP_<KIND>), so no single feature can be used
 // to send unlimited mail from our domain.
-const WS_MAIL_CAPS = { autoreply: 500, lead: 2000, review: 300, invoice: 300, site_email: 200, signin: 1000, support: 200 };
+const WS_MAIL_CAPS = { autoreply: 500, lead: 2000, review: 300, invoice: 300, site_email: 200, signin: 1000, support: 200, supportreply: 150 };
 async function wsMailCapOk(env, kind){
   if (!env || !env.KV) return true;
   const cap = parseInt(env['MAIL_CAP_' + String(kind).toUpperCase()], 10) || WS_MAIL_CAPS[kind] || 1000;
