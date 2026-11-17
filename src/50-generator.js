@@ -1,13 +1,18 @@
 function v3StarterBase(type) {
   const t = (type || '').toLowerCase();
   const M = (re) => re.test(t);
+  const studio = () => ({
+    category: 'studio', tagline: 'Good work, done properly.',
+    about: 'We are a small, senior team that listens carefully, communicates clearly and delivers work we are proud to put our name on.',
+    servicesTitle: 'What we do', ctaTitle: 'Have a project in mind?', ctaText: 'Tell us about it and we will reply with next steps.',
+    services: [['Strategy', 'A clear plan built around your goals and your customers.', '1f9ed'], ['Design', 'Thoughtful, polished work that looks the part.', '1f3a8'], ['Build & launch', 'We ship it, test it and make sure it works.', '1f680'], ['Ongoing support', 'Still here after launch, whenever you need us.', '1f4ac']] });
   // [name, description, emoji-hex]
   if (M(/barber|barbershop|fade|men.?s grooming/)) return {
     category: 'barber', tagline: 'A sharp cut, every time.',
     about: 'Walk in for a classic cut or a modern fade. We take our time, line things up right, and send you out looking your best.',
     servicesTitle: 'What we do', ctaTitle: 'Ready for a fresh cut?', ctaText: 'Grab a chair and we will take care of the rest.',
     services: [['Haircut', 'A precise cut shaped to how you want to look and feel.', '1f488'], ['Skin Fade', 'Clean, blended fades from the skin up — crisp every time.', '2702'], ['Beard Trim', 'Shaped, lined up and conditioned so it looks intentional.', '1f9d4'], ['Hot Towel Shave', 'A traditional straight-razor shave with a hot-towel finish.', '1fa92']] };
-  if (M(/\bpets?\b|(?<!hot )dog|groom|\bvet|kennel|boarding(?! school)|animal/)) return {
+  if (M(/\bpets?\b|(?<!hot )dog|groom|\bvet|kennel|boarding(?! school)|animal/) && !M(/cremat|funeral|memorial|cemetery/)) return {
     category: 'pet', tagline: 'Love your pet as much as you do.',
     about: 'Gentle, attentive care from people who genuinely like animals. Your pet is in good hands — and you will see it when you pick them up.',
     servicesTitle: 'What we offer', ctaTitle: 'Give your pet the best.', ctaText: 'Tell us about your companion and we will set things up.',
@@ -32,22 +37,35 @@ function v3StarterBase(type) {
     about: 'Everything is made by hand, early, in small batches. Real butter, real time, and nothing sitting around until tomorrow.',
     servicesTitle: 'From the oven', ctaTitle: 'Come by while it is warm.', ctaText: 'Stop in this morning or order ahead for pickup.',
     services: [['Fresh Bread', 'Naturally leavened loaves baked through the morning.', '1f35e'], ['Pastries', 'Croissants, danishes and the day\'s rotating specials.', '1f950'], ['Cakes', 'Made to order for birthdays and every excuse between.', '1f370'], ['Coffee', 'A proper cup to go with whatever you picked out.', '2615']] };
-  if (M(/cafe|coffee|espresso|roaster/)) return {
+  if (M(/cafe|coffee|espresso|roaster|ice ?cream|gelato|creamery|frozen yogurt|froyo|soft serve|dessert|juice|smoothie|acai|boba|bubble tea/)) return {
     category: 'cafe', tagline: 'Your new regular spot.',
     about: 'Good coffee, a calm room and a welcome that makes you want to stay. Whether it is a quick cup or a slow afternoon, you are in the right place.',
     servicesTitle: 'On the menu', ctaTitle: 'See you in the morning.', ctaText: 'Swing by or order ahead and skip the line.',
     services: [['Espresso', 'Pulled fresh from beans we actually care about.', '2615'], ['Pour Over', 'Single-origin coffee brewed slow and clean.', '2615'], ['Pastries', 'A short, fresh case to go with your cup.', '1f950'], ['Cold Brew', 'Smooth, steeped overnight, served over ice.', '1f9ca']] };
+  // Hotels and B&Bs, before restaurants ("Inn & restaurant" is somewhere to stay).
+  if (M(/hotel|motel|\binn\b|bed (?:and|&) breakfast|\bb ?& ?b\b|\bbnb\b|guest ?house|hostel|\blodge\b|resort/) && !M(/\bpets?\b|\bdogs?\b|kennel/)) return {
+    category: 'hotel', tagline: 'A comfortable place to stay.',
+    about: 'Comfortable rooms, a friendly welcome and people who are happy to help you plan your stay.',
+    servicesTitle: 'Rooms and stays', ctaTitle: 'Plan your stay.', ctaText: 'Tell us your dates and we will confirm availability.',
+    services: [['Guest rooms', 'Comfortable, quiet rooms for a good night’s sleep.', '1f6cf'], ['Longer stays', 'Ask about rates for a week or more.', '1f4c5'], ['Group bookings', 'Several rooms for weddings, teams or family visits.', '1f465'], ['Local tips', 'Ask us where to eat, walk and visit nearby.', '1f5fa']] };
   if (M(/restaurant|kitchen|grill|bbq|barbecue|taco|taqueria|cantina|burrito|pizz|sushi|ramen|izakaya|trattoria|diner|eatery|bistro|catering|food truck|cuisine|steakhouse|smokehouse|burger/) && !M(/remodel|renovat|cabinet|countertop/)) return {
     category: 'restaurant', tagline: 'Food worth coming back for.',
     about: 'Honest cooking made from good ingredients, served by people who are glad you came in. Pull up a seat — we saved you one.',
     servicesTitle: 'Why people come back', ctaTitle: 'Hungry yet?', ctaText: 'Reserve a table or order ahead for pickup.',
     services: [['Made to Order', 'Dishes cooked when you order them, never before.', '1f373'], ['Local Ingredients', 'We source close to home whenever the season allows.', '1f33f'], ['Full Menu', 'Something for everyone, from the regulars to the curious.', '1f37d'], ['Takeout', 'The same kitchen, packed up and ready to go.', '1f963']] };
-  if (M(/lawn|landscap|garden|yard|turf|mow|tree service|irrigation/)) return {
+  // Bars, pubs, breweries and wineries (after restaurants, so a sushi bar or a bar and grill eats first; before lawn,
+  // so a beer garden isn't a garden). A juice, salad or nail bar is something else.
+  if (M(/\bbars?\b|\bpubs?\b|gastropub|brewery|brewpub|brewing|taproom|tap room|tavern|lounge|cocktail|speakeasy|saloon|winery|vineyard|beer garden|distiller|cidery|nightclub|night club/) && !M(/juice|smoothie|salad|snack|candy|oxygen|blow ?dry|dry bar|\bnail|brow|lash|protein|espresso|coffee|bar exam|bar association|chocolate|granola/)) return {
+    category: 'bar', tagline: 'Good drinks, good company.',
+    about: 'A neighborhood bar with good drinks, friendly staff and a room that is easy to settle into.',
+    servicesTitle: 'What we pour', ctaTitle: 'Come in for a drink.', ctaText: 'Grab a seat at the bar, or get in touch about a group booking.',
+    services: [['Beer on tap', 'Ask what’s pouring today.', '1f37a'], ['Cocktails', 'Classics and house drinks, made properly.', '1f378'], ['Wine', 'A short list of reds, whites and something sparkling.', '1f377'], ['Private events', 'Birthdays, leaving drinks and team nights.', '1f389']] };
+  if (M(/lawn|landscap|garden|yard|turf|mow|tree service|tree (?:trimming|removal|care|cutting)|arborist|stump|irrigation/)) return {
     category: 'lawn', tagline: 'The best yard on the block.',
     about: 'We show up when we say we will and treat your yard like it is ours. Dependable work, fair prices, and a lawn you are proud of.',
     servicesTitle: 'What we handle', ctaTitle: 'Want a tidier yard?', ctaText: 'Tell us about your property and we will send a quote.',
     services: [['Mowing', 'Clean, even cuts on a schedule that fits your yard.', '1f33e'], ['Landscaping', 'Beds, plantings and features that lift the whole property.', '1fab4'], ['Cleanups', 'Seasonal leaf, brush and debris hauled away for good.', '1f342'], ['Trimming', 'Hedges, edges and trees kept sharp and healthy.', '1f333']] };
-  if (M(/clean|maid|janitor|housekeep|pressure wash|window wash/) && !M(/\bcar\b|auto|vehicle|dry clean/)) return {
+  if (M(/clean|maid|janitor|housekeep|pressure wash|window wash/) && !M(/\bcar\b|auto|vehicle|dry clean|\bpools?\b/)) return {
     category: 'cleaning', tagline: 'Come home to spotless.',
     about: 'Thorough, reliable cleaning from a team you can trust in your space. We sweat the corners so you never have to think about them.',
     servicesTitle: 'What we clean', ctaTitle: 'Ready for a cleaner place?', ctaText: 'Tell us the size of the job and we will quote it fast.',
@@ -57,12 +75,18 @@ function v3StarterBase(type) {
     about: 'New and used boats, straight talk, and a crew that actually boats. We will help you find the right one and keep it running for years.',
     servicesTitle: 'What we offer', ctaTitle: 'Ready to find your boat?', ctaText: 'Tell us how you like to spend time on the water and we will point you right.',
     services: [['Boat Sales', 'New and pre-owned boats matched to how you plan to use them.', '1f6a4'], ['Service & Repair', 'Factory-trained techs to keep you off the dock and on the water.', '1f527'], ['Parts & Rigging', 'The right gear, props and electronics, installed properly.', '2699'], ['Storage', 'Keep her covered and ready between trips.', '2693']] };
+  // Towing, before auto ("Auto towing" needs a tow truck, not a mechanic).
+  if (M(/\btow(?:ing|s)?\b|tow truck|wrecker|roadside assist/)) return {
+    category: 'towing', tagline: 'Towing and roadside help.',
+    about: 'Tell us your location and what happened, and we will give you the price and an honest arrival time before we set off.',
+    servicesTitle: 'Services', ctaTitle: 'Need a tow?', ctaText: 'Call or message us with your location and the vehicle.',
+    services: [['Towing', 'Cars and vans towed where you need them, loaded carefully.', '1f69a'], ['Roadside help', 'Help on the spot when your car lets you down.', '1f6a7'], ['Jump starts', 'A flat battery boosted so you can drive away.', '1f50b'], ['Lockouts', 'Help getting back into your car.', '1f511']] };
   if (M(/auto|mechanic|car repair|car ?wash|car clean|detailing|\btires?\b|body shop|collision|automotive|garage/) && !M(/garage door/)) return {
     category: 'auto', tagline: 'Honest work on your ride.',
     about: 'Straightforward diagnostics, fair prices and repairs that last. We tell you what you actually need — and what can wait.',
     servicesTitle: 'What we do', ctaTitle: 'Car acting up?', ctaText: 'Describe what is going on and we will get you scheduled.',
     services: [['Diagnostics', 'We find the real problem before touching a wrench.', '1f50d'], ['Repairs', 'From brakes to belts, done right the first time.', '1f527'], ['Maintenance', 'Oil, fluids and tune-ups to keep it healthy.', '1f6e2'], ['Detailing', 'Inside and out, looking like the day you got it.', '2728']] };
-  if (M(/gym|fitness|trainer|crossfit|yoga|pilates|martial|boxing|cycle studio/)) return {
+  if (M(/gym|fitness|trainer|crossfit|yoga|pilates|martial|boxing|cycle studio|danc|ballet|ballroom|zumba/)) return {
     category: 'fitness', tagline: 'Show up. Get stronger.',
     about: 'A room that pushes you without the ego. Coaches who know your name and a plan that actually fits your life.',
     servicesTitle: 'Train with us', ctaTitle: 'Ready to start?', ctaText: 'Come in for a first session and see if we are your place.',
@@ -77,6 +101,18 @@ function v3StarterBase(type) {
     about: 'We get you back in carefully, change or rekey your locks, and tell you the price before we start. Homes, cars and businesses.',
     servicesTitle: 'Services', ctaTitle: 'Need a locksmith?', ctaText: 'Call or message us with your location and what happened.',
     services: [['Lockouts', 'Careful entry to homes and cars, without damage where possible.', '1f511'], ['Rekeying', 'Old keys stop working, your locks stay put.', '1f5dd'], ['Lock changes', 'New locks fitted on doors, gates and windows.', '1f512'], ['Key cutting', 'Spare keys cut and tested before you leave.', '1f511']] };
+  // Security systems and guarding (after locksmith: a locksmith who also does security stays a locksmith).
+  if (M(/securit|alarm|cctv|surveillance|guard|patrol|bodyguard|access control|camera install/) && !M(/cyber|gutter|life ?guard|mouth ?guard|guardian|insur|social security|securities/)) return {
+    category: 'security', tagline: 'Security systems, properly installed.',
+    about: 'We look at your property, point out the weak spots and recommend the cameras, alarms and access control that fit it.',
+    servicesTitle: 'Services', ctaTitle: 'Get a security quote.', ctaText: 'Tell us about the property and what you want to protect.',
+    services: [['Camera systems', 'CCTV planned for clear coverage of the areas that matter.', '1f4f9'], ['Alarm systems', 'Intruder alarms fitted, tested and explained.', '1f6a8'], ['Access control', 'Keycards, keypads and fobs for doors and gates.', '1f511'], ['Security assessments', 'A walk around your property with honest recommendations.', '1f50d']] };
+  // Computer repair and IT support (before retail and studio: a phone repair shop or an IT company isn't either).
+  if (M(/computer|laptop|\bpcs?\b|macbook|phone repair|cell ?phone|iphone|tablet repair|screen repair|\bit (?:services?|support|company|consult\w*|solutions|managed|department|provider)|managed (?:it|service provider)|\bmsp\b|network(?:ing)? (?:services|install\w*|setup|support)|tech support|data recovery|cyber ?security|help ?desk|information technology/) && !M(/marketing|software develop/)) return {
+    category: 'tech', tagline: 'Computers fixed, explained plainly.',
+    about: 'We find the fault, tell you what the repair costs and whether it is worth it, then fix it properly.',
+    servicesTitle: 'Repairs and services', ctaTitle: 'Something not working?', ctaText: 'Tell us the device and what it is doing.',
+    services: [['Laptop and PC repair', 'Faults found and fixed, from power problems to failed drives.', '1f4bb'], ['Screen replacement', 'Cracked or flickering screens replaced.', '1f4f1'], ['Virus removal', 'Infections cleaned up and protection set up.', '1f6e1'], ['Data recovery', 'Files rescued from failing or damaged drives where possible.', '1f4c4']] };
   if (M(/appliance|washer|dryer repair|fridge|refrigerat|dishwasher|oven repair/)) return {
     category: 'appliance', tagline: 'Fix it before you replace it.',
     about: 'We find the fault, tell you what the repair costs and whether it is worth doing, then fix it with the right parts.',
@@ -92,12 +128,30 @@ function v3StarterBase(type) {
     about: 'We give children a safe, caring place to play, explore and learn, with a daily rhythm they can count on and staff who know each child well.',
     servicesTitle: 'Our programs', ctaTitle: 'Come and visit.', ctaText: 'Book a tour and meet the people who would look after your child.',
     services: [['Infant care', 'Gentle, attentive care for the youngest children.', '1f37c'], ['Toddlers', 'Play, songs and first friendships.', '1f9f8'], ['Preschool', 'Early learning that gets children ready for school.', '1f4da'], ['After-school care', 'A safe place to play and do homework.', '1f392']] };
+  // Pharmacies, funeral homes and places of worship, before retail ("drug store"), health, events and education.
+  if (M(/pharmac|drugstore|drug store|apothecary|chemist/)) return {
+    category: 'pharmacy', tagline: 'Your local pharmacy.',
+    about: 'We fill prescriptions carefully, take the time to explain your medicines and answer questions at the counter.',
+    servicesTitle: 'Services', ctaTitle: 'Questions about a medicine?', ctaText: 'Call us or stop by the counter.',
+    services: [['Prescriptions', 'Filled carefully, with time to explain anything new.', '1f48a'], ['Pharmacist advice', 'Questions about medicines, side effects or minor ailments.', '1f4ac'], ['Refills', 'Repeat prescriptions ready when you need them.', '1f504'], ['Vaccinations', 'Ask us which vaccines we offer and how to book.', '1f489']] };
+  if (M(/funeral|mortuary|cremat|memorial (?:home|chapel|service)|burial|undertak/)) return {
+    category: 'funeral', tagline: 'Caring for families in difficult times.',
+    about: 'When someone dies, there is a lot to think about. We explain each step and help you plan a service that feels right.',
+    servicesTitle: 'Our services', ctaTitle: 'We are here to help.', ctaText: 'Call us, or send a message and we will get back to you.',
+    services: [['Funeral services', 'Traditional or simple, religious or not, shaped around your wishes.', '1f54a'], ['Cremation', 'Cremation with or without a service, explained step by step.', '1f343'], ['Memorial services', 'A gathering to remember someone, at a time and place that suits you.', '1f490'], ['Planning ahead', 'Record your wishes now, so your family doesn’t have to guess.', '1f4dd']] };
+  if (M(/church|chapel|ministr|parish|cathedral|congregation|synagogue|temple|mosque|masjid|gurdwara|worship|baptist|methodist|lutheran|presbyterian|catholic|pentecostal|episcopal|evangelical|anglican|faith community|fellowship/) && !M(/wedding chapel|school|counsel|daycare|preschool/)) return {
+    category: 'church', tagline: 'A welcoming community of faith.',
+    about: 'We are a community that gathers to worship, learn and look after one another. You are welcome to join us.',
+    servicesTitle: 'Get involved', ctaTitle: 'Join us.', ctaText: 'Have a question before your first visit? Send us a message.',
+    services: [['Weekly worship', 'Join us to worship, pray and listen together.', '1f54a'], ['Children and families', 'Ask us what we offer for children during services.', '1f9d2'], ['Small groups', 'Smaller gatherings to study, pray and get to know people.', '1f4d6'], ['Serving our community', 'Ways to help neighbors in need.', '1f91d']] };
+  // Print and sign shops are a studio service, not a shop of goods.
+  if (M(/print|signage|sign shop|sign company|banner|embroider/)) return studio();
   if (M(/boutique|apparel|clothing|jewelry|retail|store|shop|goods|merch|gift/) && !M(/flower|florist/)) return {
     category: 'retail', tagline: 'Finds you will actually love.',
     about: 'A carefully chosen selection, not a warehouse. Everything here earned its place — come see what we picked out for you.',
     servicesTitle: 'Why shop with us', ctaTitle: 'Come take a look.', ctaText: 'Browse in store or reach out and we will hold something for you.',
     services: [['Curated', 'A tight, thoughtful selection you can trust.', '1f6cd'], ['Local', 'Owned and run by people who live here too.', '1f4cd'], ['Personal', 'Real help from people who know the stock.', '1f91d'], ['Quality', 'Pieces chosen to last, not just to sell.', '2728']] };
-  if (M(/handy|plumb|electric|hvac|heating|air condition|furnace|roof|pest|pool|gutter|contractor|remodel|renovat|fence|deck|construction|paint|flooring|drywall|siding|garage door|cabinet|countertop/)) return {
+  if (M(/handy|plumb|electric|hvac|heating|air condition|furnace|roof|pest|pool|gutter|contractor|remodel|renovat|fenc|deck|construction|paint|flooring|drywall|siding|garage door|cabinet|countertop|solar|concrete|masonry|paving|pavers/) && !(M(/fenc/) && M(/club|academy|lesson|class|school|coach|sport/))) return {
     category: 'home', tagline: 'Done right, done once.',
     about: 'Licensed, tidy and on time. We treat your home with respect and leave it better than we found it — no surprises on the bill.',
     servicesTitle: 'What we handle', ctaTitle: 'Got a project?', ctaText: 'Describe the job and we will get you a straight quote.',
@@ -128,12 +182,12 @@ function v3StarterBase(type) {
     about: 'We know this market street by street. Whether you are buying, selling or just curious, you get honest advice and someone who answers the phone.',
     servicesTitle: 'How we help', ctaTitle: 'Thinking about a move?', ctaText: 'Tell us what you are looking for and we will take it from there.',
     services: [['Buying', 'Find the right place and negotiate a fair price with confidence.', '1f3e1'], ['Selling', 'Smart pricing, great marketing and a smooth closing.', '1f511'], ['Home valuations', 'A free, honest estimate of what your home is worth today.', '1f4cf'], ['Relocation', 'New to the area? We will help you find your neighborhood.', '1f69a']] };
-  if (M(/tutor|lesson|teach|school|academy|music|piano|guitar|violin|language|driving|course|class/)) return {
+  if (M(/tutor|lesson|teach|school|academy|music|piano|guitar|violin|language|driving|course|class/) && !M(/tuner|tuning|repair|movers?|technician/)) return {
     category: 'education', tagline: 'Learning that actually sticks.',
     about: 'We meet every student where they are, set clear goals, and make the progress visible, so confidence grows along with skill.',
     servicesTitle: 'Lessons', ctaTitle: 'Ready to get started?', ctaText: 'Book a first session and we will build a plan together.',
     services: [['Private lessons', 'One-on-one sessions shaped around your goals and pace.', '1f4da'], ['Small groups', 'Learn alongside others in a focused, friendly setting.', '1f465'], ['Exam prep', 'Targeted practice and strategy for the big day.', '1f4dd'], ['Online sessions', 'The same great teaching from wherever you are.', '1f4bb']] };
-  if (M(/wedding|event|planner|florist|flower|\bdj\b|party|decor/)) return {
+  if (M(/wedding|event|planner|florist|flower|\bdj\b|party|decor|venue|banquet|reception hall/)) return {
     category: 'events', tagline: 'Your day, beautifully handled.',
     about: 'We sweat the details so you do not have to. From the first idea to the last dance, every piece comes together the way you pictured it.',
     servicesTitle: 'What we do', ctaTitle: 'Let us plan something great.', ctaText: 'Tell us your date and ideas and we will be in touch.',
@@ -143,15 +197,12 @@ function v3StarterBase(type) {
     about: 'Careful hands, honest prices and a crew that shows up on time. We treat your things like they are our own.',
     servicesTitle: 'Services', ctaTitle: 'Planning a move?', ctaText: 'Get a free quote and lock in your date.',
     services: [['Local moves', 'Fast, careful moves across town.', '1f69a'], ['Packing', 'We pack it right so it arrives in one piece.', '1f4e6'], ['Junk removal', 'Clear out what you no longer need.', '1f5d1'], ['Storage', 'Safe, secure space for whatever does not fit yet.', '1f3e2']] };
-  if (M(/consult|agency|marketing|design|developer|software|\bweb\b|it services|tech|creative|branding|copywrit/)) return {
-    category: 'studio', tagline: 'Good work, done properly.',
-    about: 'We are a small, senior team that listens carefully, communicates clearly and delivers work we are proud to put our name on.',
-    servicesTitle: 'What we do', ctaTitle: 'Have a project in mind?', ctaText: 'Tell us about it and we will reply with next steps.',
-    services: [['Strategy', 'A clear plan built around your goals and your customers.', '1f9ed'], ['Design', 'Thoughtful, polished work that looks the part.', '1f3a8'], ['Build & launch', 'We ship it, test it and make sure it works.', '1f680'], ['Ongoing support', 'Still here after launch, whenever you need us.', '1f4ac']] };
+  if (M(/consult|agency|marketing|design|developer|software|\bweb\b|it services|tech|creative|branding|copywrit|staffing|recruit|headhunt/)) return studio();
+  // No category fits: the copy is built from the type itself (v3GenericCopy), and there's no made-up service list.
   return {
-    category: 'generic', tagline: 'Proud to serve our community.',
-    about: 'We are a local business built on doing right by our neighbors — dependable service, fair prices, and people who care how it turns out.',
-    servicesTitle: 'What we do', ctaTitle: "Let's get started.", ctaText: "Reach out and we'll take it from here.", services: [['Friendly service', 'Straightforward help from people who care about getting it right.', '1f91d'], ['Tailored to you', 'We listen first, then shape the work around what you need.', '2728'], ['Here when you need us', 'Questions after the job? We are one message away.', '1f4ac']] };
+    category: 'generic', tagline: 'Here to help, close to home.',
+    about: 'We take the time to understand what you need, explain your options clearly and follow through on what we promise.',
+    servicesTitle: 'What we offer', ctaTitle: 'Get in touch.', ctaText: 'Tell us what you need and we will take it from there.', services: [] };
 }
 
 // Per-category default palette + a few editable FAQ entries (generic, never fabricated specifics).
@@ -170,8 +221,9 @@ function v3FlavorPick(arr) { return (arr && arr.length) ? arr[Math.floor(v3Rand(
 
 // Business families: decide the page recipe, the main action and the CTA voice.
 const V3_FAMILY = {
-  restaurant: 'food', cafe: 'food', bakery: 'food',
-  lawn: 'trades', cleaning: 'trades', home: 'trades', moving: 'trades', locksmith: 'trades', appliance: 'trades', auto: 'trades',
+  restaurant: 'food', cafe: 'food', bakery: 'food', bar: 'food',
+  lawn: 'trades', cleaning: 'trades', home: 'trades', moving: 'trades', locksmith: 'trades', appliance: 'trades', auto: 'trades', security: 'trades', towing: 'trades',
+  tech: 'pro', pharmacy: 'pro', funeral: 'pro', church: 'pro', hotel: 'retail',
   barber: 'beauty', salon: 'beauty', spa: 'beauty', tattoo: 'beauty', fitness: 'beauty', pet: 'beauty', tailor: 'beauty',
   legal: 'pro', finance: 'pro', realestate: 'pro', dental: 'pro', health: 'pro', studio: 'pro', education: 'pro', childcare: 'pro', generic: 'pro',
   photo: 'creative', events: 'creative', retail: 'retail', marine: 'retail',
@@ -201,6 +253,9 @@ const V3_ACTIONS = {
   call: ['appointment', 'book', 'Book a Call', 'Book a call', 'Book a call', 'Book a call', 'Choose a time that suits you and we’ll call you then.', 'Thanks. We’ll confirm your call shortly.', 'project'],
   project: ['quote', 'quote', 'Start a Project', 'Start', 'Tell us about your project', 'Start a project', 'Share what you have in mind, however rough, and we’ll reply with next steps.', 'Thanks. We’ll read it carefully and reply with next steps.', 'project'],
   avail: ['appointment', 'book', 'Availability', 'Check dates', 'Check availability', 'Check availability', 'Tell us your date and what you have in mind, and we’ll let you know if we’re free.', 'Thanks. We’ll check the date and get back to you.', 'project'],
+  repair: ['appointment', 'book', 'Book a Repair', 'Book', 'Book a repair', 'Book a repair', 'Tell us the device, what it’s doing and when suits you, and we’ll confirm a time.', 'Thanks. We’ll be in touch to confirm your repair.', 'visit'],
+  tow: ['quote', 'quote', 'Request a Tow', 'Request', 'Request a tow', 'Request a tow', 'Tell us where the vehicle is, what it is and where it needs to go. If you’re stuck at the roadside, call us.', 'Thanks. We’ll get back to you shortly with a price.', 'onsite'],
+  stay: ['appointment', 'book', 'Book a Stay', 'Book', 'Check availability', 'Check availability', 'Tell us your dates, how many guests and the kind of room you’d like, and we’ll confirm availability.', 'Thanks. We’ll check availability and get back to you shortly.', 'stay'],
   visitus: [null, '', '', 'Visit', '', 'Visit us', '', '', 'drop'],
   contact: [null, '', '', 'Contact', '', 'Get in touch', '', '', 'contact'],
 };
@@ -212,15 +267,23 @@ function v3ActionFor(cat, type, fam) {
     case 'restaurant': return M(/food truck|street food/) ? ['truck'] : M(/cater/) ? ['cater'] : M(/pizz|bbq|barbecue|smokehouse|taco|taqueria|burrito|burger|diner|sandwich|take-?out|fast food|chicken|wings|hot dog|poke|noodle bar/) ? ['order'] : ['reserve'];
     case 'bakery': return ['order'];
     case 'cafe': return ['visitus'];
-    case 'lawn': return M(/landscap|design|irrigation|tree service|hardscap/) ? ['estimate'] : ['quote'];
+    case 'bar': return ['visitus'];
+    case 'hotel': return ['stay'];
+    case 'security': return ['quote'];
+    case 'towing': return ['tow'];
+    case 'tech': return M(V3_IT_RE) ? ['call'] : ['repair'];
+    case 'pharmacy': return ['visitus'];
+    case 'funeral': return ['contact', 'Speak with us'];
+    case 'church': return ['visitus', 'Plan a visit'];
+    case 'lawn': return M(/landscap|design|irrigation|tree|arborist|stump|hardscap/) ? ['estimate'] : ['quote'];
     case 'cleaning': case 'moving': case 'locksmith': return ['quote'];
     case 'appliance': return ['service'];
-    case 'home': return M(/plumb|electric|hvac|heating|air condition|furnace|cooling|pest|pool|garage door/) ? ['service'] : M(/roof|remodel|renovat|construction|contractor|builder|paint|floor|fence|deck|siding|cabinet|countertop|drywall/) ? ['estimate'] : ['quote'];
+    case 'home': return M(/solar/) ? ['estimate'] : M(/plumb|electric|hvac|heating|air condition|furnace|cooling|pest|pool|garage door/) ? ['service'] : M(/roof|remodel|renovat|construction|contractor|builder|paint|floor|fenc|deck|siding|cabinet|countertop|drywall|concrete|masonry|paving|pavers/) ? ['estimate'] : ['quote'];
     case 'auto': return M(/car ?wash|hand wash/) ? ['visitus'] : M(/body shop|collision|\bdent/) ? ['estimate', 'Request an estimate'] : M(/detail/) ? ['garage', 'Book a detail'] : ['garage'];
     case 'marine': return ['inquire'];
     case 'barber': return ['appt', 'Book a cut'];
     case 'salon': return ['appt'];
-    case 'spa': return M(/massage/) ? ['appt', 'Book a massage'] : M(/nail|lash|brow|wax/) ? ['appt'] : ['appt', 'Book a treatment'];
+    case 'spa': return M(/massage/) ? ['appt', 'Book a massage'] : M(/nail|lash|brow|wax/) ? ['appt'] : M(/med ?spa|medical spa|medispa|aesthetic|botox|injectable/) ? ['appt', 'Book a consultation'] : ['appt', 'Book a treatment'];
     case 'tattoo': return ['consult'];
     case 'fitness': return M(/yoga|pilates|barre|spin|cycle|dance|martial|karate|jiu|bjj|taekwondo|judo|boxing|mma|kickbox/) ? ['klass'] : ['appt', 'Book a first session'];
     case 'pet': return M(/\bvet|veterinar|animal hospital/) ? ['patient'] : M(/groom/) ? ['appt', 'Book a groom'] : M(/walk/) ? ['appt', 'Book a walk'] : M(/train/) ? ['appt', 'Book a session'] : M(/board|kennel|daycare|sitt/) ? ['appt', 'Book a stay'] : ['appt', 'Book a visit'];
@@ -229,7 +292,7 @@ function v3ActionFor(cat, type, fam) {
     case 'finance': case 'realestate': return ['call'];
     case 'dental': return ['patient'];
     case 'health': return M(/counsel|therap|psycholog|mental/) && !M(/physical|massage/) ? ['consult', 'Book a first session'] : ['patient'];
-    case 'studio': return ['project'];
+    case 'studio': return M(/print|signage|sign shop|sign company|banner|embroider/) ? ['quote'] : M(/staffing|recruit|employment agency|temp agency|headhunt/) ? ['call'] : ['project'];
     case 'education': return M(/tutor/) ? ['lesson', 'Book a session'] : ['lesson'];
     case 'childcare': return ['tour'];
     case 'photo': return ['avail'];
@@ -245,8 +308,13 @@ function v3MainLabel(cat, type, fam, isShop) {
   if (fam === 'food') return 'Menu';
   if (cat === 'spa') return /nail|lash|brow|wax/.test(t) ? 'Services' : 'Treatments';
   if (cat === 'fitness') return /yoga|pilates|barre|spin|cycle|dance|martial|karate|jiu|bjj|taekwondo|judo|boxing|mma|kickbox/.test(t) ? 'Classes' : 'Training';
-  return ({ education: /tutor/.test(t) ? 'Tutoring' : 'Lessons', childcare: 'Programs', legal: 'Practice Areas', tailor: 'Alterations', dental: 'Treatments', retail: 'In Store', events: /florist|flower/.test(t) ? 'Flowers' : 'Services' })[cat] || 'Services';
+  return ({ education: /tutor/.test(t) ? 'Tutoring' : 'Lessons', childcare: 'Programs', legal: 'Practice Areas', tailor: 'Alterations', dental: 'Treatments', retail: 'In Store', events: /florist|flower/.test(t) ? 'Flowers' : 'Services', hotel: 'Rooms', church: 'Get Involved' })[cat] || 'Services';
 }
+// IT support for businesses (a "call"), as opposed to computer repair (a "repair" booking).
+const V3_IT_RE = /\bit (?:services?|support|company|consult\w*|solutions|managed|department|provider)|managed (?:it|services?)|\bmsp\b|network|cyber|help ?desk|tech support|information technology/;
+// Call-to-action voice by category, where the action's own voice doesn't fit (a bar isn't a café, a funeral home
+// doesn't "get in touch" like a shop).
+const V3_CTA_KIND_CAT = { bar: 'bar', funeral: 'care', church: 'worship' };
 // Everything a site needs to label itself coherently: header button, hero/CTA buttons, nav and page names.
 function v3Labels(cat, type, isShop) {
   const fam = isShop ? 'retail' : v3Family(cat, type);
@@ -257,7 +325,9 @@ function v3Labels(cat, type, isShop) {
   if (isShop) return Object.assign(out, { bookLabel: 'Shop now', bookShort: 'Shop', ctaKind: 'shop' });
   out.bookLabel = pick[1] || a[5];
   out.bookShort = a[3];
-  out.ctaKind = (pick[0] === 'visitus' && fam === 'food') ? 'cafe' : a[8];
+  // Somewhere to drop in for food or drink: a café's "come in for a coffee", or a plain "come and see us" for an ice
+  // cream shop or a juice bar.
+  out.ctaKind = V3_CTA_KIND_CAT[cat] || ((pick[0] === 'visitus' && fam === 'food') ? (cat === 'cafe' && !/ice ?cream|gelato|creamery|frozen yogurt|froyo|soft serve|dessert|juice|smoothie|acai|boba|bubble tea/.test(String(type || '').toLowerCase()) ? 'cafe' : 'drop') : a[8]);
   if (a[0]) out.bk = { mode: a[0], path: a[1], title: a[2], short: a[3], head: pick[1] || a[4], btn: out.bookLabel, sub: a[6], ok: a[7] };
   return out;
 }
@@ -268,7 +338,7 @@ const V3_COPY = {
   featured: ['Popular right now', 'A few favorites', 'Customer favorites', 'Where to start', 'Most requested', 'Our most popular'],
   whatWeDo: ['What we do', 'What we offer', 'How we can help', 'Ways we can help'],
   // Home teaser titles for places whose own titles just say "Menu" (the main page already carries that name).
-  menuTeaser: { restaurant: ['On the menu', 'What we’re known for', 'From the kitchen', 'House favorites'], cafe: ['On the menu', 'What we’re known for', 'Behind the counter'] },
+  menuTeaser: { restaurant: ['On the menu', 'What we’re known for', 'From the kitchen', 'House favorites'], cafe: ['On the menu', 'What we’re known for', 'Behind the counter'], bar: ['Behind the bar', 'What we pour', 'On tap'] },
   teamTitle: ['Meet the team', 'The team', 'Who you’ll meet'],
   faqTitle: ['Quick answers', 'Good to know', 'Common questions'],
   stepsTitle: ['How it works', 'What to expect', 'Getting started', 'How we work', 'From first message to finished', 'Simple from start to finish'],
@@ -293,6 +363,10 @@ const V3_COPY = {
     learn: { title: ['Book a first lesson.', 'Ready to start?', 'Let’s make a plan.'], text: ['Tell us about the student and their goals, and we’ll suggest the right lessons.', 'Get in touch to check availability and times.'] },
     tour: { title: ['Come and visit.', 'Book a tour.', 'See the rooms for yourself.'], text: ['Book a tour and meet the people who would look after your child.', 'Ask about availability and we’ll walk you through how enrollment works.'] },
     contact: { title: ['Get in touch.', 'How can we help?', 'Talk to us.'], text: ['Send us a message and we’ll get back to you soon.', 'Call or message us with any questions.'] },
+    bar: { title: ['Come in for a drink.', 'See you at the bar.', 'Pull up a stool.', 'Stop by soon.'], text: ['Grab a seat at the bar, or send us a message about a group visit.', 'Planning a party or a team night? Get in touch.', 'Questions? Call or send us a message.'] },
+    care: { title: ['We’re here to help.', 'Talk to us.', 'When you’re ready, call us.'], text: ['Call us, or send a message and we’ll get back to you.', 'Whether a death has just happened or you’re planning ahead, we’ll talk you through what happens next.', 'Ask us anything. There’s no obligation and no rush.'] },
+    worship: { title: ['Join us.', 'We’d love to meet you.', 'Come and visit.'], text: ['Have a question before your first visit? Send us a message.', 'Get in touch to ask about times, children’s programs or ways to get involved.', 'Call or send a message. We’re glad to help.'] },
+    stay: { title: ['Plan your stay.', 'Coming to town?', 'Stay with us.'], text: ['Tell us your dates and how many people are coming, and we’ll confirm availability.', 'Call us or send your dates, and we’ll get back to you with options.', 'Questions about rooms or the area? Get in touch.'] },
   },
   aboutCtaBy: {
     food: { title: ['Come and visit.', 'See you soon.', 'Pull up a chair.', 'Join us for a meal.'], text: ['We’d love to cook for you. Book a table or just drop in.', 'Have a question about the menu or a booking? Get in touch.', 'Find us, or book a table for your next visit.'] },
@@ -339,7 +413,31 @@ const V3_STEPS_BY_KIND = {
   tour: [
     [['Book a tour', 'Visit, meet the staff and see the rooms.'], ['Ask your questions', 'We explain the daily routine, meals and how enrollment works.'], ['Settle in', 'A gentle start so your child feels at home.']],
   ],
+  security: [
+    [['Tell us what to protect', 'A home, a shop or a whole site: a quick call or message starts it.'], ['We look at the property', 'We walk around, point out weak spots and recommend what fits.'], ['Installed and explained', 'Everything fitted, tested and shown to you before we leave.']],
+    [['Get in touch', 'Tell us about the property and what worries you.'], ['A plan and a price', 'The cameras, alarms or access control you need, and what it costs.'], ['Fitted properly', 'A tidy install, tested with you before we go.']],
+  ],
+  guard: [
+    [['Tell us about the site', 'The property, the hours and what worries you.'], ['We plan the cover', 'Routines, reporting and officers agreed with you.'], ['Officers on site', 'Your site covered, with a direct line to us for changes.']],
+  ],
+  tow: [
+    [['Call or message us', 'Tell us your location, the vehicle and what happened.'], ['Price and arrival time', 'You get the cost and an honest arrival time before we set off.'], ['Towed with care', 'Loaded properly and taken where you need it to go.']],
+  ],
+  repair: [
+    [['Tell us what’s wrong', 'The device, the problem and anything you’ve tried.'], ['We find the fault', 'You get the diagnosis and the price before any repair.'], ['Fixed and tested', 'We test it with you and explain what we did.']],
+  ],
+  pharmacy: [
+    [['Bring or send your prescription', 'Bring it in, or ask your prescriber to send it to us.'], ['We prepare it', 'Filled carefully and checked before it’s handed over.'], ['Collect and ask', 'Pick it up and ask the pharmacist anything you like.']],
+  ],
+  funeral: [
+    [['Call us', 'Tell us what has happened, and we’ll explain what happens next.'], ['Meet with us', 'We sit down together and plan the service at your pace.'], ['We take care of the details', 'The arrangements and the day itself, handled with care.']],
+  ],
+  church: [
+    [['Plan your visit', 'Find our times and address, and ask us anything first.'], ['Come as you are', 'Sit where you like and join in as much or as little as you want.'], ['Get to know people', 'Ask about groups, volunteering and ways to be involved.']],
+  ],
 };
+// Step titles for kinds where "From first message to finished" would read wrong.
+const V3_STEPS_TITLE = { funeral: ['What happens next', 'How we help', 'Where to start'], church: ['Your first visit', 'Planning a visit'], pharmacy: ['How it works', 'Getting your prescription'], tow: ['How it works', 'What happens when you call'], repair: ['How it works', 'What to expect'], security: ['How it works', 'From first call to installed', 'What to expect'], guard: ['How it works', 'Getting started'] };
 // "Colorful" look: richer two-color themes that suit each category.
 const V3_COLORFUL = {
   barber: ['royal', 'midnight', 'graphite'], salon: ['blush', 'plum', 'linen'], spa: ['sage', 'mint', 'harbor'],
@@ -352,8 +450,15 @@ const V3_COLORFUL = {
   realestate: ['desert', 'bottle', 'linen'], education: ['royal', 'citrus', 'sky'], events: ['blush', 'plum', 'butter'],
   moving: ['sky', 'citrus', 'ember'], studio: ['ember', 'plum', 'royal'], locksmith: ['graphite', 'butter', 'midnight'],
   appliance: ['sky', 'harbor', 'graphite'], tailor: ['linen', 'plum', 'espresso'], childcare: ['citrus', 'sky', 'mint'],
+  security: ['midnight', 'graphite', 'harbor'], towing: ['ember', 'graphite', 'citrus'], tech: ['royal', 'harbor', 'midnight'], bar: ['oxblood', 'espresso', 'ember'],
+  pharmacy: ['mint', 'harbor', 'sky'], funeral: ['slate', 'sage', 'linen'], church: ['linen', 'sage', 'royal'], hotel: ['linen', 'espresso', 'harbor'],
 };
-function v3StepsKind(cat) {
+function v3StepsKind(cat, type) {
+  const t = String(type || '').toLowerCase();
+  if (cat === 'security') return /guard|patrol|bodyguard|event security|protection|security officer/.test(t) ? 'guard' : 'security';
+  if (cat === 'towing') return 'tow';
+  if (cat === 'tech') return V3_IT_RE.test(t) ? 'project' : 'repair';
+  if (cat === 'pharmacy' || cat === 'funeral' || cat === 'church') return cat;
   if (cat === 'dental' || cat === 'health') return 'care';
   if (cat === 'education') return 'learn';
   if (cat === 'childcare') return 'tour';
@@ -361,17 +466,20 @@ function v3StepsKind(cat) {
   if (['lawn', 'cleaning', 'home', 'moving', 'locksmith', 'appliance'].indexOf(cat) > -1) return 'onsite';
   return 'project';
 }
-function v3StepsItems(cat) { const sets = V3_STEPS_BY_KIND[v3StepsKind(cat || '')] || V3_COPY.stepsSets; const set = v3FlavorPick(sets) || sets[0]; return set.map((x) => ({ name: x[0], text: x[1] })); }
+function v3StepsItems(cat, type) { const sets = V3_STEPS_BY_KIND[v3StepsKind(cat || '', type)] || V3_COPY.stepsSets; const set = v3FlavorPick(sets) || sets[0]; return set.map((x) => ({ name: x[0], text: x[1] })); }
+function v3StepsTitle(cat, type) { return v3FlavorPick(V3_STEPS_TITLE[v3StepsKind(cat || '', type)] || V3_COPY.stepsTitle); }
 function v3Pick(arr) { return arr[Math.floor(v3Rand() * arr.length)]; }
 
 // Palette fit by kind of business. Sub-types refine their category's light themes (a florist isn't a wedding
 // planner, a yoga studio isn't a gym); health and dental get blues, teals and greens, legal and finance navy,
 // slate and deep green, florists and bakeries warm colors, rose and green.
 const V3_PAL_SUB = [
+  [/juice|smoothie|acai|boba|bubble tea/, ['w_emerald', 'w_amber', 'w_lagoon', 'w_rose']],
   [/flor|flower/, ['w_rose', 'w_berry', 'w_sage', 'w_clay']], [/yoga|pilates|meditat|tai chi|barre/, ['w_sage', 'w_clay', 'w_olive', 'w_plum']],
   [/plumb|drain|sewer|water heater/, ['w_navy', 'w_lagoon', 'w_ocean', 'w_rust']], [/roof|gutter|siding/, ['w_clay', 'w_slate', 'w_navy', 'w_forest']], [/electric/, ['w_navy', 'w_amber', 'w_charcoal']], [/hvac|heating|furnace|air condition|cooling/, ['w_navy', 'w_crimson', 'w_lagoon']],
   [/(?<!men['’]?s )groom|(?<!hot )\bdogs?\b|\bpets?\b|kennel/, ['w_clay', 'w_lagoon', 'w_olive', 'w_berry']], [/steak|smokehouse|bbq|barbecue/, ['w_oxblood', 'w_rust', 'w_coffee']],
   [/massage|wellness|acupunct|chiropract|physio|therap/, ['w_sage', 'w_teal', 'w_lagoon', 'w_olive']], [/\bbar\b|pub|tavern|brew|winery|wine|taproom|cocktail|lounge/, ['w_amber', 'w_crimson', 'w_coffee']],
+  [/solar/, ['w_amber', 'w_navy', 'w_emerald']], [/danc|ballet|ballroom/, ['w_berry', 'w_plum', 'w_crimson', 'w_rose']], [/ice ?cream|gelato|creamery|frozen yogurt/, ['w_rose', 'w_berry', 'w_lagoon', 'w_amber']],
 ];
 const V3_PAL_CAT = { dental: ['w_teal', 'w_ocean', 'w_emerald'], health: ['w_teal', 'w_emerald', 'w_ocean'], legal: ['w_navy', 'w_forest', 'w_oxblood', 'w_slate'], finance: ['w_navy', 'w_forest', 'w_slate'], childcare: ['w_amber', 'w_rose', 'w_teal'], bakery: ['w_amber', 'w_rust', 'w_rose'] };
 function v3PalSet(cat, type) { const t = String(type || '').toLowerCase(), hit = V3_PAL_SUB.find(function (x) { return x[0].test(t); }); return hit ? hit[1] : (V3_PAL_CAT[cat] || null); }
@@ -379,9 +487,9 @@ function v3PalSet(cat, type) { const t = String(type || '').toLowerCase(), hit =
 function v3DarkChance(cat, type) {
   const t = String(type || '').toLowerCase();
   if (/yoga|pilates|meditat|barre|massage|wellness|kids|child|family/.test(t)) return 0;
-  if (/\bbar\b|pub|tavern|brew|taproom|cocktail|lounge|nightclub|speakeasy|winery/.test(t)) return 0.45;
+  if (/\bbar\b|pub|tavern|brew|taproom|cocktail|lounge|nightclub|speakeasy|winery/.test(t) && !/juice|smoothie|salad|snack|dessert/.test(t)) return 0.45;
   if (cat === 'restaurant') return /breakfast|brunch|diner|juice|smoothie|cafe|cater|bakery|kids/.test(t) ? 0 : 0.35;
-  return { barber: 0.35, tattoo: 0.45, photo: 0.3, studio: 0.3, auto: 0.3, fitness: 0.2 }[cat] || 0;
+  return { barber: 0.35, tattoo: 0.45, photo: 0.3, studio: 0.3, auto: 0.3, fitness: 0.2, security: 0.5, towing: 0.3, tech: 0.2, bar: 0.45 }[cat] || 0;
 }
 function v3Starter(type, cred) {
   const r = v3StarterBase(type);
@@ -394,7 +502,8 @@ function v3Starter(type, cred) {
   if (C.servicesTitle) r.servicesTitle = v3FlavorPick(C.servicesTitle) || r.servicesTitle;
   if (C.services && C.services.length) { r.services = v3PickSome(C.services, 4, 2); r.servicePool = C.services; }
   // A sub-type (plumber, electrician...) has a few hand-written searches: one per site, searched first (v3PhotoQueries).
-  if (C.photo) { r.photoQuery = Array.isArray(C.photo) ? v3FlavorPick(C.photo) : C.photo; if (C.re) r.photoSub = true; }
+  // So does a category whose type words alone search badly ("security" finds padlocks, "bar" finds chocolate).
+  if (C.photo) { r.photoQuery = Array.isArray(C.photo) ? v3FlavorPick(C.photo) : C.photo; if (C.re || C.photoFirst) r.photoSub = true; }
   r.taglinePool = C.tagline || [];
   r.servicesTitlePool = C.servicesTitle || [r.servicesTitle];
   // Labels follow what this business actually asks visitors to do (a counter-service taqueria takes orders,
@@ -438,6 +547,14 @@ function v3Starter(type, cred) {
     appliance: ['w_ocean', 'w_slate', 'w_teal'],
     tailor: ['w_coffee', 'w_charcoal', 'w_plum'],
     childcare: ['w_amber', 'w_teal', 'w_rose'],
+    security: ['w_navy', 'w_navy', 'w_charcoal', 'w_indigo'],
+    towing: ['w_amber', 'w_crimson', 'w_charcoal'],
+    tech: ['w_indigo', 'w_ocean', 'w_teal', 'w_slate'],
+    bar: ['w_oxblood', 'w_amber', 'w_coffee', 'w_crimson'],
+    pharmacy: ['w_teal', 'w_emerald', 'w_ocean'],
+    funeral: ['w_slate', 'w_sage', 'w_navy', 'w_olive'],
+    church: ['w_navy', 'w_sage', 'w_clay', 'w_plum'],
+    hotel: ['w_navy', 'w_clay', 'w_coffee', 'w_forest'],
   };
   // Type themes that suit each category, first one most often: 'bold' (condensed), 'grotesk' (Inter Tight),
   // 'clean' (Plex), 'editorial' (Newsreader), 'refined' (DM Serif), 'classic' (Playfair), 'friendly' (Nunito).
@@ -447,10 +564,11 @@ function v3Starter(type, cred) {
     photo: ['editorial', 'grotesk'], retail: ['editorial', 'refined', 'grotesk'], lawn: ['geo', 'grotesk', 'warm'], cleaning: ['geo', 'friendly', 'clean'], pet: ['warm', 'friendly', 'friendly'], generic: ['clean', 'grotesk'],
     legal: ['classic', 'elegant', 'editorial'], dental: ['geo', 'clean', 'friendly'], health: ['geo', 'clean', 'refined'], finance: ['classic', 'clean'], realestate: ['classic', 'editorial'], education: ['friendly', 'clean'],
     events: ['elegant', 'refined'], moving: ['sturdy', 'grotesk'], studio: ['grotesk', 'bold', 'geo'], locksmith: ['sturdy', 'bold'], appliance: ['geo', 'clean'], tailor: ['editorial', 'refined', 'classic'], childcare: ['friendly', 'friendly', 'clean'],
+    security: ['sturdy', 'bold', 'grotesk'], towing: ['sturdy', 'bold'], tech: ['geo', 'grotesk', 'clean'], bar: ['classic', 'bold', 'warm', 'editorial'], pharmacy: ['geo', 'clean', 'friendly'], funeral: ['refined', 'classic', 'elegant'], church: ['classic', 'refined', 'friendly', 'editorial'], hotel: ['classic', 'refined', 'editorial', 'elegant'],
   };
   const _tt = (typeof WSENGINE !== 'undefined' && WSENGINE.typeThemes) || {};
-  // A yoga or pilates studio is calm, not a condensed gym poster.
-  const _tsub = /yoga|pilates|meditat|barre/i.test(String(type || '')) ? ['warm', 'elegant', 'refined'] : null;
+  // A yoga or pilates studio is calm, not a condensed gym poster; a dance studio is lively but not a gym either.
+  const _tsub = /yoga|pilates|meditat|barre/i.test(String(type || '')) ? ['warm', 'elegant', 'refined'] : /danc|ballet|ballroom/i.test(String(type || '')) ? ['grotesk', 'elegant', 'bold'] : null;
   const _ts = (_tsub || TYPE_BY_CAT[r.category] || ['bold', 'clean']).filter((x) => _tt[x]);
   r.typeset = v3FlavorPick(_ts.length ? _ts : ['bold']);
   r.palette = v3FlavorPick(v3PalSet(r.category, type) || PAL_SETS[r.category] || ['w_mono', 'w_slate', 'w_charcoal']);
@@ -458,6 +576,49 @@ function v3Starter(type, cred) {
   // (evening food and drink, barbers, tattoo, creative studios, auto, gyms); never health, professional or family care.
   try { const _dc = v3DarkChance(r.category, type); if (v3Rand() < _dc) { const _dk = 'b_' + r.palette.slice(2); if (WSENGINE.palettes.some((p) => p.id === _dk)) r.palette = _dk; } } catch (e) {}
   r.faq = v3PickSome((C.faq || V3_COPYBOOK.generic.faq).filter((q) => (L.act === 'reserve' || !/reserv|book a table/i.test(q.join(' '))) && v3CredOk(q[0], cred)), 3, 1);
+  if (r.category === 'generic') v3GenericCopy(r, type, cred);
+  return r;
+}
+// What kind of word the business type ends in, and the type as it reads in a sentence: "Underwater basket weaving"
+// is an activity, "Doula" a person, "Escape room" a place. Trailing filler ("company", "services") is dropped, and
+// a type that is nothing but filler ("Local business") gives no phrase at all.
+function v3TypePhrase(type) {
+  const raw = String(type || '').replace(/[^A-Za-z0-9&’'\- ]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const w = raw ? raw.split(' ') : [];
+  // "Septic service" keeps its noun ("Septic" alone isn't a thing anyone offers); "Towing company" drops it.
+  while (w.length > 1 && V3_GENERIC_TRAIL.test(w[w.length - 1]) && !(w.length === 2 && /^services?$/i.test(w[1]))) w.pop();
+  if (!w.length || w.every((x) => V3_VAGUE_WORD.test(x.toLowerCase()) || V3_GENERIC_TRAIL.test(x))) return null;
+  const phrase = w.map((x) => (/^[A-Z0-9&]{2,5}$/.test(x) && !/^[AI]$/.test(x) ? x : x.toLowerCase())).join(' ');
+  const last = w[w.length - 1].toLowerCase();
+  const kind = V3_GENERIC_PLACE.test(last) ? 'place' : (V3_GENERIC_PERSON.test(last) && !V3_GENERIC_THING.test(last) && !/ing$/.test(last)) ? 'person' : 'activity';
+  return { phrase: phrase, kind: kind };
+}
+// Copy for a type that matches no category: lines that name the type, no invented services. When the type lists
+// several things ("Screen printing & embroidery", "Kayak and paddleboard rentals"), those become the services.
+function v3GenericCopy(r, type, b) {
+  const tp = v3TypePhrase(type), city = v3City(b || {});
+  r.services = []; r.servicePool = [];
+  if (!tp) return r;
+  const P = V3_GENERIC[tp.kind], T = tp.phrase, TC = T.charAt(0).toUpperCase() + T.slice(1);
+  const AT = (/^[aeiou]/i.test(T) && !/^(uni|use|one)/i.test(T) ? 'an ' : 'a ') + T;
+  const fill = (x) => x.replace(/\{ATC\}/g, AT.charAt(0).toUpperCase() + AT.slice(1)).replace(/\{AT\}/g, AT).replace(/\{TC\}/g, TC).replace(/\{T\}/g, T)
+    .replace(/\[in CITY\]/g, city ? ' in ' + city : '').replace(/\[based in CITY\]/g, city ? ' based in ' + city : '').replace(/CITY/g, city);
+  const pool = (arr) => (arr || []).filter((x) => city || x.replace(/\[[^\]]*CITY\]/g, '').indexOf('CITY') < 0).map(fill);
+  r.taglinePool = pool(P.tagline);
+  r.tagline = v3FlavorPick(r.taglinePool) || r.tagline;
+  r.aboutPool = pool(P.about);
+  r.about = v3FlavorPick(r.aboutPool) || r.about;
+  if (!(r.labels && r.labels.family === 'food')) r.ctaTitle = v3FlavorPick(pool(P.ctaTitle)) || r.ctaTitle;
+  r.genericType = T;
+  if (r.faq && r.faq.length && /^How do I get started\?$/.test(r.faq[0][0])) r.faq[0] = [fill(P.faq0), r.faq[0][1]];
+  // Services only when the type itself lists them.
+  const parts = String(type || '').split(/\s*(?:,|&|\+|\/|\band\b)\s*/i).map((x) => x.replace(/\s+/g, ' ').trim()).filter((x) => x.length >= 3);
+  if (parts.length >= 2 && parts.length <= 5) {
+    const tail = parts[parts.length - 1].split(' ');
+    const names = parts.map((x, i) => (i < parts.length - 1 && x.split(' ').length === 1 && tail.length >= 2) ? x + ' ' + tail[tail.length - 1] : x);
+    r.services = names.map((x) => { const n = x.charAt(0).toUpperCase() + x.slice(1); return [n, 'Ask us about ' + x.toLowerCase().replace(/^(?=[a-z])/, '') + ' and we’ll explain what’s involved.', '']; });
+    r.servicePool = r.services;
+  }
   return r;
 }
 
@@ -471,7 +632,9 @@ const PHOTO_QUERY = {
   lawn: 'landscaper gardening lawn', cleaning: 'house cleaner cleaning home', marine: 'boat on the water marina',
   auto: 'mechanic repairing car garage', fitness: 'personal trainer gym workout', pet: 'dog groomer grooming dog', photo: 'photographer camera studio',
   retail: 'boutique shop interior', home: 'carpenter renovating home', generic: 'local small business storefront',
-  locksmith: 'locksmith door lock key', appliance: 'appliance repair technician', tailor: 'tailor sewing alterations', childcare: 'children daycare classroom play'
+  locksmith: 'locksmith door lock key', appliance: 'appliance repair technician', tailor: 'tailor sewing alterations', childcare: 'children daycare classroom play',
+  security: 'security camera installation technician', towing: 'tow truck', tech: 'computer repair technician', bar: 'bartender bar drinks', pharmacy: 'pharmacist pharmacy',
+  funeral: 'sympathy flowers candles', church: 'church congregation', hotel: 'hotel room'
 };
 // One Unsplash search → normalized photos, best match first. null = the request failed (no point retrying),
 // [] = it worked but found nothing.
@@ -536,6 +699,11 @@ const V3_PHOTO_TERMS = [
   [/roof|gutter/, 'roof shingle roofer gutter ladder tiles chimney'],
   [/paint/, 'paint painter brush roller wall'], [/lawn|landscap|mow|garden/, 'lawn grass garden mower yard hedge'],
   [/clean|maid|janitor/, 'clean cleaning mop vacuum spray'], [/locksmith|\block/, 'lock key door'],
+  [/securit|alarm|cctv|surveillance|guard|patrol/, 'security camera cctv guard alarm surveillance officer patrol uniform installer technician'], [/\btow|wrecker|roadside/, 'tow truck flatbed wrecker roadside vehicle'],
+  [/computer|laptop|\bit\b|tech support|phone repair|network/, 'computer laptop repair technician motherboard circuit screen server network'], [/pharmac|drugstore/, 'pharmacy pharmacist medicine prescription pills shelves'],
+  [/funeral|cremat|memorial/, 'flowers lilies candle chapel memorial'], [/church|chapel|worship|ministr/, 'church worship congregation chapel pews'], [/hotel|motel|\binn\b|bed and breakfast/, 'hotel room bed lobby suite'],
+  [/\bbar\b|\bpub\b|brew|taproom|tavern|cocktail|lounge/, 'bar bartender beer cocktail taps drinks pub'], [/solar/, 'solar panel panels roof installer'], [/fenc/, 'fence fencing posts gate'],
+  [/concrete|masonry|paving/, 'concrete driveway pour slab mason'], [/tree|arborist|stump/, 'tree arborist chainsaw trimming climbing'],
 ];
 // [business type, words that mean the photo shows something else]. Skipped when the type itself has the word
 // (a pizza bakery may show pizza).
@@ -552,6 +720,8 @@ const V3_PHOTO_CONFLICT = [
   [/pizz/, /sushi|burger|cupcake/],
   [/barber/, /nail polish|manicure/], [/\bnail/, /barber|beard|shave/],
   [/\bdog|\bpet\b|groom/, /\bcats?\b|kitten/],
+  [/securit|alarm|cctv|surveillance|guard|patrol/, /padlock|\bchains?\b|hacker|binary|\bcode\b|cyber|keyboard|password|\btoy\b/],
+  [/funeral|cremat|memorial/, /party|celebrat|wedding|smiling|halloween|skull|birthday/],
 ];
 const V3_PHOTO_DESK = /laptop|computer|\boffice\b|\bdesk\b|meeting|smartphone|keyboard|typing|business ?(man|woman)|\bsuit\b/;
 const V3_PHOTO_POSE = /portrait|posing|\bposes?\b|selfie|headshot|fashion|\bmodel\b|smiling (man|woman)/;
@@ -564,7 +734,8 @@ function v3PhotoRel(biz, sc) {
   v3Words(sc && sc.photoQuery).split(' ').forEach(add);
   ((biz && biz.services) || []).forEach(function (s) { v3Words(s && s.name).split(' ').forEach(add); });
   V3_PHOTO_TERMS.forEach(function (x) { if (x[0].test(t)) x[1].split(' ').forEach(add); });
-  return { terms: Object.keys(terms).map(function (w) { return new RegExp('\\b' + w); }), bad: V3_PHOTO_CONFLICT.filter(function (x) { return x[0].test(t) && !x[1].test(t); }).map(function (x) { return x[1]; }), trades: !!(sc && sc.labels && sc.labels.family === 'trades'), people: !!(sc && sc.labels && /^(trades|beauty|pro)$/.test(sc.labels.family)) };
+  // A funeral home's photos are flowers and quiet rooms, not people at work.
+  return { terms: Object.keys(terms).map(function (w) { return new RegExp('\\b' + w); }), bad: V3_PHOTO_CONFLICT.filter(function (x) { return x[0].test(t) && !x[1].test(t); }).map(function (x) { return x[1]; }), trades: !!(sc && sc.labels && sc.labels.family === 'trades'), people: !!(sc && sc.labels && /^(trades|beauty|pro)$/.test(sc.labels.family) && sc.category !== 'funeral' && sc.category !== 'church') };
 }
 function v3PhotoScore(p, rel) {
   const s = (p && p.txt) || '';
@@ -880,6 +1051,8 @@ function v3VisitTitle(fam, act, b, cat) {
   if (act === 'truck') return city ? 'Find us around ' + city + '.' : 'Where to find us.';
   if (fam === 'trades' && !(cat === 'auto' && b.address)) return city ? v3Pick(['Serving ' + city + ' and nearby.', 'Working in and around ' + city + '.']) : (b.address ? 'Where to find us.' : 'Get in touch.');
   if (!b.address) return city ? v3Pick(['Based in ' + city + '.', 'Find us in ' + city + '.']) : 'Get in touch.';
+  const byCat = { church: ['Join us.', 'Visit us.', 'Find us.'], pharmacy: ['Visit the pharmacy.', 'Find us.', 'Come and see us.'], funeral: ['Find us.', 'Visit us.', 'Where to find us.'], hotel: ['Getting here.', 'Find us.', 'Where we are.'], bar: ['Come by for a drink.', 'Find us.', 'Visit us.'] };
+  if (byCat[cat]) return v3Pick(byCat[cat]);
   const pools = { food: cat === 'restaurant' ? ['Come and eat with us.', 'Find us.', 'Visit us.'] : ['Come by.', 'Find us.', 'Visit us.'], beauty: ['Visit us.', 'Find us.', 'Come and see us.'], pro: ['Visit our office.', 'Find us.', 'Where to find us.'], retail: cat === 'retail' ? ['Visit the shop.', 'Find us.', 'Come and see us.'] : ['Visit us.', 'Find us.', 'Come and see us.'] };
   return v3Pick(pools[fam] || ['Find us.', 'Visit us.']);
 }
@@ -934,7 +1107,7 @@ function v3ServeLine(b) {
 // A title from a { city, plain } pool: the city version when there is a city (CITY replaced), else a plain one.
 function v3CityPick(pool, b) { const city = v3City(b); return city && pool.city ? v3Pick(pool.city).replace(/CITY/g, city) : v3Pick(pool.plain || ['Why choose us']); }
 // A plain line for a named service with no description (a card is never just a title), varied per business.
-function v3SvcFill(fam, name, i) { const p = V3_SVC_FILL[fam] || V3_SVC_FILL.pro; return p[(parseInt(v3Hash(name), 36) + i) % p.length]; }
+function v3SvcFill(fam, name, i, cat) { const p = V3_SVC_FILL_CAT[cat] || V3_SVC_FILL[fam] || V3_SVC_FILL.pro; return p[(parseInt(v3Hash(name), 36) + i) % p.length]; }
 function v3Years(b) { return b.founded ? new Date().getFullYear() - parseInt(b.founded, 10) : -1; }
 // Businesses that go to their customers (trades, cleaners, movers, mobile services) get an "Areas we serve" block.
 function v3ServiceArea(fam, cat, type, b) { return (fam === 'trades' && !(cat === 'auto' && b.address && !/mobile/i.test(type))) || /\bmobile\b|dog walk|pet sit|house ?sit|walker|we come to you/i.test(String(type || '')); }
@@ -977,9 +1150,11 @@ function v3WhyItems(b, cat, fam, hasArea, trust) {
   }
   if ((b.licensed || b.insured) && !trust) out.push(b.licensed && b.insured ? { icon: 'shield-check', title: 'Licensed and insured', text: 'Fully licensed and insured, so you’re covered.', source: 'licensed' } : b.licensed ? { icon: 'shield-check', title: 'Fully licensed', text: 'We’re licensed, and happy to share the details.', source: 'licensed' } : { icon: 'shield-check', title: 'Fully insured', text: 'We’re insured, so you’re covered while we work.', source: 'insured' });
   if (b.founded) { const y = { icon: 'calendar', title: n >= 2 ? n + ' years in ' + (city || 'business') : 'Since ' + b.founded, text: city ? 'Serving ' + city + ' since ' + b.founded + '.' : 'In business since ' + b.founded + '.', source: 'years' }; if (trust) spares.unshift(y); else out.push(y); }
-  if (city || (b.towns || []).length) { const l = { icon: 'map-pin', title: city ? 'Local to ' + city : 'Local to the area', text: (hasArea && city && v3Nearby(b).length) ? 'Based in ' + city + ' and working in the towns around it.' : (v3ServeLine(b) || 'We’re based in ' + city + ', close to the people we work for.'), source: 'local' }; if (trust && hasArea && (b.towns || []).length) spares.push(l); else out.push(l); }
+  if (city || (b.towns || []).length) { const l = { icon: 'map-pin', title: city ? 'Local to ' + city : 'Local to the area', text: (hasArea && city && v3Nearby(b).length) ? 'Based in ' + city + ' and working in the towns around it.' : (v3ServeLine(b) || 'We’re based in ' + city + ', close to the people we work for.'), source: 'local' }; if (city && V3_WHY_LOCAL[cat]) { l.title = V3_WHY_LOCAL[cat][0].replace(/CITY/g, city); l.text = V3_WHY_LOCAL[cat][1].replace(/CITY/g, city); } if (trust && hasArea && (b.towns || []).length) spares.push(l); else out.push(l); }
   const have = {}; out.forEach(function (x) { have[x.title.toLowerCase()] = 1; });
-  const pool = (V3_WHY[cat] || []).concat(V3_WHY[cat === 'childcare' ? 'childcare' : fam] || V3_WHY.generic).filter(function (x, i, a) { return a.findIndex(function (y) { return y[1] === x[1]; }) === i && !have[x[1].toLowerCase()] && !(cat === 'cleaning' && /clean up/i.test(x[1])) && !(b.unique && Object.keys(v3SigWords(x[1] + ' ' + x[2])).some(function (w) { return w.length >= 6 && v3SigWords(b.unique)[w]; })); });
+  // A sub-type's own points first (a dance studio isn't a gym), then the category's, then the family's.
+  const sub = v3CopyFor(b.type, cat), own = (sub && sub.re && sub.why) || V3_WHY[cat] || [];
+  const pool = own.concat(V3_WHY_OWN[cat] ? [] : (V3_WHY[cat === 'childcare' ? 'childcare' : fam] || V3_WHY.generic)).filter(function (x, i, a) { return a.findIndex(function (y) { return y[1] === x[1]; }) === i && !have[x[1].toLowerCase()] && !(cat === 'cleaning' && /clean up/i.test(x[1])) && !(b.unique && Object.keys(v3SigWords(x[1] + ' ' + x[2])).some(function (w) { return w.length >= 6 && v3SigWords(b.unique)[w]; })); });
   while (out.length < 4 && pool.length) { const p = pool.splice(Math.floor(v3Rand() * pool.length), 1)[0]; out.push({ icon: p[0], title: p[1], text: p[2], source: 'starter' }); }
   while (out.length < 3 && spares.length) out.push(spares.shift());
   const ic = (typeof WSENGINE !== 'undefined' && WSENGINE.ICONS) || null;
@@ -991,7 +1166,12 @@ function v3WhyItems(b, cat, fam, hasArea, trust) {
 }
 // The mark in the header until the owner uploads a logo: { style, icon }, a valid line-icon id, varied per business.
 // Specific kinds first (a dog wash is a pet business, a kindergarten isn't a garden, a photographer isn't pho).
-const V3_MARK_PRE = [[/hot dog|food truck|food stand/, ['utensils', 'chef-hat']], [/yoga|pilates|meditat|barre/, ['yoga', 'flower', 'sun', 'leaf']], [/flor|flower/, ['flower', 'flower-2', 'leaf']], [/financ|wealth|invest/, ['chart-column', 'briefcase', 'landmark']], [/wedding|event plan|party plan|planner/, ['heart', 'calendar-check', 'sparkles']],
+const V3_MARK_PRE = [[/locksmith/, ['key-round', 'lock']], [/securit(?!ies)|alarm|cctv|surveillance|guard|patrol|bodyguard|access control/, ['shield', 'shield-check']], [/\btow(?:ing|s)?\b|tow truck|wrecker|roadside/, ['truck', 'traffic-cone', 'route']],
+  [/computer|laptop|\bpcs?\b|phone repair|\bit (?:services?|support|company)|managed it|network|tech support|data recovery|cyber/, ['laptop', 'cog']], [/pharmac|drugstore|apothecary/, ['pill', 'heart-pulse']], [/funeral|mortuary|cremat|memorial/, ['flower-2', 'leaf', 'bird']],
+  [/church|chapel|ministr|parish|cathedral|baptist|methodist|lutheran|presbyterian|catholic|pentecostal|episcopal|evangelical|anglican|christian/, ['church', 'heart']], [/bed (?:and|&) breakfast|\bb ?& ?b\b|guest ?house|\binn\b/, ['bed-double', 'coffee', 'house']], [/hotel|motel|hostel|\blodge\b|resort/, ['bed-double', 'key-round', 'building-2']],
+  [/solar/, ['sun', 'zap']], [/fenc/, ['fence', 'hammer']], [/concrete|masonry|paving|pavers/, ['brick-wall', 'hard-hat', 'hammer']], [/mortgage|home loan|lender/, ['house', 'key-round', 'landmark']], [/staffing|recruit|employment agency|temp agency|headhunt/, ['users', 'briefcase', 'handshake']],
+  [/screen ?print|embroider|custom (?:t-?shirts?|apparel)/, ['shirt', 'palette']], [/print|signage|sign shop|banner/, ['file-text', 'palette']], [/venue|banquet|event (?:hall|space)|reception hall/, ['building-2', 'party-popper']], [/brew|taproom|tap room|\bpubs?\b|tavern|beer|cidery/, ['beer', 'wheat']],
+  [/juice|smoothie|acai|boba|bubble tea/, ['cup-soda']], [/hot dog|food truck|food stand/, ['utensils', 'chef-hat']], [/yoga|pilates|meditat|barre/, ['yoga', 'flower', 'sun', 'leaf']], [/flor|flower/, ['flower', 'flower-2', 'leaf']], [/financ|wealth|invest/, ['chart-column', 'briefcase', 'landmark']], [/wedding|event plan|party plan|planner/, ['heart', 'calendar-check', 'sparkles']],
   [/massage/, ['hand-heart', 'leaf', 'flower-2']], [/\bnail/, ['sparkle', 'gem', 'hand-heart']], [/lash|\bbrows?\b|eyebrow/, ['eye', 'sparkle']], [/day ?spa|\bspas?\b|facial|esthet|skin ?care/, ['sparkle', 'flower-2', 'droplet']],
   [/\bvet|veterinar|animal hosp/, ['paw-print', 'stethoscope']], [/(?<!hot )\bdogs?\b|\bpets?\b|(?<!men['’]?s )groom|kennel|\bcats?\b/, ['paw-print', 'dog', 'bone']],
   [/daycare|day care|child ?care|preschool|pre-k|nursery|kindergarten|montessori|after.?school|nanny|babysit/, ['baby', 'blocks', 'smile']],
@@ -1002,12 +1182,13 @@ const V3_MARK_PRE = [[/hot dog|food truck|food stand/, ['utensils', 'chef-hat']]
   [/\bbike|bicycle|cycling/, ['bike']], [/book ?(store|shop)|bookseller/, ['book-open']], [/gift/, ['gift']], [/boutique|apparel|clothing/, ['shirt', 'shopping-bag']], [/cater/, ['chef-hat', 'utensils']], [/gym|crossfit|boxing|fitness|personal train/, ['dumbbell']]];
 const V3_MARK_ICONS = [[/garage door/, ['house', 'wrench']], [/plumb|drain|sewer|water heater/, ['droplet', 'wrench']], [/electric/, ['zap', 'plug', 'lightbulb']], [/hvac|heating|furnace|air condition|cooling/, ['thermometer', 'snowflake', 'wind']], [/roof|gutter|siding/, ['house', 'hammer']], [/paint/, ['paintbrush', 'paint-roller']], [/pest/, ['bug']], [/pool/, ['waves', 'droplets']], [/\block/, ['key-round', 'lock']], [/appliance|washer|dryer|fridge|refrigerat|dishwasher/, ['washing-machine', 'wrench']], [/tree/, ['trees', 'tree-deciduous']], [/lawn|landscap|garden|yard|mow|turf/, ['leaf', 'sprout', 'trees']], [/clean|maid|janitor|housekeep|wash/, ['sparkles', 'spray-can']], [/mov|haul|junk/, ['truck', 'package']], [/auto|mechanic|car\b|tire|garage|detail/, ['car', 'wrench']], [/handy|contract|remodel|renovat|construct|build|carpent|deck|fence|floor|drywall|cabinet|countertop/, ['hammer', 'wrench', 'hard-hat']],
   [/coffee|cafe|espresso|roaster/, ['coffee']], [/cake|cupcake/, ['cake', 'cake-slice']], [/bak|pastr|patisserie|croissant|bread|bagel|donut/, ['croissant', 'wheat']], [/pizz/, ['pizza']], [/sushi|seafood|fish/, ['fish']], [/bbq|barbecue|smokehouse|grill|steak/, ['flame', 'beef']], [/taco|taqueria|burrito|cantina/, ['utensils-crossed']], [/ice cream|gelato|creamery|frozen yogurt/, ['ice-cream-cone']], [/\bbar\b|\bpub\b|brew|winery|wine|tavern|taproom/, ['wine']], [/juice|smoothie|boba|bubble tea/, ['cup-soda']], [/sandwich|\bdeli\b/, ['sandwich']], [/soup|ramen|noodle|\bpho\b/, ['soup']]];
-const V3_MARK_BY_CAT = { barber: ['razor', 'scissors'], salon: ['scissors'], spa: ['hand-heart', 'sparkle'], tattoo: ['pen-tool'], fitness: ['dumbbell'], pet: ['paw-print'], tailor: ['scissors', 'ruler'], legal: ['scale', 'landmark'], finance: ['chart-column', 'briefcase'], realestate: ['house', 'key-round'], dental: ['tooth'], health: ['heart-pulse', 'stethoscope'], studio: ['pen-tool', 'compass'], education: ['graduation-cap', 'book-open'], childcare: ['baby', 'blocks'], photo: ['camera'], events: ['party-popper', 'flower-2'], retail: ['shopping-bag', 'gem'], marine: ['anchor', 'sailboat'] };
+const V3_MARK_BY_CAT = { security: ['shield', 'shield-check'], towing: ['truck'], tech: ['laptop', 'cog'], bar: ['wine', 'beer'], pharmacy: ['pill'], funeral: ['flower-2', 'leaf'], church: ['heart', 'sun', 'hand-heart'], hotel: ['bed-double', 'key-round'], barber: ['razor', 'scissors'], salon: ['scissors'], spa: ['hand-heart', 'sparkle'], tattoo: ['pen-tool'], fitness: ['dumbbell'], pet: ['paw-print'], tailor: ['scissors', 'ruler'], legal: ['scale', 'landmark'], finance: ['chart-column', 'briefcase'], realestate: ['house', 'key-round'], dental: ['tooth'], health: ['heart-pulse', 'stethoscope'], studio: ['pen-tool', 'compass'], education: ['graduation-cap', 'book-open'], childcare: ['baby', 'blocks'], photo: ['camera'], events: ['party-popper', 'flower-2'], retail: ['shopping-bag', 'gem'], marine: ['anchor', 'sailboat'] };
 function v3LogoMark(fam, cat, type) {
   const t = String(type || '').toLowerCase(), ic = WSENGINE.ICONS || {};
   const hit = V3_MARK_PRE.concat(V3_MARK_ICONS).find(function (x) { return x[0].test(t); });
   let opts = (hit ? hit[1] : fam === 'trades' ? ['wrench', 'hammer', 'house'] : fam === 'food' ? ['utensils', 'chef-hat'] : (V3_MARK_BY_CAT[cat] || [])).filter(function (x) { return ic[x]; });
-  if (!opts.length) { let f = ''; try { f = WSENGINE.iconFor({}, type); } catch (e) {} opts = [ic[f] ? f : 'sparkles']; }
+  // Nothing fits: the type's own words where they suggest an icon ("Bike repair" → wrench), never the generic tick.
+  if (!opts.length) { let f = ''; try { f = WSENGINE.iconFor({ name: type }, type); } catch (e) {} opts = [ic[f] && f !== 'circle-check' ? f : 'sparkles']; }
   const style = fam === 'trades' ? v3Pick(['badge', 'icon']) : (fam === 'pro' || fam === 'beauty') ? v3Pick(['wordmark', 'monogram']) : fam === 'food' ? v3Pick(['wordmark', 'icon']) : 'wordmark';
   return { style: style, icon: v3Pick(opts) };
 }
@@ -1154,11 +1335,12 @@ function v3Pages(site, sc, isShop) {
     const trustItems = (fam === 'trades' || fam === 'pro') && can('trust') ? v3TrustItems(b) : [];
     const trust = trustItems.length >= 2 ? mk('trust', { variant: v3Look('trust', trustItems.length >= 3 ? ['band', 'band', 'strip', 'cards'] : ['strip', 'band']), title: '' }) : null;
     const area = (b.towns || []).length && can('area') && v3ServiceArea(fam, cat, b.type, b) ? mk('area', { variant: v3Look('area', []), title: v3CityPick(V3_AREA_TITLE, b), text: [v3ServeLine(b) || (b.city ? 'Based in ' + v3City(b) + '.' : ''), 'Not sure if we cover your address? Get in touch and we’ll let you know.'].filter(Boolean).join(' ') }) : null;
-    const whyItems = (fam === 'trades' || fam === 'pro' || fam === 'beauty') && can('why') ? v3WhyItems(b, cat, fam, !!area, !!trust) : [];
-    const why = whyItems.length >= 3 ? mk('why', { variant: v3Look('why', ['grid', 'split']), title: v3CityPick(V3_WHY_TITLE[fam] || V3_WHY_TITLE.pro, b), items: whyItems }) : null;
+    // A hotel is a retail-family site, but guests still want to know why to stay.
+    const whyItems = (fam === 'trades' || fam === 'pro' || fam === 'beauty' || cat === 'hotel') && can('why') ? v3WhyItems(b, cat, fam, !!area, !!trust) : [];
+    const why = whyItems.length >= 3 ? mk('why', { variant: v3Look('why', ['grid', 'split']), title: v3CityPick(V3_WHY_TITLE_CAT[cat] || V3_WHY_TITLE[fam] || V3_WHY_TITLE.pro, b), items: whyItems }) : null;
     // The supporting line under a headline-first opening: a plain local line (the owner's own answer already leads the
     // story or the why points). Stored on the hero, so it shows (and can be edited) in those layouts only.
-    if (hero && !WSENGINE.str(hero.sub)) { const city = v3City(b); hero.sub = city && V3_HERO_SUB[fam] ? v3Pick(V3_HERO_SUB[fam]).replace(/CITY/g, city) : ''; }
+    if (hero && !WSENGINE.str(hero.sub)) { const city = v3City(b), hs = V3_HERO_SUB_CAT[cat] || V3_HERO_SUB[fam]; hero.sub = city && hs ? v3Pick(hs).replace(/CITY/g, city) : ''; }
     let homeUsedIntro = false;
     let homeIntro = null;
     const V3_PROMISE = {
@@ -1167,7 +1349,8 @@ function v3Pages(site, sc, isShop) {
       pro: ['Clear answers, fair prices and work we’re proud to put our name on.', 'We listen first, keep you informed and deliver what we promised.', 'Small enough to care, experienced enough to get it right.'],
     };
     V3_PROMISE.creative = V3_PROMISE.pro;
-    const aboutPool = (((sc && sc.aboutPool) || (V3_FLAVORS[cat] && V3_FLAVORS[cat].about) || []).concat(V3_PROMISE[fam] || [])).filter((t) => t && t !== (intro && intro.text) && t !== (sc && sc.about));
+    // A church, a funeral home or a hotel doesn't promise "clear answers, fair prices": only its own lines.
+    const aboutPool = (((sc && sc.aboutPool) || (V3_FLAVORS[cat] && V3_FLAVORS[cat].about) || []).concat(V3_WHY_OWN[cat] ? [] : (V3_PROMISE[fam] || []))).filter((t) => t && t !== (intro && intro.text) && t !== (sc && sc.about));
     if (!menu && intro) { homeIntro = intro; homeUsedIntro = true; }
     else if (aboutPool.length) {
       // With "why choose us" on the page, the story band says something the points don't (no restating them).
@@ -1177,7 +1360,7 @@ function v3Pages(site, sc, isShop) {
       const line = v3Pick(fresh.length ? fresh : aboutPool);
       if (fresh.length) homeIntro = mk('intro', { variant: v3Look('intro', V3_LOOKS.intro[fam]), title: '', text: (b.unique && !why ? v3Sentence(b.unique) + ' ' : '') + line, emoji: '' });
     }
-    const steps = (!isShop && !isFood && fam !== 'retail' && cat !== 'generic' && (services || prices)) ? mk('steps', { variant: v3Look('steps', V3_LOOKS.steps[fam]), title: v3FlavorPick(V3_COPY.stepsTitle), items: v3StepsItems(cat) }) : null;
+    const steps = (!isShop && !isFood && fam !== 'retail' && cat !== 'generic' && (services || prices)) ? mk('steps', { variant: v3Look('steps', V3_LOOKS.steps[fam]), title: v3StepsTitle(cat, b.type), items: v3StepsItems(cat, b.type) }) : null;
     const gal = gallery[0] || null;
     if (gal) gal.variant = v3Look('gallery', V3_LOOKS.gallery[fam]);
     // Short FAQs on professional and trades sites sit open (every answer visible); longer ones and other families fold.
@@ -1232,7 +1415,7 @@ function v3Pages(site, sc, isShop) {
     const mainSection = products || services || prices;
     if (mainSection) {
       const mainSecs = [];
-      mainSecs.push(mk('pagehead', { title: mainLabel, text: v3FlavorPick(isShop ? V3_COPY.shopHead : (isFood ? V3_COPY.menuHead : V3_COPY.servicesHead)), emoji: '' }));
+      mainSecs.push(mk('pagehead', { title: mainLabel, text: v3FlavorPick(isShop ? V3_COPY.shopHead : (V3_MAIN_HEAD_CAT[cat] || (isFood ? V3_COPY.menuHead : V3_COPY.servicesHead))), emoji: '' }));
       if (mainSection.type === 'services') mainSection.variant = v3Look('services', V3_LOOKS.mainList[fam]);
       mainSecs.push(mainSection);
       if (prices && prices !== mainSection) mainSecs.push(prices);
@@ -1296,6 +1479,7 @@ const V3_AI_RULES = [
   'Never use: you can count on, quality service, trusted, solutions, one-stop, your one-stop, look no further, top-notch, second to none, we pride ourselves, all your … needs, wide range, various, for your convenience, in no time, and "experience" as a filler noun ("a relaxing experience").',
   'Service descriptions are crisp noun phrases that say what is included, like a menu line: "Corn tortillas, slow-cooked fillings and fresh salsa." / "A bath, custom cut, nail trim and ear cleaning." / "Leaks traced and fixed, with the price agreed first." Never start one with You get, You’ll get, These, This service, This is, We provide, We offer, Experience, Enjoy or Our.',
   'Taglines read as a short sentence or a crisp phrase ("Sonoran recipes, hand-pressed tortillas." / "Bread baked overnight, on the shelf by morning."), never a possessive label such as "Your dog’s calm grooming experience" and never ending in experience, solutions or services.',
+  'When suggestServices is true (a kind of business we have no template for, and the owner listed no services), services may instead be 3–5 services this kind of business plainly offers, judged only from its type and the facts: each a short plain name of 1–4 words (no prices, numbers, brand names, certifications, guarantees or claims) with one crisp line. Otherwise never add, drop or rename a service.',
   'Fields. taglines: 3 different candidates, 4–9 words each; never the business name; leave the city out unless it reads naturally; build on what makes them different when the facts give it; never a light rewording of the draft tagline. intro: 2–3 sentences in the owner’s voice ("we") weaving together what makes them different, where they work and what they do. about: 3–4 sentences telling their story from the facts. services: exactly one crisp noun-phrase line per service saying what’s included (see the examples above); no second sentence, no filler. why: only as many as counts.why, a short title and one sentence each, about things the facts or the kind of business support. faq: answer the draft questions in the same order (you may reword a question slightly); direct, useful answers that never promise specifics the facts don’t give (say "Call us and we’ll explain" instead). cta: a short, specific title and one sentence. Stay within the limits; shorter is better.',
 ].join('\n');
 const V3_AI_SCHEMA = { type: 'OBJECT', properties: {
@@ -1315,6 +1499,21 @@ const V3_AI_FILLER = /you can count on|count on us|quality (service|work|workman
 const V3_AI_SVC_OPEN = /^(you get|you['’]ll get|you will get|these\b|this service|this is\b|we provide|we offer|experience\b|enjoy\b|our\b)/i;
 // Taglines that are a label, not a line: "Your dog's calm grooming experience", "… solutions", "… services".
 const V3_AI_TAG_LABEL = /\b(experience|solutions|services)\W*$|^your [a-z-]+['’]s\b/i;
+// Suggested service names (only for types without a template, when the owner listed none): at most this many, at
+// least two, and never a non-name like "Services", "Other", "Quality" or the old filler trio.
+const V3_AI_NEW_SVC_MAX = 5;
+const V3_AI_SVC_JUNK = /^(services?|other( services)?|misc\w*|more|general|various|extras?|quality( work| service)?|customer service|friendly service|tailored to you|clear pricing|here when you need us|great service|fair prices?|free \w+|and more|everything|anything|all of it)$/i;
+function v3AiSvcName(x, ctx) {
+  const c = v3AiCheck(x, 40, ctx, 'name');
+  if (!c.v) return c;
+  const n = c.v.replace(/[.,:;]+$/, '').trim();
+  if (n.split(/\s+/).length > 5) return { r: 'words' };
+  if (/\d/.test(n)) return { r: 'number' };
+  if (!/^[A-Za-z]/.test(n) || /[$%@#|\\/?]|https?:|www\./i.test(n)) return { r: 'symbol' };
+  if (V3_AI_SVC_JUNK.test(n) || V3_VAGUE_SERVICE.test(v3Words(n))) return { r: 'vague' };
+  if (ctx.name && ctx.name.length >= 4 && v3AiNorm(n).indexOf(ctx.name) > -1) return { r: 'name' };
+  return { v: n.charAt(0).toUpperCase() + n.slice(1) };
+}
 function v3AiKeys(env) { try { if (typeof geminiKeys === 'function') return geminiKeys(env); } catch (e) {} return env && env.GEMINI_API_KEY ? String(env.GEMINI_API_KEY).split(',').map(function (k) { return k.trim(); }).filter(Boolean) : []; }
 function v3AiCap(env) { const n = parseInt(env && env.AI_MONTHLY_CAP, 10); return isNaN(n) || n < 0 ? 3000 : n; }
 // Count one call against the monthly cap (ai:count:YYYY-MM) before making it. No KV, no counter, no calls.
@@ -1391,7 +1590,7 @@ async function v3AiCopy(env, facts, draft) {
   let timer = 0;
   const body = JSON.stringify({
     systemInstruction: { parts: [{ text: V3_AI_RULES }] },
-    contents: [{ role: 'user', parts: [{ text: JSON.stringify({ brief: v3AiBrief(facts), facts: facts, draft: draft.copy, limits: V3_AI_ASK, counts: { taglines: 3, why: (draft.copy.why || []).length, faq: (draft.copy.faq || []).length } }) }] }],
+    contents: [{ role: 'user', parts: [{ text: JSON.stringify(Object.assign({ brief: v3AiBrief(facts), facts: facts, draft: draft.copy, limits: V3_AI_ASK, counts: Object.assign({ taglines: 3, why: (draft.copy.why || []).length, faq: (draft.copy.faq || []).length }, draft.suggestServices ? { services: '3-' + V3_AI_NEW_SVC_MAX } : {}) }, draft.suggestServices ? { suggestServices: true } : {})) }] }],
     generationConfig: { responseMimeType: 'application/json', responseSchema: V3_AI_SCHEMA, temperature: 0.7, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } },
   });
   let fail = 'error';
@@ -1435,6 +1634,19 @@ async function v3AiCopy(env, facts, draft) {
   const intro = T('intro', out.intro, C.intro, 'intro'); if (intro) res.intro = intro;
   const about = T('about', out.about, C.about, 'long'); if (about) res.about = about;
   const sv = {}; (Array.isArray(out.services) ? out.services : []).forEach(function (s, i) { const v = s && T('services.' + i, s.text, C.svc, 'svc'); if (v && s.name) sv[String(s.name).trim().toLowerCase()] = v; }); if (Object.keys(sv).length) res.services = sv;
+  // New service names, only when the draft asked for them: each name and line checked like any other field, no
+  // repeats, at most V3_AI_NEW_SVC_MAX, and at least two (one card on its own looks like a mistake).
+  if (draft.suggestServices) {
+    const seen = {}, ns = [];
+    (Array.isArray(out.services) ? out.services : []).forEach(function (s, i) {
+      if (!s || ns.length >= V3_AI_NEW_SVC_MAX) return;
+      const n = v3AiSvcName(s.name, ctx); if (!n.v) { rej.push('services.' + i + ':name_' + n.r); return; }
+      const k = v3AiNorm(n.v); if (seen[k]) { rej.push('services.' + i + ':repeat'); return; }
+      const v = sv[String(s.name).trim().toLowerCase()]; if (!v) return;
+      seen[k] = 1; ns.push({ name: n.v, text: v });
+    });
+    if (ns.length >= 2) res.newServices = ns; else rej.push('services:few');
+  }
   const why = (Array.isArray(out.why) ? out.why : []).slice(0, Math.max((draft.copy.why || []).length, 2)).map(function (w, i) { const a = w && T('why.' + i, w.title, C.whyT), b = a && T('why.' + i, w.text, C.whyX); return a && b ? { title: a, text: b } : null; }).filter(Boolean); if (why.length) res.why = why;
   // FAQ, answer by answer: one that breaks a rule keeps the template's question and answer in its place.
   const df = draft.copy.faq || [], nf = df.length, af = Array.isArray(out.faq) ? out.faq : [];
@@ -1445,6 +1657,17 @@ async function v3AiCopy(env, facts, draft) {
   }
   if (out.cta) { const a = T('cta', out.cta.title, C.ctaT), b = a && T('cta', out.cta.text, C.ctaX); if (a && b) res.cta = { title: a, text: b }; }
   return res;
+}
+// Before the pages are built: AI-suggested services for a type without a template (the owner listed none) become the
+// services section, so the home teaser, the Services page and the booking form all use them. Returns true if used.
+function v3AiAddServices(site, ai, sc) {
+  if (!ai || ai.fail || !ai.newServices || ai.newServices.length < 2) return false;
+  if (site.sections.some(function (s) { return s.type === 'services' || s.type === 'products' || s.type === 'prices'; })) return false;
+  const at = site.sections.findIndex(function (s) { return s.type === 'intro'; });
+  const hi = site.sections.findIndex(function (s) { return s.type === 'hero'; });
+  const sec = Object.assign({ id: 'services-' + WSENGINE.uid(), type: 'services' }, WSENGINE.sections.services.create(site), { variant: 'grid', title: (sc && sc.servicesTitle) || 'What we offer', items: ai.newServices.map(function (x) { return { emoji: '', name: x.name, text: x.text, from: '' }; }) });
+  site.sections.splice((at > -1 ? at : hi) + 1, 0, sec);
+  return true;
 }
 // Put the checked AI fields into the finished pages. Owner-written text, owner-answer why points, names, prices,
 // links and the section structure stay as they are. Returns the fields that came from the AI; a field that had
@@ -1618,7 +1841,7 @@ async function buildV3Site(d, env, opts) {
       const _items = biz.services.filter(function (x) { return x.name; }).map(function (x, i) {
         const k = _norm(x.name);
         const hit = _starter.find(function (s) { return s.k && (s.k === k || (k.length > 3 && (s.k.indexOf(k) > -1 || k.indexOf(s.k) > -1))); });
-        return { emoji: knownType ? ((hit && hit.emoji) || _recs[(i + 2) % (_recs.length || 1)] || '') : '', name: x.name, text: x.desc || (hit ? hit.text : '') || v3SvcFill(sc.labels.family, biz.name, i), from: x.price || '' };
+        return { emoji: knownType ? ((hit && hit.emoji) || _recs[(i + 2) % (_recs.length || 1)] || '') : '', name: x.name, text: x.desc || (hit ? hit.text : '') || v3SvcFill(sc.labels.family, biz.name, i, sc.category), from: x.price || '' };
       });
       add('services', { variant: 'grid', title: sc.servicesTitle || 'What we do', items: _items });
     }
@@ -1657,7 +1880,9 @@ async function buildV3Site(d, env, opts) {
     // Past the monthly Google cap, Google is skipped entirely. Unsplash fetches spares as each Google slot's backup.
     // AI wording, asked once and in parallel with the photo lookups (real /create generations only).
     const _starterFaq = !_ofaq.length;
-    const _aiDraft = { phone: biz.phone, address: biz.address, cityFull: biz.city, taglinePool: sc.taglinePool || [], prices: biz.services.map(function (s) { return s.price; }).filter(Boolean), copy: { tagline: heroTag, intro: aboutText, services: (site.sections.find(function (s) { return s.type === 'services'; }) || { items: [] }).items.map(function (it) { return { name: it.name, text: it.text }; }), why: v3WithSeed(seed + '|whydraft', function () { return v3WhyItems(biz, sc.category, sc.labels.family, !!((biz.towns || []).length && WSENGINE.sections.area && v3ServiceArea(sc.labels.family, sc.category, biz.type, biz)), v3TrustOn(biz, sc.labels.family)); }).filter(function (w) { return w.source === 'starter'; }).map(function (w) { return { title: w.title, text: w.text }; }), faq: _starterFaq ? (sc.faq || []).map(function (x) { return { q: x[0], a: v3FaqFit(x[0], x[1], biz) }; }) : [], cta: { title: sc.ctaTitle || '', text: sc.ctaText || '' } } };
+    // A type with no template and no owner services: the AI may suggest the services (checked in v3AiCopy).
+    const _suggest = sc.category === 'generic' && !isShop && !site.sections.some(function (s) { return s.type === 'services' || s.type === 'products'; });
+    const _aiDraft = { suggestServices: _suggest, phone: biz.phone, address: biz.address, cityFull: biz.city, taglinePool: sc.taglinePool || [], prices: biz.services.map(function (s) { return s.price; }).filter(Boolean), copy: { tagline: heroTag, intro: aboutText, services: (site.sections.find(function (s) { return s.type === 'services'; }) || { items: [] }).items.map(function (it) { return { name: it.name, text: it.text }; }), why: v3WithSeed(seed + '|whydraft', function () { return v3WhyItems(biz, sc.category, sc.labels.family, !!((biz.towns || []).length && WSENGINE.sections.area && v3ServiceArea(sc.labels.family, sc.category, biz.type, biz)), v3TrustOn(biz, sc.labels.family)); }).filter(function (w) { return w.source === 'starter'; }).map(function (w) { return { title: w.title, text: w.text }; }), faq: _starterFaq ? (sc.faq || []).map(function (x) { return { q: x[0], a: v3FaqFit(x[0], x[1], biz) }; }) : [], cta: { title: sc.ctaTitle || '', text: sc.ctaText || '' } } };
     const _aiP = (opts && opts.ai) ? v3AiCopy(env, v3AiFacts(biz, sc, site.sections.map(function (s) { return s.type; })), _aiDraft).catch(function () { return null; }) : Promise.resolve(null);
     try {
       const _gOn = !!biz.googlePlaceId && (await gphotoLeft(env)) > 0;
@@ -1699,10 +1924,14 @@ async function buildV3Site(d, env, opts) {
     // Assign the site id up front so the contact form can bake its /api/form/<siteId> action.
     const siteId = 'ws' + Math.random().toString(36).slice(2, 9);
     site.siteId = siteId;
+    // The AI answer is awaited before the pages are built (it ran alongside the photo lookups, so this adds no wait):
+    // suggested services have to be in place before the pages are split.
+    const _ai = await _aiP;
+    const _aiSvc = v3AiAddServices(site, _ai, sc);
     // Build a real multi-page site (Home + Shop/Menu/Services + About + Contact) with cross-page nav.
     v3WithSeed(seed + '|layout', function () { v3Pages(site, sc, isShop); });
-    const _ai = await _aiP;
-    const _aiUsed = v3AiApply(site, _ai, biz, _starterFaq);
+    const _aiUsed = v3AiApply(site, _ai, biz, _starterFaq).filter(function (x) { return !_aiSvc || x !== 'services'; });
+    if (_aiSvc) _aiUsed.unshift('services');
     site.copySource = _aiUsed.length ? 'ai' : 'template';
     if (_aiUsed.length) site.copyFields = _aiUsed;
     // Why AI fields fell back (short codes such as tagline:template, faq.1:claim, intro:no_section, ai:timeout).

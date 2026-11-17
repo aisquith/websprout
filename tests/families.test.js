@@ -30,7 +30,7 @@ module.exports = async function (ctx, t) {
     ['Auto repair', 'Book a service', 'Book', 'Services'], ['Barber shop', 'Book a cut', 'Book', 'Services'], ['Nail salon', 'Book an appointment', 'Book', 'Services'], ['Massage therapist', 'Book a massage', 'Book', 'Treatments'],
     ['Yoga studio', 'Book a class', 'Book', 'Classes'], ['Dog grooming', 'Book a groom', 'Book', 'Services'], ['Tattoo studio', 'Book a consultation', 'Consultation', 'Services'], ['Law firm', 'Book a consultation', 'Consultation', 'Practice Areas'],
     ['Dentist', 'Request an appointment', 'Appointments', 'Treatments'], ['Accountant', 'Book a call', 'Book a Call', 'Services'], ['Daycare', 'Book a tour', 'Book a Tour', 'Programs'], ['Piano lessons', 'Book a first lesson', 'Book', 'Lessons'],
-    ['Florist', 'Order flowers', 'Order', 'Flowers'], ['Wedding photographer', 'Check availability', 'Availability', 'Services'], ['Web design agency', 'Start a project', 'Start a Project', 'Services'], ['Church', 'Get in touch', null, 'Services'],
+    ['Florist', 'Order flowers', 'Order', 'Flowers'], ['Wedding photographer', 'Check availability', 'Availability', 'Services'], ['Web design agency', 'Start a project', 'Start a Project', 'Services'], ['Church', 'Plan a visit', null, 'Get Involved'],
   ];
   const wrong = [];
   for (const [type, btn, page, main] of LABELS) {

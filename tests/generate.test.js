@@ -100,7 +100,9 @@ module.exports = async function (ctx, t) {
   {
     const src = require('fs').readFileSync(require('path').join(__dirname, '../src/49-copy.js'), 'utf8');
     const { BOOK, SUBS, copyFor } = new Function(src + ';return { BOOK: V3_COPYBOOK, SUBS: V3_SUBTYPES, copyFor: v3CopyFor };')();
-    const thin = Object.keys(BOOK).filter((k) => { const c = BOOK[k]; return !(c.tagline.length >= 8 && c.about.length >= 3 && c.services.length >= 4 && c.ctaTitle.length >= 4 && c.ctaText.length >= 3 && c.faq.length >= 4 && c.photo); });
+    // The generic fallback has no starter services on purpose (no made-up list; see categories.test.js).
+    t.eq(BOOK.generic.services.length, 0, 'the generic fallback has no made-up starter services');
+    const thin = Object.keys(BOOK).filter((k) => k !== 'generic').filter((k) => { const c = BOOK[k]; return !(c.tagline.length >= 8 && c.about.length >= 3 && c.services.length >= 4 && c.ctaTitle.length >= 4 && c.ctaText.length >= 3 && c.faq.length >= 4 && c.photo); });
     t.eq(thin.join(','), '', 'every business type has plenty of starter copy to draw from');
     const strings = []; const walk = (v) => { if (typeof v === 'string') strings.push(v); else if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === 'object' && !(v instanceof RegExp)) Object.values(v).forEach(walk); };
     walk(BOOK); walk(SUBS);
