@@ -1,3 +1,4 @@
+const lib = require('./lib');
 // Publishing, the live site, contact forms, inbox and reviews.
 const { createSite, post, openPage, sleep } = require('./lib');
 
@@ -7,13 +8,23 @@ module.exports = async function (ctx, t) {
   const slug = 'qa' + Date.now().toString(36);
   // pretend the owner published while looking at the About page
   const html = s.html.replace('</body>', '<script>window.__wsInitPath="about";</script></body>');
-  let r = await post(base, '/publish', { html, siteId: s.siteId, key: s.formKey, slug });
+  let r = await lib.pubPost(base, { html, siteId: s.siteId, key: s.formKey, slug });
   t.eq(r.status, 200, 'publish succeeds');
-  r = await post(base, '/publish', { html, siteId: s.siteId, key: 'wrong', slug });
+  r = await lib.pubPost(base, { html, siteId: s.siteId, key: 'wrong', slug });
   t.eq(r.status, 403, 'publish with a wrong key is refused');
   const other = await createSite(base, { name: 'Other', type: 'Bakery' });
-  r = await post(base, '/publish', { html: 'x', siteId: other.siteId, key: other.formKey, slug });
+  r = await lib.pubPost(base, { html: 'x', siteId: other.siteId, key: other.formKey, slug });
   t.eq(r.status, 400, 'another site cannot take a published name');
+  // Publishing needs a signed-in account, and only the site's owner can publish it again.
+  const anon = await createSite(base, { name: 'Anon Shop', type: 'Bakery' });
+  const aslug = 'qa-anon' + Date.now().toString(36);
+  r = await post(base, '/publish', { html: anon.html, siteId: anon.siteId, key: anon.formKey, slug: aslug });
+  t.ok(r.status === 401 && r.json && r.json.signin === true, 'publishing without an account is refused and asks to sign in');
+  t.eq((await fetch(base + '/s/' + aslug)).status === 200, false, 'nothing was published anonymously');
+  r = await lib.pubPost(base, { html, siteId: s.siteId, key: s.formKey, slug }, null, 'someone-else@example.com');
+  t.eq(r.status, 403, 'another account cannot publish over the owner\'s site, even with the key');
+  r = await lib.pubPost(base, { html, siteId: s.siteId, key: s.formKey, slug });
+  t.eq(r.status, 200, 'the owner can publish updates');
   r = await post(base, '/unpublish', { slug, siteId: other.siteId, key: other.formKey });
   t.ok(r.status >= 400, 'another site cannot unpublish it');
 

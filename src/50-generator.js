@@ -17,7 +17,7 @@ function v3StarterBase(type) {
     about: 'Gentle, attentive care from people who genuinely like animals. Your pet is in good hands — and you will see it when you pick them up.',
     servicesTitle: 'What we offer', ctaTitle: 'Give your pet the best.', ctaText: 'Tell us about your companion and we will set things up.',
     services: [['Grooming', 'Baths, cuts and nails that leave them fresh and happy.', '1f6c1'], ['Boarding', 'A safe, comfortable stay while you are away.', '1f3e1'], ['Daycare', 'Play, exercise and company all day long.', '1f415'], ['Wellness', 'Attentive care that keeps them feeling their best.', '1f43e']] };
-  if (M(/\bhair|stylist|blowout/) || (M(/salon/) && !M(/nail|tann|lash|brow|\bwax|skin|massage/))) return {
+  if (M(/\bhair|stylist|blowout/) || (M(/salon/) && !M(/nail|tann|lash|brow|\bwax|skin|massage|bridal|wedding (?:dress|gown)/))) return {
     category: 'salon', tagline: 'Hair you will want to show off.',
     about: 'From a trim to a full transformation, we listen first and cut to suit you — your hair, your face, your routine.',
     servicesTitle: 'Services', ctaTitle: 'Let us find your look.', ctaText: 'Book a chair and tell us what you have in mind.',
@@ -146,7 +146,7 @@ function v3StarterBase(type) {
     services: [['Weekly worship', 'Join us to worship, pray and listen together.', '1f54a'], ['Children and families', 'Ask us what we offer for children during services.', '1f9d2'], ['Small groups', 'Smaller gatherings to study, pray and get to know people.', '1f4d6'], ['Serving our community', 'Ways to help neighbors in need.', '1f91d']] };
   // Print and sign shops are a studio service, not a shop of goods.
   if (M(/print|signage|sign shop|sign company|banner|embroider/)) return studio();
-  if (M(/boutique|apparel|clothing|jewelry|retail|store|shop|goods|merch|gift/) && !M(/flower|florist/)) return {
+  if (M(/boutique|apparel|clothing|jewelry|retail|store|shop|goods|merch|gift|bridal(?! (?:makeup|hair|beauty))|wedding (?:dress|gown)/) && !M(/flower|florist/)) return {
     category: 'retail', tagline: 'Finds you will actually love.',
     about: 'A carefully chosen selection, not a warehouse. Everything here earned its place — come see what we picked out for you.',
     servicesTitle: 'Why shop with us', ctaTitle: 'Come take a look.', ctaText: 'Browse in store or reach out and we will hold something for you.',
@@ -297,7 +297,7 @@ function v3ActionFor(cat, type, fam) {
     case 'childcare': return ['tour'];
     case 'photo': return ['avail'];
     case 'events': return M(/florist|flower/) ? ['flowers'] : ['avail'];
-    case 'retail': return ['visitus'];
+    case 'retail': return M(/bridal|wedding (?:dress|gown)|bridesmaid/) ? ['appt', 'Book an appointment'] : ['visitus'];
   }
   return [fam === 'food' ? 'visitus' : 'contact'];
 }
@@ -308,7 +308,7 @@ function v3MainLabel(cat, type, fam, isShop) {
   if (fam === 'food') return 'Menu';
   if (cat === 'spa') return /nail|lash|brow|wax/.test(t) ? 'Services' : 'Treatments';
   if (cat === 'fitness') return /yoga|pilates|barre|spin|cycle|dance|martial|karate|jiu|bjj|taekwondo|judo|boxing|mma|kickbox/.test(t) ? 'Classes' : 'Training';
-  return ({ education: /tutor/.test(t) ? 'Tutoring' : 'Lessons', childcare: 'Programs', legal: 'Practice Areas', tailor: 'Alterations', dental: 'Treatments', retail: 'In Store', events: /florist|flower/.test(t) ? 'Flowers' : 'Services', hotel: 'Rooms', church: 'Get Involved' })[cat] || 'Services';
+  return ({ education: /tutor/.test(t) ? 'Tutoring' : 'Lessons', childcare: 'Programs', legal: 'Practice Areas', tailor: 'Alterations', dental: 'Treatments', retail: /bridal|wedding (?:dress|gown)|bridesmaid/.test(t) ? 'Bridal' : 'In Store', events: /florist|flower/.test(t) ? 'Flowers' : 'Services', hotel: 'Rooms', church: 'Get Involved' })[cat] || 'Services';
 }
 // IT support for businesses (a "call"), as opposed to computer repair (a "repair" booking).
 const V3_IT_RE = /\bit (?:services?|support|company|consult\w*|solutions|managed|department|provider)|managed (?:it|services?)|\bmsp\b|network|cyber|help ?desk|tech support|information technology/;
@@ -1769,13 +1769,46 @@ function parseServicesText(txt) {
   return out.slice(0, 12);
 }
 
+// Setup's "What do you offer?" chips: the services this generator itself starts from for the business type (the same
+// category and sub-type matching as buildV3Site, so a picked chip gets the matching starter description), plus a few
+// example answers to "Why do customers pick you?". A type that matches no category gets no services (never made up).
+function v3Suggest(type) {
+  const t = String(type == null ? '' : type).replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
+  if (t.length < 2 || !/[a-z]/i.test(t)) return { services: [], why: [], category: 'generic' };
+  const cat = v3StarterBase(t).category || 'generic', low = t.toLowerCase();
+  const services = [], seen = {};
+  if (cat !== 'generic') (v3CopyFor(t, cat).services || []).forEach(function (s) { const n = String((s && s[0]) || '').trim(), k = n.toLowerCase(); if (n && !seen[k] && services.length < 10) { seen[k] = 1; services.push(n); } });
+  const sub = V3_UNIQUE_EX_SUB.find(function (x) { return x[0].test(low) && (!x[2] || x[2] === cat); });
+  return { services: services, why: (sub ? sub[1] : (V3_UNIQUE_EX[cat] || V3_UNIQUE_EX.generic)).slice(0, 3), category: cat };
+}
+// GET /api/suggest?type=<business type>. Public, read-only and same-origin only (the setup form); lightly rate-limited.
+async function doSuggest(request, env) {
+  const H = { 'Content-Type': 'application/json' };
+  const raw = new URL(request.url).searchParams.get('type') || '';
+  if (raw.length > 100) return new Response(JSON.stringify({ ok: false, error: 'That business type is too long.', services: [], why: [], category: 'generic' }), { status: 400, headers: H });
+  // Test servers apply the limit only to requests that name a test IP (as /create does).
+  if (env.WS_TEST_MODE !== '1' || request.headers.get('x-ws-test-ip')) {
+    const ip = wsClientIp(request, env);
+    if (!(await wsRate(env, 'sgrate:' + new Date().toISOString().slice(0, 13) + ':' + ip, 240, 3600))) return new Response(JSON.stringify({ ok: false, error: 'Too many requests. Try again in a little while.', services: [], why: [], category: 'generic' }), { status: 429, headers: H });
+  }
+  return new Response(JSON.stringify(Object.assign({ ok: true }, v3Suggest(raw))), { headers: Object.assign({ 'Cache-Control': 'private, max-age=3600' }, H) });
+}
+
 async function buildV3Site(d, env, opts) {
-  if (d && !Array.isArray(d.services) && typeof d.servicesText === 'string' && d.servicesText.trim()) {
-    d = Object.assign({}, d, { services: parseServicesText(d.servicesText) });
+  if (d && typeof d.servicesText === 'string' && d.servicesText.trim()) {
+    // Services typed or picked in setup (one per line). Alongside a services list they are merged, without duplicates.
+    const _fromText = parseServicesText(d.servicesText);
+    if (!Array.isArray(d.services)) d = Object.assign({}, d, { services: _fromText });
+    else {
+      const _k = function (s) { return String((s && s.name) || '').toLowerCase().replace(/[^a-z0-9]+/g, ''); }, _have = {};
+      d.services.forEach(function (s) { _have[_k(s)] = 1; });
+      d = Object.assign({}, d, { services: d.services.concat(_fromText.filter(function (s) { const k = _k(s); if (!k || _have[k]) return false; _have[k] = 1; return true; })) });
+    }
   }
   {
     const _cat0 = v3StarterBase((d.type || '').toString()).category;
-    const isShop = !!d.ecommerce || (/shop|store|boutique|retail|e-?commerce|goods|merch/i.test((d.type || '').toString()) && (_cat0 === 'retail' || _cat0 === 'generic'));
+    // A bridal shop sells by appointment (try-ons, fittings), not from an online catalog.
+    const isShop = !!d.ecommerce || (/shop|store|boutique|retail|e-?commerce|goods|merch/i.test((d.type || '').toString()) && !/bridal|wedding (?:dress|gown)/i.test((d.type || '').toString()) && (_cat0 === 'retail' || _cat0 === 'generic'));
     const biz = {
       name: (d.name || '').toString().trim().slice(0, 80) || 'Your Business',
       type: (d.type || '').toString().trim().slice(0, 60) || 'Local Business',
@@ -1829,22 +1862,25 @@ async function buildV3Site(d, env, opts) {
     if (d.announce) add('announce', { text: String(d.announce).slice(0, 120), emoji: knownType ? '1f389' : '' });
     add('hero', { variant: 'photo', title: '', tagline: heroTag, status: false, emoji: '' });
     if (aboutText) add('intro', { variant: 'center', text: aboutText, emoji: '' });
-    if (isShop) {
-      const _prods = (Array.isArray(d.products) ? d.products.slice(0, 48).map(function (p) { return { name: (p.name || '').toString().slice(0, 80), price: (p.price || '').toString().slice(0, 20), desc: (p.desc || '').toString().slice(0, 160), emoji: (p.emoji || '').toString().slice(0, 12), photo: '' }; }) : []);
-      if (_prods.length) add('products', { variant: 'grid', title: (d.shopTitle ? String(d.shopTitle).slice(0, 60) : 'Shop'), items: _prods });
-      else if (sc.services && sc.services.length) add('services', { variant: 'grid', title: sc.servicesTitle || 'Why shop with us', items: sc.services.map(function (s) { return { emoji: s[2] || '', name: s[0], text: s[1], from: '' }; }) });
-    }
-    else if (has(biz.services)) {
+    // The owner's own services (typed, or picked as chips in setup), each with the matching starter line and icon when
+    // it is one of this type's starter services, else a plain line for the family (never an empty card).
+    const _ownItems = function () {
       const _norm = function (x) { return String(x || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/s\b/g, '').trim(); };
       const _starter = (sc.servicePool || sc.services || []).map(function (s) { return { k: _norm(s[0]), text: s[1], emoji: s[2] || '' }; });
       let _recs = []; try { _recs = WSENGINE.emojiRecsFor(biz.type) || []; } catch (e) {}
-      const _items = biz.services.filter(function (x) { return x.name; }).map(function (x, i) {
+      return biz.services.filter(function (x) { return x.name; }).map(function (x, i) {
         const k = _norm(x.name);
         const hit = _starter.find(function (s) { return s.k && (s.k === k || (k.length > 3 && (s.k.indexOf(k) > -1 || k.indexOf(s.k) > -1))); });
-        return { emoji: knownType ? ((hit && hit.emoji) || _recs[(i + 2) % (_recs.length || 1)] || '') : '', name: x.name, text: x.desc || (hit ? hit.text : '') || v3SvcFill(sc.labels.family, biz.name, i, sc.category), from: x.price || '' };
+        return { emoji: (hit && hit.emoji) || (knownType ? (_recs[(i + 2) % (_recs.length || 1)] || '') : ''), name: x.name, text: x.desc || (hit ? hit.text : '') || v3SvcFill(sc.labels.family, biz.name, i, sc.category), from: x.price || '' };
       });
-      add('services', { variant: 'grid', title: sc.servicesTitle || 'What we do', items: _items });
+    };
+    if (isShop) {
+      const _prods = (Array.isArray(d.products) ? d.products.slice(0, 48).map(function (p) { return { name: (p.name || '').toString().slice(0, 80), price: (p.price || '').toString().slice(0, 20), desc: (p.desc || '').toString().slice(0, 160), emoji: (p.emoji || '').toString().slice(0, 12), photo: '' }; }) : []);
+      if (_prods.length) add('products', { variant: 'grid', title: (d.shopTitle ? String(d.shopTitle).slice(0, 60) : 'Shop'), items: _prods });
+      else if (has(biz.services)) add('services', { variant: 'grid', title: sc.servicesTitle || 'Why shop with us', items: _ownItems() });
+      else if (sc.services && sc.services.length) add('services', { variant: 'grid', title: sc.servicesTitle || 'Why shop with us', items: sc.services.map(function (s) { return { emoji: s[2] || '', name: s[0], text: s[1], from: '' }; }) });
     }
+    else if (has(biz.services)) add('services', { variant: 'grid', title: sc.servicesTitle || 'What we do', items: _ownItems() });
     else if (sc.services && sc.services.length) { add('services', { variant: 'grid', title: sc.servicesTitle || 'What we do', items: sc.services.map(function (s) { return { emoji: s[2] || '', name: s[0], text: s[1], from: '' }; }) }); }
     if (biz.googlePlaceId) add('reviews', { variant: 'google', title: 'What people say' });
     else if (has(biz.reviews)) add('reviews', { variant: 'wall' });

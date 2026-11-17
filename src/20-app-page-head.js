@@ -261,6 +261,35 @@ textarea.dark-input{resize:vertical;min-height:76px;line-height:1.6}
 .more-chk input{width:16px;height:16px;margin:0;accent-color:#4ade80;flex:none}
 .more-chk:has(input:checked){border-color:#4ade80;background:rgba(74,222,128,.12)}
 .more-where .look-opt{padding:9px 10px;text-align:center;align-items:center}
+/* Setup: "What do you offer?" chips and "Why do customers pick you?", revealed once a business type is entered */
+.svc-wrap{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .32s ease,opacity .28s ease}
+.svc-wrap.on{grid-template-rows:1fr;opacity:1}
+.svc-wrap[hidden]{display:none}
+.svc-in{min-height:0;overflow:hidden;padding-bottom:2px}
+.svc-wrap.done .svc-in{overflow:visible}
+.svc-opt{color:rgba(255,255,255,.55);font-weight:400}
+.svc-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:2px 0 10px}
+.svc-chips:empty{display:none}
+.svc-chip{min-height:44px;max-width:100%;display:inline-flex;align-items:center;gap:7px;padding:8px 14px 8px 11px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#e8f5e4;font-family:inherit;font-size:13.5px;font-weight:600;line-height:1.25;text-align:left;overflow-wrap:anywhere;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
+.svc-chip::before{content:"+";flex:none;display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);font-size:13px;font-weight:700;line-height:1}
+.svc-chip:hover{border-color:rgba(255,255,255,.3)}
+.svc-chip[aria-pressed=true]{border-color:#4ade80;background:rgba(74,222,128,.14);color:#fff}
+.svc-chip[aria-pressed=true]::before{content:"✓";background:#4ade80;color:#06210f}
+.svc-chip:focus-visible{outline:2px solid #4ade80;outline-offset:2px}
+.svc-add-row{display:flex;gap:8px}
+.svc-add-row .dark-input{flex:1;min-width:0;min-height:44px}
+.svc-add-btn{flex:none;min-height:44px;padding:0 16px;border-radius:9px;border:1px solid rgba(74,222,128,.45);background:rgba(74,222,128,.12);color:#e8f5e4;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.svc-add-btn:focus-visible{outline:2px solid #4ade80;outline-offset:2px}
+.svc-add-btn[hidden]{display:none}
+.svc-hint{margin-top:6px;font-size:12.5px;line-height:1.45;color:rgba(255,255,255,.72)}
+.svc-hint:empty{display:none}
+.svc-why{margin-top:14px}
+.svc-why .dark-input{min-height:44px}
+/* The card scrolls inside once setup outgrows it (560px): "Grow my site" stays in reach at its bottom edge. */
+.builder-card{scroll-padding-bottom:104px}
+#panel1 .panel-foot{position:sticky;bottom:0;z-index:3;margin:12px -22px -20px;padding:16px 22px 20px;background:#0b160a}
+@media(max-width:600px){.svc-chips{gap:6px}.svc-chip{padding:8px 11px 8px 9px;gap:6px;font-size:13px}.svc-chip::before{width:16px;height:16px;font-size:12px}}
+@media(prefers-reduced-motion:reduce){.svc-wrap{transition:none}}
 .look-sw{display:block;height:14px;border-radius:4px}
 .lk-light{background:linear-gradient(90deg,#FAFBFC 68%,#3B46C7 68%)}
 .lk-dark{background:linear-gradient(90deg,#131315 68%,#8E97FF 68%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}

@@ -1,3 +1,4 @@
+const lib = require('./lib');
 // Shops: products published with the site, checkout charges server-side prices, the live cart works.
 const fs = require('fs');
 const path = require('path');
@@ -9,19 +10,23 @@ module.exports = async function (ctx, t) {
   const s = await createSite(base, { name: 'Thread & Co', type: 'Clothing boutique', ecommerce: true, products: [{ name: 'Linen Shirt', price: '$48', desc: 'Breathable linen' }, { name: 'Canvas Tote', price: '2 for $30' }] });
   t.ok(s.site.pages.some((p) => p.path === 'shop'), 'store gets a Shop page');
   const slug = 'shop' + Date.now().toString(36);
-  let r = await post(base, '/publish', { html: s.html, site: s.site, siteId: s.siteId, key: s.formKey, slug });
+  let r = await lib.pubPost(base, { html: s.html, site: s.site, siteId: s.siteId, key: s.formKey, slug }, null, OWNER);
   t.eq(r.status, 200, 'shop publishes with its site data');
 
-  // Without an owner who can take payments, checkout explains instead of failing silently
-  r = await post(base, '/cart-checkout', { site: s.siteId, items: [{ n: 'Linen Shirt', qty: 1 }] });
+  // Without an owner who can take payments, checkout explains instead of failing silently. (Publishing always records
+  // the signed-in publisher as owner, so this uses a second shop published by an ordinary account.)
+  const np = await createSite(base, { name: 'Plain Goods', type: 'Clothing boutique', ecommerce: true, products: [{ name: 'Linen Shirt', price: '$48' }] });
+  r = await lib.pubPost(base, { html: np.html, site: np.site, siteId: np.siteId, key: np.formKey, slug: slug + 'np' }, null, 'shopkeeper@example.com');
+  t.eq(r.status, 200, 'an ordinary account publishes a shop');
+  r = await post(base, '/cart-checkout', { site: np.siteId, items: [{ n: 'Linen Shirt', qty: 1 }] });
   t.ok(r.status === 400 && /not set up|not currently|payment/i.test((r.json && r.json.error) || ''), 'checkout explains when payments are not set up: ' + r.text.slice(0, 100));
   t.eq(r.headers.get('access-control-allow-origin'), '*', 'checkout answers sandboxed published pages (CORS)');
 
   // The editable notify address never decides who gets paid: pointing it at the platform owner changes nothing
-  await post(base, '/api/inbox/notify', { site: s.siteId, key: s.formKey, email: OWNER });
-  r = await post(base, '/cart-checkout', { site: s.siteId, items: [{ n: 'Linen Shirt', qty: 1 }] });
+  await post(base, '/api/inbox/notify', { site: np.siteId, key: np.formKey, email: OWNER });
+  r = await post(base, '/cart-checkout', { site: np.siteId, items: [{ n: 'Linen Shirt', qty: 1 }] });
   t.ok(r.status === 400 && /not set up|not currently|payment/i.test((r.json && r.json.error) || ''), 'notify address set to the platform owner does not enable checkout: ' + r.text.slice(0, 100));
-  r = await fetch(base + '/checkout?site=' + encodeURIComponent(s.siteId) + '&p=0');
+  r = await fetch(base + '/checkout?site=' + encodeURIComponent(np.siteId) + '&p=0');
   t.ok(/not currently accepting|not set up|no longer available/i.test(await r.text()), 'single-product checkout is refused too');
 
   // Owner able to take payments (the platform account, recorded as the site's owner): a real product reaches Stripe, an unknown one never does

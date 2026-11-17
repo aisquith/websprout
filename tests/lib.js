@@ -98,7 +98,12 @@ async function signIn(base, email, fresh) {
   return sess;
 }
 const cookie = (sess) => SESS + '=' + sess;
+// Publish as a signed-in account (publishing requires one). email defaults to a shared test publisher.
+async function pubPost(base, body, headers, email) {
+  const sess = await signIn(base, email || 'publisher@example.com');
+  return post(base, '/publish', body, Object.assign({ Cookie: cookie(sess) }, headers || {}));
+}
 // Puppeteer cookie for a session (__Host- cookies must be Secure with Path=/ and no Domain).
 const browserCookie = (base, sess) => ({ name: SESS, value: sess, url: base, path: '/', secure: true, httpOnly: true });
 
-module.exports = { sleep, waitFor, launchBrowser, tracker, post, createSite, openPage, renderHtml, openStudioWith, previewFrame, signIn, cookie, browserCookie, SESS };
+module.exports = { sleep, waitFor, launchBrowser, tracker, post, createSite, openPage, renderHtml, openStudioWith, previewFrame, signIn, cookie, browserCookie, SESS, pubPost };

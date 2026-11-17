@@ -1,3 +1,4 @@
+const lib = require('./lib');
 // Published-site hardening: single-page sites render pages[0], owner redirects (301), branded 404s that keep the
 // site's own look and link back to its base, empty pages/lists never render blank, owner links are made safe.
 const { createSite, post, openPage, renderHtml, sleep } = require('./lib');
@@ -37,7 +38,7 @@ module.exports = async function (ctx, t) {
   t.ok(/Services: nothing to show yet/.test(edit), 'the editor still shows the "nothing to show yet" placeholder');
 
   const slug = 'hd' + Date.now().toString(36);
-  let r = await post(base, '/publish', { html, site, siteId: s.siteId, key: s.formKey, slug });
+  let r = await lib.pubPost(base, { html, site, siteId: s.siteId, key: s.formKey, slug });
   t.eq(r.status, 200, 'publishes');
   r = await fetch(base + '/s/' + slug + '/old-about', { redirect: 'manual' });
   t.ok(r.status === 301 && r.headers.get('location') === '/s/' + slug + '/about', 'renamed page redirects (301) under /s/<slug>/ (' + r.status + ' ' + r.headers.get('location') + ')');
@@ -60,7 +61,7 @@ module.exports = async function (ctx, t) {
   html = WS.renderSite(one, { mode: 'live' });
   t.ok(/FRESH-PAGE-CONTENT/.test(html) && !/STALE-SECTIONS-CONTENT/.test(html), 'a one-page site renders pages[0]');
   const slug2 = 'hs' + Date.now().toString(36);
-  r = await post(base, '/publish', { html, site: one, siteId: s.siteId, key: s.formKey, slug: slug2 });
+  r = await lib.pubPost(base, { html, site: one, siteId: s.siteId, key: s.formKey, slug: slug2 });
   t.eq(r.status, 200, 'one-page site publishes');
   r = await fetch(base + '/s/' + slug2 + '/');
   t.ok(r.status === 200 && /FRESH-PAGE-CONTENT/.test(await r.text()), 'one-page home serves');

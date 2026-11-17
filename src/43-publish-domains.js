@@ -194,6 +194,16 @@ async function doPublish(request, env){
     const b = await request.json();
     if (!b.html || !b.siteId || !b.key) return fail('Missing data');
     if (!(await siteKeyOk(b.siteId, b.key, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
+    // Publishing needs a signed-in account (the editor already asks for one). Enforced here too, so nobody can put an
+    // anonymous page (e.g. phishing) on a websprout.app address by calling this endpoint directly. Once a site has an
+    // owner, only that account (or the admin) can publish it.
+    const _pubSess = await getSession(request, env);
+    const _pubEmail = String((_pubSess && _pubSess.email) || '').toLowerCase();
+    if (!_pubEmail) return new Response(JSON.stringify({ error:'Sign in to publish your site.', signin:true }), { status:401, headers:{'Content-Type':'application/json'} });
+    try {
+      const _owner = String((await env.KV.get('siteowner:' + b.siteId)) || '').toLowerCase();
+      if (_owner && _owner !== _pubEmail && _pubEmail !== SUPPORT_EMAIL.toLowerCase()) return new Response(JSON.stringify({ error:'This site belongs to another account. Sign in with that account to publish it.', signin:true }), { status:403, headers:{'Content-Type':'application/json'} });
+    } catch(e){}
     const slug = slugify(b.slug || '');
     if (slug.length < 3) return fail('Pick a name with at least 3 letters/numbers');
     if (RESERVED_SLUGS.indexOf(slug) > -1) return fail('That name is reserved — choose another');

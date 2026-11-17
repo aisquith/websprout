@@ -94,9 +94,24 @@
           </div>
           <div id="gFillDone" class="gfill-done" style="display:none"></div>
         </div>
+        <div id="svcWrap" class="svc-wrap" hidden>
+          <div class="svc-in">
+            <div class="field-lbl" id="svcLbl">What do you offer? <span class="svc-opt">(tap to choose)</span></div>
+            <div id="svcChips" class="svc-chips" role="group" aria-labelledby="svcLbl"></div>
+            <div class="svc-add-row">
+              <input id="svcAdd" class="dark-input" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" aria-label="Add something you offer" aria-describedby="svcHint" placeholder="+ Add your own">
+              <button type="button" id="svcAddBtn" class="svc-add-btn" hidden>Add</button>
+            </div>
+            <div id="svcHint" class="svc-hint" aria-live="polite"></div>
+            <div class="svc-why">
+              <div class="field-lbl">Why do customers pick you? <span class="svc-opt">(optional)</span></div>
+              <input id="moreUnique" aria-label="Why do customers pick you?" class="dark-input" type="text" maxlength="200" placeholder="e.g. Family-run, friendly and open late">
+            </div>
+          </div>
+        </div>
         <div style="margin-top:14px">
           <div class="field-lbl">A few details <span style="color:rgba(255,255,255,.55);font-weight:400">(optional)</span></div>
-          <textarea id="customPrompt" aria-label="A few details about your business" class="dark-input" rows="3" placeholder="What you offer, what makes you different, and the feel you want. A sentence or two is plenty."></textarea>
+          <textarea id="customPrompt" aria-label="A few details about your business" class="dark-input" rows="3" placeholder="Anything else? Who you serve, your story, or the feel you want. A sentence or two is plenty."></textarea>
         </div>
         <div class="detail-grid" style="margin-top:14px">
           <div>
@@ -117,10 +132,6 @@
           <summary class="more-sum">Tell us a bit more <span class="more-opt">(optional, makes your site more convincing)</span></summary>
           <div class="more-body">
             <div class="detail-grid more-grid">
-              <div class="span2">
-                <div class="field-lbl">What makes you different?</div>
-                <input id="moreUnique" aria-label="What makes you different?" class="dark-input" type="text" maxlength="200" placeholder="e.g. Family-run, friendly and open late">
-              </div>
               <div>
                 <div class="field-lbl">Year you started</div>
                 <input id="moreFounded" aria-label="Year you started" class="dark-input" type="number" inputmode="numeric" min="1900" max="2100" step="1" placeholder="e.g. 2012">

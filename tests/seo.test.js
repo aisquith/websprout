@@ -1,3 +1,4 @@
+const lib = require('./lib');
 // Published multi-page sites: every page has its own real URL, title, canonical link and content; per-site sitemap.
 const { createSite, post, openPage, sleep } = require('./lib');
 
@@ -5,7 +6,7 @@ module.exports = async function (ctx, t) {
   const { base, browser } = ctx;
   const s = await createSite(base, { name: 'Peak Law', type: 'Law firm', city: 'Boston', phone: '617-555-0100' });
   const slug = 'seo' + Date.now().toString(36);
-  const r0 = await post(base, '/publish', { html: s.html, site: s.site, siteId: s.siteId, key: s.formKey, slug });
+  const r0 = await lib.pubPost(base, { html: s.html, site: s.site, siteId: s.siteId, key: s.formKey, slug });
   t.eq(r0.status, 200, 'publishes');
   const paths = s.site.pages.map((p) => p.path);
   t.ok(paths.includes('about') && paths.includes('contact'), 'site has About and Contact pages');

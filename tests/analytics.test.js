@@ -1,3 +1,4 @@
+const lib = require('./lib');
 // Analytics: browser events are allowlisted, events land in local D1 (server-side landing, generation, first edit,
 // publish, leads, published-site views), attribution and insight thresholds, and no response ever sets a cookie.
 const fs = require('fs');
@@ -69,7 +70,7 @@ module.exports = async function (ctx, t) {
 
   // Publish -> publish event + published_ts; published site sets no cookie; views + leads are counted.
   const slug = 'antest' + Date.now().toString(36).slice(-5);
-  const pr = await post(base, '/publish', { html: site.html, siteId: site.siteId, key: site.formKey, slug: slug }, { 'User-Agent': UA });
+  const pr = await lib.pubPost(base, { html: site.html, siteId: site.siteId, key: site.formKey, slug: slug }, { 'User-Agent': UA });
   t.ok(pr.json && pr.json.ok, 'site published');
   t.ok(await waitFor(async () => !!((await q('SELECT published_ts FROM sites WHERE site_id = ?', [site.siteId]))[0] || {}).published_ts, 6000), 'publish is recorded on the site');
   const ps = await fetch(base + '/', { headers: { 'x-ws-test-host': slug + '.websprout.app', 'User-Agent': UA } });

@@ -1,3 +1,4 @@
+const lib = require('./lib');
 // Local search structured data: every published page (home and sub-pages, multi- and single-page sites) carries a
 // valid schema.org LocalBusiness JSON-LD with the most specific type, the site's canonical URL, contact details,
 // hours and services; sub-pages add a BreadcrumbList. Ratings only ever come from Google, never owner-typed reviews.
@@ -19,7 +20,7 @@ module.exports = async function (ctx, t) {
   const s = await createSite(base, { name: 'Pipe <Pros>', type: 'Plumber', city: 'Austin, TX', address: '12 Main St, Austin, TX 78701', phone: '512-555-0100', instagram: 'pipepros', servicesText: 'Drain cleaning - $120\nLeak repair from $90\nWater heaters' });
   const site = JSON.parse(JSON.stringify(s.site));
   const slug = 'ld' + Date.now().toString(36);
-  let r = await post(base, '/publish', { html: s.html, site: s.site, siteId: s.siteId, key: s.formKey, slug });
+  let r = await lib.pubPost(base, { html: s.html, site: s.site, siteId: s.siteId, key: s.formKey, slug });
   t.eq(r.status, 200, 'publishes');
   const origin = 'https://' + slug + '.websprout.app';
   const paths = site.pages.map((p) => p.path);
@@ -56,7 +57,7 @@ module.exports = async function (ctx, t) {
   Object.assign(one.biz, { email: 'hi@pipepros.test', logo: 'https://example.com/logo.png', googlePlaceId: 'ChIJ_test_place_123', googleRating: 4.7, googleReviews: 88, hours: [{ d: 'Mon', open: '08:00', close: '17:00' }, { d: 'Tue', open: '8:30', close: '17:00' }, { d: 'Sun' }] });
   one.pages[0].sections.push({ id: 'rv-own', type: 'reviews', variant: 'wall', items: [{ quote: 'Best ever', name: 'Mom' }] });
   const slug1 = 'ld1' + Date.now().toString(36);
-  r = await post(base, '/publish', { html: WS.renderSite(one, { mode: 'live' }), site: one, siteId: s.siteId, key: s.formKey, slug: slug1 });
+  r = await lib.pubPost(base, { html: WS.renderSite(one, { mode: 'live' }), site: one, siteId: s.siteId, key: s.formKey, slug: slug1 });
   t.eq(r.status, 200, 'single-page site publishes');
   const h1 = await (await fetch(base + '/s/' + slug1)).text();
   const b1 = ldOf(h1).find((x) => x['@type'] === 'Plumber') || {};

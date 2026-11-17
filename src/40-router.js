@@ -122,6 +122,8 @@ async function wsRoute(request, env, url, _host) {
     if (url.pathname === '/example' && request.method === 'GET') return doExample(request, env);
     if (url.pathname === '/api/photos' && request.method === 'GET') { if (env.UNSPLASH_ACCESS_KEY) wsCount(env, 'unsplash', wsHour(), request); return doPhotoSearch(request, env); }
     if ((url.pathname === '/api/place' || url.pathname === '/api/place/find' || url.pathname === '/api/place/details') && request.method === 'GET' && env.GOOGLE_PLACES_KEY) wsCount(env, 'places', url.pathname.slice(11) || 'reviews', request);
+    // Setup's service chips (read-only): the app's own pages only, never another site or a customer host.
+    if (url.pathname === '/api/suggest' && request.method === 'GET') { if (!wsIsAppHost(_host) || !wsSameOrigin(request, url)) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { 'Content-Type': 'application/json' } }); return doSuggest(request, env); }
     if (url.pathname === '/api/place' && request.method === 'GET') return doPlace(request, env);
     if (url.pathname === '/api/place/find' && request.method === 'GET') return doPlaceFind(request, env);
     if (url.pathname === '/api/place/details' && request.method === 'GET') return doPlaceDetails(request, env);

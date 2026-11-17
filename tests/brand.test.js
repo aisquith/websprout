@@ -170,6 +170,8 @@ module.exports = async function (ctx, t) {
     t.ok(await page.evaluate(() => !!document.getElementById('moreBox') && !document.getElementById('moreBox').open), 'setup has a collapsed "Tell us a bit more" group');
     await page.evaluate(() => { document.getElementById('moreBox').open = true; });
     await page.type('#bizType', 'Bakery');
+    // "Why do customers pick you?" (moreUnique) now sits under the service chips, revealed once the type is entered.
+    await waitFor(() => vis('moreUnique'), 8000, 150);
     t.ok(!(await vis('moreLicWrap')) && !(await vis('moreAreaWrap')) && (await vis('moreUnique')) && (await vis('moreFounded')), 'a bakery is asked what makes it different and the year, not credentials or towns');
     await page.evaluate(() => { const el = document.getElementById('bizType'); el.value = ''; });
     await page.type('#bizType', 'Plumber');

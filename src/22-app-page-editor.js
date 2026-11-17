@@ -117,7 +117,7 @@ window.wsPublishUpdate=function(opts){
     var done=function(){if(btn){btn.removeAttribute('data-busy');btn._wsSt='';}wsPaintPubState();};
     return fetch('/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(wsPublishPayload(slug))}).then(function(r){return r.json();}).then(function(j){
       if(j&&!j.error){window.wsAfterPublish();done();toast('✓ Updated — your live site now shows your latest edits.',3200);return true;}
-      done();toast((j&&j.error)||'Could not update your live site — please try again',4000);return false;
+      done();toast((j&&j.error)||'Could not update your live site — please try again',4000);if(j&&j.signin){try{if(window.openAuth)window.openAuth();}catch(e){}}return false;
     }).catch(function(){done();toast('Could not update your live site — please try again',4000);return false;});
   };
   if(!probs.length)return go();
@@ -643,6 +643,7 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!ok)return;
     wsLeaveStudio();
     ['bizName','bizType','customPrompt','bizCity','bizPhone','gFillQ','moreUnique','moreFounded','moreTowns'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+    try{if(window.wsSvcReset)wsSvcReset();}catch(e){}
     try{['moreLicensed','moreInsured'].forEach(function(id){var el=document.getElementById(id);if(el)el.checked=false;});window._wsWhere='';document.querySelectorAll('#moreWhere .look-opt').forEach(function(b,i){b.setAttribute('aria-checked',i?'false':'true');});var mb=document.getElementById('moreBox');if(mb)mb.open=false;if(window.wsMoreSync)wsMoreSync();}catch(e){}
     try{window._wsLook='';document.querySelectorAll('#lookPick .look-opt').forEach(function(b){b.setAttribute('aria-checked','false');});}catch(e){}
     try{window._wsPlace=null;var gd=document.getElementById('gFillDone'),gb=document.getElementById('gFillBtn'),gx=document.getElementById('gFillBox'),gl=document.getElementById('gFillList');if(gd)gd.style.display='none';if(gb)gb.style.display='';if(gx)gx.style.display='none';if(gl)gl.innerHTML='';}catch(e){}
@@ -2710,7 +2711,7 @@ function wsBuildPaletteBar(){ wsEdSel = (typeof wsEdSel==='number'?wsEdSel:0); w
     fetch('/api/place/details?place='+encodeURIComponent(p.id)).then(function(r){return r.json();}).then(function(j){
       if(!j||!j.ok){msg((j&&j.error)||'Could not load that listing.');return;}
       window._wsPlace=j;
-      setv('bizName',j.name,true);setv('bizType',j.type);setv('bizCity',j.city,true);setv('bizPhone',j.phone,true);setv('customPrompt',j.about);if(window.wsMoreSync)wsMoreSync();
+      setv('bizName',j.name,true);setv('bizType',j.type);setv('bizCity',j.city,true);setv('bizPhone',j.phone,true);setv('customPrompt',j.about);if(window.wsMoreSync)wsMoreSync();if(window.wsSvcLoad)wsSvcLoad();
       list.innerHTML='';box.style.display='none';btn.style.display='none';done.style.display='block';done.innerHTML='';
       var s=document.createElement('span');s.textContent='Using your Google listing: '+j.name+(j.address?' \u00b7 '+j.address:'')+(j.rating?' \u00b7 '+j.rating+' stars ('+j.count+')':'');done.appendChild(s);
       var x=document.createElement('button');x.type='button';x.className='gfill-link';x.textContent='Remove';x.style.marginLeft='8px';
@@ -2742,7 +2743,8 @@ function wsMoreSync(){
   var lw=document.getElementById('moreLicWrap'),aw=document.getElementById('moreAreaWrap'),tw=document.getElementById('moreTownsWrap'),un=document.getElementById('moreUnique');
   if(lw)lw.hidden=!lic;if(aw)aw.hidden=!sa;
   if(tw)tw.hidden=window._wsWhere==='come';
-  if(un)un.placeholder='e.g. '+(/barber|salon|hair|nail|spa|beauty/.test(ty)?'Hot-towel shaves and walk-ins until 8pm':/restaurant|food|cafe|café|coffee|bak|pizza|taco|grill|bar\\b|truck/.test(ty)?'Family recipes, made fresh every morning':/clean|maid/.test(ty)?'Eco-friendly products and the same cleaner every visit':sa?'Upfront prices and same-day visits':/law|attorney|account|tax|financ|insur/.test(ty)?'Free first consultation and 20 years of experience':/yoga|pilates|gym|fitness|studio/.test(ty)?'Small classes and teachers who know your name':'Family-run, friendly and open late');
+  // Once /api/suggest has answered, its trade examples rotate in this placeholder instead (wsWhyStart).
+  if(un&&!(window._wsSvc&&window._wsSvc.why&&window._wsSvc.why.length))un.placeholder='e.g. '+(/barber|salon|hair|nail|spa|beauty/.test(ty)?'Hot-towel shaves and walk-ins until 8pm':/restaurant|food|cafe|café|coffee|bak|pizza|taco|grill|bar\\b|truck/.test(ty)?'Family recipes, made fresh every morning':/clean|maid/.test(ty)?'Eco-friendly products and the same cleaner every visit':sa?'Upfront prices and same-day visits':/law|attorney|account|tax|financ|insur/.test(ty)?'Free first consultation and 20 years of experience':/yoga|pilates|gym|fitness|studio/.test(ty)?'Small classes and teachers who know your name':'Family-run, friendly and open late');
 }
 (function(){
   var ty=document.getElementById('bizType');if(ty)ty.addEventListener('input',wsMoreSync);
@@ -2750,6 +2752,104 @@ function wsMoreSync(){
   var wh=document.getElementById('moreWhere');
   if(wh)wh.addEventListener('click',function(e){var b=e.target.closest('.look-opt');if(!b)return;wh.querySelectorAll('.look-opt').forEach(function(x){x.setAttribute('aria-checked',x===b?'true':'false');});window._wsWhere=b.getAttribute('data-where');wsMoreSync();});
   wsMoreSync();
+})();
+// Setup: "What do you offer?" chips. Once a business type is entered, /api/suggest (the generator's own category matching)
+// suggests that trade's services with the top three picked; the owner taps to pick or adds their own. The picked ones go
+// to /create as servicesText. The same answer brings trade examples for "Why do customers pick you?" (moreUnique).
+var WS_SVC_MAX=8,WS_SVC_LEN=40,WS_SVC_FULL='You can pick up to 8. Untick one to add another.';
+window._wsSvc={type:'',items:[],why:[],loaded:false};
+var _wsSvcCache={},_wsSvcT=0,_wsSvcSeq=0,_wsWhyT=0,_wsWhyI=0;
+function wsSvcSquash(t){var NL=String.fromCharCode(10),CR=String.fromCharCode(13),TB=String.fromCharCode(9);return String(t==null?'':t).split(NL).join(' ').split(CR).join(' ').split(TB).join(' ').split(' ').filter(Boolean).join(' ');}
+function wsSvcKey(t){return wsSvcSquash(t).toLowerCase().slice(0,60);}
+function wsSvcClean(t){return wsSvcSquash(t).slice(0,WS_SVC_LEN).trim();}
+function wsSvcPicked(){return window._wsSvc.items.filter(function(x){return x.on;});}
+function wsSvcText(){return wsSvcPicked().map(function(x){return x.name;}).join(String.fromCharCode(10));}
+// Merge two newline-separated service lists, dropping repeats (case and punctuation aside).
+function wsSvcMerge(a,b){var NL=String.fromCharCode(10),seen={},out=[];String(a||'').split(NL).concat(String(b||'').split(NL)).forEach(function(l){l=wsSvcSquash(l);var k=l.toLowerCase().replace(/[^a-z0-9]+/g,'');if(l&&k&&!seen[k]){seen[k]=1;out.push(l);}});return out.join(NL);}
+function wsSvcShow(on){
+  var w=document.getElementById('svcWrap');if(!w)return;clearTimeout(w._t);
+  if(!on){w.classList.remove('on');w.classList.remove('done');w.hidden=true;return;}
+  if(!w.hidden)return;
+  w.hidden=false;void w.offsetHeight;w.classList.add('on');w._t=setTimeout(function(){w.classList.add('done');},360);
+}
+function wsSvcHint(t){
+  var h=document.getElementById('svcHint');if(!h)return;var S=window._wsSvc;
+  h.textContent=t||(S.loaded&&!S.items.length?'Add the main things you offer, one at a time, and we’ll put them on your site.':'');
+}
+function wsSvcRender(){
+  var box=document.getElementById('svcChips'),add=document.getElementById('svcAdd');if(!box)return;var S=window._wsSvc;
+  box.innerHTML='';
+  S.items.forEach(function(it,i){var b=document.createElement('button');b.type='button';b.className='svc-chip';b.textContent=it.name;b.setAttribute('aria-pressed',it.on?'true':'false');b.setAttribute('data-i',String(i));box.appendChild(b);});
+  if(add)add.placeholder=S.items.length?'+ Add your own':'+ Add something you offer';
+  wsSvcHint('');
+}
+// "Why do customers pick you?": the trade's examples take turns as the placeholder while the field is empty.
+function wsWhyStart(){
+  var un=document.getElementById('moreUnique');clearInterval(_wsWhyT);_wsWhyI=0;if(!un)return;
+  var ex=window._wsSvc.why||[];if(!ex.length){wsMoreSync();return;}
+  un.placeholder='e.g. '+ex[0];if(ex.length<2)return;
+  _wsWhyT=setInterval(function(){if(document.hidden||un.value||document.activeElement===un)return;_wsWhyI=(_wsWhyI+1)%ex.length;un.placeholder='e.g. '+ex[_wsWhyI];},3500);
+}
+function wsSvcApply(k,j){
+  var S=window._wsSvc,names=[],seen={};
+  ((j&&j.services)||[]).slice(0,10).forEach(function(n){n=wsSvcClean(n);if(n&&!seen[n.toLowerCase()]){seen[n.toLowerCase()]=1;names.push(n);}});
+  var cur=S.items.filter(function(x){return !x.custom;}).map(function(x){return x.name;}).join('|');
+  S.type=k;S.why=((j&&j.why)||[]).filter(function(x){return typeof x==='string'&&x;}).slice(0,3);
+  // Same suggestions as before (e.g. "Plumb" then "Plumber"): keep what the owner already picked.
+  if(!S.loaded||names.join('|')!==cur){
+    var own=S.items.filter(function(x){return x.custom;}),mine={};own.forEach(function(x){mine[x.name.toLowerCase()]=1;});
+    var sug=names.filter(function(n){return !mine[n.toLowerCase()];}).map(function(n){return {name:n,on:false,custom:false};});
+    var room=WS_SVC_MAX-own.filter(function(x){return x.on;}).length;
+    for(var i=0;i<sug.length&&i<3&&room>0;i++,room--)sug[i].on=true;
+    S.items=sug.concat(own);
+  }
+  S.loaded=true;wsSvcRender();wsSvcShow(true);wsWhyStart();
+}
+function wsSvcLoad(){
+  var el=document.getElementById('bizType');if(!el)return;var S=window._wsSvc;
+  var raw=wsSvcSquash(el.value).slice(0,60),k=raw.toLowerCase();
+  if(k.length<2){
+    // Type cleared before anything was added: fold the row away again.
+    if(!k&&!S.items.some(function(x){return x.custom;})&&!((document.getElementById('moreUnique')||{}).value||'').trim()){S.type='';S.items=[];S.why=[];S.loaded=false;_wsSvcSeq++;wsSvcRender();wsSvcShow(false);wsWhyStart();}
+    return;
+  }
+  if(k===S.type&&S.loaded){wsSvcShow(true);return;}
+  var seq=++_wsSvcSeq;
+  if(_wsSvcCache[k]){wsSvcApply(k,_wsSvcCache[k]);return;}
+  fetch('/api/suggest?type='+encodeURIComponent(raw),{credentials:'same-origin'})
+    .then(function(r){return r.json();})
+    .then(function(j){if(!j||!j.ok)throw new Error('suggest');_wsSvcCache[k]=j;if(seq===_wsSvcSeq)wsSvcApply(k,j);})
+    .catch(function(){if(seq===_wsSvcSeq)wsSvcApply(k,{services:[],why:[]});});
+}
+function wsSvcReset(){clearTimeout(_wsSvcT);_wsSvcSeq++;window._wsSvc={type:'',items:[],why:[],loaded:false};var a=document.getElementById('svcAdd');if(a)a.value='';var b=document.getElementById('svcAddBtn');if(b)b.hidden=true;wsSvcRender();wsSvcShow(false);clearInterval(_wsWhyT);}
+(function(){
+  var ty=document.getElementById('bizType'),box=document.getElementById('svcChips'),add=document.getElementById('svcAdd'),btn=document.getElementById('svcAddBtn');
+  if(!ty||!box||!add||!btn)return;
+  ty.addEventListener('input',function(){clearTimeout(_wsSvcT);_wsSvcT=setTimeout(wsSvcLoad,450);});
+  ty.addEventListener('blur',function(){clearTimeout(_wsSvcT);wsSvcLoad();});
+  box.addEventListener('click',function(e){
+    var b=e.target.closest('.svc-chip');if(!b)return;var it=window._wsSvc.items[+b.getAttribute('data-i')];if(!it)return;
+    if(!it.on&&wsSvcPicked().length>=WS_SVC_MAX){wsSvcHint(WS_SVC_FULL);return;}
+    it.on=!it.on;b.setAttribute('aria-pressed',it.on?'true':'false');wsSvcHint('');
+  });
+  var syncBtn=function(){btn.hidden=!add.value.trim();};
+  var doAdd=function(){
+    var S=window._wsSvc,full=false,any=false;
+    add.value.split(',').forEach(function(p){
+      var n=wsSvcClean(p);if(!n)return;
+      var have=S.items.filter(function(x){return x.name.toLowerCase()===n.toLowerCase();})[0];
+      if(have){if(!have.on){if(wsSvcPicked().length>=WS_SVC_MAX){full=true;return;}have.on=true;}any=true;return;}
+      if(wsSvcPicked().length>=WS_SVC_MAX||S.items.filter(function(x){return x.custom;}).length>=WS_SVC_MAX){full=true;return;}
+      S.items.push({name:n,on:true,custom:true});any=true;
+    });
+    if(any||!full)add.value='';
+    wsSvcRender();if(full)wsSvcHint(WS_SVC_FULL);syncBtn();
+  };
+  add.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();doAdd();}});
+  add.addEventListener('input',syncBtn);
+  btn.addEventListener('click',function(){doAdd();add.focus();});
+  // A type already in the box (restored by the browser, or set before this ran) gets its chips too.
+  if(wsSvcSquash(ty.value).length>=2)wsSvcLoad();
 })();
 // The optional answers for /create (only the ones that apply to this kind of business).
 function wsMoreAnswers(){
@@ -2766,6 +2866,8 @@ function doCreateV3(){
   var payload={name:val('bizName').trim(),type:type,about:val('customPrompt').trim().slice(0,400),city:val('bizCity').trim().slice(0,80),phone:val('bizPhone').trim().slice(0,40)};
   if(window._wsLook)payload.look=window._wsLook;
   try{Object.assign(payload,wsMoreAnswers());}catch(e){}
+  // The services picked as chips (merged with any typed elsewhere, without repeats).
+  try{var _st=wsSvcText();if(_st)payload.servicesText=payload.servicesText?wsSvcMerge(payload.servicesText,_st):_st;}catch(e){}
   var gp=window._wsPlace;if(gp&&gp.googlePlaceId){payload.googlePlaceId=gp.googlePlaceId;payload.googleName=gp.name||'';payload.address=gp.address||'';payload.hours=gp.hours||[];payload.reviews=gp.reviews||[];if(typeof gp.rating==='number'&&isFinite(gp.rating))payload.rating=gp.rating;if(typeof gp.count==='number'&&isFinite(gp.count))payload.count=gp.count;}
   var btn=document.getElementById('gbtn'),gt=document.getElementById('gbtnTxt'),ld=document.getElementById('loading');
   if(btn)btn.disabled=true;if(gt)gt.textContent='Growing...';if(ld)ld.classList.add('on');

@@ -1,3 +1,4 @@
+const lib = require('./lib');
 // Cross-site request forgery from customer sites (*.websprout.app is same-SITE), session cookie hardening, login CSRF,
 // owner-bound Pro checkout + Stripe webhook, security headers, fail-closed secrets and rate limits.
 const crypto = require('crypto');
@@ -153,7 +154,7 @@ module.exports = async function (ctx, t) {
   r = await fetch(base + '/me');
   t.eq(r.headers.get('cache-control'), 'no-store', 'account JSON is not cached');
   const pubSlug = 'xs' + stamp;
-  await post(base, '/publish', { html: s1.html, site: s1.site, siteId: s1.siteId, key: s1.formKey, slug: pubSlug });
+  await lib.pubPost(base, { html: s1.html, site: s1.site, siteId: s1.siteId, key: s1.formKey, slug: pubSlug }, null, email);
   r = await fetch(base + '/', { headers: { 'x-ws-test-host': pubSlug + '.websprout.app' } });
   t.ok(r.status === 200 && r.headers.get('x-content-type-options') === 'nosniff' && !!r.headers.get('referrer-policy') && !r.headers.get('x-frame-options'), 'published sites get nosniff + Referrer-Policy but stay frameable');
 
