@@ -1515,7 +1515,7 @@ function v3AiSvcName(x, ctx) {
   return { v: n.charAt(0).toUpperCase() + n.slice(1) };
 }
 function v3AiKeys(env) { try { if (typeof geminiKeys === 'function') return geminiKeys(env); } catch (e) {} return env && env.GEMINI_API_KEY ? String(env.GEMINI_API_KEY).split(',').map(function (k) { return k.trim(); }).filter(Boolean) : []; }
-function v3AiCap(env) { const n = parseInt(env && env.AI_MONTHLY_CAP, 10); return isNaN(n) || n < 0 ? 3000 : n; }
+function v3AiCap(env) { const n = parseInt(env && env.AI_MONTHLY_CAP, 10); return isNaN(n) || n < 0 ? 30000 : n; } // ~$0.003 per site on Gemini 2.5 Flash: 30k is about $100 a month at most
 // Count one call against the monthly cap (ai:count:YYYY-MM) before making it. No KV, no counter, no calls.
 async function v3AiSpend(env) {
   if (!env || !env.KV) return false;

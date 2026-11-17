@@ -97,7 +97,9 @@ async function wsRoute(request, env, url, _host) {
     if (url.pathname === '/auth/logout' && !wsSameOrigin(request, url)) return new Response('Forbidden', { status: 403 });
     // Test-only routes exist only on a test server: WS_TEST_MODE (never set in production) AND a local wrangler dev request
     // (plain http, no Cloudflare edge client IP). Every request through Cloudflare's edge carries cf-connecting-ip.
-    const _testOk = env.WS_TEST_MODE === '1' && url.protocol === 'http:' && !request.headers.get('cf-connecting-ip');
+    // Local wrangler dev (Miniflare) fills cf-connecting-ip with the loopback address; the edge always sends the real client IP.
+    const _testIp = request.headers.get('cf-connecting-ip');
+    const _testOk = env.WS_TEST_MODE === '1' && url.protocol === 'http:' && (!_testIp || _testIp === '127.0.0.1' || _testIp === '::1');
     if (url.pathname === '/checkout' && request.method === 'GET') return doCheckout(request, env);
     if (url.pathname === '/cart-checkout' && request.method === 'OPTIONS') return new Response(null, { headers: formCors() });
     if (url.pathname === '/cart-checkout' && request.method === 'POST') { const _cr = await doCartCheckout(request, env); const _ch = new Headers(_cr.headers); _ch.set('Access-Control-Allow-Origin', '*'); return new Response(_cr.body, { status: _cr.status, headers: _ch }); }
@@ -112,6 +114,9 @@ async function wsRoute(request, env, url, _host) {
       } else if (env.KV) {
         const _mapped = await env.KV.get('domain:' + _host);
         if (_mapped) {
+          // Custom domains are a Pro feature: when the owner's Pro has ended, send visitors to the free address instead.
+          let _off = false; try { _off = !!(JSON.parse((await env.KV.get('pubmeta:' + _mapped)) || '{}').proOff); } catch(e){}
+          if (_off) return Response.redirect('https://' + _mapped + '.websprout.app' + url.pathname + url.search, 302);
           if (url.pathname === '/sitemap.xml' || url.pathname === '/robots.txt') { const _m = await servePublishedMeta(_mapped, env, url.pathname, 'https://' + _host); if (_m) return _m; }
           const _r = await servePublished(_mapped, env, url.pathname, { base: '/', origin: 'https://' + _host }); if (_r) return _r;
         }
@@ -175,12 +180,19 @@ async function wsRoute(request, env, url, _host) {
     if (url.pathname === '/admin/customer' && request.method === 'GET') return doAdminCustomer(request, env);
     if (url.pathname === '/admin/activity' && request.method === 'GET') return doAdminActivity(request, env);
     if (url.pathname === '/admin/nudge' && request.method === 'GET' && ['same-origin', 'none', ''].indexOf(request.headers.get('sec-fetch-site') || '') > -1) return doAdminNudge(request, env);
-    if (url.pathname === '/email-optout' && request.method === 'GET') return doEmailOptout(request, env);
+    if (url.pathname === '/email-optout' && (request.method === 'GET' || request.method === 'POST')) return doEmailOptout(request, env);
     // State-changing admin links: refuse requests triggered from another page (e.g. an <img> on a published *.websprout.app site)
     if ((url.pathname === '/admin/grant' || url.pathname === '/admin/feature' || url.pathname === '/admin/nudge') && ['same-origin', 'none', ''].indexOf(request.headers.get('sec-fetch-site') || '') === -1) return new Response('Forbidden', { status: 403 });
     if (url.pathname === '/admin/grant') return doAdminGrant(request, env);
     if (url.pathname === '/admin/errors/clear' && request.method === 'POST') { if (['same-origin', 'none', ''].indexOf(request.headers.get('sec-fetch-site') || '') === -1) return new Response('Forbidden', { status: 403 }); return doAdminErrorsClear(request, env); }
     if (url.pathname === '/admin/feature') return doAdminFeature(request, env);
+    if (url.pathname === '/admin/moderation' && request.method === 'GET') return doAdminModeration(request, env);
+    if ((url.pathname === '/admin/moderation/scan' || url.pathname === '/admin/moderation/dismiss' || url.pathname === '/admin/takedown') && request.method === 'POST') {
+      if (['same-origin', 'none', ''].indexOf(request.headers.get('sec-fetch-site') || '') === -1) return new Response('Forbidden', { status: 403 });
+      if (url.pathname === '/admin/takedown') return doAdminTakedown(request, env);
+      if (url.pathname === '/admin/moderation/scan') return doAdminModScan(request, env);
+      return doAdminModDismiss(request, env);
+    }
     if (url.pathname === '/showcase') return doShowcasePage(request, env);
     if (url.pathname === '/showcase/data') return doShowcaseData(env);
     if (url.pathname === '/dev' && request.method === 'GET') return doDevPage(request, env);
@@ -220,7 +232,7 @@ async function wsRoute(request, env, url, _host) {
     if (url.pathname === '/api/stripe/webhook' && request.method === 'POST') return doStripeWebhook(request, env);
     if (url.pathname === '/success') return new Response(SUCCESS_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     if (url.pathname === '/terms') return new Response(TERMS_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
-    if (url.pathname === '/privacy') return new Response(PRIVACY_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    if (url.pathname === '/privacy') return new Response(wsAdsOn(env) ? wsPrivacyWithAds(PRIVACY_PAGE) : PRIVACY_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     if (url.pathname === '/accessibility') return new Response(ACCESSIBILITY_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     if (url.pathname === '/deploy-guide') return new Response(DEPLOY_GUIDE_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     if (url.pathname === '/sitemap.xml') return new Response(SITEMAP, { headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=86400' } });
@@ -242,6 +254,7 @@ async function wsRoute(request, env, url, _host) {
     if (_sub) _html = _html.split(SUB_LINK).join(_sub);
     _html = _html.split('__WS_EDV__').join(editorVersion(_sub));
     if (env.GOOGLE_PLACES_KEY) _html = _html.split('id="gFillWrap" hidden').join('id="gFillWrap"');
+    { const _ads = wsAdsTags(env); if (_ads) _html = _html.replace('</head>', _ads + '</head>'); }
     try { const _sg = await getSitesGrown(env); if (_sg && _sg > 0) _html = _html.split('id="liveCount">&mdash;<').join('id="liveCount">' + fmtThousands(_sg) + '<'); } catch (e) {}
     return new Response(_html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate', 'Pragma': 'no-cache' } });
 }
@@ -314,6 +327,37 @@ async function doTestAnalytics(request, env){
   return succeed({ ok:true, inserted: st.length });
 }
 
+// Ad conversion tracking on websprout.app itself (never on customers' published sites). Each part turns on only when
+// its setting exists in Cloudflare:
+//   GOOGLE_TAG_ID             AW-123456789 (Google Ads) or G-XXXXXXX (Google Analytics 4)
+//   GOOGLE_ADS_PUBLISH_LABEL  AW-123456789/AbCdEf  conversion: someone published their first site
+//   GOOGLE_ADS_TRIAL_LABEL    AW-123456789/GhIjKl  conversion: someone started the Pro trial
+//   META_PIXEL_ID             1234567890           Meta (Facebook/Instagram) Pixel: Lead on publish, StartTrial on Pro
+function wsAdsCfg(env){
+  const g = String((env && env.GOOGLE_TAG_ID) || '').trim(), m = String((env && env.META_PIXEL_ID) || '').trim();
+  const lab = function(v){ v = String(v || '').trim(); return /^AW-\d{5,15}\/[A-Za-z0-9_-]{4,40}$/.test(v) ? v : ''; };
+  return { g: /^(AW-\d{5,15}|G-[A-Z0-9]{4,15})$/.test(g) ? g : '', meta: /^\d{8,20}$/.test(m) ? m : '', pub: lab(env && env.GOOGLE_ADS_PUBLISH_LABEL), trial: lab(env && env.GOOGLE_ADS_TRIAL_LABEL) };
+}
+function wsAdsOn(env){ const c = wsAdsCfg(env); return !!(c.g || c.meta); }
+function wsAdsTags(env){
+  const c = wsAdsCfg(env);
+  if (!c.g && !c.meta) return '';
+  let h = '';
+  if (c.g) h += '<script async src="https://www.googletagmanager.com/gtag/js?id=' + c.g + '"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","' + c.g + '");</script>';
+  if (c.meta) h += '<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");fbq("init","' + c.meta + '");fbq("track","PageView");</script>';
+  // wsConv("publish", siteId) / wsConv("trial"): each conversion is reported once per site (publish) or once per browser (trial).
+  h += '<script>window.wsConv=function(k,id){try{var key="ws_conv_"+k+"_"+(id||"");if(localStorage.getItem(key))return;localStorage.setItem(key,"1");}catch(e){}'
+    + 'try{var L=' + JSON.stringify({ publish: c.pub, trial: c.trial }) + ';if(window.gtag&&L[k])gtag("event","conversion",{send_to:L[k]});}catch(e){}'
+    + 'try{if(window.fbq)fbq("track",k==="trial"?"StartTrial":"Lead");}catch(e){}};</script>';
+  return h;
+}
+// Privacy page wording when ad measurement is on.
+function wsPrivacyWithAds(page){
+  return page
+    .replace('Websprout measures how the site is used without cookies or third-party trackers:', 'Websprout measures how the site is used without cookies:')
+    .replace('<p>We do not track you across other websites. We do not sell your data. We use only the cookies necessary for the service to work, including a sign-in cookie to keep you logged in.</p>',
+      '<p>We do not sell your data. Besides the cookies the service needs (including a sign-in cookie to keep you logged in), websprout.app uses Google and Meta advertising tags to measure whether our ads work: they may set cookies and tell those companies when someone who saw an ad publishes a site or starts a Pro trial. These tags never run on the websites our customers publish. You can opt out of personalized ads at <a href="https://adssettings.google.com">adssettings.google.com</a> and in your Facebook or Instagram ad preferences.</p>');
+}
 function succeed(data) {
   return new Response(JSON.stringify(data), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }

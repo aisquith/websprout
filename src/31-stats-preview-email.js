@@ -80,6 +80,10 @@ async function doSavePreview(request, env) {
     const sess = await getSession(request, env);
     if (!(sess && sess.email) && !(body.siteId && await siteKeyOk(String(body.siteId), body.key, env))) return new Response(JSON.stringify({ error:'Please sign in to share a preview.' }), { status:401, headers:{ 'Content-Type':'application/json' } });
     if (!(await wsRate(env, 'pvrate:' + wsClientIp(request, env), 30, 3600))) return fail('Too many share links right now. Please try again later.');
+    // Share links serve on websprout.app too: same content check as publishing (53-moderation.js).
+    if (await wsModBlocked(env, body.siteId, sess && sess.email)) return new Response(JSON.stringify({ error:'This site can\u2019t be shared from Websprout. Contact support if you think this is a mistake.', moderation:true }), { status:403, headers:{ 'Content-Type':'application/json' } });
+    const _mv = await wsModCheck(env, { name: siteNameFromHtml(body.html), slug: '', pages: [body.html] });
+    if (_mv.status === 'block') { await wsModQueue(env, 'preview-' + String(body.siteId || 'anon').replace(/[^a-z0-9]/gi, '').slice(0, 30).toLowerCase(), body.siteId, _mv, { email: (sess && sess.email) || '', refused: true, preview: true }); return new Response(JSON.stringify({ error: wsModMessage(_mv.category), moderation:true }), { status:422, headers:{ 'Content-Type':'application/json' } }); }
     const id = randToken(12);
     // Store for 7 days
     await env.KV.put('preview:' + id, body.html, { expirationTtl: 60*60*24*7 });

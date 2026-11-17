@@ -124,6 +124,7 @@ tr.under td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 <button data-p="growth"><span class="ic" aria-hidden="true">&#8599;</span>Growth</button>
 <button data-p="customers"><span class="ic" aria-hidden="true">&#9787;</span>Customers</button>
 <button data-p="sites"><span class="ic" aria-hidden="true">&#9635;</span>Sites</button>
+<button data-p="moderation"><span class="ic" aria-hidden="true">&#9873;</span>Moderation<span class="cnt" id="modCnt" hidden></span></button>
 <button data-p="revenue"><span class="ic" aria-hidden="true">$</span>Revenue</button>
 <button data-p="health"><span class="ic" aria-hidden="true">&#9829;</span>Health &amp; costs</button>
 <button data-p="activity"><span class="ic" aria-hidden="true">&#8801;</span>Activity</button>
@@ -170,12 +171,20 @@ tr.under td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 <h2>Custom domains</h2><div class="tw" id="domT"></div>
 </section>
 
+<section class="pg" data-pg="moderation" hidden>
+<p class="lead">Every publish and share link is checked for obscene, vulgar, NSFW, hateful or scam content before it goes live. Sites that were refused, or went out while the AI check was unavailable, show up here. You can also check every published site at once.</p>
+<div class="acts" style="margin-bottom:12px"><button class="btn pri" id="modScan">Check all published sites</button><span class="muted" id="modScanMsg" role="status" style="align-self:center"></span></div>
+<p class="muted" id="modAi" hidden></p>
+<div class="tw" id="modT"><div style="padding:12px"><span class="sk"></span><span class="sk"></span></div></div>
+</section>
+
 <section class="pg" data-pg="revenue" hidden>
 <p class="lead">Subscription revenue, store sales on customer sites, and invoices.</p>
 <div class="kpis" id="revK"></div>
 <h2>Monthly recurring revenue over time <span class="help">from the daily snapshot</span></h2><div class="card chart" id="mrrChart"></div>
 <div class="grid2" style="margin-top:14px"><div class="card" id="revPanel"></div><div class="card" id="valPanel"></div></div>
 <h2>Invoices <span class="help" id="invSub"></span></h2><div class="tw" id="invT"></div>
+<h2>Payments not linked to an account <span class="help">someone paid for Pro but we could not tell which account &mdash; find them in Customers and use Give Pro, or refund in Stripe</span></h2><div class="tw" id="unmT"></div>
 </section>
 
 <section class="pg" data-pg="health" hidden>
@@ -195,7 +204,7 @@ tr.under td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
 <script>
 var S={days:30,page:'overview',src:'',cat:'',acq:'sources',biz:'categories',A:null,D:null,sort:{}};
 var EMPTY='No data yet \u2014 this fills in as people use Websprout.';
-var PAGES={overview:'Overview',growth:'Growth',customers:'Customers',sites:'Sites',revenue:'Revenue',health:'Health & costs',activity:'Activity'};
+var PAGES={overview:'Overview',growth:'Growth',customers:'Customers',sites:'Sites',moderation:'Moderation',revenue:'Revenue',health:'Health & costs',activity:'Activity'};
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function dt(ms){if(!ms)return '<span class="muted">&mdash;</span>';var d=new Date(ms);return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
@@ -248,10 +257,12 @@ function doAct(b){var a=b.getAttribute('data-act'),em=b.getAttribute('data-email
   var run=function(){
     if(a==='plan')return req('/admin/grant?email='+encodeURIComponent(em)+'&plan='+v,{},v==='pro'?'Pro granted to '+em:'Pro removed from '+em).then(function(ok){if(ok)openCustomer(em);});
     if(a==='dev')return req('/admin/grant?email='+encodeURIComponent(em)+'&role='+v,{},v==='dev'?'Developer access granted':'Developer access removed').then(function(ok){if(ok)openCustomer(em);});
+    if(a==='down'||a==='block')return req('/admin/takedown?slug='+encodeURIComponent(slug)+(a==='block'?'&block=1':''),{method:'POST'},slug+(a==='block'?' taken down and blocked':' taken down')).then(function(ok){if(ok){closeDrawer();loadMod();}});
+    if(a==='okmod')return req('/admin/moderation/dismiss?slug='+encodeURIComponent(slug),{method:'POST'},slug+' marked as fine').then(function(ok){if(ok)loadMod();});
     if(a==='feat')return req('/admin/feature?slug='+encodeURIComponent(slug)+'&on='+v,{},v==='1'?slug+' is now featured on the showcase':slug+' removed from the showcase').then(function(ok){if(ok){closeDrawer();}});
   };
-  var msg=a==='plan'&&v==='free'?'Remove Pro from '+em+'? Their badge comes back and custom domains stop working.':a==='plan'?'Give '+em+' Pro for free (comp)?':a==='dev'&&v==='user'?'Remove developer access from '+em+'?':a==='dev'?'Give '+em+' access to the developer panel?':a==='feat'&&v==='1'?'Feature '+slug+' on the public showcase?':'Remove '+slug+' from the showcase?';
-  confirmBox(msg,a==='plan'&&v==='free'?'Remove Pro':a==='dev'&&v==='user'?'Remove access':'Confirm',(v==='free'||v==='user'||v==='0')).then(function(ok){if(ok)run();});}
+  var msg=a==='down'?'Take '+slug+' offline? The owner can fix it and publish again.':a==='block'?'Take '+slug+' offline and block it? The owner will not be able to publish or share this site again.':a==='okmod'?'Mark '+slug+' as fine? If it was refused, the owner can then publish exactly this content (later edits are checked again).':a==='plan'&&v==='free'?'Remove Pro from '+em+'? Their badge comes back and custom domains stop working.':a==='plan'?'Give '+em+' Pro for free (comp)?':a==='dev'&&v==='user'?'Remove developer access from '+em+'?':a==='dev'?'Give '+em+' access to the developer panel?':a==='feat'&&v==='1'?'Feature '+slug+' on the public showcase?':'Remove '+slug+' from the showcase?';
+  confirmBox(msg,a==='down'?'Take down':a==='block'?'Take down and block':a==='plan'&&v==='free'?'Remove Pro':a==='dev'&&v==='user'?'Remove access':'Confirm',(a==='down'||a==='block'||v==='free'||v==='user'||v==='0')).then(function(ok){if(ok)run();});}
 function openCustomer(email){var u=((S.D&&S.D.users)||[]).filter(function(x){return x.email===email;})[0]||{email:email};
   openDrawer(email,'<span class="sk"></span><span class="sk" style="width:60%"></span><span class="sk big"></span>');
   fetch('/admin/customer?email='+encodeURIComponent(email)).then(function(r){return r.json();}).then(function(j){if(j.error){$('dBody').innerHTML='<p class="down">'+esc(j.error)+'</p>';return;}var c=j.user||u;
@@ -262,7 +273,7 @@ function openCustomer(email){var u=((S.D&&S.D.users)||[]).filter(function(x){ret
     h+='<h2>Timeline</h2>'+((j.events||[]).length?'<ul class="tl">'+j.events.map(function(e){return '<li><b>'+esc(evLabel(e.type))+'</b>'+(e.site_id?' <span class="muted">'+esc(e.site_id)+'</span>':'')+'<div class="t">'+dt(e.ts)+(e.source?' &middot; via '+esc(e.source):'')+'</div></li>';}).join('')+'</ul>':'<p class="muted">No recorded events yet.</p>');
     $('dBody').innerHTML=h;}).catch(function(){$('dBody').innerHTML='<p class="down">Could not load this customer.</p>';});}
 function openSite(slug){var p=((S.D&&S.D.published)||[]).filter(function(x){return x.slug===slug;})[0];if(!p)return;
-  openDrawer(slug+'.websprout.app','<div class="card">'+stat('Address','<a href="https://'+esc(slug)+'.websprout.app" target="_blank" rel="noopener">Open site &#8599;</a>')+stat('Visits (all time)',num(p.views))+stat('Leads',num(p.leads))+stat('Last updated',dt(p.updated))+stat('Websprout badge',p.nobadge?'Hidden (Pro)':'Shown')+stat('Showcase',p.featured?'Featured':'Not featured')+'</div><div class="acts">'+(p.featured?'<button class="btn dng" data-act="feat" data-slug="'+esc(slug)+'" data-v="0">Remove from showcase</button>':'<button class="btn pri" data-act="feat" data-slug="'+esc(slug)+'" data-v="1">Feature on showcase</button>')+'</div>');}
+  openDrawer(slug+'.websprout.app','<div class="card">'+stat('Address','<a href="https://'+esc(slug)+'.websprout.app" target="_blank" rel="noopener">Open site &#8599;</a>')+stat('Visits (all time)',num(p.views))+stat('Leads',num(p.leads))+stat('Last updated',dt(p.updated))+stat('Websprout badge',p.nobadge?'Hidden (Pro)':'Shown')+stat('Showcase',p.featured?'Featured':'Not featured')+'</div><div class="acts">'+(p.featured?'<button class="btn dng" data-act="feat" data-slug="'+esc(slug)+'" data-v="0">Remove from showcase</button>':'<button class="btn pri" data-act="feat" data-slug="'+esc(slug)+'" data-v="1">Feature on showcase</button>')+'<button class="btn dng" data-act="down" data-slug="'+esc(slug)+'">Take down</button><button class="btn dng" data-act="block" data-slug="'+esc(slug)+'">Take down and block</button></div>');}
 var EVL={landing:'Visited a landing page',visit:'Opened the builder',setup_start:'Started setup',generate:'Generated a site',generate_fail:'Generation failed',first_edit:'First edit',signup:'Created an account',login:'Signed in',publish:'Published',unpublish:'Unpublished',launch_check:'Ran the launch check',upgrade_click:'Opened Go Pro',pro_start:'Started Pro',pro_cancel:'Cancelled Pro',pro_cancel_scheduled:'Scheduled a cancellation',payment_failed:'Payment failed',pro_comp:'Given Pro (comp)',pro_revoke:'Pro removed by admin',lead:'Received a lead',review:'Received a review',domain_connected:'Connected a domain',store_checkout:'Store checkout',share:'Shared a preview',deploy_netlify:'Exported to Netlify',account_delete:'Deleted account'};
 function evLabel(t){return EVL[t]||t;}
 /* ---------- renderers ---------- */
@@ -304,6 +315,7 @@ function renderSites(){var d=S.D;if(!d)return;var q=($('siteQ').value||'').toLow
   table('siteT',[{k:'slug',label:'Address',fmt:function(p){return '<a href="https://'+esc(p.slug)+'.websprout.app" target="_blank" rel="noopener">'+esc(p.slug)+'</a>'+(p.featured?' <span class="badge dev">FEATURED</span>':'');}},{k:'views',label:'Visits',num:1,fmt:function(p){return num(p.views);}},{k:'leads',label:'Leads',num:1,fmt:function(p){return num(p.leads);}},{k:'updated',label:'Updated',num:1,fmt:function(p){return dt(p.updated);}},{k:'nobadge',label:'Badge',fmt:function(p){return p.nobadge?'<span class="muted">hidden (Pro)</span>':'shown';}}],rows,{sortKey:'updated',empty:(d.published||[]).length?'No sites match this search.':'No published sites yet \u2014 this fills in as owners publish.',rowAttr:function(p){return ' class="click" tabindex="0" data-open="'+esc(p.slug)+'" aria-label="Open '+esc(p.slug)+'"';},onOpen:openSite});
   table('domT',[{k:'host',label:'Domain',fmt:function(x){return '<a href="https://'+esc(x.host)+'" target="_blank" rel="noopener">'+esc(x.host)+'</a>';}},{k:'slug',label:'Points to'}],d.domains||[],{empty:'No custom domains yet.'});}
 function renderData(){var d=S.D;if(!d)return;if(d.error){$('custT').innerHTML='<p class="empty down">'+esc(d.error)+'</p>';return;}var t=d.totals||{};renderCustomers();renderSites();
+  table('unmT',[{k:'ts',label:'When',num:1,fmt:function(x){return dt(x.ts);}},{k:'typed',label:'Email typed at checkout',fmt:function(x){return esc(x.typed||'(none)');}},{k:'customer',label:'Stripe customer',fmt:function(x){return esc(x.customer||'');}}],(d.unmatched||[]),{sortKey:'ts',empty:'None. Every payment was linked to its account.'});
   table('invT',[{k:'ts',label:'When',num:1,fmt:function(x){return dt(x.ts);}},{k:'desc',label:'For'},{k:'amount',label:'Amount',num:1,fmt:function(x){return esc((x.currency||'usd').toUpperCase())+' '+((x.amount||0)/100).toFixed(2);}},{k:'fee',label:'Fee',num:1,fmt:function(x){return x.fee?usd(x.fee):'&mdash;';}},{k:'client',label:'Client'}],d.invoices||[],{sortKey:'ts',empty:'No invoices yet.'});
   $('invSub').textContent=(t.invoices||0)+' created \u00b7 '+(t.feesOk?usd(t.feesCollected)+' fees collected':usd(t.feeBilled)+' fees billed');
   var gs=d.errorGroups||[];table('errT',[{k:'last',label:'Last seen',num:1,fmt:function(e){return dt(e.last);}},{k:'where',label:'Where'},{k:'msg',label:'Error and affected sites',fmt:function(e){return '<div style="color:#fca5a5;font-size:12.5px;word-break:break-word;max-width:460px">'+esc(e.msg)+(e.line?' <span class="muted">(line '+e.line+')</span>':'')+'</div>'+(e.sites&&e.sites.length?'<div class="muted" style="font-size:11.5px;word-break:break-all">'+e.sites.map(esc).join(', ')+'</div>':'');}},{k:'last24',label:'Last 24h / total',num:1,fmt:function(e){return '<span'+(e.last24?' class="down"':'')+'>'+e.last24+'</span> / '+e.count;}}],gs,{sortKey:'last24',empty:'No errors reported &#127881;'});
@@ -318,6 +330,22 @@ function loadActs(more){var q=$('actSearch').value||'',ty=$('actType').value||''
     if(j.types&&!more)$('actType').innerHTML='<option value="">All events</option>'+j.types.map(function(t){return '<option value="'+esc(t)+'"'+(t===ty?' selected':'')+'>'+esc(evLabel(t))+'</option>';}).join('');
     if(!j.db){var ql=q.toLowerCase();_acts=_acts.filter(function(a){return (!ql||JSON.stringify(a).toLowerCase().indexOf(ql)>-1)&&(!ty||a.type===ty);});}
     renderActs();}).catch(function(){$('actT').innerHTML='<p class="empty down">Could not load activity.</p>';});}
+var MODCAT={sexual:'Sexual / NSFW',profanity:'Vulgar language',hate:'Hate or harassment',violence:'Violence',drugs:'Drugs',weapons:'Weapons',scam:'Scam or phishing',impersonation:'Impersonates a brand',other:'Not family-friendly'};
+function renderMod(items,aiOn){var c=$('modCnt'),n=items.filter(function(x){return x.status==='block'&&!x.refused;}).length;c.hidden=!items.length;c.textContent=items.length;
+  var ai=$('modAi');ai.hidden=!!aiOn;ai.innerHTML=aiOn?'':'<b>The AI check is off</b> (no Gemini key, or MODERATION_AI=off). Only the word list is running.';
+  table('modT',[{k:'slug',label:'Site',fmt:function(x){var live=!x.refused&&!x.preview;return (live?'<a href="https://'+esc(x.slug)+'.websprout.app" target="_blank" rel="noopener">'+esc(x.slug)+'</a>':esc(x.slug))+(x.email?'<div class="muted" style="font-size:12px">'+esc(x.email)+'</div>':'');}},
+    {k:'status',label:'Result',fmt:function(x){return x.status==='block'?(x.refused?'<span class="badge">REFUSED</span>':'<span class="badge pro" style="background:#7f1d1d;color:#fecaca">LIVE &mdash; FLAGGED</span>'):'<span class="badge">NOT CHECKED</span>';}},
+    {k:'category',label:'Why',fmt:function(x){return esc(MODCAT[x.category]||(x.status==='unchecked'?'AI check unavailable ('+(x.reason||'')+')':x.category||''))+(x.status==='block'&&x.reason?'<div class="muted" style="font-size:12px">'+esc(x.reason)+'</div>':'');}},
+    {k:'ts',label:'When',num:1,fmt:function(x){return dt(x.ts);}},
+    {k:'act',label:'',fmt:function(x){var live=!x.refused&&!x.preview;return '<span class="acts" style="margin:0">'+(live?'<button class="btn dng" data-act="down" data-slug="'+esc(x.slug)+'">Take down</button><button class="btn dng" data-act="block" data-slug="'+esc(x.slug)+'">Block</button>':'')+'<button class="btn" data-act="okmod" data-slug="'+esc(x.slug)+'">'+(live?'Looks fine':(x.status==='block'&&x.hash?'Allow it':'Dismiss'))+'</button></span>';}}],
+    items,{sortKey:'ts',empty:'Nothing to review. Every checked site passed.'});}
+function loadMod(){fetch('/admin/moderation').then(function(r){return r.json();}).then(function(j){renderMod(j.items||[],j.aiOn);}).catch(function(){$('modT').innerHTML='<p class="empty down">Could not load the moderation list.</p>';});}
+function scanAll(){var b=$('modScan'),m=$('modScanMsg'),checked=0,flagged=0,unchecked=0;b.disabled=true;
+  var step=function(cur){m.textContent='Checking… '+checked+' sites so far';fetch('/admin/moderation/scan'+(cur?'?cursor='+encodeURIComponent(cur):''),{method:'POST'}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json();}).then(function(j){checked+=j.checked||0;flagged+=(j.flagged||[]).length;unchecked+=j.unchecked||0;if(!j.done&&j.cursor)return step(j.cursor);
+    b.disabled=false;m.textContent='Done: checked '+checked+' sites, '+flagged+' flagged'+(unchecked?', '+unchecked+' could not be checked by the AI':'')+'.';loadMod();}).catch(function(){b.disabled=false;m.textContent='The check stopped early ('+checked+' sites checked). Run it again to continue.';loadMod();});};
+  step('');}
+$('modT').addEventListener('click',function(e){var b=e.target.closest('button[data-act]');if(b)doAct(b);});
+$('modScan').addEventListener('click',function(){confirmBox('Check every published site now? This reviews each site with the AI and can take a few minutes.','Check all sites',false).then(function(ok){if(ok)scanAll();});});
 function loadA(){fetch('/admin/analytics?days='+S.days+(S.src?'&source='+encodeURIComponent(S.src):'')+(S.cat?'&category='+encodeURIComponent(S.cat):'')).then(function(r){return r.json();}).then(function(j){S.A=j;renderA();}).catch(function(){$('attList').innerHTML='<li class="warn"><span class="tag warn">ERROR</span><span>Could not load analytics &mdash; make sure you are signed in as the owner.</span></li>';});}
 function loadD(){fetch('/admin/data').then(function(r){return r.json();}).then(function(j){S.D=j;renderData();}).catch(function(){$('custT').innerHTML='<p class="empty down">Could not load &mdash; make sure you are signed in as the owner.</p>';});}
 document.addEventListener('click',function(e){var g=e.target.closest('[data-go]');if(g)go(g.getAttribute('data-go'));});
@@ -328,10 +356,10 @@ tabs('acqTabs','acq',renderGrowth);tabs('bizTabs','biz',renderGrowth);
 $('custQ').addEventListener('input',renderCustomers);$('custPlan').addEventListener('change',renderCustomers);$('siteQ').addEventListener('input',renderSites);
 var _at;$('actSearch').addEventListener('input',function(){clearTimeout(_at);_at=setTimeout(function(){loadActs(false);},300);});$('actType').addEventListener('change',function(){loadActs(false);});$('actMore').addEventListener('click',function(){loadActs(true);});
 $('errClear').addEventListener('click',function(){confirmBox('Clear all logged errors? This cannot be undone.','Clear errors',true).then(function(ok){if(ok)req('/admin/errors/clear',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'},'Errors cleared');});});
-$('refresh').addEventListener('click',function(){loadA();loadD();loadActs(false);toast('Refreshed',true);});
+$('refresh').addEventListener('click',function(){loadA();loadD();loadActs(false);loadMod();toast('Refreshed',true);});
 window.addEventListener('hashchange',function(){var h=location.hash.slice(1);if(PAGES[h]&&h!==S.page)go(h,true);});
 (function(){var d=parseInt(lsGet('wsAdmDays'),10);if([7,30,90].indexOf(d)>-1){S.days=d;[].forEach.call($('range').querySelectorAll('button'),function(x){x.setAttribute('aria-pressed',x.getAttribute('data-d')===String(d)?'true':'false');});}var h=location.hash.slice(1);go(PAGES[h]?h:(lsGet('wsAdmPage')||'overview'),true);})();
-loadA();loadD();loadActs(false);
+loadA();loadD();loadActs(false);loadMod();
 </script></body></html>`;
 
 
@@ -354,9 +382,9 @@ async function sendNudgeEmail(env, to, siteName, token){
     + '<div style="text-align:center;margin:22px 0"><a href="https://websprout.app/?utm_source=nudge&utm_medium=email" style="display:inline-block;background:#2d7a3a;color:#fff;padding:13px 30px;border-radius:10px;font-size:15px;font-weight:700;text-decoration:none">Open my site →</a></div>'
     + '<p style="color:#888;font-size:13px;margin:0">Sign in with this email address, then open <strong>Settings → My sites</strong>.</p>'
     + '</div>'
-    + '<div style="background:#f8faf8;border-top:1px solid #e8f0e5;padding:16px 26px;text-align:center"><p style="color:#aaa;font-size:12px;margin:0">You are receiving this one-time reminder because you built a site on <a href="https://websprout.app" style="color:#2d7a3a">Websprout</a>. <a href="' + optout + '" style="color:#888">Unsubscribe</a></p></div>'
+    + wsMailFooter(env, 'You are receiving this one-time reminder because you built a site on <a href="https://websprout.app" style="color:#2d7a3a">Websprout</a>.', optout)
     + '</div>';
-  const r = await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'Your website is saved — publish it free in one click', html: html }) });
+  const r = await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'Your website is saved — publish it free in one click', html: html, headers: wsUnsubHeaders(optout) }) });
   return r && r.ok;
 }
 async function runNudges(env, dry){
@@ -364,6 +392,8 @@ async function runNudges(env, dry){
   try{
     if(!env || !env.KV) return out;
     if(!dry && !env.RESEND_API_KEY){ out.errors++; return out; }
+    // Reminder emails need a mailing address in the footer (CAN-SPAM): paused until POSTAL_ADDRESS is set.
+    if(!dry && !wsPostalAddress(env)){ out.paused = 'Set POSTAL_ADDRESS (or WS_POSTAL_ADDRESS in 00-header.js) to send reminder emails.'; return out; }
     const cutoffNew = Date.now() - 48*3600*1000;
     const cutoffOld = Date.now() - 30*86400000;
     let cursor, guard=0;
@@ -411,7 +441,8 @@ async function doEmailOptout(request, env){
   const expect = await nudgeToken(e, env);
   if(!wsSafeEq(t, expect)) return page('That unsubscribe link is not valid.');
   await env.KV.put('emailoptout:'+e, String(Date.now()));
-  return page('Done — <strong>'+escHtml(e)+'</strong> will not receive reminder emails from Websprout.');
+  if(request.method === 'POST') return new Response('ok', { headers:{ 'Content-Type':'text/plain' } });
+  return page('Done — <strong>'+escHtml(e)+'</strong> will not receive reminder or weekly summary emails from Websprout.');
 }
 async function doAdminNudge(request, env){
   const s = await getSession(request, env);
@@ -1032,6 +1063,7 @@ async function doAdminData(request, env){
   const domains=[];
   try{ const r=await env.KV.list({ prefix:'domain:', limit:1000 }); for(const k of r.keys){ try{ const sl=await env.KV.get(k.name); domains.push({ host:k.name.slice(7), slug:sl||'' }); }catch(e){} } }catch(e){}
   // invoices created (KV) - amounts + fees configured at creation time
+  const unmatched=[]; try{ const r=await env.KV.list({ prefix:'prounmatched:', limit:1000 }); for(const k of r.keys){ try{ const o=JSON.parse(await env.KV.get(k.name)||'{}'); unmatched.push({ ts:o.ts||0, typed:o.typed||'', customer:o.customer||'' }); }catch(e){} } }catch(e){}
   const invoices=[]; let invTotal=0, feeBilled=0;
   try{ let cur=undefined,g=0; do{ const r=await env.KV.list({ prefix:'invoice:', cursor:cur, limit:1000 }); for(const k of r.keys){ try{ const o=JSON.parse(await env.KV.get(k.name)||'{}'); invoices.push({ ts:o.ts||0, owner:(k.name.split(':')[1])||'', amount:o.amount||0, fee:o.fee||0, currency:(o.currency||'usd'), desc:o.desc||'', client:o.clientEmail||'' }); invTotal+=(o.amount||0); feeBilled+=(o.fee||0); }catch(e){} } cur=r.list_complete?null:r.cursor; g++; } while(cur&&g<15); }catch(e){}
   invoices.sort((a,b)=>(b.ts||0)-(a.ts||0));
@@ -1049,7 +1081,7 @@ async function doAdminData(request, env){
   try{ const r3=await env.KV.list({ prefix:'clienterr:', limit:1000 }); const names=r3.keys.map(function(k){return k.name;}).sort().reverse().slice(0,300); for(const nm of names){ try{ errors.push(JSON.parse(await env.KV.get(nm)||'{}')); }catch(e){} } }catch(e){}
   const errorGroups=groupClientErrors(errors);
   let visits=0; try{ visits=parseInt(await env.KV.get('stat:visit')||'0',10)||0; }catch(e){}
-  return succeed({ totals:{ visits, visitConv: visits?Math.round(buildTotal/visits*1000)/10:0, accounts:users.length, paid, comped, pro:paid+comped, free, conversion: users.length?Math.round(paid/users.length*1000)/10:0, mrr: paid*price, published:pub.length, generations:buildTotal, leads:leadTotal, domains:domains.length, devs, signups7, errors:errors.length, errors24: errorGroups.reduce(function(a,g){return a+g.last24;},0), invoices:invoices.length, invoiced:invTotal, feeBilled, feesCollected, feesCount, feesOk }, users, published:pub, errors: errors.slice(0,60), errorGroups: errorGroups.slice(0,40), domains, invoices: invoices.slice(0,40) });
+  return succeed({ unmatched, totals:{ visits, visitConv: visits?Math.round(buildTotal/visits*1000)/10:0, accounts:users.length, paid, comped, pro:paid+comped, free, conversion: users.length?Math.round(paid/users.length*1000)/10:0, mrr: paid*price, published:pub.length, generations:buildTotal, leads:leadTotal, domains:domains.length, devs, signups7, errors:errors.length, errors24: errorGroups.reduce(function(a,g){return a+g.last24;},0), invoices:invoices.length, invoiced:invTotal, feeBilled, feesCollected, feesCount, feesOk }, users, published:pub, errors: errors.slice(0,60), errorGroups: errorGroups.slice(0,40), domains, invoices: invoices.slice(0,40) });
 }
 async function doAdminPage(request, env){
   const s = await getSession(request, env);

@@ -7,3 +7,7 @@ const SUB_LINK = 'https://buy.stripe.com/00w00kgq56Bd1ds2Wy6Na00';
 // Support inbox — SERVER-SIDE ONLY. Never interpolated into PAGE, so it never appears in page source.
 const SUPPORT_EMAIL = 'michael.aisquith@gmail.com';
 const SUPPORT_INBOX = 'support@websprout.app';
+// Mailing address shown at the bottom of reminder and digest emails (US CAN-SPAM requires one: a street address,
+// a PO box or a registered mailbox all count). Fill it in here, or set POSTAL_ADDRESS in Cloudflare to override.
+// While it's empty, the unpublished-site reminder and the weekly summary emails are not sent.
+const WS_POSTAL_ADDRESS = '';

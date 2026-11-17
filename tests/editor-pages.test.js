@@ -1,10 +1,12 @@
 // Editor: draft vs live (explicit "Update site"), pages (rename, address, redirects, delete, one-page sites),
 // styled prompts instead of native dialogs, input validation and launch checks.
-const { openPage, openStudioWith, sleep, waitFor } = require('./lib');
+const { openPage, openStudioWith, sleep, waitFor, signIn, browserCookie } = require('./lib');
 
 module.exports = async function (ctx, t) {
   const { base, browser } = ctx;
   const page = await openPage(browser, { width: 1440 });
+  // Publishing needs an account: sign this browser in before the editor opens (so the site is saved to this account).
+  await page.setCookie(browserCookie(base, await signIn(base, 'editor-pages@example.com')));
   const pubs = [];
   page.on('request', (q) => { if (new URL(q.url()).pathname === '/publish' && q.method() === 'POST') pubs.push(q.postData() || ''); });
   t.ok(await openStudioWith(page, base, 'Glow Salon', 'Hair salon', { city: 'Austin', phone: '512-555-0100' }), 'studio opens');

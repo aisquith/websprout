@@ -22,6 +22,27 @@ async function wsSetSiteOwner(env, siteId, email){
   if (!siteId || !email || !env || !env.KV) return;
   try { if (!(await env.KV.get('siteowner:' + siteId))) await env.KV.put('siteowner:' + siteId, String(email).toLowerCase()); } catch(e){}
 }
+// Apply (pro=true) or remove (pro=false) Pro features on every published site the account owns.
+async function wsPlanSites(env, email, pro){
+  if (!env || !env.KV || !email) return 0;
+  const em = String(email).toLowerCase();
+  if (em === SUPPORT_EMAIL.toLowerCase()) return 0;
+  let list = []; try { list = JSON.parse((await env.KV.get('usersites:' + em)) || '[]'); } catch(e){}
+  const ids = new Set((Array.isArray(list) ? list : []).map(function(it){ return it && it.siteId; }).filter(Boolean));
+  try { const pl = JSON.parse((await env.KV.get('pubby:' + em)) || '[]'); if (Array.isArray(pl)) pl.forEach(function(x){ if (x) ids.add(x); }); } catch(e){}
+  let n = 0;
+  for (const sid of ids) {
+    try {
+      const owner = String((await env.KV.get('siteowner:' + sid)) || '').toLowerCase();
+      if (owner && owner !== em) continue;
+      const slug = await env.KV.get('slugof:' + sid); if (!slug) continue;
+      const m = JSON.parse((await env.KV.get('pubmeta:' + slug)) || 'null'); if (!m || m.siteId !== sid) continue;
+      if (pro) { m.nobadge = true; delete m.proOff; } else { m.nobadge = false; m.proOff = true; }
+      await env.KV.put('pubmeta:' + slug, JSON.stringify(m)); n++;
+    } catch(e){}
+  }
+  return n;
+}
 async function wsPlanOf(env, email){ try{ const u=JSON.parse((await env.KV.get('user:'+String(email).toLowerCase()))||'{}'); return u.plan||'free'; }catch(e){ return ''; } }
 // Is this subscription still live? Out-of-order events (a late invoice.paid after customer.subscription.deleted) must
 // not re-grant Pro: a "dead" marker from the delete wins, and when Stripe is reachable its current status decides.
@@ -43,7 +64,10 @@ async function doStripeWebhook(request, env){
   const done = new Response('{"received":true}', { headers:{ 'Content-Type':'application/json' } });
   // Stripe retries and may deliver an event twice: handle each event id once (remembered for 3 days).
   const evId = String(ev.id || '').slice(0, 100);
-  try{ if(evId && env.KV){ if(await env.KV.get('stripeev:' + evId)) return done; await env.KV.put('stripeev:' + evId, '1', { expirationTtl: 3*86400 }); } }catch(e){}
+  // The event is marked handled only after it succeeds; on an error we answer 500 so Stripe retries it (every step is
+  // safe to repeat).
+  try{ if(evId && env.KV && await env.KV.get('stripeev:' + evId)) return done; }catch(e){}
+  const markDone = async function(){ try{ if(evId && env.KV) await env.KV.put('stripeev:' + evId, '1', { expirationTtl: 3*86400 }); }catch(e){} };
   try{
     const obj=(ev.data&&ev.data.object)||{};
     const cust=obj.customer||'';
@@ -58,7 +82,12 @@ async function doStripeWebhook(request, env){
       const ref = String(obj.client_reference_id || (obj.metadata && obj.metadata.ws_ref) || '');
       const email = /^wsp_[a-f0-9]{32}$/.test(ref) ? ((await env.KV.get('proref:' + ref)) || '').toLowerCase() : '';
       if(!email){
-        try{ console.warn('stripe: checkout ' + evId + ' has no valid account reference; Pro not granted'); await env.KV.put('prounmatched:' + evId, JSON.stringify({ ts: Date.now(), customer: cust, sub: obj.subscription || '', ref: ref.slice(0, 80), typed: String((obj.customer_details && obj.customer_details.email) || obj.customer_email || '').slice(0, 120) }), { expirationTtl: 90*86400 }); }catch(e){}
+        const typed = String((obj.customer_details && obj.customer_details.email) || obj.customer_email || '').slice(0, 120);
+        try{ console.warn('stripe: checkout ' + evId + ' has no valid account reference; Pro not granted'); await env.KV.put('prounmatched:' + evId, JSON.stringify({ ts: Date.now(), customer: cust, sub: obj.subscription || '', ref: ref.slice(0, 80), typed: typed }), { expirationTtl: 90*86400 }); }catch(e){}
+        // Someone paid but we can't tell which account: tell the owner right away so they can grant Pro by hand.
+        try{ if(await wsMailCapOk(env, 'support')) await wsSendMail(env, { from: 'Websprout <hello@websprout.app>', to: [SUPPORT_EMAIL], subject: 'Action needed: a Pro payment is not linked to an account',
+          html: '<p>A customer paid for Pro but the payment could not be matched to a Websprout account, so Pro was <b>not</b> turned on automatically.</p><p>Email typed at checkout: <b>' + escHtml(typed || '(none)') + '</b><br>Stripe customer: ' + escHtml(cust || '(none)') + '<br>Subscription: ' + escHtml(obj.subscription || '(none)') + '</p><p>Find their account in Admin &gt; Customers and use <b>Give Pro</b>, or refund them in Stripe. These also show in Admin &gt; Revenue.</p>' }); }catch(e){}
+        await markDone();
         return done;
       }
       await setUserPlan(env, email, 'pro', cust, obj.subscription||'');
@@ -85,7 +114,11 @@ async function doStripeWebhook(request, env){
       try{ await logEvent(request, env, 'payment_failed', { email: em||'', server: true, dedupe: ev.id, props:{ amount: obj.amount_due || 0, attempt: obj.attempt_count || 0 } }); }catch(e){}
     }
     _wsUsers = null;
-  }catch(e){ try{ console.error('stripe webhook', (e && e.stack) || e); }catch(_){} }
+  }catch(e){
+    try{ console.error('stripe webhook', (e && e.stack) || e); }catch(_){}
+    return new Response('{"error":"temporary failure, please retry"}', { status:500, headers:{ 'Content-Type':'application/json' } });
+  }
+  await markDone();
   return done;
 }
 

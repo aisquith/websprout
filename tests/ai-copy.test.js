@@ -124,8 +124,8 @@ module.exports = async function (ctx, t) {
     const s = (await slow.build(biz(), env({ AI_TIMEOUT_MS: '300' }))).site;
     t.ok(s.copySource === 'template' && Date.now() - t0 < 3000 && hero(s).tagline === hero(tpl).tagline, 'a slow Gemini times out and the template copy is used (' + (Date.now() - t0) + 'ms)');
     const capped = fake(GOOD);
-    const s2 = (await capped.build(biz(), env({ KV: kv({ [MONTH()]: '3000' }) }))).site;
-    t.ok(capped.calls.length === 0 && s2.copySource === 'template', 'monthly cap reached (default 3000): no AI call');
+    const s2 = (await capped.build(biz(), env({ KV: kv({ [MONTH()]: '30000' }) }))).site;
+    t.ok(capped.calls.length === 0 && s2.copySource === 'template', 'monthly cap reached (default 30000): no AI call');
     const cap0 = fake(GOOD); await cap0.build(biz(), env({ AI_MONTHLY_CAP: '0' }));
     t.eq(cap0.calls.length, 0, 'AI_MONTHLY_CAP sets the cap');
     const nokey = fake(GOOD); const s3 = (await nokey.build(biz(), { KV: kv() })).site;

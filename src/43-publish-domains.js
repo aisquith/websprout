@@ -171,6 +171,7 @@ async function servePublished(slug, env, path, opts){
       if (!(await pubCanCheckout(env, _sid2))) html = html.replace(/<body class="/, '<body class="ws-nopay ');
     } catch(e){}
   }
+  html = wsTurnstileInject(html, env);
   let nobadge = false; try { const m = await env.KV.get('pubmeta:' + slug); if (m) nobadge = !!JSON.parse(m).nobadge; } catch(e){}
   const resp = new Response(nobadge ? html : withBadge(html), { headers: { 'Content-Type':'text/html; charset=utf-8', 'X-Robots-Tag':'all' } });
   if (!v3target) return resp;
@@ -212,6 +213,13 @@ async function doPublish(request, env){
     if (b.html.length > 4*1024*1024) return fail('Site is too large to publish');
     let _pro = false; try { const _s = await getSession(request, env); if (_s) { const _u = JSON.parse(await env.KV.get('user:' + _s.email) || '{}'); _pro = !!(_u && _u.plan === 'pro'); } } catch(e){}
     try { const _ps2 = await getSession(request, env); const _po = !!(_ps2 && ((_ps2.email||'').toLowerCase()===SUPPORT_EMAIL.toLowerCase())); if (!_pro && !_po) b.pages = null; } catch(e){}
+    // Content check (53-moderation.js): nothing obscene, vulgar, NSFW, hateful or scammy goes live under our name.
+    if (await wsModBlocked(env, b.siteId, _pubEmail)) return new Response(JSON.stringify({ error:'This site can\u2019t be published on Websprout. Contact support if you think this is a mistake.', moderation:true }), { status:403, headers:{'Content-Type':'application/json'} });
+    {
+      const _mv = await wsModCheck(env, { name: siteNameFromHtml(b.html), slug: slug, pages: [b.html].concat(Array.isArray(b.pages) ? b.pages.map(function(p){ return p && p.html; }) : []) });
+      if (_mv.status === 'block') { await wsModQueue(env, slug, b.siteId, _mv, { email: _pubEmail, refused: true }); return new Response(JSON.stringify({ error: wsModMessage(_mv.category), moderation:true }), { status:422, headers:{'Content-Type':'application/json'} }); }
+      if (_mv.status === 'unchecked' && _mv.reason !== 'nokey' && _mv.reason !== 'off') await wsModQueue(env, slug, b.siteId, _mv, { email: _pubEmail });
+    }
     // Capture leads through Websprout's own backend: point every form at our endpoint AND inject a
     // tiny handler that submits via fetch + shows an inline thank-you (no third party, no raw JSON page).
     const prep = (html) => {
@@ -252,7 +260,7 @@ async function doPublish(request, env){
     // Multi-page sites get an index; single-page sites have none (preserves legacy serving).
     if (_paths.length > 1) await env.KV.put('pubpages:' + slug, JSON.stringify(_paths));
     else { try { await env.KV.delete('pubpages:' + slug); } catch(e){} }
-    await env.KV.put('pubmeta:' + slug, JSON.stringify({ siteId: b.siteId, updated: Date.now(), nobadge: _pro, pages: _paths, name: siteNameFromHtml(b.html) }));
+    await env.KV.put('pubmeta:' + slug, JSON.stringify(Object.assign({ siteId: b.siteId, updated: Date.now(), nobadge: _pro, pages: _paths, name: siteNameFromHtml(b.html) }, (_pro || _pubEmail === SUPPORT_EMAIL.toLowerCase()) ? {} : { proOff: true })));
     // Structured shops: keep the published products (name, price) server-side so checkout charges these prices,
     // never whatever a visitor's browser sends.
     try {
@@ -280,6 +288,8 @@ async function doPublish(request, env){
       }
     } catch(e){}
     try { await env.KV.put('slugof:' + b.siteId, slug); } catch(e){}
+    // Which sites each account has published (so plan changes can update all of them: badge, custom domain).
+    try { const _pk = 'pubby:' + _pubEmail; let _pl = []; try { _pl = JSON.parse((await env.KV.get(_pk)) || '[]'); } catch(e){} if (!Array.isArray(_pl)) _pl = []; if (_pl.indexOf(b.siteId) < 0) { _pl.push(b.siteId); await env.KV.put(_pk, JSON.stringify(_pl.slice(-200))); } } catch(e){}
     return succeed({ ok:true, slug: slug, url: 'https://' + slug + '.websprout.app', pathUrl: 'https://websprout.app/s/' + slug, nobadge: _pro, pages: _paths });
   } catch(e){ return wsErr(e); }
 }
@@ -311,6 +321,7 @@ async function doSlugCheck(request, env){
     const sid = url.searchParams.get('siteId') || '';
     if (slug.length < 3) return succeed({ available:false, slug:slug, reason:'too short' });
     if (RESERVED_SLUGS.indexOf(slug) > -1) return succeed({ available:false, slug:slug, reason:'reserved' });
+    if (wsModSlugProblem(slug)) return succeed({ available:false, slug:slug, reason:'reserved' });
     if (!env.KV) return succeed({ available:true, slug:slug });
     const existing = await env.KV.get('pubmeta:' + slug);
     let avail = !existing;

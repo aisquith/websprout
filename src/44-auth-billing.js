@@ -229,6 +229,7 @@ async function setUserPlan(env, email, plan, cust, sub){
   const k='user:'+email.toLowerCase();
   let u={}; try{ u=JSON.parse(await env.KV.get(k)||'{}'); }catch(e){}
   if(!u.email) u.email=email.toLowerCase();
+  const _wasPro = u.plan==='pro';
   u.plan=plan;
   // Distinguish a real paying customer (came in with a Stripe customer) from a comped/gifted account
   u.proSource = (plan==='pro') ? ((cust || u.stripeCustomer) ? 'paid' : 'comp') : '';
@@ -243,6 +244,9 @@ async function setUserPlan(env, email, plan, cust, sub){
   if(sub!==undefined&&sub!=='') u.stripeSub=sub;
   u.planUpdated=Date.now();
   await env.KV.put(k, JSON.stringify(u));
+  // Pro features on published sites follow the plan: losing Pro brings the badge back and points custom domains at the
+  // free address; getting Pro back restores both (the domain setup is kept, so nothing needs reconnecting).
+  if(_wasPro !== (plan==='pro')){ try{ await wsPlanSites(env, email, plan==='pro'); }catch(e){ try{ console.error('plan sites', (e && e.message) || e); }catch(_){} } }
 }
 async function doSupport(request, env){
   try{

@@ -32,6 +32,7 @@ Tests need Chrome (or set `CHROME_PATH`). They also run on GitHub on every push 
 | `43-publish-domains.js` | publishing, serving published sites, custom domains |
 | `44-auth-billing.js`, `45-admin.js`, `46-account-saves.js` | sign-in, Stripe, admin and developer panels, saves and accounts |
 | `47-store.js`, `50-generator.js`, `51-sanitize.js` | shop and checkout, site generation, HTML cleanup |
+| `52-support.js`, `53-moderation.js` | support auto-replies, content checks on publish and share links |
 
 **The files are slices of one script, not separate modules.** Files 20-23 are one long template literal split in four, so inside them write `\\` for a backslash and never write `${` unless you mean a server-side value.
 
@@ -48,5 +49,13 @@ Add these in Cloudflare → Workers & Pages → websprout → Settings → Varia
 | `UNSPLASH_ACCESS_KEY` | photos on generated sites and the photo search in the editor |
 | `GOOGLE_PLACES_KEY` | live Google rating and reviews (enable "Places API (New)" in Google Cloud) |
 | `CF_API_TOKEN`, `CF_ZONE_ID` | automatic HTTPS for customers' own domains (Cloudflare for SaaS) |
+| `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET` | bot check on published contact forms (failed checks still reach the owner but get no auto-reply) |
+| `GOOGLE_TAG_ID`, `GOOGLE_ADS_PUBLISH_LABEL`, `GOOGLE_ADS_TRIAL_LABEL` | Google Ads / GA4 conversion tracking on websprout.app (publish, trial start) |
+| `META_PIXEL_ID` | Meta Pixel on websprout.app (Lead on publish, StartTrial on Pro) |
+| `POSTAL_ADDRESS` | mailing address in the footer of reminder and weekly summary emails; **those two emails are paused until it's set** (CAN-SPAM). Overrides `WS_POSTAL_ADDRESS` in `00-header.js` |
+
+**Limits you can change** (Variables): `AI_MONTHLY_CAP` (AI site copy, default 30,000/month), `MOD_MONTHLY_CAP` (AI content checks, default 20,000/month), `MODERATION_AI=off` (word list only), `UNSPLASH_HOURLY_CAP` (default 45; raise after Unsplash production approval).
+
+**Content checks:** every publish and share link is checked (`53-moderation.js`) for obscene, vulgar, NSFW, hateful or scam content. Admin → Moderation lists refused or unchecked sites, can check every published site at once, and can take a site down (and block it).
 
 **Custom domains (one-time):** in the websprout.app zone, open SSL/TLS → Custom Hostnames, enable Cloudflare for SaaS and set the fallback origin to `sites.websprout.app`. Then add a Worker route `*/*` for the zone so customer domains reach the Worker. The API token needs the "SSL and Certificates: Edit" permission on the zone.

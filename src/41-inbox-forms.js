@@ -203,6 +203,30 @@ async function doViews(request, env){
     return succeed({ total: total, today: today, week: week, days: days, live: !!liveSlug, slug: liveSlug });
   } catch(e){ return wsErr(e); }
 }
+// Cloudflare Turnstile (bot check) on published contact forms. Turns on when TURNSTILE_SITE_KEY and TURNSTILE_SECRET
+// are set in Cloudflare. Only shows a challenge when Cloudflare thinks the visitor may be a bot.
+function wsTurnstileInject(html, env){
+  const key = String((env && env.TURNSTILE_SITE_KEY) || '').trim();
+  if (!key || !/^[A-Za-z0-9_-]{6,80}$/.test(key) || String(html).indexOf('/api/form/') < 0) return html;
+  let n = 0;
+  const out = String(html).replace(/(<form\b[^>]*\/api\/form\/[^>]*>)([\s\S]*?)(<\/form>)/gi, function(m, open, inner, close){
+    if (inner.indexOf('cf-turnstile') > -1) return m;
+    n++; return open + inner + '<div class="cf-turnstile" data-sitekey="' + key + '" data-appearance="interaction-only" data-size="flexible" style="margin-top:10px"></div>' + close;
+  });
+  if (!n) return html;
+  const tag = '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>';
+  return out.indexOf('</body>') > -1 ? out.replace('</body>', tag + '</body>') : out + tag;
+}
+async function wsTurnstileOk(env, token, ip){
+  const secret = String((env && env.TURNSTILE_SECRET) || '').trim();
+  if (!secret) return true;
+  if (!token || typeof token !== 'string' || token.length > 4096) return false;
+  try {
+    const body = new FormData(); body.append('secret', secret); body.append('response', token); if (ip) body.append('remoteip', ip);
+    const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method:'POST', body: body });
+    const j = await r.json(); return !!(j && j.success);
+  } catch(e){ return true; } // Cloudflare unreachable: don't lose a real customer's message
+}
 function jsonR(obj, status){ return new Response(JSON.stringify(obj), { status: status||200, headers: { ...formCors(), 'Content-Type':'application/json' } }); }
 
 async function doFormSubmit(request, env, siteId){
@@ -214,6 +238,7 @@ async function doFormSubmit(request, env, siteId){
     if (ct.indexOf('application/json') > -1) { data = await request.json(); }
     else { const fd = await request.formData(); fd.forEach(function(v,k){ data[k] = (typeof v === 'string') ? v : '(file)'; }); }
     if (data._ws_hp || data._gotcha) return jsonR({ ok:true }); // honeypot -> silently accept
+    const _tsToken = data['cf-turnstile-response']; delete data['cf-turnstile-response'];
     const fields = {}; let n = 0;
     for (const k in data){ if (String(k).charAt(0) === '_') continue; if (n++ >= 25) break; let val = data[k]; if (typeof val !== 'string') val = String(val); val = wsClean(val); if (!val) continue; fields[wsClean(k).slice(0,60)] = val.slice(0,3000); }
     if (Object.keys(fields).length === 0) return jsonR({ ok:false, error:'empty' }, 400);
@@ -223,11 +248,14 @@ async function doFormSubmit(request, env, siteId){
     if (rl > 40) return jsonR({ ok:false, error:'rate' }, 429);
     await env.KV.put(rlKey, String(rl + 1), { expirationTtl: 3600 });
     const ts = Date.now();
-    const rec = { ts: ts, fields: fields, ua: (request.headers.get('user-agent')||'').slice(0,180), ref: (request.headers.get('referer')||'').slice(0,180) };
+    // Bot check failed (or no token): the message is still saved and the owner still hears about it, but no
+    // automatic reply goes to the address that was typed in (that's what a spammer would abuse).
+    const _human = await wsTurnstileOk(env, _tsToken, ip === '0' ? '' : ip);
+    const rec = { ts: ts, unverified: _human ? undefined : true, fields: fields, ua: (request.headers.get('user-agent')||'').slice(0,180), ref: (request.headers.get('referer')||'').slice(0,180) };
     await env.KV.put('form:' + siteId + ':' + ts + ':' + Math.random().toString(36).slice(2,7), JSON.stringify(rec), { expirationTtl: 60*60*24*120 });
     let notify = '';
     try { notify = await env.KV.get('notify:' + siteId) || ''; if (notify && env.RESEND_API_KEY) await sendFormEmail(env, notify, siteId, fields); } catch(e){}
-    try { await sendAutoReply(env, siteId, fields, notify); } catch(e){}
+    if (_human) { try { await sendAutoReply(env, siteId, fields, notify); } catch(e){} }
     try { await logEvent(request, env, 'lead', { site: siteId, anon: true, props: { emailed: (notify && env.RESEND_API_KEY) ? 1 : 0 } }); } catch(e){}
     return jsonR({ ok:true });
   } catch(e){ return jsonR({ ok:false, error:'error' }, 500); }
@@ -235,6 +263,8 @@ async function doFormSubmit(request, env, siteId){
 
 async function runWeeklyDigest(env){
   if(!env.KV || !env.RESEND_API_KEY) return;
+  // Marketing-style mail needs a mailing address in the footer (CAN-SPAM): paused until POSTAL_ADDRESS is set.
+  if(!wsPostalAddress(env)) return;
   // The cron may fire more often than weekly (nudges share it) - send the digest at most once every 6 days.
   try{ const _last = parseInt((await env.KV.get('digest:lastrun'))||'0',10)||0; if(Date.now() - _last < 6*86400000) return; await env.KV.put('digest:lastrun', String(Date.now())); }catch(e){ return; }
   const seen = new Set();
@@ -255,6 +285,7 @@ async function runWeeklyDigest(env){
     try{
       const notify = await env.KV.get('notify:'+siteId);
       if(!notify) continue;
+      if(await env.KV.get('emailoptout:'+String(notify).toLowerCase())) continue;
       const _v = await wsSiteViews(env, siteId, 7);
       const weekViews = _v.days.reduce(function(a, x){ return a + x.c; }, 0);
       const totalViews = _v.total;
@@ -285,8 +316,10 @@ async function sendDigestEmail(env, to, siteId, weekViews, weekLeads, totalViews
     + leadLine
     + '<p style="margin:0 0 22px;font-size:13px;color:#999">' + totalViews + ' total views all-time</p>'
     + '<p style="margin:0"><a href="' + inboxUrl + '" style="display:inline-block;background:#16a34a;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">View your leads</a></p>'
-    + '</div></div>';
-  await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer '+env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'\uD83C\uDF31 Your website got ' + weekViews + ' views this week', html: html }) });
+    + '</div>';
+  const unsub = await wsUnsubUrl(env, to);
+  const full = html + wsMailFooter(env, 'You get this weekly summary because your website on Websprout sends its leads to this address.', unsub) + '</div>';
+  await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer '+env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'\uD83C\uDF31 Your website got ' + weekViews + ' views this week', html: full, headers: wsUnsubHeaders(unsub) }) });
   await wsMailCount(env, 'digest');
 }
 // Business name for emails, from a published page's <title> ("Name | Barber shop in Austin").
@@ -304,6 +337,17 @@ async function wsMailCapOk(env, kind){
   const k = 'mailcap:' + kind + ':' + new Date().toISOString().slice(0,10);
   try { const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= cap) return false; await env.KV.put(k, String(n + 1), { expirationTtl: 2 * 86400 }); } catch(e){}
   return true;
+}
+// Footer pieces for non-transactional mail (reminders, digests): the mailing address and an unsubscribe link, plus the
+// List-Unsubscribe headers mail apps use for their one-click "Unsubscribe" button.
+function wsPostalAddress(env){ return String((env && env.POSTAL_ADDRESS) || WS_POSTAL_ADDRESS || '').trim(); }
+async function wsUnsubUrl(env, email){ return 'https://websprout.app/email-optout?e=' + encodeURIComponent(String(email).toLowerCase()) + '&t=' + encodeURIComponent(await nudgeToken(email, env)); }
+function wsUnsubHeaders(url){ return { 'List-Unsubscribe': '<' + url + '>', 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }; }
+function wsMailFooter(env, why, unsubUrl){
+  const addr = wsPostalAddress(env);
+  return '<div style="background:#f8faf8;border-top:1px solid #e8f0e5;padding:16px 26px;text-align:center"><p style="color:#999;font-size:12px;line-height:1.6;margin:0">' + why
+    + ' <a href="' + unsubUrl + '" style="color:#777">Unsubscribe</a></p>'
+    + '<p style="color:#aaa;font-size:12px;margin:6px 0 0">Websprout' + (addr ? ' \u00b7 ' + escHtml(addr) : '') + '</p></div>';
 }
 async function wsSendMail(env, msg){
   if (env.WS_TEST_MODE === '1') { await wsMailCount(env, 'test'); try { const k = 'testmail:' + msg.to[0]; const prev = JSON.parse((await env.KV.get(k)) || '{}'); await env.KV.put(k, JSON.stringify(Object.assign({}, msg, { n: (prev.n || 0) + 1 })), { expirationTtl: 600 }); } catch(e){} return true; }

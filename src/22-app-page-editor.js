@@ -48,6 +48,7 @@ function autoSetDevice(){
     if(p.get('sub')==='success'){
       window.history.replaceState({},'',window.location.pathname);
       toast('\uD83C\uDF89 Thanks! Starting your free trial...',6000);
+      try{if(window.wsConv)window.wsConv('trial');}catch(e){}
       var tries=0;
       var iv=setInterval(function(){
         tries++;
@@ -98,7 +99,7 @@ function wsPaintPubState(){
 }
 // Kept under its old name: called on every edit, undo and redo. It no longer publishes anything.
 function autoSyncLive(){try{if(wsLiveSlug())wsSetUnpub(true);}catch(e){}}
-window.wsAfterPublish=function(){_wsPubFresh=Date.now();wsSetUnpub(false);};
+window.wsAfterPublish=function(){_wsPubFresh=Date.now();wsSetUnpub(false);try{if(window.wsConv)window.wsConv('publish',(typeof wsSid==='function'&&wsSid())||'');}catch(e){}};
 function wsPublishPayload(slug){
   var html=(typeof gHTML==='string'&&gHTML)||localStorage.getItem('wsh')||'';
   try{if(window._wsSiteData&&typeof wsSyncHome==='function')wsSyncHome();}catch(e){}
