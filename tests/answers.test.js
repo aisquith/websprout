@@ -226,7 +226,7 @@ module.exports = async function (ctx, t) {
       const s = await site(base('Handyman', { name: n + ' Handyman', licensed: true, insured: true }));
       secs(s).filter((x) => x.type === 'faq').forEach((f) => f.items.forEach((i) => { if (/licensed and insured/i.test(i.q)) cred = i.a; }));
     }
-    t.ok(!cred || /^Yes\. We’re fully licensed and insured/.test(cred), 'a licensing question is answered from the owner’s answers (' + cred + ')');
+    t.ok(!cred || /^Yes\. We’re licensed and insured/.test(cred), 'a licensing question is answered from the owner’s answers (' + cred + ')');
     const area = secs(await site(base('Lawn care', { name: 'Area Lawn', towns: 'Shelbyville, Ogdenville' }))).filter((x) => x.type === 'faq').flatMap((f) => f.items).find((i) => /what areas/i.test(i.q));
     t.ok(!area || /Springfield, Shelbyville and Ogdenville/.test(area.a), 'the areas question lists the towns the owner gave');
   }

@@ -50,6 +50,13 @@ input:focus{outline:none;border-color:#2d7a3a}
 .btrack{height:70px;width:100%;max-width:30px;display:flex;align-items:flex-end}
 .b{width:100%;background:linear-gradient(180deg,#4ade80,#2d7a3a);border-radius:5px 5px 0 0;min-height:3px}
 .bd{font-size:10px;color:#8a9a8c}
+.sk{display:block;height:11px;border-radius:7px;background:linear-gradient(90deg,#e8efe6 25%,#f6faf5 40%,#e8efe6 60%);background-size:300% 100%;animation:skShim 1.25s ease-in-out infinite}
+.skc{background:#fff;border:1px solid #e3ebe0;border-radius:12px;padding:15px 16px;display:flex;flex-direction:column;gap:9px}
+.sk-slow{color:#6b7b6d;font-size:13px;text-align:center;margin-top:8px;opacity:0;animation:skShow .4s ease 8s forwards}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@keyframes skShim{0%{background-position:100% 0}100%{background-position:0 0}}
+@keyframes skShow{to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}.sk-slow{animation-duration:0s}}
 @media(max-width:560px){.stats{grid-template-columns:repeat(2,1fr)}}
 </style></head>
 <body>
@@ -63,8 +70,8 @@ input:focus{outline:none;border-color:#2d7a3a}
     <div style="margin-top:16px"><button class="btn" onclick="openGate()">Open dashboard</button></div>
   </div>
   <div id="app" style="display:none">
-    <div class="stats" id="stats"></div>
-    <div class="chartcard"><h3>Visitors &middot; last 7 days</h3><div class="bars" id="chartbars"></div></div>
+    <div class="stats" id="stats"><div class="skc"><span class="sk" style="width:45%;height:24px"></span><span class="sk" style="width:65%"></span></div><div class="skc"><span class="sk" style="width:45%;height:24px"></span><span class="sk" style="width:65%"></span></div><div class="skc"><span class="sk" style="width:45%;height:24px"></span><span class="sk" style="width:65%"></span></div><div class="skc"><span class="sk" style="width:45%;height:24px"></span><span class="sk" style="width:65%"></span></div></div>
+    <div class="chartcard"><h3>Visitors &middot; last 7 days</h3><div class="bars" id="chartbars"><span class="sk" style="width:100%;height:84px;border-radius:8px"></span></div></div>
     <div class="notify">
       <div class="f"><label>Email me the moment a new lead comes in</label><input id="notify" aria-label="Notification email" type="email" placeholder="you@example.com"></div>
       <label class="arow" style="flex-basis:100%;display:flex;gap:8px;align-items:center;font-size:13px;color:#3d4a3a;order:9"><input type="checkbox" id="autoreply" checked onchange="saveAutoReply()"> Send people an automatic &ldquo;thanks, we got your message&rdquo; email</label>
@@ -77,7 +84,7 @@ input:focus{outline:none;border-color:#2d7a3a}
       <button class="btn ghost" onclick="exportCsv()">Export CSV</button>
       <button class="btn danger" onclick="clearAll()">Clear all</button>
     </div>
-    <div id="list"></div>
+    <div id="list"><div role="status" aria-live="polite"><span class="sr">Loading your dashboard</span><div aria-hidden="true" style="display:flex;flex-direction:column;gap:10px"><div class="skc"><span class="sk" style="width:30%;height:14px"></span><span class="sk" style="width:80%"></span><span class="sk" style="width:55%"></span></div><div class="skc"><span class="sk" style="width:24%;height:14px"></span><span class="sk" style="width:70%"></span><span class="sk" style="width:62%"></span></div><div class="skc"><span class="sk" style="width:34%;height:14px"></span><span class="sk" style="width:76%"></span><span class="sk" style="width:48%"></span></div></div><div class="sk-slow">Still working \u2014 this is taking a little longer than usual.</div></div></div>
   </div>
 </div>
 <script>
@@ -319,7 +326,7 @@ async function sendDigestEmail(env, to, siteId, weekViews, weekLeads, totalViews
     + '</div>';
   const unsub = await wsUnsubUrl(env, to);
   const full = html + wsMailFooter(env, 'You get this weekly summary because your website on Websprout sends its leads to this address.', unsub) + '</div>';
-  await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer '+env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'\uD83C\uDF31 Your website got ' + weekViews + ' views this week', html: full, headers: wsUnsubHeaders(unsub) }) });
+  await wsResend(env, { method:'POST', headers:{ 'Authorization':'Bearer '+env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'\uD83C\uDF31 Your website got ' + weekViews + ' views this week', html: full, headers: wsUnsubHeaders(unsub) }) });
   await wsMailCount(env, 'digest');
 }
 // Business name for emails, from a published page's <title> ("Name | Barber shop in Austin").
@@ -349,10 +356,49 @@ function wsMailFooter(env, why, unsubUrl){
     + ' <a href="' + unsubUrl + '" style="color:#777">Unsubscribe</a></p>'
     + '<p style="color:#aaa;font-size:12px;margin:6px 0 0">Websprout' + (addr ? ' \u00b7 ' + escHtml(addr) : '') + '</p></div>';
 }
+// Every email goes through here: addresses that hard-bounced or marked our mail as spam are never emailed again
+// (Resend acceptable use). Resend reports those to /api/resend/webhook.
+async function wsResend(env, opts){
+  try {
+    const p = JSON.parse(opts.body);
+    const to = (Array.isArray(p.to) ? p.to : [p.to]).filter(Boolean);
+    const keep = [];
+    for (const a of to) { const k = String(a).toLowerCase().replace(/^.*<([^>]+)>.*$/, '$1').trim(); if (!(env.KV && await env.KV.get('suppress:' + k))) keep.push(a); }
+    if (!keep.length) return new Response('{"suppressed":true}', { status: 200, headers: { 'Content-Type': 'application/json' } });
+    if (keep.length !== to.length) { p.to = keep; opts = Object.assign({}, opts, { body: JSON.stringify(p) }); }
+  } catch(e){}
+  return fetch('https://api.resend.com/emails', opts);
+}
+// Resend webhook (Svix-signed): email.bounced (hard bounces) and email.complained add the address to the
+// suppression list. Set RESEND_WEBHOOK_SECRET (whsec_...) from Resend > Webhooks.
+async function doResendWebhook(request, env){
+  const secret = String(env.RESEND_WEBHOOK_SECRET || '').trim();
+  if (!secret || !env.KV) return new Response('not configured', { status: 503 });
+  const raw = await request.text();
+  const id = request.headers.get('svix-id') || '', ts = request.headers.get('svix-timestamp') || '', sig = request.headers.get('svix-signature') || '';
+  if (!id || !ts || !sig || Math.abs(Date.now() / 1000 - (parseInt(ts, 10) || 0)) > 600) return new Response('bad signature', { status: 400 });
+  let ok = false;
+  try {
+    const keyBytes = Uint8Array.from(atob(secret.replace(/^whsec_/, '')), function(c){ return c.charCodeAt(0); });
+    const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const mac = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(id + '.' + ts + '.' + raw)));
+    const expect = btoa(String.fromCharCode.apply(null, mac));
+    ok = sig.split(' ').some(function(part){ const v = part.split(','); return v[0] === 'v1' && wsSafeEq(v[1] || '', expect); });
+  } catch(e){ ok = false; }
+  if (!ok) return new Response('bad signature', { status: 400 });
+  let ev = {}; try { ev = JSON.parse(raw); } catch(e){ return new Response('bad json', { status: 400 }); }
+  const d = ev.data || {};
+  const hard = ev.type === 'email.complained' || (ev.type === 'email.bounced' && !/transient|temporary|soft/i.test(String((d.bounce && (d.bounce.type || d.bounce.subType)) || '')));
+  if (hard) {
+    const to = Array.isArray(d.to) ? d.to : [d.to];
+    for (const a of to) { const k = String(a || '').toLowerCase().trim(); if (k.indexOf('@') > 0) await env.KV.put('suppress:' + k, JSON.stringify({ type: ev.type, ts: Date.now() })); }
+  }
+  return new Response('{"ok":true}', { headers: { 'Content-Type': 'application/json' } });
+}
 async function wsSendMail(env, msg){
   if (env.WS_TEST_MODE === '1') { await wsMailCount(env, 'test'); try { const k = 'testmail:' + msg.to[0]; const prev = JSON.parse((await env.KV.get(k)) || '{}'); await env.KV.put(k, JSON.stringify(Object.assign({}, msg, { n: (prev.n || 0) + 1 })), { expirationTtl: 600 }); } catch(e){} return true; }
   if (!env.RESEND_API_KEY) return false;
-  const r = await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify(msg) });
+  const r = await wsResend(env, { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify(msg) });
   if (r.ok) await wsMailCount(env, 'transactional');
   return r.ok;
 }
@@ -407,7 +453,7 @@ async function sendFormEmail(env, to, siteId, fields){
   let rows = '';
   for (const k in fields){ rows += '<tr><td style="padding:7px 12px;font-weight:600;color:#0f1a0d;border-bottom:1px solid #eee;vertical-align:top">' + escHtml(k) + '</td><td style="padding:7px 12px;color:#333;border-bottom:1px solid #eee">' + escHtml(fields[k]).replace(/\n/g,'<br>') + '</td></tr>'; }
   const html = '<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:560px;margin:0 auto"><div style="background:#0f1a0d;padding:20px;text-align:center"><span style="color:#fff;font-size:20px;font-weight:800">🌱 New form submission</span></div><div style="padding:24px"><p style="color:#555;margin:0 0 14px">Someone just submitted a form on your website:</p><table style="width:100%;border-collapse:collapse;font-size:14px;border:1px solid #eee;border-radius:8px;overflow:hidden">' + rows + '</table><p style="margin:20px 0 0"><a href="https://websprout.app/leads" style="color:#2d7a3a;font-weight:700;text-decoration:none">Reply from your Leads inbox →</a></p></div></div>';
-  await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'🌱 New submission from your website', html: html }) });
+  await wsResend(env, { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'🌱 New submission from your website', html: html }) });
   await wsMailCount(env, 'lead');
 }
 
@@ -430,7 +476,7 @@ async function sendReviewEmail(env, to, siteId, siteName, rev){
     + '<p style="margin:0"><a href="' + url + '" style="display:inline-block;background:#16a34a;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Review &amp; approve \u2192</a></p>'
     + '<p style="margin:18px 0 0;font-size:12px;color:#999">Approve it to publish it, or reject it \u2014 your call.</p>'
     + '</div></div>';
-  await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'\u2B50 New review waiting for your approval', html: html }) });
+  await wsResend(env, { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'\u2B50 New review waiting for your approval', html: html }) });
   await wsMailCount(env, 'review');
 }
 function isRealEmail(e){
@@ -558,7 +604,7 @@ async function sendInvoiceEmail(env, to, fromOwner, desc, amount, currency, url)
   const amt = (amount/100).toFixed(2);
   const cur = currency.toUpperCase();
   const html = '<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:520px;margin:0 auto"><div style="background:#0f1a0d;padding:20px;text-align:center"><span style="color:#fff;font-size:20px;font-weight:800">Invoice</span></div><div style="padding:24px"><p style="color:#555;margin:0 0 6px">' + escHtml(desc) + '</p><p style="font-size:28px;font-weight:800;color:#0f1a0d;margin:0 0 18px">' + cur + ' ' + amt + '</p><p style="margin:0 0 22px"><a href="' + url + '" style="display:inline-block;background:#16a34a;color:#fff;padding:13px 26px;border-radius:8px;text-decoration:none;font-weight:700">Pay now</a></p><p style="color:#999;font-size:12px;margin:0">Sent via Websprout on behalf of ' + escHtml(fromOwner) + '. Reply to this email to reach them directly.</p></div></div>';
-  await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer '+env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout Invoices <hello@websprout.app>', to:[to], reply_to:fromOwner, subject:'Invoice: '+desc+' ('+cur+' '+amt+')', html:html }) });
+  await wsResend(env, { method:'POST', headers:{ 'Authorization':'Bearer '+env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout Invoices <hello@websprout.app>', to:[to], reply_to:fromOwner, subject:'Invoice: '+desc+' ('+cur+' '+amt+')', html:html }) });
   await wsMailCount(env, 'invoice');
 }
 

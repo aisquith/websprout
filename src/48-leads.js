@@ -126,13 +126,20 @@ input[type=search]{flex:1;min-width:160px}
 .pick-copy{border-top:1px solid var(--line);border-radius:0 0 10px 10px;margin-top:4px}
 .pick-rem{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);padding:10px 12px 6px;cursor:pointer}
 @media(max-width:560px){.pick-ov{align-items:flex-end;padding:0}.pick{width:100%;border-radius:16px 16px 0 0;padding-bottom:18px}}
+.sk{display:block;height:11px;border-radius:7px;background:linear-gradient(90deg,rgba(255,255,255,.06) 25%,rgba(255,255,255,.14) 40%,rgba(255,255,255,.06) 60%);background-size:300% 100%;animation:skShim 1.25s ease-in-out infinite}
+.sk-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px;display:flex;flex-direction:column;gap:10px}
+.sk-slow{color:var(--mut);font-size:13px;text-align:center;margin-top:6px;opacity:0;animation:skShow .4s ease 8s forwards}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@keyframes skShim{0%{background-position:100% 0}100%{background-position:0 0}}
+@keyframes skShow{to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}.sk-slow{animation-duration:0s}}
 .empty{text-align:center;color:var(--mut);padding:50px 16px;border:1px dashed var(--line);border-radius:14px}
 .gate{max-width:420px;margin:70px auto;text-align:center}
 .msg{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1d2a1b;border:1px solid var(--line);color:var(--fg);padding:10px 16px;border-radius:10px;font-size:14px;display:none;z-index:9}
 @media(max-width:560px){.fields{grid-template-columns:1fr}.fields dt{margin-top:6px}.when{margin-left:0;width:100%}.top .who{display:none}}
 </style></head><body>
 <div class="top"><a class="brand" href="/"><i><svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true"><path d="M12 21V12" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/><path d="M12 14.5C10.4 9.8 6.2 7.6 3 8.2C3.4 13 7.6 15.5 12 14.5Z" fill="#fff"/><path d="M12 13C13.5 8.2 17.8 6 21 6.6C20.6 11.4 16.4 13.9 12 13Z" fill="#fff"/></svg></i>Websprout</a><span class="sp"></span><span class="who" id="who"></span><a class="btn ghost" href="/">Back to editor</a></div>
-<div class="wrap" id="app"><p class="sub">Loading your leads&hellip;</p></div>
+<div class="wrap" id="app"><div role="status" aria-live="polite"><span class="sr">Loading your leads</span><div aria-hidden="true"><span class="sk" style="width:180px;height:24px;margin:2px 0 10px"></span><span class="sk" style="width:300px;margin-bottom:22px"></span><div style="display:flex;gap:8px;margin-bottom:18px"><span class="sk" style="width:220px;height:34px;border-radius:10px"></span><span class="sk" style="flex:1;height:34px;border-radius:10px"></span></div><div class="sk-card"><div style="display:flex;gap:10px"><span class="sk" style="width:28%;height:15px"></span><span class="sk" style="width:60px;margin-left:auto"></span></div><span class="sk" style="width:70%"></span><span class="sk" style="width:55%"></span><div style="display:flex;gap:8px;margin-top:4px"><span class="sk" style="width:90px;height:30px;border-radius:9px"></span><span class="sk" style="width:90px;height:30px;border-radius:9px"></span></div></div><div class="sk-card"><div style="display:flex;gap:10px"><span class="sk" style="width:22%;height:15px"></span><span class="sk" style="width:60px;margin-left:auto"></span></div><span class="sk" style="width:82%"></span><span class="sk" style="width:48%"></span><div style="display:flex;gap:8px;margin-top:4px"><span class="sk" style="width:90px;height:30px;border-radius:9px"></span><span class="sk" style="width:90px;height:30px;border-radius:9px"></span></div></div><div class="sk-card"><div style="display:flex;gap:10px"><span class="sk" style="width:32%;height:15px"></span><span class="sk" style="width:60px;margin-left:auto"></span></div><span class="sk" style="width:64%"></span><span class="sk" style="width:60%"></span><div style="display:flex;gap:8px;margin-top:4px"><span class="sk" style="width:90px;height:30px;border-radius:9px"></span><span class="sk" style="width:90px;height:30px;border-radius:9px"></span></div></div></div><div class="sk-slow">Still working \u2014 this is taking a little longer than usual.</div></div></div>
 <div class="msg" id="msg" role="status" aria-live="polite"></div>
 <script>
 (function(){
@@ -212,6 +219,6 @@ input[type=search]{flex:1;min-width:160px}
   fetch('/api/leads',{credentials:'same-origin'}).then(function(r){return r.json();}).then(function(j){
     if(!j||!j.auth){app.innerHTML='';var g=el('div','gate');g.appendChild(el('h1',null,'Your leads'));g.appendChild(el('p','sub','Sign in to see messages from all your sites in one place.'));var a=el('a','btn pri','Sign in');a.href='/?signin=1';g.appendChild(a);app.appendChild(g);return;}
     D=j;document.getElementById('who').textContent=j.email||'';if(!j.leads.some(function(L){return L.status==='new';})&&j.leads.length)F.status='all';render();
-  }).catch(function(){app.innerHTML='';app.appendChild(el('div','empty','Could not load your leads. Refresh to try again.'));});
+  }).catch(function(){app.innerHTML='';var e=el('div','empty','Could not load your leads. Check your connection and try again.');var rb=el('button','btn pri','Try again');rb.style.marginTop='14px';rb.addEventListener('click',function(){location.reload();});e.appendChild(el('br'));e.appendChild(rb);app.appendChild(e);});
 })();
 </script></body></html>`;

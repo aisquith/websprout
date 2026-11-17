@@ -10,7 +10,7 @@ function withBadge(html){
   if (!html || html.indexOf('ws-badge') > -1) return html;
   // The cart pill (engine .wsp-cart, legacy #wsCartBtn) also sits bottom-right: lift it above the badge, and hide
   // the badge while the cart drawer is open so it never covers the drawer.
-  const b = '<style id="ws-badge-css">.wsp-cart,#wsCartBtn{bottom:64px!important}.wsp-draw.on~#ws-badge{display:none!important}@media(max-width:480px){#ws-badge{font-size:11px!important;padding:6px 10px!important;bottom:10px!important;right:10px!important}.wsp-cart,#wsCartBtn{bottom:56px!important;right:12px!important}}@media(max-width:700px){body.has-bar #ws-badge{bottom:calc(var(--bar-h,64px) + 10px)!important}body.has-bar .wsp-cart,body.has-bar #wsCartBtn{bottom:calc(var(--bar-h,64px) + 56px)!important}body.has-bar .ws-top{bottom:calc(var(--bar-h,64px) + 18px)}}</style><a href="https://websprout.app/?utm_source=badge&utm_medium=referral&ref=badge" target="_blank" rel="noopener" id="ws-badge" style="position:fixed;bottom:14px;right:14px;z-index:2147483600;display:flex;align-items:center;gap:6px;background:rgba(15,26,13,.92);color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif;font-size:12px;font-weight:600;padding:7px 12px;border-radius:100px;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.14);line-height:1">🌱 Built with Websprout — make yours free</a>';
+  const b = '<style id="ws-badge-css">.wsp-cart,#wsCartBtn{bottom:64px!important}.wsp-draw.on~#ws-badge{display:none!important}@media(max-width:480px){#ws-badge{font-size:11px!important;padding:6px 10px!important;bottom:10px!important;right:10px!important}.wsp-cart,#wsCartBtn{bottom:56px!important;right:12px!important}}@media(max-width:700px){body.has-bar #ws-badge{bottom:calc(var(--bar-h,64px) + 10px)!important}body.has-bar .wsp-cart,body.has-bar #wsCartBtn{bottom:calc(var(--bar-h,64px) + 56px)!important}body.has-bar .ws-top{bottom:calc(var(--bar-h,64px) + 18px)}}</style><div id="ws-badge" style="position:fixed;bottom:14px;right:14px;z-index:2147483600;display:flex;align-items:center;gap:6px;background:rgba(15,26,13,.92);color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif;font-size:12px;font-weight:600;padding:7px 12px;border-radius:100px;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.14);line-height:1"><a href="https://websprout.app/?utm_source=badge&utm_medium=referral&ref=badge" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">🌱 Built with Websprout — make yours free</a><a href="https://websprout.app/report" target="_blank" rel="noopener nofollow" aria-label="Report this site" style="color:inherit;opacity:.62;text-decoration:none;border-left:1px solid rgba(255,255,255,.25);padding-left:7px;font-weight:500">Report</a></div>';
   const i = html.lastIndexOf('</body>');
   return i > -1 ? html.slice(0,i) + b + html.slice(i) : html + b;
 }
@@ -172,6 +172,8 @@ async function servePublished(slug, env, path, opts){
     } catch(e){}
   }
   html = wsTurnstileInject(html, env);
+  // Google Maps Embed API key (optional; restrict it by referrer to the Embed API): the page turns "Get directions" into a map.
+  { const _mk = String(env.GOOGLE_MAPS_EMBED_KEY || '').trim(); if (_mk && /^[A-Za-z0-9_-]{20,60}$/.test(_mk)) html = html.replace(/<head([^>]*)>/i, function(m){ return m + '<meta name="ws-maps-key" content="' + htmlAttr(_mk) + '">'; }); }
   let nobadge = false; try { const m = await env.KV.get('pubmeta:' + slug); if (m) nobadge = !!JSON.parse(m).nobadge; } catch(e){}
   const resp = new Response(nobadge ? html : withBadge(html), { headers: { 'Content-Type':'text/html; charset=utf-8', 'X-Robots-Tag':'all' } });
   if (!v3target) return resp;
@@ -428,7 +430,7 @@ async function doConnectDomain(request, env){
     const cfB = await cfAddHostname(env, host);
     const www = await dnsLookup('www.' + host, 'CNAME');
     const pointed = www.indexOf(DOMAIN_TARGET) > -1;
-    if (!cfA.configured) { try { if (env.RESEND_API_KEY) await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[SUPPORT_EMAIL], subject:'Custom domain to finish: ' + host, html:'<p>' + host + ' was verified for ' + slug + '.websprout.app. Add it as a Cloudflare for SaaS custom hostname (or set CF_API_TOKEN + CF_ZONE_ID to automate this).</p>' }) }); } catch(e){} }
+    if (!cfA.configured) { try { if (env.RESEND_API_KEY) await wsResend(env, { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[SUPPORT_EMAIL], subject:'Custom domain to finish: ' + host, html:'<p>' + host + ' was verified for ' + slug + '.websprout.app. Add it as a Cloudflare for SaaS custom hostname (or set CF_API_TOKEN + CF_ZONE_ID to automate this).</p>' }) }); } catch(e){} }
     return succeed({ ok:true, verified:true, host: host, pointed: pointed, https: cfA.configured ? (cfA.ok ? 'pending' : 'error') : 'manual', httpsError: cfA.error || '', steps: steps, url: 'https://www.' + host });
   } catch(e){ return wsErr(e); }
 }

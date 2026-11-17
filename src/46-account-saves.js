@@ -52,6 +52,33 @@ async function wsSubLive(env, sub){
   const sk = (env.STRIPE_SECRET_KEY || '').trim(); if (!sk) return true;
   try { const r = await fetch('https://api.stripe.com/v1/subscriptions/' + encodeURIComponent(sub), { headers:{ 'Authorization':'Bearer ' + sk } }); if (!r.ok) return true; const j = await r.json(); return ['active', 'trialing', 'past_due'].indexOf(String(j && j.status)) > -1; } catch(e){ return true; }
 }
+// Confirmation after checkout (auto-renewal laws): what they signed up for, when the first charge happens, that it
+// renews monthly until cancelled, and how to cancel. Sent once per subscription; also marks the trial as used.
+async function wsSendProWelcome(env, email, session){
+  const sub = String((session && session.subscription) || '');
+  const em = String(email).toLowerCase();
+  if (sub) { if (await env.KV.get('prowelcome:' + sub)) return; await env.KV.put('prowelcome:' + sub, '1', { expirationTtl: 400*86400 }); }
+  let trialEnd = 0, amount = WS_PRO_PRICE;
+  const sk = (env.STRIPE_SECRET_KEY || '').trim();
+  if (sk && sub && env.WS_TEST_MODE !== '1') {
+    try { const r = await fetch('https://api.stripe.com/v1/subscriptions/' + encodeURIComponent(sub), { headers:{ 'Authorization':'Bearer ' + sk } }); if (r.ok) { const j = await r.json(); trialEnd = (parseInt(j.trial_end, 10) || 0) * 1000; const ua = j.items && j.items.data && j.items.data[0] && j.items.data[0].price && j.items.data[0].price.unit_amount; if (ua) amount = ua / 100; } } catch(e){}
+  }
+  if (!trialEnd && !(session && session.amount_total)) trialEnd = Date.now() + 7*86400000;
+  try { const u = JSON.parse((await env.KV.get('user:' + em)) || '{}'); if (u && u.email) { u.trialUsed = true; await env.KV.put('user:' + em, JSON.stringify(u)); } } catch(e){}
+  const price = '$' + (Math.round(amount * 100) / 100).toFixed(amount % 1 ? 2 : 0) + '/month';
+  const when = trialEnd ? new Date(trialEnd).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric', timeZone:'UTC' }) : '';
+  const lines = trialEnd
+    ? ['Your 7-day free trial of Websprout Pro has started. You have not been charged.', 'On <b>' + when + '</b> your card will be charged <b>' + price + '</b>, and Pro will then renew automatically every month until you cancel.']
+    : ['Your Websprout Pro subscription has started at <b>' + price + '</b>.', 'It renews automatically every month until you cancel.'];
+  const html = '<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:560px;margin:0 auto;color:#222">'
+    + '<div style="background:#0f1a0d;padding:22px;text-align:center"><span style="color:#fff;font-size:20px;font-weight:800">\uD83C\uDF31 Welcome to Websprout Pro</span></div>'
+    + '<div style="padding:26px;font-size:15px;line-height:1.7">' + lines.map(function(l){ return '<p style="margin:0 0 12px">' + l + '</p>'; }).join('')
+    + '<p style="margin:0 0 12px"><b>How to cancel:</b> sign in at <a href="https://websprout.app" style="color:#2d7a3a">websprout.app</a>, open <b>Settings \u2192 Manage billing &amp; cancel plan</b>, and click Cancel. ' + (trialEnd ? 'Cancel before ' + when + ' and you won\u2019t be charged at all. ' : '') + 'You can also reply to this email and we\u2019ll cancel it for you.</p>'
+    + '<p style="margin:0 0 12px">Pro includes: no Websprout badge, your own domain, multi-page sites, the built-in store and code download.</p>'
+    + '<p style="margin:0;font-size:13px;color:#777">Terms: <a href="https://websprout.app/terms" style="color:#777">websprout.app/terms</a></p></div></div>';
+  if (!(await wsMailCapOk(env, 'support'))) return;
+  await wsSendMail(env, { from:'Websprout <hello@websprout.app>', reply_to:'support@websprout.app', to:[em], subject: trialEnd ? 'Your Websprout Pro free trial has started (first charge ' + when + ')' : 'Your Websprout Pro subscription has started', html: html });
+}
 async function doStripeWebhook(request, env){
   const raw = await request.text();
   const secrets = [env.STRIPE_WEBHOOK_SECRET, env.STRIPE_WEBHOOK_SECRET_TEST].filter(Boolean);
@@ -91,6 +118,7 @@ async function doStripeWebhook(request, env){
         return done;
       }
       await setUserPlan(env, email, 'pro', cust, obj.subscription||'');
+      try{ await wsSendProWelcome(env, email, obj); }catch(e){ try{ console.error('pro welcome', (e && e.message) || e); }catch(_){} }
       try{ await logEvent(request, env, 'pro_start', { email: email, server: true, dedupe: ev.id, props:{ amount: obj.amount_total || 0 } }); }catch(e){}
       _wsUsers = null;
     } else if((ev.type==='invoice.paid'||ev.type==='invoice.payment_succeeded') && obj.subscription){

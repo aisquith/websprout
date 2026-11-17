@@ -195,6 +195,8 @@ async function doBillingCheckout(request, env){
       let body='mode=subscription&line_items[0][price]='+encodeURIComponent(price)+'&line_items[0][quantity]=1&client_reference_id='+ref+'&metadata[ws_ref]='+ref+'&subscription_data[metadata][ws_ref]='+ref
         +'&success_url='+encodeURIComponent(SITE_ORIGIN+'/?sub=success')+'&cancel_url='+encodeURIComponent(SITE_ORIGIN+'/');
       body += u.stripeCustomer ? '&customer='+encodeURIComponent(u.stripeCustomer) : '&customer_email='+encodeURIComponent(em);
+      // The advertised 7-day free trial (first subscription only; Checkout ignores trials set on the Price).
+      if(!u.stripeCustomer && !u.trialUsed) body += '&subscription_data[trial_period_days]=7&payment_method_collection=always';
       const r=await fetch('https://api.stripe.com/v1/checkout/sessions', { method:'POST', headers:{ 'Authorization':'Bearer '+sk, 'Content-Type':'application/x-www-form-urlencoded' }, body:body });
       const j=await r.json();
       if(r.ok && j && j.url) return succeed({ url:j.url });
@@ -266,7 +268,7 @@ async function doSupport(request, env){
       + '<p style="margin:0 0 4px"><b>From:</b> ' + esc(name||'(no name)') + ' &lt;' + esc(email) + '&gt;</p>'
       + '<hr style="border:none;border-top:1px solid #eee;margin:12px 0">'
       + '<p style="white-space:pre-wrap;margin:0">' + esc(message) + '</p></div>';
-    const r = await fetch('https://api.resend.com/emails', {
+    const r = await wsResend(env, {
       method:'POST',
       headers:{ 'Authorization':'Bearer '+env.RESEND_API_KEY, 'Content-Type':'application/json' },
       body: JSON.stringify({ from:'Websprout Support <hello@websprout.app>', to:[SUPPORT_INBOX], reply_to: email, subject:'🛟 Support: '+(name||email), html: html })

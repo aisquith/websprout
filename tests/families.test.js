@@ -123,11 +123,10 @@ module.exports = async function (ctx, t) {
     const one = await build(base('Plumber', { founded: '2004' }));
     t.ok(!secs(one).some((x) => x.type === 'stats'), 'a single real number is not enough for a numbers band');
     const real = await build(base('Plumber', { founded: '2004', googlePlaceId: 'ChIJ_test_place_id_123', rating: '4.7', count: 85 }));
-    const st = secs(real).find((x) => x.type === 'stats');
-    const yrs = String(new Date().getFullYear() - 2004);
-    t.ok(st && st.items.map((i) => i.value).join(',') === yrs + ',4.7,85', 'numbers come straight from the business (' + (st && st.items.map((i) => i.value)) + ')');
-    const aboutTypes = real.pages.find((p) => p.path === 'about').sections.map((x) => x.type);
-    t.ok(homeTypes(real)[1] === 'trust' && homeTypes(real).indexOf('stats') < 0 && aboutTypes.indexOf('stats') > -1, 'trades show real numbers as trust badges under the hero, the numbers band moves to About (' + homeTypes(real) + ')');
+    // Google's rating and count are never stored (Google's terms): no Google numbers in the site data, no numbers band
+    // from them; the trust badges show the rating live on the page instead.
+    t.ok(!secs(real).some((x) => x.type === 'stats') && !/4\.7|"85"|googleRating|googleReviews/.test(JSON.stringify(real)), 'numbers from Google are never baked into the site');
+    t.ok(homeTypes(real)[1] === 'trust', 'trades show real facts (years, the live Google rating) as trust badges under the hero (' + homeTypes(real) + ')');
     const fake = await build(base('Plumber', { founded: '3020', rating: 9, count: 'lots' }));
     t.ok(!secs(fake).some((x) => x.type === 'stats'), 'impossible numbers are ignored');
     const team = await build(base('Barber shop', { team: [{ name: 'Ana', role: 'Fades and tapers' }, { name: 'Bo', role: 'Beards' }] }));

@@ -927,7 +927,7 @@ document.addEventListener('DOMContentLoaded',function(){
     var err=document.getElementById('tokenError');
     var btn=document.getElementById('step2nextBtn');
     if(!token){err.textContent='Please paste your token first.';err.classList.add('on');return;}
-    btn.disabled=true;btn.textContent='Checking...';
+    btn.disabled=true;btn.innerHTML='<span class="wsl-spin" aria-hidden="true"></span>Checking\\u2026';
     err.classList.remove('on');
     fetch('https://api.netlify.com/api/v1/user',{headers:{'Authorization':'Bearer '+token}})
     .then(function(r){return r.json();})
@@ -1202,7 +1202,7 @@ document.addEventListener('DOMContentLoaded',function(){
     modal.style.display='flex';
     var _sw0=document.getElementById('leadsStats');if(_sw0)_sw0.style.display='none';
     if(!sid||!k){if(list)list.innerHTML='<div style="color:rgba(255,255,255,.72);text-align:center;padding:32px 14px;line-height:1.6">Generate or open a site first \\u2014 your leads will appear here.</div>';return;}
-    if(list)list.innerHTML='<div style="color:rgba(255,255,255,.72);text-align:center;padding:30px 0">Loading\\u2026</div>';
+    if(list)list.innerHTML=window.wsSkel('list',3,'Loading your leads\\u2026');
     fetch('/api/inbox?site='+encodeURIComponent(sid)+'&key='+encodeURIComponent(k)).then(function(r){return r.json();}).then(function(j){
       if(j.error){if(list)list.innerHTML='<div style="color:#fca5a5;text-align:center;padding:30px 0">'+_leadEsc(j.error)+'</div>';return;}
       var ni=document.getElementById('leadsNotify');if(ni&&j.notify)ni.value=j.notify;
@@ -1935,7 +1935,7 @@ function wsRenderLeadsCard(pad){
   var sid=window._wsSite||localStorage.getItem('ws_site')||'',key=window._wsKey||localStorage.getItem('ws_key')||'';
   var d=wsDet(pad,'wseLeads','Leads & visitors','','');var box=d.box;
   if(!sid||!key){wsSetDetStatus(d,'After saving','');box.appendChild(wseEl('div','wse-hint','Messages from your contact and booking forms, and visitor numbers, appear here once your site is saved and published.'));return;}
-  box.appendChild(wseEl('div','wse-hint','Loading...'));
+  box.appendChild(window.wsSkelEl('lines',3,'Loading leads and visitors\\u2026'));
   fetch('/api/inbox?site='+encodeURIComponent(sid)+'&key='+encodeURIComponent(key)).then(function(r){return r.json();}).then(function(j){
     box.innerHTML='';if(!j||j.error){box.appendChild(wseEl('div','wse-hint','Leads aren’t available right now.'));return;}
     var subs=j.submissions||[];var fresh=subs.filter(function(s){return !s.status||s.status==='new';}).length;
@@ -2122,7 +2122,7 @@ function wsShuffleLook(){
 function wsPhotoSearch(q){
   var grid=document.getElementById('slotSearchGrid'),note=document.getElementById('slotSearchNote');if(!grid)return;
   q=String(q||'').trim();if(!q)return;
-  grid.innerHTML='';if(note)note.textContent='Searching...';
+  grid.innerHTML=window.wsSkel('grid',9);if(note)note.textContent='Searching Unsplash\\u2026';
   fetch('/api/photos?q='+encodeURIComponent(q)).then(function(r){return r.json();}).then(function(j){
     var res=(j&&j.results)||[];
     if(!res.length){if(note)note.textContent=(j&&j.error)||'No photos found. Try a simpler word.';return;}
@@ -2246,7 +2246,7 @@ function wsRenderVersions(pad){
   pad.appendChild(wseEl('div','wse-label','Version history'));
   var box=wseEl('div','wse-card');pad.appendChild(box);
   if(!sid||!key){box.appendChild(wseEl('div','wse-hint','Versions appear once your site has been saved.'));return;}
-  box.appendChild(wseEl('div','wse-hint','Loading...'));
+  box.appendChild(window.wsSkelEl('list',3,'Loading saved versions\\u2026'));
   fetch('/versions?site='+encodeURIComponent(sid)+'&key='+encodeURIComponent(key)).then(function(r){return r.json();}).then(function(j){
     box.innerHTML='';var vs=(j&&j.versions)||[];
     if(!vs.length){box.appendChild(wseEl('div','wse-hint','No saved versions yet. A snapshot is kept every 10 minutes while you edit.'));return;}
@@ -2328,7 +2328,7 @@ function wsRenderBizInfo(pad,open){
   if(b.googlePlaceId){
     var lk=wseEl('div','wse-hint','Linked: '+(b.googleName||'your Google listing'));gw.appendChild(lk);
     // Choose which Google reviews show: untick one to hide it (stored by Google review id in biz.googleHidden).
-    var rvw=wseEl('div','wse-grevs');rvw.style.marginTop='8px';rvw.appendChild(wseEl('div','wse-hint','Loading your Google reviews…'));gw.appendChild(rvw);
+    var rvw=wseEl('div','wse-grevs');rvw.style.marginTop='8px';rvw.appendChild(window.wsSkelEl('list',3,'Loading your Google reviews\\u2026'));gw.appendChild(rvw);
     fetch('/api/place?place='+encodeURIComponent(b.googlePlaceId)).then(function(r){return r.ok?r.json():null;}).then(function(j){
       rvw.innerHTML='';var items=((j&&j.items)||[]).filter(function(v){return v&&v.id;});
       if(!items.length){rvw.appendChild(wseEl('div','wse-hint','No Google reviews with text to show yet.'));return;}
@@ -3910,11 +3910,14 @@ function doPayment(){
     if(!link||link.indexOf('PASTE_YOUR')>-1){toast('Payments are not set up yet — add your Stripe subscription link as the STRIPE_SUB_LINK variable in your Worker.',6500);return;}
     localStorage.setItem('wsh',gHTML);
     // The server creates the checkout for the signed-in account (an opaque reference, never the typed email).
+    window.wsTrialConsent().then(function(ok){if(!ok)return;
+    var _cl=window.wsBusy('Opening secure checkout\\u2026');
     fetch('/billing/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(function(r){return r.json();}).then(function(j){
       if(j&&j.url){window.location.href=j.url;return;}
-      if(j&&j.pro){unlockNow();return;}
+      _cl();if(j&&j.pro){unlockNow();return;}
       toast((j&&j.error)||'Could not start checkout. Please try again.',5000);
-    }).catch(function(){toast('Could not start checkout. Please try again.',5000);});
+    }).catch(function(){_cl();toast('Could not start checkout. Please try again.',5000);});
+    });
   }
   function unlockNow(){unlocked=true;try{sessionStorage.setItem('wsu','1');}catch(e){}try{applyUnlock();}catch(e){}toast('You are already Pro. Everything is unlocked!',5000);}
   // Never send an already-Pro or comped member to Stripe.

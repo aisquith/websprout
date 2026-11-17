@@ -48,8 +48,10 @@ module.exports = async function (ctx, t) {
     t.eq(res.status, 302, 'place-photo redirects to the photo');
     t.eq(res.headers.get('location'), 'https://lh3.googleusercontent.com/p/wide2=w1600', 'redirect goes to the right photo, width clamped to 1600');
     t.ok(!/SECRET_KEY/.test(JSON.stringify([...res.headers])), 'the API key never reaches the browser');
-    t.ok(/max-age=604800/.test(res.headers.get('cache-control') || ''), 'redirect is cached for 7 days');
-    t.eq(env.KV.ttl['pphotos:' + PID], 86400, 'the photo list is kept for 24 hours');
+    // Google's terms allow no caching of Places content: only a 10-minute dedupe window (browser, edge and KV).
+    t.ok(/max-age=600$/.test(res.headers.get('cache-control') || ''), 'redirect is cached for 10 minutes at most ' + res.headers.get('cache-control'));
+    t.eq(env.KV.ttl['pphotos:' + PID], 600, 'the photo list is kept for 10 minutes at most');
+    t.eq(env.KV.ttl['pphoto:' + PID + ':' + K.v3Hash('places/P1/photos/wide2') + ':1600'], 600, 'the photo URL is kept for 10 minutes at most');
     t.eq(env.KV.m.get('gphoto:count:' + new Date().toISOString().slice(0, 7)), '2', 'each billed Google call is counted for the month');
     t.eq(calls[0].h['X-Goog-FieldMask'], 'photos', 'photo list asks Google only for the photos field');
     t.ok(/\/v1\/places\/P1\/photos\/wide2\/media\?maxWidthPx=1600&skipHttpRedirect=true$/.test(calls[1].u), 'media call uses skipHttpRedirect ' + calls[1].u);

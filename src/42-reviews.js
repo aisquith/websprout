@@ -162,8 +162,10 @@ h2{font-size:14px;font-weight:700;margin:24px 0 10px;display:flex;align-items:ce
 .muted{color:rgba(234,242,232,.4)}.empty{color:rgba(234,242,232,.4);font-size:14px;padding:14px 2px}
 .err{color:#fca5a5;text-align:center;padding:40px 16px;line-height:1.6}
 a{color:#4ade80;text-decoration:none}
+.sk{display:block;height:11px;border-radius:7px;background:linear-gradient(90deg,rgba(255,255,255,.06) 25%,rgba(255,255,255,.14) 40%,rgba(255,255,255,.06) 60%);background-size:300% 100%;animation:skShim 1.25s ease-in-out infinite}.skc{border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px;margin-bottom:12px;display:flex;flex-direction:column;gap:10px}.sk-slow{color:rgba(234,242,232,.55);font-size:13px;text-align:center;margin-top:6px;opacity:0;animation:skShow .4s ease 8s forwards}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}@keyframes skShim{0%{background-position:100% 0}100%{background-position:0 0}}@keyframes skShow{to{opacity:1}}@media (prefers-reduced-motion:reduce){.sk{animation:none}.sk-slow{animation-duration:0s}}
 </style></head><body>
-<div class="top"><div><h1>&#11088; Reviews</h1><div class="sub" id="sub">Loading&hellip;</div></div><button class="rl" id="refresh">&#8635; Refresh</button></div>
+<div class="top"><div><h1>&#11088; Reviews</h1><div class="sub" id="sub">Loading your reviews&hellip;</div></div><button class="rl" id="refresh">&#8635; Refresh</button></div>
+<div id="rvSkel" role="status" aria-live="polite"><span class="sr">Loading your reviews</span><div aria-hidden="true"><div class="skc" style="margin-bottom:18px"><span class="sk" style="width:30%;height:14px"></span><span class="sk" style="width:100%;height:38px;border-radius:9px"></span><span class="sk" style="width:100%;height:70px;border-radius:9px"></span></div><div class="skc"><div style="display:flex;gap:10px"><span class="sk" style="width:26%;height:14px"></span><span class="sk" style="width:80px;margin-left:auto"></span></div><span class="sk" style="width:88%"></span><span class="sk" style="width:60%"></span></div><div class="skc"><div style="display:flex;gap:10px"><span class="sk" style="width:32%;height:14px"></span><span class="sk" style="width:80px;margin-left:auto"></span></div><span class="sk" style="width:74%"></span><span class="sk" style="width:52%"></span></div><div class="skc"><div style="display:flex;gap:10px"><span class="sk" style="width:22%;height:14px"></span><span class="sk" style="width:80px;margin-left:auto"></span></div><span class="sk" style="width:80%"></span><span class="sk" style="width:66%"></span></div></div><div class="sk-slow">Still working \u2014 this is taking a little longer than usual.</div></div>
 <div id="main" style="display:none">
   <div class="add">
     <div style="font-weight:700;margin-bottom:12px;font-size:15px">Add a review</div>
@@ -205,13 +207,14 @@ function act(action,id){
   fetch('/api/reviews/manage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:SITE,action:action,id:id})}).then(function(r){return r.json();}).then(function(j){ if(j&&j.reviews) render(j.reviews); }).catch(function(){alert('Something went wrong. Try again.');});
 }
 function load(){
-  if(!SITE){ qs('denied').style.display='block'; qs('denied').innerHTML='No site specified. Open this from the publish panel in your studio.'; return; }
+  if(!SITE){ var _sk0=qs('rvSkel');if(_sk0)_sk0.remove(); qs('denied').style.display='block'; qs('denied').innerHTML='No site specified. Open this from the publish panel in your studio.'; return; }
   fetch('/api/reviews/manage?site='+encodeURIComponent(SITE)).then(function(r){return r.json();}).then(function(j){
+    var _sk=qs('rvSkel');if(_sk)_sk.remove();
     if(!j||!j.ok||j.owner===false){ qs('denied').style.display='block'; qs('denied').innerHTML='You need to be signed in as the owner of this site to manage its reviews.<br><br><a href="https://websprout.app">Go to Websprout</a>'; return; }
     qs('main').style.display='block';
     qs('sub').innerHTML='Approve what visitors leave, or add your own &middot; <a href="https://'+esc(SITE)+'.websprout.app" target="_blank">view site</a>';
     render(j.reviews||[]);
-  }).catch(function(){ qs('denied').style.display='block'; qs('denied').textContent='Could not load reviews. Please refresh.'; });
+  }).catch(function(){ var _sk=qs('rvSkel');if(_sk)_sk.remove(); qs('denied').style.display='block'; qs('denied').innerHTML='Could not load your reviews. Check your connection and <a href="#" onclick="location.reload();return false">try again</a>.'; });
 }
 qs('addStars').addEventListener('click',function(e){var t=e.target;if(t&&t.getAttribute('data-i')!=null){addSel=(parseInt(t.getAttribute('data-i'),10)|0)+1;paintAdd();}});
 qs('addBtn').addEventListener('click',function(){

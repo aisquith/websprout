@@ -334,8 +334,8 @@ var MODCAT={sexual:'Sexual / NSFW',profanity:'Vulgar language',hate:'Hate or har
 function renderMod(items,aiOn){var c=$('modCnt'),n=items.filter(function(x){return x.status==='block'&&!x.refused;}).length;c.hidden=!items.length;c.textContent=items.length;
   var ai=$('modAi');ai.hidden=!!aiOn;ai.innerHTML=aiOn?'':'<b>The AI check is off</b> (no Gemini key, or MODERATION_AI=off). Only the word list is running.';
   table('modT',[{k:'slug',label:'Site',fmt:function(x){var live=!x.refused&&!x.preview;return (live?'<a href="https://'+esc(x.slug)+'.websprout.app" target="_blank" rel="noopener">'+esc(x.slug)+'</a>':esc(x.slug))+(x.email?'<div class="muted" style="font-size:12px">'+esc(x.email)+'</div>':'');}},
-    {k:'status',label:'Result',fmt:function(x){return x.status==='block'?(x.refused?'<span class="badge">REFUSED</span>':'<span class="badge pro" style="background:#7f1d1d;color:#fecaca">LIVE &mdash; FLAGGED</span>'):'<span class="badge">NOT CHECKED</span>';}},
-    {k:'category',label:'Why',fmt:function(x){return esc(MODCAT[x.category]||(x.status==='unchecked'?'AI check unavailable ('+(x.reason||'')+')':x.category||''))+(x.status==='block'&&x.reason?'<div class="muted" style="font-size:12px">'+esc(x.reason)+'</div>':'');}},
+    {k:'status',label:'Result',fmt:function(x){return x.status==='report'?'<span class="badge pro" style="background:#78350f;color:#fde68a">REPORTED'+(x.reports>1?' ('+x.reports+')':'')+'</span>'+(x.reporter?'<div class="muted" style="font-size:12px">by '+esc(x.reporter)+'</div>':''):x.status==='block'?(x.refused?'<span class="badge">REFUSED</span>':'<span class="badge pro" style="background:#7f1d1d;color:#fecaca">LIVE &mdash; FLAGGED</span>'):'<span class="badge">NOT CHECKED</span>';}},
+    {k:'category',label:'Why',fmt:function(x){return esc(MODCAT[x.category]||(x.status==='unchecked'?'AI check unavailable ('+(x.reason||'')+')':x.category||''))+((x.status==='block'||x.status==='report')&&x.reason?'<div class="muted" style="font-size:12px">'+esc(x.reason)+'</div>':'');}},
     {k:'ts',label:'When',num:1,fmt:function(x){return dt(x.ts);}},
     {k:'act',label:'',fmt:function(x){var live=!x.refused&&!x.preview;return '<span class="acts" style="margin:0">'+(live?'<button class="btn dng" data-act="down" data-slug="'+esc(x.slug)+'">Take down</button><button class="btn dng" data-act="block" data-slug="'+esc(x.slug)+'">Block</button>':'')+'<button class="btn" data-act="okmod" data-slug="'+esc(x.slug)+'">'+(live?'Looks fine':(x.status==='block'&&x.hash?'Allow it':'Dismiss'))+'</button></span>';}}],
     items,{sortKey:'ts',empty:'Nothing to review. Every checked site passed.'});}
@@ -384,7 +384,7 @@ async function sendNudgeEmail(env, to, siteName, token){
     + '</div>'
     + wsMailFooter(env, 'You are receiving this one-time reminder because you built a site on <a href="https://websprout.app" style="color:#2d7a3a">Websprout</a>.', optout)
     + '</div>';
-  const r = await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'Your website is saved — publish it free in one click', html: html, headers: wsUnsubHeaders(optout) }) });
+  const r = await wsResend(env, { method:'POST', headers:{ 'Authorization':'Bearer ' + env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[to], subject:'Your website is saved — publish it free in one click', html: html, headers: wsUnsubHeaders(optout) }) });
   return r && r.ok;
 }
 async function runNudges(env, dry){
@@ -1030,7 +1030,7 @@ async function runErrorAlert(env){
     const groups=groupClientErrors(errs);
     const rows=groups.slice(0,10).map(function(g){ return '<tr><td style="padding:6px 10px;border-bottom:1px solid #eee;font-weight:700">'+g.count+'x</td><td style="padding:6px 10px;border-bottom:1px solid #eee">'+escHtml(g.msg)+'<div style="color:#888;font-size:12px">'+escHtml(g.where)+' &middot; '+escHtml(g.sites.join(', '))+'</div></td></tr>'; }).join('');
     const html='<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:600px"><p>'+errs.length+' JavaScript error'+(errs.length===1?'':'s')+' were reported since the last alert ('+groups.length+' distinct):</p><table style="border-collapse:collapse;font-size:14px">'+rows+'</table><p><a href="https://websprout.app/admin">Open the admin dashboard</a></p></div>';
-    await fetch('https://api.resend.com/emails', { method:'POST', headers:{ 'Authorization':'Bearer '+env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[SUPPORT_EMAIL], subject:'Websprout: '+groups.length+' new error'+(groups.length===1?'':'s')+' on sites', html: html }) });
+    await wsResend(env, { method:'POST', headers:{ 'Authorization':'Bearer '+env.RESEND_API_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ from:'Websprout <hello@websprout.app>', to:[SUPPORT_EMAIL], subject:'Websprout: '+groups.length+' new error'+(groups.length===1?'':'s')+' on sites', html: html }) });
     await wsMailCount(env, 'admin');
   }catch(e){}
 }

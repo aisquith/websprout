@@ -71,7 +71,8 @@ module.exports = async function (ctx, t) {
   delete one.biz.googlePlaceId;
   t.ok(!WS.businessLd(one).aggregateRating, 'no rating markup without a linked Google listing');
 
-  // Google place photos: credited "Photo: name · Google" with nofollow, never as Unsplash; responsive widths via w=
+  // Google place photos: credited "Photo: name · Google Maps" (the author linked to their profile, nofollow, new tab),
+  // never as Unsplash; responsive widths via w=
   const g = JSON.parse(JSON.stringify(site));
   const hero = g.pages[0].sections.find((x) => x.type === 'hero'); hero.variant = 'photo';
   const gurl = 'https://websprout.app/api/place-photo?pid=ChIJ_test&i=0&w=1600';
@@ -79,17 +80,17 @@ module.exports = async function (ctx, t) {
   g.photoCredits = { [hero.id + '.photo']: { name: 'Ana Ruiz', link: 'https://maps.google.com/maps/contrib/123', source: 'google' } };
   let gh = WS.renderSite(g, { mode: 'live' });
   const credits = (gh.match(/<p class="credits">([\s\S]*?)<\/p>/) || [])[1] || '';
-  t.ok(/Photo: <a href="https:\/\/maps\.google\.com\/maps\/contrib\/123" rel="nofollow noopener">Ana Ruiz<\/a> · Google/.test(credits), 'Google photo credited to its author and Google ' + credits.slice(0, 200));
+  t.ok(/Photo: <a href="https:\/\/maps\.google\.com\/maps\/contrib\/123" target="_blank" rel="nofollow noopener">Ana Ruiz<\/a> · Google Maps/.test(credits), 'Google photo credited to its author and Google Maps ' + credits.slice(0, 200));
   t.ok(!/unsplash/i.test(credits), 'Google photo is not credited to Unsplash');
   t.ok(/srcset="[^"]*place-photo\?pid=ChIJ_test&amp;i=0&amp;w=400 400w/.test(gh) && /w=1600 1600w/.test(gh), 'place photo gets responsive widths (400-1600)');
   t.ok((ldOf(gh)[0] || {}).image === gurl, 'JSON-LD image is the hero photo');
   g.photoCredits[hero.id + '.photo'].link = '';
   g.photos.extra = 'https://images.unsplash.com/photo-1?w=1680'; g.photoCredits.extra = { name: 'Jo Lens', link: 'https://unsplash.com/@jo' };
   gh = WS.renderSite(g, { mode: 'live' });
-  t.ok(/Photo: Ana Ruiz · Google/.test(gh) && /Photos by <a href="https:\/\/unsplash\.com\/@jo\?utm_source=websprout&amp;utm_medium=referral">Jo Lens<\/a> on <a href="https:\/\/unsplash\.com\/\?utm_source/.test(gh), 'Unsplash credits unchanged next to Google credits');
+  t.ok(/Photo: Ana Ruiz · Google Maps/.test(gh) && /Photos by <a href="https:\/\/unsplash\.com\/@jo\?utm_source=websprout&amp;utm_medium=referral">Jo Lens<\/a> on <a href="https:\/\/unsplash\.com\/\?utm_source/.test(gh), 'Unsplash credits unchanged next to Google credits');
   g.photoFallbacks = { [hero.id + '.photo']: { url: 'https://images.unsplash.com/photo-2?w=1680', name: 'Kai Backup', link: 'https://unsplash.com/@kai' } };
   gh = WS.renderSite(g, { mode: 'live' });
-  t.ok(/Photos by <a[^>]*>Jo Lens<\/a>, <a href="https:\/\/unsplash\.com\/@kai\?utm_source=websprout&amp;utm_medium=referral">Kai Backup<\/a> on <a href="https:\/\/unsplash\.com/.test(gh) && /Photo: Ana Ruiz · Google/.test(gh), 'a Google photo\'s Unsplash backup photographer is credited too');
+  t.ok(/Photos by <a[^>]*>Jo Lens<\/a>, <a href="https:\/\/unsplash\.com\/@kai\?utm_source=websprout&amp;utm_medium=referral">Kai Backup<\/a> on <a href="https:\/\/unsplash\.com/.test(gh) && /Photo: Ana Ruiz · Google Maps/.test(gh), 'a Google photo\'s Unsplash backup photographer is credited too');
   delete g.photos[hero.id + '.photo'];
   t.ok(!/Kai Backup/.test(WS.renderSite(g, { mode: 'live' })), 'backup credit goes when the photo is removed');
 };

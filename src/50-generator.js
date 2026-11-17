@@ -153,9 +153,9 @@ function v3StarterBase(type) {
     services: [['Curated', 'A tight, thoughtful selection you can trust.', '1f6cd'], ['Local', 'Owned and run by people who live here too.', '1f4cd'], ['Personal', 'Real help from people who know the stock.', '1f91d'], ['Quality', 'Pieces chosen to last, not just to sell.', '2728']] };
   if (M(/handy|plumb|electric|hvac|heating|air condition|furnace|roof|pest|pool|gutter|contractor|remodel|renovat|fenc|deck|construction|paint|flooring|drywall|siding|garage door|cabinet|countertop|solar|concrete|masonry|paving|pavers/) && !(M(/fenc/) && M(/club|academy|lesson|class|school|coach|sport/))) return {
     category: 'home', tagline: 'Done right, done once.',
-    about: 'Licensed, tidy and on time. We treat your home with respect and leave it better than we found it — no surprises on the bill.',
+    about: 'Tidy, careful and on time. We treat your home with respect, agree the price before we start and leave everything clean when we finish.',
     servicesTitle: 'What we handle', ctaTitle: 'Got a project?', ctaText: 'Describe the job and we will get you a straight quote.',
-    services: [['Free Estimates', 'A clear, honest number before any work begins.', '1f4cb'], ['Quality Work', 'Craftsmanship that holds up for years, not months.', '1f528'], ['On Schedule', 'We show up when we say and finish when we promise.', '23f0'], ['Guaranteed', 'We stand behind the work, plain and simple.', '2705']] };
+    services: [['Estimates', 'A clear, honest number before any work begins.', '1f4cb'], ['Careful work', 'Done properly, with materials chosen to last.', '1f528'], ['Clear scheduling', 'We agree a time with you and keep you posted.', '23f0'], ['Clean-up', 'We tidy up and take away the mess when the job is done.', '2705']] };
   // Generic local business — a fitting tagline and about, but no invented service list.
   if (M(/\blaw\b|lawyer|attorney|legal|notary|paralegal/)) return {
     category: 'legal', tagline: 'Clear advice when it matters most.',
@@ -175,13 +175,13 @@ function v3StarterBase(type) {
   if (M(/account|bookkeep|\btax(?!i)|\bcpa\b|financ|insurance|mortgage|invest|wealth|payroll/)) return {
     category: 'finance', tagline: 'Numbers you can stop worrying about.',
     about: 'We keep your finances organized, on time and easy to understand, so you can focus on everything else.',
-    servicesTitle: 'Services', ctaTitle: 'Let us take this off your plate.', ctaText: 'Book a free call and we will map out what you need.',
+    servicesTitle: 'Services', ctaTitle: 'Let us take this off your plate.', ctaText: 'Book a call and we will map out what you need.',
     services: [['Tax preparation', 'Accurate, on-time filing with every deduction you are owed.', '1f4c4'], ['Bookkeeping', 'Clean monthly books and reports you can actually read.', '1f4ca'], ['Planning', 'Clear advice on what is next for your money.', '1f4c8'], ['Year-round support', 'Questions answered whenever they come up, not just in April.', '1f4ac']] };
   if (M(/real ?estate|realtor|realty|property manag|\bbroker/)) return {
     category: 'realestate', tagline: 'The right move, made simple.',
     about: 'We know this market street by street. Whether you are buying, selling or just curious, you get honest advice and someone who answers the phone.',
     servicesTitle: 'How we help', ctaTitle: 'Thinking about a move?', ctaText: 'Tell us what you are looking for and we will take it from there.',
-    services: [['Buying', 'Find the right place and negotiate a fair price with confidence.', '1f3e1'], ['Selling', 'Smart pricing, great marketing and a smooth closing.', '1f511'], ['Home valuations', 'A free, honest estimate of what your home is worth today.', '1f4cf'], ['Relocation', 'New to the area? We will help you find your neighborhood.', '1f69a']] };
+    services: [['Buying', 'Find the right place and negotiate a fair price with confidence.', '1f3e1'], ['Selling', 'Smart pricing, great marketing and a smooth closing.', '1f511'], ['Home valuations', 'An honest estimate of what your home is worth today.', '1f4cf'], ['Relocation', 'New to the area? We will help you find your neighborhood.', '1f69a']] };
   if (M(/tutor|lesson|teach|school|academy|music|piano|guitar|violin|language|driving|course|class/) && !M(/tuner|tuning|repair|movers?|technician/)) return {
     category: 'education', tagline: 'Learning that actually sticks.',
     about: 'We meet every student where they are, set clear goals, and make the progress visible, so confidence grows along with skill.',
@@ -195,7 +195,7 @@ function v3StarterBase(type) {
   if (M(/moving|movers|relocat|storage|junk|haul/)) return {
     category: 'moving', tagline: 'Moving day, minus the stress.',
     about: 'Careful hands, honest prices and a crew that shows up on time. We treat your things like they are our own.',
-    servicesTitle: 'Services', ctaTitle: 'Planning a move?', ctaText: 'Get a free quote and lock in your date.',
+    servicesTitle: 'Services', ctaTitle: 'Planning a move?', ctaText: 'Get a quote and lock in your date.',
     services: [['Local moves', 'Fast, careful moves across town.', '1f69a'], ['Packing', 'We pack it right so it arrives in one piece.', '1f4e6'], ['Junk removal', 'Clear out what you no longer need.', '1f5d1'], ['Storage', 'Safe, secure space for whatever does not fit yet.', '1f3e2']] };
   if (M(/consult|agency|marketing|design|developer|software|\bweb\b|it services|tech|creative|branding|copywrit|staffing|recruit|headhunt/)) return studio();
   // No category fits: the copy is built from the type itself (v3GenericCopy), and there's no made-up service list.
@@ -805,6 +805,10 @@ async function gphotoSpend(env) {
   if (!env || !env.KV) return false;
   try { const k = gphotoKey(); const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= gphotoCap(env)) return false; await env.KV.put(k, String(n + 1), { expirationTtl: 40 * 86400 }); return true; } catch (e) { return false; }
 }
+// Google Maps Platform Terms (3.2.3) and the Places API policies allow no caching of Places content except place IDs
+// (and lat/lng for 30 days). Everything else from Google (photo lists, photo URLs, ratings, reviews) is kept only
+// this long, to collapse a burst of identical requests into one Google call. Google's terms allow nothing longer.
+const PLACES_DEDUPE_TTL = 600;
 async function placePhotoList(pid, env, ms) {
   if (!env || !env.GOOGLE_PLACES_KEY || !GPLACE_RE.test(String(pid || ''))) return null;
   const ck = 'pphotos:' + pid;
@@ -824,7 +828,7 @@ async function placePhotoList(pid, env, ms) {
     let link = String(a.uri || ''); if (link.indexOf('//') === 0) link = 'https:' + link;
     return { name: p.name, w: +p.widthPx || 0, h: +p.heightPx || 0, by: String(a.displayName || '').slice(0, 80), link: /^https:\/\/[^\s"'<>]+$/.test(link) ? link.slice(0, 300) : '' };
   }).filter(Boolean);
-  try { if (env.KV) await env.KV.put(ck, JSON.stringify(out), { expirationTtl: 24 * 3600 }); } catch (e) {}
+  try { if (env.KV) await env.KV.put(ck, JSON.stringify(out), { expirationTtl: PLACES_DEDUPE_TTL }); } catch (e) {}
   return out;
 }
 // Google photos → site photo entries: a landscape photo for the hero when there is one, then the rest in order.
@@ -854,7 +858,8 @@ async function doPlacePhoto(request, env) {
   const cache = (typeof caches !== 'undefined' && caches.default) || null;
   const ckey = new Request('https://websprout.app/api/place-photo?pid=' + encodeURIComponent(pid) + '&i=' + i + '&w=' + w + '&k=' + k);
   try { if (cache) { const hit = await cache.match(ckey); if (hit) return hit; } } catch (e) {}
-  const found = function (uri) { return new Response(null, { status: 302, headers: { 'Location': uri, 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=604800' } }); };
+  // The photo URL is Places content: kept (edge, KV, browser) only for the 10-minute dedupe window.
+  const found = function (uri) { return new Response(null, { status: 302, headers: { 'Location': uri, 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=' + PLACES_DEDUPE_TTL } }); };
   try {
     // Known image URL (another data center already asked Google): no Google call at all, not even for the list.
     let known = ''; try { if (k && env.KV) known = (await env.KV.get('pphoto:' + pid + ':' + k + ':' + w)) || ''; } catch (e) {}
@@ -871,7 +876,7 @@ async function doPlacePhoto(request, env) {
       const j = r.ok ? await r.json() : null;
       uri = String((j && j.photoUri) || '');
       if (!/^https:\/\/[^\s"'<>]+$/.test(uri)) return backup();
-      try { if (env.KV) await env.KV.put(uk, uri, { expirationTtl: 7 * 86400 }); } catch (e) {}
+      try { if (env.KV) await env.KV.put(uk, uri, { expirationTtl: PLACES_DEDUPE_TTL }); } catch (e) {}
     }
     const res = found(uri);
     try { if (cache) await cache.put(ckey, res.clone()); } catch (e) {}
@@ -880,27 +885,39 @@ async function doPlacePhoto(request, env) {
 }
 
 // ── Google rating + reviews for published sites (Places API (New); needs GOOGLE_PLACES_KEY) ──
-// Responses are cached for 6 hours so a busy site does not spend API quota on every visit.
+// The live reviews widget and live rating badges read this on every page view; nothing from Google is stored in the
+// site. Answers are kept only for PLACES_DEDUPE_TTL (10 minutes: KV, the edge and the visitor's browser) to collapse
+// bursts, as Google's terms allow no longer caching. Cost stays bounded: one Google call per place per 10 minutes at
+// most, a per-place daily ceiling (PLACES_PER_PLACE_DAILY, default 48), a per-visitor rate limit and the monthly
+// PLACES_MONTHLY_CAP (placesSpend). Past any of them the answer is "busy" and the site shows no Google content.
+// Reviews come back in Google's own order with no rating filter (the owner can hide one; the widget then says so).
+function placesPerPlaceDaily(env) { const n = parseInt(env && env.PLACES_PER_PLACE_DAILY, 10); return isNaN(n) || n < 0 ? 48 : n; }
+function gHttps(u, max) { u = String(u || ''); if (u.indexOf('//') === 0) u = 'https:' + u; return /^https:\/\/[^\s"'<>]+$/.test(u) ? u.slice(0, max || 400) : ''; }
 async function doPlace(request, env) {
   const url = new URL(request.url);
   const id = (url.searchParams.get('place') || '').trim();
-  const cors = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' };
+  const cors = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=' + PLACES_DEDUPE_TTL };
   if (!/^[A-Za-z0-9_-]{10,300}$/.test(id)) return new Response(JSON.stringify({ error: 'bad place' }), { status: 400, headers: cors });
   if (!env.GOOGLE_PLACES_KEY) return new Response(JSON.stringify({ error: 'not configured' }), { status: 503, headers: cors });
   try {
-    const ck = 'place2:' + id; // v2: reviews carry an id (so owners can hide one) and a link to it on Google
+    const ck = 'place3:' + id; // v3: reviews carry their author's profile link and photo (Google's attribution)
     if (env.KV) { const c = await env.KV.get(ck); if (c) return new Response(c, { headers: cors }); }
     const busy = function () { return new Response(JSON.stringify({ error: 'busy' }), { status: 429, headers: Object.assign({}, cors, { 'Cache-Control': 'no-store' }) }); };
     if (!(await wsRate(env, 'plrate:' + wsClientIp(request, env), 30, 3600))) return busy();
+    if (!(await wsRate(env, 'plday:' + id + ':' + new Date().toISOString().slice(0, 10), placesPerPlaceDaily(env), 86400))) return busy();
     if (!(await placesSpend(env))) return busy();
+    // "reviews" returns each review's authorAttribution (displayName, uri, photoUri), needed for attribution.
     const r = await fetch('https://places.googleapis.com/v1/places/' + encodeURIComponent(id), { headers: { 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY, 'X-Goog-FieldMask': 'displayName,rating,userRatingCount,googleMapsUri,reviews' } });
     if (!r.ok) return new Response(JSON.stringify({ error: 'google error' }), { status: 502, headers: cors });
     const p = await r.json();
     const out = JSON.stringify({
-      name: (p.displayName && p.displayName.text) || '', rating: typeof p.rating === 'number' ? p.rating : null, reviews: typeof p.userRatingCount === 'number' ? p.userRatingCount : null, url: /^https:\/\/[^\s"'<>]+$/.test(String(p.googleMapsUri || '')) ? String(p.googleMapsUri).slice(0, 400) : '',
-      items: (p.reviews || []).slice(0, 5).map(function (v) { const rid = String(v.name || '').split('/').pop().replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80); return { id: rid, link: /^https:\/\/[^\s"'<>]+$/.test(String(v.googleMapsUri || '')) ? String(v.googleMapsUri).slice(0, 400) : '', rating: v.rating || 0, text: String((v.text && v.text.text) || (v.originalText && v.originalText.text) || '').slice(0, 600), name: (v.authorAttribution && v.authorAttribution.displayName) || 'Google user', when: v.relativePublishTimeDescription || '' }; }).filter(function (v) { return v.text; }),
+      name: (p.displayName && p.displayName.text) || '', rating: typeof p.rating === 'number' ? p.rating : null, reviews: typeof p.userRatingCount === 'number' ? p.userRatingCount : null, url: gHttps(p.googleMapsUri),
+      items: (p.reviews || []).slice(0, 5).map(function (v) {
+        const rid = String(v.name || '').split('/').pop().replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80), au = v.authorAttribution || {};
+        return { id: rid, link: gHttps(v.googleMapsUri), rating: v.rating || 0, text: String((v.text && v.text.text) || (v.originalText && v.originalText.text) || '').slice(0, 600), name: String(au.displayName || 'Google user').slice(0, 80), authorUri: gHttps(au.uri), authorPhoto: gHttps(au.photoUri, 600), when: v.relativePublishTimeDescription || '' };
+      }).filter(function (v) { return v.text; }),
     });
-    if (env.KV) await env.KV.put(ck, out, { expirationTtl: 6 * 3600 });
+    if (env.KV) await env.KV.put(ck, out, { expirationTtl: PLACES_DEDUPE_TTL });
     return new Response(out, { headers: cors });
   } catch (e) { return new Response(JSON.stringify({ error: 'failed' }), { status: 500, headers: cors }); }
 }
@@ -918,7 +935,8 @@ async function doPlaceFind(request, env) {
   } catch (e) { return jsonR({ ok: false, error: 'Lookup failed.', results: [] }); }
 }
 
-// Google Places (New) place → setup fields, so a business can start from its Google listing.
+// Google Places (New) place → setup fields, so a business can start from its Google listing. The site keeps the
+// place ID (allowed indefinitely by Google's terms); the facts the owner confirms in setup become their own.
 // Pure (no fetch) so tests can feed it a recorded response.
 function placeToSetup(p) {
   p = p || {};
@@ -943,9 +961,6 @@ function placeToSetup(p) {
       if (!h.close || endsNextDay || (h.close >= h.open && c > h.close)) h.close = c;
     });
   }
-  const reviews = (p.reviews || []).filter(function (v) { return (v.rating || 0) >= 4; }).map(function (v) {
-    return { quote: txt(v.text || v.originalText).slice(0, 240), name: String((v.authorAttribution && v.authorAttribution.displayName) || '').slice(0, 60) };
-  }).filter(function (v) { return v.quote.length > 15; }).slice(0, 6);
   const addr = String(p.shortFormattedAddress || p.formattedAddress || '').slice(0, 160);
   return {
     googlePlaceId: /^[A-Za-z0-9_-]{10,300}$/.test(String(p.id || '')) ? String(p.id) : '',
@@ -956,7 +971,9 @@ function placeToSetup(p) {
     phone: String(p.nationalPhoneNumber || p.internationalPhoneNumber || '').slice(0, 40),
     about: txt(p.editorialSummary).slice(0, 400),
     hours: hours,
-    reviews: reviews,
+    // No review text or authors: Google reviews are never copied into a site (or sent to the AI). A linked listing
+    // shows them live (the reviews widget, /api/place). The rating and count are for the setup screen only (shown
+    // live, never stored: buildV3Site ignores them).
     rating: typeof p.rating === 'number' ? p.rating : null,
     count: typeof p.userRatingCount === 'number' ? p.userRatingCount : 0,
   };
@@ -968,7 +985,7 @@ async function doPlaceDetails(request, env) {
   try {
     if (env.KV) { const ip = wsClientIp(request, env); const k = 'pdrate:' + ip; const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= 20) return jsonR({ ok: false, error: 'Too many lookups. Try again later.' }, 429); await env.KV.put(k, String(n + 1), { expirationTtl: 3600 }); }
     if (!(await placesSpend(env))) return jsonR({ ok: false, error: 'Google lookups are busy this month. Please fill in your details by hand.' }, 429);
-    const r = await fetch('https://places.googleapis.com/v1/places/' + encodeURIComponent(id), { headers: { 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY, 'X-Goog-FieldMask': 'id,displayName,primaryTypeDisplayName,formattedAddress,shortFormattedAddress,addressComponents,nationalPhoneNumber,internationalPhoneNumber,regularOpeningHours,editorialSummary,rating,userRatingCount,reviews' } });
+    const r = await fetch('https://places.googleapis.com/v1/places/' + encodeURIComponent(id), { headers: { 'X-Goog-Api-Key': env.GOOGLE_PLACES_KEY, 'X-Goog-FieldMask': 'id,displayName,primaryTypeDisplayName,formattedAddress,shortFormattedAddress,addressComponents,nationalPhoneNumber,internationalPhoneNumber,regularOpeningHours,editorialSummary,rating,userRatingCount' } });
     if (!r.ok) return jsonR({ ok: false, error: 'Google could not find that listing.' }, 502);
     return jsonR(Object.assign({ ok: true }, placeToSetup(await r.json())));
   } catch (e) { return jsonR({ ok: false, error: 'Lookup failed.' }); }
@@ -1111,13 +1128,14 @@ function v3SvcFill(fam, name, i, cat) { const p = V3_SVC_FILL_CAT[cat] || V3_SVC
 function v3Years(b) { return b.founded ? new Date().getFullYear() - parseInt(b.founded, 10) : -1; }
 // Businesses that go to their customers (trades, cleaners, movers, mobile services) get an "Areas we serve" block.
 function v3ServiceArea(fam, cat, type, b) { return (fam === 'trades' && !(cat === 'auto' && b.address && !/mobile/i.test(type))) || /\bmobile\b|dog walk|pet sit|house ?sit|walker|we come to you/i.test(String(type || '')); }
-// Trust badges, from real data only: licensed, insured, founding year, a linked Google rating, the towns served.
+// Trust badges, from real data only: licensed, insured, founding year, a linked Google rating (shown live on the
+// site, never stored), the towns served.
 function v3TrustItems(b) {
   const out = [], city = v3City(b), near = v3Nearby(b);
   if (b.licensed) out.push({ icon: 'shield-check', label: 'Licensed', source: 'licensed' });
   if (b.insured) out.push({ icon: 'shield', label: 'Insured', source: 'insured' });
   if (b.founded) { const n = v3Years(b); out.push({ icon: 'calendar', label: n >= 2 ? n + ' years in business' : 'Since ' + b.founded, source: 'years' }); }
-  if (b.googlePlaceId && b.googleRating >= 1) out.push({ icon: 'star', label: b.googleRating.toFixed(1) + ' on Google' + (b.googleReviews ? ' (' + b.googleReviews + ' reviews)' : ''), source: 'google_rating' });
+  if (b.googlePlaceId) out.push({ icon: 'star', label: 'Google rating', source: 'google_rating' });
   if ((b.towns || []).length) out.push({ icon: 'map-pin', label: 'Serving ' + (city || b.towns[0]) + (near.length > (city ? 0 : 1) ? ' and nearby' : ''), source: 'area' });
   return out;
 }
@@ -1198,7 +1216,7 @@ const V3_CRED_Q = /are you (?:fully )?(?:licen[sc]ed|insured)/i;
 function v3CredOk(q, o) { if (!V3_CRED_Q.test(q)) return true; o = o || {}; const l = /licen/i.test(q), i = /insured/i.test(q); return (l && i) ? !!(o.licensed || o.insured) : l ? !!o.licensed : !!o.insured; }
 function v3FaqFit(q, a, b) {
   if (V3_CRED_Q.test(q)) {
-    if (b.licensed && b.insured) return 'Yes. We’re fully licensed and insured, and happy to share the details.';
+    if (b.licensed && b.insured) return 'Yes. We’re licensed and insured, and happy to share the details.';
     if (b.licensed) return 'Yes, we’re licensed. Ask us and we’ll share the details.';
     if (b.insured && /insured/i.test(q)) return 'We’re insured. Ask us and we’ll share the details for your job.';
     return a;
@@ -1521,7 +1539,8 @@ async function v3AiSpend(env) {
   if (!env || !env.KV) return false;
   try { const k = 'ai:count:' + new Date().toISOString().slice(0, 7); const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= v3AiCap(env)) return false; await env.KV.put(k, String(n + 1), { expirationTtl: 40 * 86400 }); return true; } catch (e) { return false; }
 }
-// The facts the AI may use. The city as said in a sentence, the other towns. Review snippets only from a linked Google listing.
+// The facts the AI may use: the owner's own answers only. The city as said in a sentence, the other towns.
+// Never Google content (reviews, ratings): Google's terms don't allow feeding it to another service.
 function v3AiFacts(biz, sc, types) {
   const yrs = v3Years(biz);
   return {
@@ -1529,7 +1548,6 @@ function v3AiFacts(biz, sc, types) {
     whatMakesUsDifferent: biz.unique || '', yearStarted: biz.founded || '', yearsInBusiness: yrs >= 1 ? yrs : '', licensed: !!biz.licensed, insured: !!biz.insured,
     ownerTagline: biz.tagline || '', ownerAbout: biz.about || '',
     services: (biz.services || []).filter(function (s) { return s.name; }).map(function (s) { return { name: s.name, ownerText: s.desc || '' }; }),
-    reviewSnippets: biz.googlePlaceId ? (biz.reviews || []).filter(function (r) { return r && r.quote; }).slice(0, 5).map(function (r) { return String(r.quote).replace(/\s+/g, ' ').trim().slice(0, 200); }) : [],
     sections: types,
   };
 }
@@ -1884,21 +1902,15 @@ async function buildV3Site(d, env, opts) {
     else if (sc.services && sc.services.length) { add('services', { variant: 'grid', title: sc.servicesTitle || 'What we do', items: sc.services.map(function (s) { return { emoji: s[2] || '', name: s[0], text: s[1], from: '' }; }) }); }
     if (biz.googlePlaceId) add('reviews', { variant: 'google', title: 'What people say' });
     else if (has(biz.reviews)) add('reviews', { variant: 'wall' });
-    // Numbers only from real data (years since the founding year the owner gave, the linked Google listing's
-    // rating and review count). Never a starter number: with fewer than two real figures there is no band.
+    // Numbers only from real data: years since the founding year the owner gave. Never a starter number, and never a
+    // number from Google (its rating and review count are shown live by the trust badges and reviews widget, not
+    // stored). With fewer than two real figures there is no band.
     {
       const _now = new Date().getFullYear(), _f = parseInt(biz.founded, 10);
       const _yrs = /^\d{4}$/.test(biz.founded) && _f > 1800 && _f <= _now ? _now - _f : 0;
-      const _rn = parseFloat(d.rating), _cn = parseInt(d.count, 10);
-      const _rt = /^\s*\d+(\.\d+)?\s*$/.test(String(d.rating)) && _rn >= 1 && _rn <= 5 ? _rn : 0;
-      const _ct = /^\s*\d+\s*$/.test(String(d.count)) && _cn >= 5 ? _cn : 0;
       const _st = [];
       if (_yrs >= 2) _st.push({ label: 'Years in business', source: 'years', value: String(_yrs), suffix: '', emoji: '' });
-      if (biz.googlePlaceId && _rt) _st.push({ label: 'Google rating', source: 'google_rating', value: _rt.toFixed(1), suffix: '★', emoji: '' });
-      if (biz.googlePlaceId && _rt && _ct) _st.push({ label: 'Google reviews', source: 'google_reviews', value: String(_ct), suffix: '', emoji: '' });
       if (_st.length >= 2) add('stats', { variant: 'row', title: '', items: _st });
-      // A linked listing's real rating rides on biz, where the trust badges read it.
-      if (biz.googlePlaceId && _rt) { biz.googleRating = _rt; if (_ct) biz.googleReviews = _ct; }
     }
     // The team, only when the owner listed real people.
     if (has(biz.team) && biz.team.some(function (x) { return x.name; })) add('team', { variant: 'rows', title: '', items: biz.team.filter(function (x) { return x.name; }).map(function (x) { return { name: x.name, text: x.specialty }; }) });

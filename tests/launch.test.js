@@ -84,4 +84,62 @@ module.exports = async function (ctx, t) {
   const home = await (await fetch(base + '/')).text();
   t.ok(!/googletagmanager|fbevents/.test(home), 'the test server (no ad settings) serves no ad tags');
   t.ok(/third-party trackers/.test(await (await fetch(base + '/privacy')).text()), 'and the privacy page keeps the no-trackers wording');
+
+  // Ad tags: US visitors only, never with Global Privacy Control or after opting out
+  const A = new Function([grab('wsAdsAllowed')].join('\n') + '\nreturn wsAdsAllowed;')();
+  const rq = (hd) => ({ headers: new Headers(hd) });
+  t.ok(A(rq({ 'cf-ipcountry': 'US' })), 'ad tags load for US visitors');
+  t.ok(!A(rq({ 'cf-ipcountry': 'DE' })) && !A(rq({ 'cf-ipcountry': 'GB' })) && !A(rq({})), 'but not for EU/UK or unknown-country visitors');
+  t.ok(!A(rq({ 'cf-ipcountry': 'US', 'sec-gpc': '1' })), 'Global Privacy Control turns them off');
+  t.ok(!A(rq({ 'cf-ipcountry': 'US', cookie: 'a=1; ws_adsoff=1' })), 'and so does opting out at /privacy-choices');
+  t.ok(/href="\/privacy-choices"/.test(home), 'the footer links to Your Privacy Choices');
+
+  // Trial terms and consent before checkout
+  t.ok(/wsTrialConsent/.test(home) && /renews automatically at \$10\/month until you cancel/.test(home), 'checkout is preceded by the trial and renewal terms');
+  t.ok(/By continuing you agree to the <a href="\/terms"/.test(home) && /18 or older/.test(home), 'sign-in and checkout state agreement to the Terms (18+)');
+  t.ok(!/\$15-40 per month, forever/.test(home) && !/free forever/.test(home), 'no unverifiable competitor or "free forever" claims');
+  const edjs = await (await fetch(base + (home.match(/src="(\/app\/editor\.js[^"]*)"/) || [])[1])).text();
+  t.ok(/wsTrialConsent\(\)\.then/.test(edjs), 'the editor\'s Go Pro path asks for consent too');
+
+  // Pro welcome email with the first charge date and how to cancel
+  const pb = 'welcome.' + stamp + '@launch.test'; const ps = await signIn(base, pb);
+  const cj = await (await fetch(base + '/billing/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: cookie(ps), 'Sec-Fetch-Site': 'same-origin' }, body: '{}' })).json();
+  const ref = ((cj.url || '').match(/client_reference_id=(wsp_[a-f0-9]{32})/) || [])[1];
+  t.ok(!!ref, 'checkout returns a link with the account reference');
+  const ev2 = { id: 'evt_wel_' + stamp, created: Math.floor(Date.now() / 1000), type: 'checkout.session.completed', data: { object: { mode: 'subscription', client_reference_id: ref, customer: 'cus_w' + stamp, subscription: 'sub_w' + stamp, amount_total: 0 } } };
+  const b2 = JSON.stringify(ev2);
+  r = await fetch(base + '/api/stripe/webhook', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Stripe-Signature': stripeSig(b2) }, body: b2 });
+  t.eq(r.status, 200, 'trial checkout handled');
+  const wm = await (await fetch(base + '/__test/mail?to=' + encodeURIComponent(pb))).json();
+  t.ok(wm && /free trial has started/.test(wm.subject || '') && /renew automatically every month until you cancel/.test(wm.html || '') && /Manage billing/.test(wm.html || ''), 'the customer gets a confirmation with the charge date, renewal and how to cancel');
+
+  // Report this site
+  r = await fetch(base + '/report', { headers: { Referer: 'https://' + slug + '.websprout.app/' } });
+  const rp = await r.text();
+  t.ok(r.status === 200 && /Report a site/.test(rp) && rp.indexOf('value="' + slug + '.websprout.app"') > -1, 'the report page opens with the site filled in from the badge link');
+  t.ok(/aria-label="Report this site"/.test(await live(slug)), 'the free-site badge has a Report link');
+  const rpost = (o) => fetch(base + '/report', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-ws-test-ip': '10.9.' + stamp.length + '.' + Math.floor(Math.random() * 200) }, body: JSON.stringify(o) });
+  r = await rpost({ site: 'nope-' + stamp + '.websprout.app', reason: 'scam' });
+  t.eq(r.status, 400, 'reports for addresses that are not Websprout sites are refused');
+  r = await rpost({ site: 'https://' + slug + '.websprout.app/about', reason: 'scam', details: 'asks for bank login', email: 'reporter@launch.test' });
+  t.eq(r.status, 200, 'a report is accepted');
+  const mq = await (await fetch(base + '/admin/moderation', { headers: { Cookie: cookie(admin) } })).json();
+  t.ok(mq.items.some((x) => x.slug === slug && x.status === 'report' && x.category === 'scam' && x.reporter === 'reporter@launch.test'), 'the report shows in Admin > Moderation');
+  const am = await (await fetch(base + '/__test/mail?to=' + encodeURIComponent(OWNER.toLowerCase()))).json();
+  t.ok(am && /Site reported/.test(am.subject || ''), 'and the owner is emailed');
+
+  // Bounces and complaints: suppressed addresses are never emailed
+  const R = new Function('fetch', [grab('wsResend')].join('\n') + '\nreturn wsResend;');
+  const sentTo = []; const fake = async (u, o) => { sentTo.push(JSON.parse(o.body).to); return new Response('{}'); };
+  const kvm = new Map([['suppress:bad@x.test', '1']]);
+  const env = { KV: { get: async (k) => kvm.get(k) || null } };
+  const send = R(fake);
+  r = await send(env, { method: 'POST', body: JSON.stringify({ to: ['bad@x.test'] }) });
+  t.ok(sentTo.length === 0 && /suppressed/.test(await r.text()), 'a suppressed address is not emailed');
+  await send(env, { method: 'POST', body: JSON.stringify({ to: ['Bad@X.test', 'ok@x.test'] }) });
+  t.eq(JSON.stringify(sentTo[0]), '["ok@x.test"]', 'only the other recipients are kept');
+  r = await fetch(base + '/api/resend/webhook', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+  t.ok(r.status === 503 || r.status === 400, 'the Resend webhook needs its signing secret');
+  r = await fetch(base + '/email-optout?e=a%40b.c&t=x', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Origin: 'https://mail.google.com' }, body: 'List-Unsubscribe=One-Click' });
+  t.eq(r.status, 200, 'mail apps can send the one-click unsubscribe');
 };

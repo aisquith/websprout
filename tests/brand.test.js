@@ -23,8 +23,9 @@ module.exports = async function (ctx, t) {
   t.ok(/Licensed/.test(tr) && /Insured/.test(tr) && /Since 2009/.test(tr) && /Serving Springfield/.test(tr) && (tr.match(/<li/g) || []).length === 4, 'trust strip shows licensed, insured, since-year and area badges');
   t.ok((tr.match(/<svg class="ico/g) || []).length === 4, 'every trust badge has a line icon');
   t.ok(/trust-cards/.test(R(bare({ licensed: true, insured: true }), { type: 'trust', variant: 'cards' })), 'trust cards variant renders');
-  const g = R(bare({ founded: '2001', googleRating: 4.86, googleReviews: 312 }), { type: 'trust' });
-  t.ok(/4\.9 on Google/.test(g) && /312 reviews/.test(g), 'trust shows the Google rating and review count');
+  const g = R(bare({ founded: '2001', googlePlaceId: 'ChIJ_test_place_123', googleRating: 4.86, googleReviews: 312 }), { type: 'trust' });
+  t.ok(/data-glive hidden[\s\S]*data-g="rating"[\s\S]* on Google/.test(g) && !/4\.9 on|312 review/.test(g), 'trust shows the Google rating live (hidden until Google answers), never a stored number');
+  t.ok(!/on Google/.test(R(bare({ founded: '2001', licensed: true, googleRating: 4.86 }), { type: 'trust' })), 'no Google rating badge without a linked listing');
   t.eq(R(bare({ licensed: true, insured: true }), { type: 'trust', licensed: false }), '', 'a section toggle turns a badge off');
   t.eq(R(bare({ founded: '3020', licensed: true }), { type: 'trust' }), '', 'a future founding year is ignored');
   t.eq(R(bare(), { type: 'why', items: [] }), '', 'why renders nothing without points');

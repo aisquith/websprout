@@ -20,6 +20,45 @@ const PAGE = `<!DOCTYPE html>
 // The preview document to READ from: the live same-origin preview (structured sites), else an inert DOMParser copy of the
 // page HTML (no scripts run, nothing loads). Never reaches into an untrusted opaque-origin preview.
 window.wsPfDocSafe=function(){try{if(!window._wsPfSafe){var pf=document.getElementById('pf');var d=pf&&pf.contentDocument;if(d&&d.body&&d.body.children.length)return d;}}catch(e){}try{var h=(typeof window.gHTML==='string'&&window.gHTML)||localStorage.getItem('wsh')||'';if(h)return new DOMParser().parseFromString(h,'text/html');}catch(e){}return null;};
+// Before any Pro checkout: the trial and renewal terms, stated plainly, and an explicit "continue" (auto-renewal laws).
+window.wsTrialConsent=function(){
+  return window.wsConfirm({
+    title:"Start your 7-day free trial",
+    message:"Here is exactly how Pro works:",
+    items:["Free for 7 days. You are not charged today.","After the trial, Pro renews automatically at $10/month until you cancel.","Cancel anytime in Settings \u2192 Manage billing & cancel plan. Cancel before the trial ends and you pay nothing."],
+    footHtml:'By continuing you agree to the <a href="/terms" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Terms</a> and <a href="/privacy" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Privacy Policy</a>, and you authorize Websprout to charge $10/month after the trial until you cancel.',
+    okLabel:"Continue to secure checkout",
+    cancelLabel:"Not now"
+  });
+};
+// Loading placeholders. kind: "list" (avatar + two lines), "cards", "tiles" (stat tiles + chart), "lines", "grid"
+// (photos). Returns HTML; the message is read out to screen readers, and a "still working" note appears after 8s.
+window.wsSkel=function(kind,n,msg){
+  n=n||3;var b=function(w,c){return '<span class="wsl-b'+(c?' '+c:'')+'" style="width:'+w+'%"></span>';},h='';
+  var W=[92,74,85,66,80,70];
+  for(var i=0;i<n;i++){var w=W[i%W.length];
+    if(kind==='list')h+='<div class="wsl-row"><span class="wsl-b wsl-dot"></span><div>'+b(Math.min(60,w-20))+b(w)+'</div></div>';
+    else if(kind==='cards')h+='<div class="wsl-card">'+b(40)+b(w)+b(w-25)+'</div>';
+    else if(kind==='lines')h+='<div style="padding:5px 0">'+b(w)+'</div>';
+  }
+  if(kind==='tiles'){h='<div class="wsl-tiles">';for(var t=0;t<(n||4);t++)h+='<div class="wsl-tile">'+b(45)+'<span class="wsl-b wsl-big"></span></div>';h+='</div><span class="wsl-b wsl-chart" style="width:100%"></span>';}
+  if(kind==='grid'){h='<div class="wsl-grid">';for(var g=0;g<(n||9);g++)h+='<span class="wsl-b wsl-ph" style="width:100%"></span>';h+='</div>';}
+  var m=String(msg||'Loading').replace(/[<>&"]/g,'');
+  return '<div class="wsl" role="status" aria-live="polite"><span class="wsl-sr">'+m+'</span><div aria-hidden="true">'+h+'</div>'+(msg?'<div class="wsl-msg" aria-hidden="true">'+m+'</div>':'')+'<div class="wsl-slow">Still working \u2014 this is taking a little longer than usual.</div></div>';
+};
+window.wsSkelEl=function(kind,n,msg){var d=document.createElement('div');d.innerHTML=window.wsSkel(kind,n,msg);return d.firstChild;};
+// A button that starts something: spinner + label while busy. Returns a function that restores the button.
+window.wsBtnBusy=function(btn,label){
+  if(!btn)return function(){};var html=btn.innerHTML,dis=btn.disabled;btn.disabled=true;btn.setAttribute('aria-busy','true');
+  btn.innerHTML='<span class="wsl-spin" aria-hidden="true"></span>'+String(label||'Working').replace(/[<>&"]/g,'');
+  return function(newHtml){btn.disabled=dis;btn.removeAttribute('aria-busy');btn.innerHTML=newHtml!=null?newHtml:html;};
+};
+// Full-screen "Opening secure checkout..." style overlay for actions that leave the page. Returns a close function.
+window.wsBusy=function(msg){
+  var d=document.createElement('div');d.className='wsl-busy';d.setAttribute('role','status');d.setAttribute('aria-live','polite');
+  d.innerHTML='<div><span class="wsl-spin" aria-hidden="true"></span>'+String(msg||'Working').replace(/[<>&"]/g,'')+'</div>';
+  document.body.appendChild(d);return function(){if(d.parentNode)d.parentNode.removeChild(d);};
+};
 window.wsConfirm=function(opts){
   return new Promise(function(resolve){
     opts=opts||{};
@@ -36,7 +75,8 @@ window.wsConfirm=function(opts){
     var row=document.createElement("div"); row.className="wsCfm-actions";
     var c=document.createElement("button"); c.type="button"; c.className="wsCfm-btn"; c.textContent=cancelLabel;
     var k=document.createElement("button"); k.type="button"; k.className="wsCfm-btn "+(danger?"danger":"primary"); k.textContent=okLabel;
-    row.appendChild(c); row.appendChild(k); box.appendChild(h); box.appendChild(p); if(ul) box.appendChild(ul); box.appendChild(row); back.appendChild(box); document.body.appendChild(back);
+    var ft=null; if(opts.footHtml){ ft=document.createElement("div"); ft.className="wsCfm-msg"; ft.style.fontSize="12.5px"; ft.style.marginTop="10px"; ft.innerHTML=opts.footHtml; }
+    row.appendChild(c); row.appendChild(k); box.appendChild(h); box.appendChild(p); if(ul) box.appendChild(ul); if(ft) box.appendChild(ft); box.appendChild(row); back.appendChild(box); document.body.appendChild(back);
     var prev=document.activeElement;
     requestAnimationFrame(function(){ back.classList.add("on"); k.focus(); });
     function close(ans){
@@ -118,7 +158,7 @@ window.wsPrompt=function(opts){
 <meta name="twitter:image" content="https://websprout.app/og.png">
 <meta name="twitter:image:alt" content="Websprout - Website Builder">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%232d7a3a'/><path d='M12 21V12' stroke='%23fff' stroke-width='2.3' stroke-linecap='round'/><path d='M12 14.5C10.4 9.8 6.2 7.6 3 8.2C3.4 13 7.6 15.5 12 14.5Z' fill='%23fff'/><path d='M12 13C13.5 8.2 17.8 6 21 6.6C20.6 11.4 16.4 13.9 12 13Z' fill='%23fff'/></svg>">
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"Websprout","url":"https://websprout.app/","description":"Website builder that turns your business details into a complete, professional website instantly.","applicationCategory":"DesignApplication","operatingSystem":"Web browser","browserRequirements":"Requires JavaScript","offers":{"@type":"Offer","price":"10.00","priceCurrency":"USD","description":"$10/month Pro subscription. Building and publishing your site live is free; Pro removes the Websprout badge, connects your own domain, and lets you download the source code. Cancel anytime."},"featureList":["Instant website generation","Live preview before paying","Visual editor — no code","Download full HTML source code","Free one-click deploy to Netlify or Cloudflare Pages"]},{"@type":"Organization","name":"Websprout","url":"https://websprout.app/","logo":"https://websprout.app/og.svg","sameAs":[]},{"@type":"WebSite","name":"Websprout","url":"https://websprout.app/"},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do I need to pay for hosting?","acceptedAnswer":{"@type":"Answer","text":"No. Both Netlify and Cloudflare Pages have permanently free tiers that are more than enough for most websites. Netlify gives you 100GB of bandwidth per month free, and Cloudflare Pages offers unlimited bandwidth."}},{"@type":"Question","name":"Can I update my site after deploying?","acceptedAnswer":{"@type":"Answer","text":"Yes. Use the visual editor in Websprout to make changes, re-download your site, and re-deploy. On Netlify you can drag and drop a new file onto your existing site to update it, and on Cloudflare Pages you upload a new version through the dashboard."}},{"@type":"Question","name":"How do I connect a custom domain?","acceptedAnswer":{"@type":"Answer","text":"Both platforms make this easy and free. On Netlify, go to Site Settings, Domain Management, Add custom domain, then follow the DNS instructions from your registrar. On Cloudflare Pages, use Custom Domains, Add a domain."}},{"@type":"Question","name":"Is my site secure with HTTPS?","acceptedAnswer":{"@type":"Answer","text":"Yes, automatically. Both Netlify and Cloudflare Pages issue free SSL certificates the moment your site is deployed, so your site always serves over HTTPS with no extra configuration."}},{"@type":"Question","name":"How much does Websprout cost?","acceptedAnswer":{"@type":"Answer","text":"Building and publishing your website live is completely free, with a small Websprout badge. Go Pro for $10 per month to remove the badge, connect your own custom domain, and download the source code. You can cancel anytime."}},{"@type":"Question","name":"How long does it take to build a website?","acceptedAnswer":{"@type":"Answer","text":"Instantly. You enter your business details and get a complete, professional website that you can preview live and edit visually."}}]}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"Websprout","url":"https://websprout.app/","description":"Website builder that turns your business details into a complete, professional website instantly.","applicationCategory":"DesignApplication","operatingSystem":"Web browser","browserRequirements":"Requires JavaScript","offers":{"@type":"Offer","price":"10.00","priceCurrency":"USD","description":"$10/month Pro subscription. Building and publishing your site live is free; Pro removes the Websprout badge, connects your own domain, and lets you download the source code. Cancel anytime."},"featureList":["Instant website generation","Live preview before paying","Visual editor — no code","Download full HTML source code","Free one-click deploy to Netlify or Cloudflare Pages"]},{"@type":"Organization","name":"Websprout","url":"https://websprout.app/","logo":"https://websprout.app/og.svg","sameAs":[]},{"@type":"WebSite","name":"Websprout","url":"https://websprout.app/"},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do I need to pay for hosting?","acceptedAnswer":{"@type":"Answer","text":"Usually not. Netlify and Cloudflare Pages both offer free plans that are enough for most small business websites. Check their sites for current limits."}},{"@type":"Question","name":"Can I update my site after deploying?","acceptedAnswer":{"@type":"Answer","text":"Yes. Use the visual editor in Websprout to make changes, re-download your site, and re-deploy. On Netlify you can drag and drop a new file onto your existing site to update it, and on Cloudflare Pages you upload a new version through the dashboard."}},{"@type":"Question","name":"How do I connect a custom domain?","acceptedAnswer":{"@type":"Answer","text":"Both platforms make this easy and free. On Netlify, go to Site Settings, Domain Management, Add custom domain, then follow the DNS instructions from your registrar. On Cloudflare Pages, use Custom Domains, Add a domain."}},{"@type":"Question","name":"Is my site secure with HTTPS?","acceptedAnswer":{"@type":"Answer","text":"Yes, automatically. Both Netlify and Cloudflare Pages issue free SSL certificates the moment your site is deployed, so your site always serves over HTTPS with no extra configuration."}},{"@type":"Question","name":"How much does Websprout cost?","acceptedAnswer":{"@type":"Answer","text":"Building and publishing your website live is completely free, with a small Websprout badge. Go Pro for $10 per month to remove the badge, connect your own custom domain, and download the source code. You can cancel anytime."}},{"@type":"Question","name":"How long does it take to build a website?","acceptedAnswer":{"@type":"Answer","text":"Instantly. You enter your business details and get a complete, professional website that you can preview live and edit visually."}}]}]}</script>
 <style>
 *:focus-visible{outline:3px solid #3dba52 !important;outline-offset:2px !important;}
 .ws-skip{position:absolute;left:-9999px;top:0;z-index:100000;background:#0f1a0d;color:#fff;padding:10px 16px;border-radius:0 0 8px 0;text-decoration:none;font-weight:600}.ws-skip:focus{left:0}
@@ -965,6 +1005,31 @@ nav.scrolled{background:rgba(6,12,5,.78)!important;backdrop-filter:blur(16px) sa
 .qa-bar{height:4px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;max-width:286px;margin:0 auto}
 .qa-fill{height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,#34d399,#22d3ee);transition:width .45s cubic-bezier(.3,.7,.3,1)}
 @media(prefers-reduced-motion:reduce){.qa-logo{animation:none}.qa-step.active .qa-ic{animation:none;border-top-color:#4ade80}}
+/* Loading states for everything that is not site generation: placeholder blocks shaped like what is coming,
+   a "still working" note after 8s, and spinners in buttons. */
+.wsl{display:block;padding:4px 0}
+.slot-search-grid>.wsl{grid-column:1/-1}
+.wsl-b{display:block;height:11px;border-radius:7px;background:linear-gradient(90deg,rgba(255,255,255,.06) 25%,rgba(255,255,255,.14) 40%,rgba(255,255,255,.06) 60%);background-size:300% 100%;animation:wslShim 1.25s ease-in-out infinite}
+.wsl-row{display:flex;gap:12px;align-items:center;padding:11px 2px}
+.wsl-row>div{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}
+.wsl-dot{flex:0 0 34px;height:34px;border-radius:50%}
+.wsl-card{border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;margin-bottom:10px;display:flex;flex-direction:column;gap:9px}
+.wsl-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.wsl-tile{border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.wsl-big{height:22px;width:55%}
+.wsl-chart{height:110px;border-radius:12px}
+.wsl-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.wsl-ph{aspect-ratio:4/3;height:auto;border-radius:10px}
+.wsl-msg{font-size:13px;color:rgba(255,255,255,.66);text-align:center;margin-top:10px}
+.wsl-slow{font-size:12.5px;color:rgba(255,255,255,.55);text-align:center;margin-top:4px;opacity:0;animation:wslShow .4s ease 8s forwards}
+.wsl-spin{display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;vertical-align:-2px;margin-right:7px;animation:wslRot .7s linear infinite;flex:0 0 auto}
+.wsl-busy{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:rgba(4,8,4,.55);backdrop-filter:blur(3px)}
+.wsl-busy>div{background:#0f1a0d;border:1px solid rgba(45,122,58,.35);border-radius:14px;padding:18px 22px;color:#eaf2e8;font-size:15px;font-weight:600;display:flex;align-items:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.wsl-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@keyframes wslShim{0%{background-position:100% 0}100%{background-position:0 0}}
+@keyframes wslRot{to{transform:rotate(360deg)}}
+@keyframes wslShow{to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.wsl-b{animation:none}.wsl-spin{animation-duration:2s}.wsl-slow{animation-duration:0s}}
 </style>
 <script id="ws-qa">
 (function(){

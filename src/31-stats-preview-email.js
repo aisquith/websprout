@@ -177,7 +177,7 @@ async function doSendEmail(request, env) {
     };
 
     await wsMailCount(env, 'site_email');
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await wsResend(env, {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + env.RESEND_API_KEY,

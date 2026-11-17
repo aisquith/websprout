@@ -55,11 +55,13 @@ const WS_CROSS_ORIGIN_POST = {
   '/cart-checkout': 1,       // shop cart on published sites (47 cartInjection, engine shop; relative URL on site hosts)
   '/api/hit': 1,             // published-site view counter (42 formScript, no-cors beacon)
   '/api/clientlog': 1,       // published-site JS error reports (43 doPublish errJS)
-  '/api/stripe/webhook': 1   // Stripe's servers (signature-verified, 46)
+  '/api/stripe/webhook': 1,  // Stripe's servers (signature-verified, 46)
+  '/api/resend/webhook': 1,  // Resend's servers: bounces/complaints (Svix-signature-verified, 41)
+  '/email-optout': 1         // one-click unsubscribe POST from mail apps (RFC 8058; HMAC token in the URL, 45)
 };
 function wsCrossOriginOk(p){ return WS_CROSS_ORIGIN_POST[p] === 1 || p.indexOf('/api/form/') === 0; } // + /api/form/<site>: published-site contact forms
 // Endpoints that legitimately post a non-JSON body (they do their own checks): the sign-in form and the sandboxed renderer.
-const WS_FORM_POST = { '/auth/verify': 1, '/render': 1 };
+const WS_FORM_POST = { '/auth/verify': 1, '/render': 1, '/email-optout': 1, '/api/resend/webhook': 1 };
 // Security headers on every response, framing rules on the app's own pages, and the one-time upgrade of an old
 // ws_sess cookie to __Host-ws_sess (see getSession).
 function wsFinish(request, url, host, res){
@@ -186,6 +188,9 @@ async function wsRoute(request, env, url, _host) {
     if (url.pathname === '/admin/grant') return doAdminGrant(request, env);
     if (url.pathname === '/admin/errors/clear' && request.method === 'POST') { if (['same-origin', 'none', ''].indexOf(request.headers.get('sec-fetch-site') || '') === -1) return new Response('Forbidden', { status: 403 }); return doAdminErrorsClear(request, env); }
     if (url.pathname === '/admin/feature') return doAdminFeature(request, env);
+    if (url.pathname === '/api/resend/webhook' && request.method === 'POST') return doResendWebhook(request, env);
+    if (url.pathname === '/report' && request.method === 'GET') return doReportPage(request, env);
+    if (url.pathname === '/report' && request.method === 'POST') return doReportSubmit(request, env);
     if (url.pathname === '/admin/moderation' && request.method === 'GET') return doAdminModeration(request, env);
     if ((url.pathname === '/admin/moderation/scan' || url.pathname === '/admin/moderation/dismiss' || url.pathname === '/admin/takedown') && request.method === 'POST') {
       if (['same-origin', 'none', ''].indexOf(request.headers.get('sec-fetch-site') || '') === -1) return new Response('Forbidden', { status: 403 });
@@ -232,6 +237,7 @@ async function wsRoute(request, env, url, _host) {
     if (url.pathname === '/api/stripe/webhook' && request.method === 'POST') return doStripeWebhook(request, env);
     if (url.pathname === '/success') return new Response(SUCCESS_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     if (url.pathname === '/terms') return new Response(TERMS_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    if (url.pathname === '/privacy-choices' && typeof PRIVACY_CHOICES_PAGE === 'string') return new Response(PRIVACY_CHOICES_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
     if (url.pathname === '/privacy') return new Response(wsAdsOn(env) ? wsPrivacyWithAds(PRIVACY_PAGE) : PRIVACY_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     if (url.pathname === '/accessibility') return new Response(ACCESSIBILITY_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     if (url.pathname === '/deploy-guide') return new Response(DEPLOY_GUIDE_PAGE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
@@ -254,7 +260,7 @@ async function wsRoute(request, env, url, _host) {
     if (_sub) _html = _html.split(SUB_LINK).join(_sub);
     _html = _html.split('__WS_EDV__').join(editorVersion(_sub));
     if (env.GOOGLE_PLACES_KEY) _html = _html.split('id="gFillWrap" hidden').join('id="gFillWrap"');
-    { const _ads = wsAdsTags(env); if (_ads) _html = _html.replace('</head>', _ads + '</head>'); }
+    { const _ads = wsAdsAllowed(request) ? wsAdsTags(env) : ''; if (_ads) _html = _html.replace('</head>', _ads + '</head>'); }
     try { const _sg = await getSitesGrown(env); if (_sg && _sg > 0) _html = _html.split('id="liveCount">&mdash;<').join('id="liveCount">' + fmtThousands(_sg) + '<'); } catch (e) {}
     return new Response(_html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate', 'Pragma': 'no-cache' } });
 }
@@ -337,6 +343,15 @@ function wsAdsCfg(env){
   const g = String((env && env.GOOGLE_TAG_ID) || '').trim(), m = String((env && env.META_PIXEL_ID) || '').trim();
   const lab = function(v){ v = String(v || '').trim(); return /^AW-\d{5,15}\/[A-Za-z0-9_-]{4,40}$/.test(v) ? v : ''; };
   return { g: /^(AW-\d{5,15}|G-[A-Z0-9]{4,15})$/.test(g) ? g : '', meta: /^\d{8,20}$/.test(m) ? m : '', pub: lab(env && env.GOOGLE_ADS_PUBLISH_LABEL), trial: lab(env && env.GOOGLE_ADS_TRIAL_LABEL) };
+}
+// Ad tags load only for visitors in the US (no consent banner needed there), and never when the browser sends Global
+// Privacy Control or the visitor opted out at /privacy-choices (CCPA/CPRA "Do Not Sell or Share").
+function wsAdsAllowed(request){
+  const h = request.headers;
+  if (String(h.get('sec-gpc') || '').trim() === '1') return false;
+  if (/(?:^|;\s*)ws_adsoff=1(?:;|$)/.test(h.get('cookie') || '')) return false;
+  const c = String(h.get('cf-ipcountry') || '').toUpperCase();
+  return c === 'US';
 }
 function wsAdsOn(env){ const c = wsAdsCfg(env); return !!(c.g || c.meta); }
 function wsAdsTags(env){

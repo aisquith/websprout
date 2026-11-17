@@ -46,11 +46,13 @@ Add these in Cloudflare → Workers & Pages → websprout → Settings → Varia
 |---|---|
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Pro subscriptions, shop checkout, Stripe Connect payouts |
 | `RESEND_API_KEY` | sign-in emails, lead notifications, digests |
+| `RESEND_WEBHOOK_SECRET` | bounce/complaint suppression (Resend → Webhooks → `https://websprout.app/api/resend/webhook`, events `email.bounced`, `email.complained`) |
 | `UNSPLASH_ACCESS_KEY` | photos on generated sites and the photo search in the editor |
 | `GOOGLE_PLACES_KEY` | live Google rating and reviews (enable "Places API (New)" in Google Cloud) |
 | `CF_API_TOKEN`, `CF_ZONE_ID` | automatic HTTPS for customers' own domains (Cloudflare for SaaS) |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET` | bot check on published contact forms (failed checks still reach the owner but get no auto-reply) |
 | `GOOGLE_TAG_ID`, `GOOGLE_ADS_PUBLISH_LABEL`, `GOOGLE_ADS_TRIAL_LABEL` | Google Ads / GA4 conversion tracking on websprout.app (publish, trial start) |
+| `GOOGLE_MAPS_EMBED_KEY` | map on published sites' Visit/Contact section (Maps Embed API, free; restrict the key by HTTP referrer to `*.websprout.app` and customer domains). Without it sites show a "Get directions" link |
 | `META_PIXEL_ID` | Meta Pixel on websprout.app (Lead on publish, StartTrial on Pro) |
 | `POSTAL_ADDRESS` | mailing address in the footer of reminder and weekly summary emails; **those two emails are paused until it's set** (CAN-SPAM). Overrides `WS_POSTAL_ADDRESS` in `00-header.js` |
 

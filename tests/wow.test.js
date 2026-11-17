@@ -49,7 +49,7 @@ module.exports = async function (ctx, t) {
     t.ok(new RegExp('data-founded="2009">' + yrs + '</b>').test(real) && /Licensed &amp; insured/.test(real) && /Serving Tulsa/.test(real), 'real facts become the proof card (years, counting up) and chips (licensed and insured, area)');
     t.ok(!/Google rating|class="hc-stars/.test(real), 'never a rating without a linked Google listing');
     const g = W.renderSite(mk({ googlePlaceId: 'ChIJ_abcdefghij', googleRating: 4.8, googleReviews: 132 }), { mode: 'live' });
-    t.ok(/data-count="4\.8"/.test(g) && /132 reviews/.test(g), 'a linked listing’s real rating leads the proof card');
+    t.ok(/<li data-glive hidden>[\s\S]*?data-g="rating"/.test(g) && !/4\.8 on|132 review/.test(g), 'a linked listing’s rating is a live chip, filled from Google on the page (stored numbers are never shown)');
     const own = mk({}); own.sections[0].title = 'Storm damage? We can help.';
     const oh = W.renderSite(own, { mode: 'live' });
     t.ok(/<h1 class="hc-h[^"]*">Storm damage\? We can help\.<\/h1>/.test(oh) && /<p class="hc-sub">Roofs built to last\.<\/p>/.test(oh), 'an owner title wins, with the tagline under it');

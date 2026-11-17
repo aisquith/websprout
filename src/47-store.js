@@ -9,6 +9,16 @@ function priceToCents(v){
   if (!isFinite(n) || n <= 0) return 0;
   return Math.round(n * 100);
 }
+// Shown on the Stripe checkout page of every shop: who the seller is and how to reach them about returns and refunds
+// (Stripe requires shops to show contact details and a refund policy before payment).
+async function wsStoreSellerText(env, siteId, slug){
+  let name = '', email = '';
+  try { if (slug) { const m = JSON.parse((await env.KV.get('pubmeta:' + slug)) || '{}'); name = String(m.name || '').trim(); } } catch(e){}
+  try { email = String((await env.KV.get('notify:' + siteId)) || (await env.KV.get('siteowner:' + siteId)) || '').trim(); } catch(e){}
+  if (!/^[^\s@<>"]{1,64}@[^\s@<>"]{1,190}$/.test(email)) email = '';
+  const t = 'Sold by ' + (name || 'this business') + ', not by Websprout. For questions, returns or refunds, contact the seller' + (email ? ' at ' + email : ' using the contact details on their website') + '. Refunds are handled by the seller under their own policy.';
+  return '&custom_text[submit][message]=' + encodeURIComponent(t.slice(0, 1150));
+}
 async function doCheckout(request, env){
   var url = new URL(request.url);
   var siteId = (url.searchParams.get('site') || '').trim();
@@ -58,6 +68,7 @@ async function doCheckout(request, env){
     + '&line_items[0][price_data][product_data][name]=' + enc(String(product.name).slice(0, 120));
   if (product.desc) bodyStr += '&line_items[0][price_data][product_data][description]=' + enc(String(product.desc).slice(0, 200));
   if (appFee > 0) bodyStr += '&payment_intent_data[application_fee_amount]=' + appFee;
+  try { bodyStr += await wsStoreSellerText(env, siteId, slug); } catch(e){}
   try {
     var r = await fetch('https://api.stripe.com/v1/checkout/sessions', { method: 'POST', headers: sHeaders, body: bodyStr });
     var j = await r.json();
@@ -190,6 +201,7 @@ async function doCartCheckout(request, env){
       if(lines[li].desc){ body += '&line_items['+li+'][price_data][product_data][description]='+enc(lines[li].desc); }
     }
     if(appFee>0){ body += '&payment_intent_data[application_fee_amount]='+appFee; }
+    try { body += await wsStoreSellerText(env, siteId, slug); } catch(e){}
     var r = await fetch('https://api.stripe.com/v1/checkout/sessions', { method:'POST', headers:sHeaders, body:body });
     var j = await r.json();
     if(!r.ok || j.error || !j.url) return fail('We could not start checkout. Please try again.');

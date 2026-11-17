@@ -195,7 +195,7 @@
 
 <!-- SHOWCASE -->
 <div class="ws-showcase ws-reveal" id="showcase" aria-label="Example website styles">
-  <div class="ws-sc-head">Real sites, grown in seconds</div>
+  <div class="ws-sc-head">Example sites, made by the builder</div>
   <div class="ws-sc-sub">Every one of these was made by the same builder you are about to use, from just a name and a business type. Click one to look around.</div>
   <div class="ws-ex-grid" id="wsExGrid"></div>
   <div class="ws-sc-note">Example businesses. Every site comes out different: layout, colors, fonts and words.</div>
@@ -237,20 +237,20 @@
         <ul class="cmp-list">
           <li class="cmp-item">A complete site, built instantly</li>
           <li class="cmp-item">Publish it live, free</li>
-          <li class="cmp-item">7-day free trial, then $10/mo</li>
+          <li class="cmp-item">7-day free trial, then $10/mo (renews monthly, cancel anytime)</li>
           <li class="cmp-item">No badge &amp; your own domain on Pro</li>
           <li class="cmp-item">Hosted free on websprout.app</li>
           <li class="cmp-item">Edit it yourself &mdash; no code</li>
         </ul>
       </div>
       <div class="cmp-card">
-        <div class="cmp-head" style="color:rgba(255,255,255,.72)">Other builders</div>
+        <div class="cmp-head" style="color:rgba(255,255,255,.72)">Typical website builders</div>
         <ul class="cmp-list">
-          <li class="cmp-item no">$15-40 per month, forever</li>
-          <li class="cmp-item no">Locked into their platform</li>
-          <li class="cmp-item no">Can't export your code</li>
-          <li class="cmp-item no">Cookie-cutter templates</li>
-          <li class="cmp-item no">Slow, fiddly setup</li>
+          <li class="cmp-item no">Monthly fees just to stay online</li>
+          <li class="cmp-item no">Hard to move your site elsewhere</li>
+          <li class="cmp-item no">Code export often limited or missing</li>
+          <li class="cmp-item no">You start from a blank template</li>
+          <li class="cmp-item no">Setup can take hours</li>
           <li class="cmp-item no">Complex drag-and-drop editor</li>
         </ul>
       </div>
@@ -280,7 +280,7 @@
       <div class="price-card pick">
         <div class="price-name">Pro</div>
         <div class="price-amt"><sup>$</sup>10</div>
-        <div class="price-freq">7 days free, then $10/mo</div>
+        <div class="price-freq">7 days free, then $10/mo. Renews monthly until you cancel.</div>
         <ul class="price-list">
           <li class="price-item">No Websprout badge</li>
           <li class="price-item">Connect your own domain</li>
@@ -324,10 +324,12 @@
     <span style="color:rgba(255,255,255,.72);font-size:13px">&#169; 2026 Websprout</span>
     <a href="/terms" target="_blank">Terms</a>
     <a href="/privacy" target="_blank">Privacy</a>
+    <a href="/privacy-choices" target="_blank">Your Privacy Choices</a>
     <a href="/accessibility" target="_blank">Accessibility</a>
     <a href="/for">For your business</a>
     <a href="/deploy-guide" target="_blank">Deploy guide</a>
     <a href="mailto:support@websprout.app">Contact</a>
+    <a href="mailto:abuse@websprout.app">Report abuse</a>
   </div>
 </footer>
 <div class="studio" id="studio"><svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden"><symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol><symbol id="i-settings" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="18" r="2"/></symbol><symbol id="i-info" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></symbol><symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></symbol><symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><line x1="6" y1="20" x2="6" y2="14"/><line x1="12" y1="20" x2="12" y2="8"/><line x1="18" y1="20" x2="18" y2="4"/></symbol><symbol id="i-megaphone" viewBox="0 0 24 24"><path d="m3 11 15-5v12L3 13Z"/><path d="M11.6 16.8a3 3 0 1 1-5.6-2"/></symbol><symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></symbol><symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1V2l-2 1-2-1-2 1-2-1-2 1Z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/></symbol><symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></symbol><symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a4 4 0 0 1 0 8h-3"/></symbol><symbol id="i-redo" viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9a4 4 0 0 0 0 8h3"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z"/></symbol><symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></symbol><symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18Z"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M5 21h14"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol><symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol><symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol><symbol id="i-rocket" viewBox="0 0 24 24"><path d="M5 16c-1.5 1.3-2 5-2 5s3.7-.5 5-2a2.1 2.1 0 0 0-3-3Z"/><path d="M12 15l-3-3a21 21 0 0 1 2-4A12 12 0 0 1 21 3c0 2.7-.8 7-6 11a21 21 0 0 1-3 1Z"/><path d="M9 12H5s.5-2.8 2-4c1.6-1 4 0 4 0"/><path d="M12 15v4s2.8-.5 4-2c1-1.6 0-4 0-4"/></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></symbol><symbol id="i-palette" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="9" r="1.2"/><circle cx="12" cy="7" r="1.2"/><circle cx="16" cy="9" r="1.2"/><path d="M12 21a3 3 0 0 1 0-6 2 2 0 0 0 0-4"/></symbol><symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-2 8 9-12h-7l2-8Z"/></symbol><symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6L12 3Z"/></symbol></svg>
@@ -451,7 +453,7 @@
           <a id="pubReviews" href="#" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:11px;font-size:13px;font-weight:600;text-decoration:none;font-family:inherit;box-sizing:border-box">&#11088; Manage reviews</a>
           <div id="pubBadgeNudge" style="display:none;background:linear-gradient(180deg,rgba(45,122,58,.14),rgba(45,122,58,.04));border:1px solid rgba(74,222,128,.22);border-radius:12px;padding:14px 16px;margin-top:14px">
             <div style="font-size:13.5px;color:#fff;font-weight:700;margin-bottom:3px">&#127793; Your site is live &mdash; with a small Websprout badge</div>
-            <div style="font-size:12.5px;color:rgba(255,255,255,.72);line-height:1.5;margin-bottom:11px">Try Pro free for 7 days to remove the badge and connect your own domain. Then $10/mo, cancel anytime.</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.72);line-height:1.5;margin-bottom:11px">Try Pro free for 7 days to remove the badge and connect your own domain. Then $10/mo, renews monthly until you cancel.</div>
             <button id="pubBadgeGoPro" class="s-btn s-purple" style="width:100%;padding:10px;border-radius:9px;font-size:13.5px;font-weight:700;cursor:pointer">&#10024; Start free trial &mdash; remove the badge</button>
           </div>
           <div id="pubDomainLocked" style="display:none;border-top:1px solid rgba(255,255,255,.07);margin-top:18px;padding-top:18px">
@@ -524,7 +526,7 @@
       var s=pslug(slugIn.value);
       if(s!==slugIn.value)slugIn.value=s;
       if(s.length<3){avail.innerHTML='<span style="color:rgba(255,255,255,.72)">At least 3 characters</span>';goBtn.disabled=true;return;}
-      avail.innerHTML='<span style="color:rgba(255,255,255,.72)">Checking...</span>';
+      avail.innerHTML='<span style="color:rgba(255,255,255,.72)"><span class="wsl-spin" aria-hidden="true"></span>Checking if it\u2019s free\u2026</span>';
       fetch('/slug-check?slug='+encodeURIComponent(s)+'&siteId='+encodeURIComponent(site())).then(function(r){return r.json();}).then(function(j){
         if(j.available){avail.innerHTML='<span style="color:#4ade80">&#10003; '+s+'.websprout.app is yours</span>';goBtn.disabled=false;}
         else{
@@ -545,7 +547,7 @@
         try{if(window.openAuth)window.openAuth();}catch(e){}
         return;
       }
-      goBtn.textContent='Publishing...';goBtn.disabled=true;
+      goBtn.innerHTML='<span class="wsl-spin" aria-hidden="true"></span>Publishing\u2026';goBtn.disabled=true;
       var _lc=0;try{if(window.wsLaunchCheck)_lc=window.wsLaunchCheck().length;}catch(e){}
       fetch('/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({launch:{issues:_lc},site:window._wsSiteData||undefined,html:curHtml(),slug:s,siteId:site(),key:key(),pages:(window._wsPages&&window._wsPages.length>1)?(window.wsSyncPages&&window.wsSyncPages(),window._wsPages.map(function(p){return{path:p.path,html:p.html};})):undefined})}).then(function(r){return r.json();}).then(function(j){
         goBtn.textContent='Publish live \u2192';goBtn.disabled=false;
@@ -558,14 +560,14 @@
     $('pubCopy').addEventListener('click',function(){var u=window._wsLive||$('pubUrl').textContent;if(navigator.clipboard)navigator.clipboard.writeText(u);if(window.toast)toast('Link copied!');});
     $('pubOpen').addEventListener('click',function(){window.open(window._wsLive||$('pubUrl').textContent,'_blank');});
     $('pubUpdate').addEventListener('click',function(){
-      var btn=this,orig=btn.innerHTML;btn.textContent='Re-publishing...';
+      var btn=this,orig=btn.innerHTML;btn.innerHTML='<span class="wsl-spin" aria-hidden="true"></span>Updating your live site\u2026';
       if(window.wsPublishUpdate){window.wsPublishUpdate().then(function(){btn.innerHTML=orig;},function(){btn.innerHTML=orig;});return;}
       fetch('/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:window._wsSiteData||undefined,html:curHtml(),slug:window._wsSlug,siteId:site(),key:key(),pages:(window._wsPages&&window._wsPages.length>1)?(window.wsSyncPages&&window.wsSyncPages(),window._wsPages.map(function(p){return{path:p.path,html:p.html};})):undefined})}).then(function(r){return r.json();}).then(function(j){btn.innerHTML=orig;if(window.toast)toast(j.error?j.error:'\u2713 Updated — your live site now shows your latest edits.');}).catch(function(){btn.innerHTML=orig;if(window.toast)toast('Could not update — please try again');});
     });
     var unpubBtn=$('pubUnpub');
     if(unpubBtn)unpubBtn.addEventListener('click',async function(){
       var __ok=await wsConfirm({title:'Take your site offline?',message:'The link will stop working until you publish it again. Your site stays saved to your account.',okLabel:'Take offline',cancelLabel:'Keep live',danger:true});if(!__ok)return;
-      var self=this;self.textContent='Taking offline...';
+      var self=this;self.innerHTML='<span class="wsl-spin" aria-hidden="true"></span>Taking offline\u2026';
       fetch('/unpublish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:window._wsSlug,siteId:site(),key:key()})}).then(function(r){return r.json();}).then(function(j){
         self.textContent='Take this site offline';
         if(j&&j.ok){try{localStorage.removeItem('ws_slug_'+site());}catch(e){}modal.style.display='none';if(window.toast)toast('Your site is now offline.');}
@@ -603,7 +605,7 @@
     $('domConnect').addEventListener('click',domConnect);
     $('domCheck').addEventListener('click',function(){
       var d=$('domInput').value.trim();var res=$('domResult');if(!d)return;
-      res.innerHTML='<span style="color:rgba(255,255,255,.72)">Checking...</span>';
+      res.innerHTML='<span style="color:rgba(255,255,255,.72)"><span class="wsl-spin" aria-hidden="true"></span>Checking your domain\u2026</span>';
       fetch('/api/domain-check?domain='+encodeURIComponent(d)).then(function(r){return r.json();}).then(function(j){
         var buy='<a href="'+(j.buyUrl||'https://www.godaddy.com')+'" target="_blank" style="color:#4ade80;font-weight:700;text-decoration:none">Buy on GoDaddy &#8594;</a>';
         var status='';
@@ -696,7 +698,7 @@
       <div class="drop-overlay" id="dropOverlay"><div class="drop-overlay-txt">🌱 Drop photo to add to site</div></div>
       <div class="lock-badge" id="lkbadge">
         <button class="lock-title" type="button" onclick="this.parentNode.classList.toggle('open')">&#10024; Remove the Websprout badge</button>
-        <div class="lock-sub">Try Pro free for 7 days &mdash; no badge and your own domain. Then $10/mo, cancel anytime.</div>
+        <div class="lock-sub">Try Pro free for 7 days &mdash; no badge and your own domain. Then $10/mo, renews monthly until you cancel.</div>
         <input type="email" id="emailCapture" aria-label="Email address" class="lock-email" placeholder="your@email.com">
         <button class="s-btn s-purple" style="width:100%;padding:10px;border-radius:8px;font-size:13px" id="lockPayBtn">Start 7-day free trial</button>
       </div>
@@ -925,7 +927,7 @@
     <div class="deploy-header">
       <div>
         <h2>🚀 Deploy your site</h2>
-        <p>Get your site live in seconds — both are free forever.</p>
+        <p>Get your site live in minutes — both have free plans.</p>
       </div>
     </div>
     <div class="deploy-tabs">
@@ -940,7 +942,7 @@
       <div class="d-wizard-step" id="nstep1">
         <div class="d-step-badge">Step 1 of 3</div>
         <div class="d-step-title">Create a free Netlify account</div>
-        <div class="d-step-desc">Netlify hosts your site for free forever. No credit card needed.</div>
+        <div class="d-step-desc">Netlify has a free plan for small sites (check their current limits). No credit card needed to start.</div>
         <a href="https://app.netlify.com/signup" target="_blank" class="d-btn d-btn-n" style="display:block;text-align:center;text-decoration:none;margin-bottom:10px">Open Netlify signup →</a>
         <div style="font-size:12px;color:#888;text-align:center;margin-bottom:16px">Already have an account? Skip ahead.</div>
         <button class="d-step-next" id="nstep1nextBtn">I have an account — Next →</button>
@@ -1196,7 +1198,7 @@
     var email=($('supEmail').value||'').trim(),msg=($('supMsg').value||'').trim(),nm=($('supName').value||'').trim(),out=$('supMsgOut');
     if(!email||email.indexOf('@')<1){out.style.color='#fca5a5';out.textContent='Please enter your email so we can reply.';return;}
     if(msg.length<5){out.style.color='#fca5a5';out.textContent='Please write a short message.';return;}
-    sb.disabled=true;sb.textContent='Sending\u2026';out.textContent='';
+    sb.disabled=true;sb.innerHTML='<span class="wsl-spin" aria-hidden="true"></span>Sending\u2026';out.textContent='';
     fetch('/support',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:nm,email:email,message:msg})}).then(function(r){return r.json();}).then(function(j){
       sb.disabled=false;sb.textContent='Send message';
       if(j&&j.ok){out.style.color='#7fe39a';out.textContent='\u2713 Message sent \u2014 we\u2019ll reply by email soon.';$('supMsg').value='';setTimeout(closeS,1800);}
@@ -1221,6 +1223,7 @@
       <input id="authEmail" aria-label="Email address" type="email" placeholder="you@email.com" autocomplete="email" style="width:100%;background:#060d05;border:1px solid rgba(45,122,58,.3);border-radius:10px;color:#fff;padding:12px 14px;font-size:15px;outline:none;font-family:inherit;margin-bottom:10px">
       <button id="authEmailBtn" style="width:100%;background:#2d7a3a;color:#fff;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Email me a sign-in link</button>
       <div id="authMsg" style="font-size:13px;min-height:18px;margin-top:10px;text-align:center"></div>
+      <div style="font-size:12px;line-height:1.5;margin-top:6px;text-align:center;color:rgba(255,255,255,.62)">By continuing you agree to the <a href="/terms" target="_blank" rel="noopener" style="color:#7fe39a">Terms</a> and <a href="/privacy" target="_blank" rel="noopener" style="color:#7fe39a">Privacy Policy</a>. You must be 18 or older.</div>
     </div>
   </div>
 </div>
@@ -1256,7 +1259,7 @@
       <div id="panePlan" class="pf-pane">
         <div id="pfActions" style="margin-bottom:14px"></div>
         <div class="set-h">What Pro includes</div>
-        <div class="set-note" style="margin-bottom:0">Remove the &ldquo;Made with Websprout&rdquo; badge, connect your own custom domain, download your full source code, and unlock multi-page sites and the built-in store. Start with a 7-day free trial, then $10/month. Cancel anytime.</div>
+        <div class="set-note" style="margin-bottom:0">Remove the &ldquo;Made with Websprout&rdquo; badge, connect your own custom domain, download your full source code, and unlock multi-page sites and the built-in store. Start with a 7-day free trial, then $10/month, renewing monthly until you cancel. Cancel anytime.</div>
       </div>
       <div id="panePrivacy" class="pf-pane">
         <div class="set-h" style="margin-top:4px">Your data</div>
@@ -1282,14 +1285,17 @@
     var link='${SUB_LINK}';
     if(!link||link.indexOf('PASTE_YOUR')>-1){if(window.toast)toast('Payments are not set up yet.',5000);return;}
     // The server creates the checkout for the signed-in account (an opaque reference, never the typed email).
+    window.wsTrialConsent().then(function(ok){if(!ok)return;
+    var _cl=window.wsBusy('Opening secure checkout\u2026');
     fetch('/billing/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(function(r){return r.json();}).then(function(j){
       if(j&&j.url){window.location.href=j.url;return;}
-      if(j&&j.pro){if(window.toast)toast('You are already Pro. Everything is unlocked!',5000);return;}
+      _cl();if(j&&j.pro){if(window.toast)toast('You are already Pro. Everything is unlocked!',5000);return;}
       if(window.toast)toast((j&&j.error)||'Could not start checkout. Please try again.',5000);
-    }).catch(function(){if(window.toast)toast('Could not start checkout. Please try again.',5000);});
+    }).catch(function(){_cl();if(window.toast)toast('Could not start checkout. Please try again.',5000);});
+    });
   }
   function openBilling(){
-    var b=$('pfBilling'); if(b){b.disabled=true;b.textContent='Opening Stripe...';}
+    var b=$('pfBilling'); if(b){b.disabled=true;b.innerHTML='<span class="wsl-spin" aria-hidden="true"></span>Opening billing\u2026';}
     fetch('/account/billing-portal',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).then(function(r){return r.json();}).then(function(j){
       if(j&&j.url){window.location.href=j.url;}
       else{if(b){b.disabled=false;b.innerHTML='Manage billing &amp; cancel plan';}if(window.toast)toast((j&&j.error)||'Could not open billing right now.',5000);}
@@ -1372,7 +1378,7 @@
   if($('authEmailBtn'))$('authEmailBtn').addEventListener('click',function(){
     var em=$('authEmail').value.trim(),msg=$('authMsg'),self=this;
     if(!em||em.indexOf('@')<1){msg.innerHTML='<span style="color:#f87171">Enter a valid email</span>';return;}
-    self.disabled=true;self.textContent='Sending...';
+    self.disabled=true;self.innerHTML='<span class="wsl-spin" aria-hidden="true"></span>Sending\u2026';
     fetch('/auth/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em})}).then(function(r){return r.json();}).then(function(j){
       self.disabled=false;self.textContent='Email me a sign-in link';
       if(j.error){msg.innerHTML='<span style="color:#f87171">'+String(j.error).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];})+'</span>';}
@@ -1628,7 +1634,7 @@
   function open(){
     if(!modal)return;
     var sid=sSite(), k=sKey();
-    body.innerHTML='<div style="text-align:center;color:rgba(255,255,255,.72);padding:40px 10px">Loading your numbers\u2026</div>';
+    body.innerHTML=window.wsSkel('tiles',4,'Loading your numbers\u2026');
     modal.style.display='flex';
     if(!sid){ body.innerHTML='<div style="text-align:center;color:rgba(255,255,255,.72);padding:40px 10px;line-height:1.6">Create or open a site first to see its analytics.</div>'; return; }
     var slug=lsGet('ws_slug_'+sid)||'';
@@ -1779,12 +1785,12 @@
   }
   function openProject(sid,b){
     var p=getProjects(),it=null;for(var i=0;i<p.length;i++){if(p[i].siteId===sid){it=p[i];break;}}
-    if(!it)return;if(b)b.textContent='Loading...';
+    if(!it)return;var _bd=window.wsBtnBusy(b,'Opening\u2026');
     fetch('/load?site='+encodeURIComponent(sid)+'&key='+encodeURIComponent(it.key||'')).then(function(r){return r.json();}).then(function(j){
-      if(j.error||!j.html){if(b)b.textContent='Edit';if(window.toast)toast('Could not load this site. It may have expired.',4000);return;}
+      if(j.error||!j.html){_bd('Edit');if(window.toast)toast('Could not load this site. It may have expired.',4000);return;}
       try{localStorage.setItem('wsh',j.html);localStorage.setItem('ws_site',sid);localStorage.setItem('ws_key',it.key||'');sessionStorage.setItem('ws_studio','1');if(j.site&&j.site.sections)localStorage.setItem('ws_sd',JSON.stringify(j.site));else localStorage.removeItem('ws_sd');}catch(e){}
       window._wsSite=sid;window._wsKey=it.key||'';window._wsNavOK=true;location.href='/';
-    }).catch(function(){if(b)b.textContent='Edit';if(window.toast)toast('Could not load this site.',4000);});
+    }).catch(function(){_bd('Edit');if(window.toast)toast('Could not load this site.',4000);});
   }
   window.openMySites=function(){render();modal.style.display='flex';accountSync();};
   var msBtn=document.getElementById('mySitesBtn');if(msBtn)msBtn.addEventListener('click',window.openMySites);

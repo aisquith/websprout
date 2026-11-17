@@ -13,7 +13,11 @@ const WSENGINE = (function(){
       .replace(/'/g, '&#39;');
   WS.tel = (p = '') => 'tel:' + String(p).replace(/[^\d+]/g, '');
   WS.map = (a = '') => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(a);
-  WS.mapEmbed = (a = '') => 'https://www.google.com/maps?q=' + encodeURIComponent(a) + '&output=embed';
+  // Map embeds use Google's official Maps Embed API, which needs a key: WS.mapsKey (set by whoever renders, e.g. the
+  // server from GOOGLE_MAPS_EMBED_KEY) or site.mapsEmbedKey. Without one there is no iframe, only a directions link;
+  // a published page whose <head> carries <meta name="ws-maps-key" content="KEY"> upgrades that link to a map.
+  WS.mapsKey = '';
+  WS.mapEmbed = (a = '', key = WS.mapsKey) => (key ? 'https://www.google.com/maps/embed/v1/place?key=' + encodeURIComponent(key) + '&q=' + encodeURIComponent(a) : '');
   WS.money = (n) => (n === '' || n == null ? '' : typeof n === 'number' ? '$' + (Number.isInteger(n) ? n : n.toFixed(2)) : WS.esc(n));
   WS.fmtTime = (t) => {
     if (!t) return '';
@@ -518,20 +522,24 @@ const WSENGINE = (function(){
   const glyph = (c, code, cls) => { if (!code) return ''; const n = c.iconStyle === 'line' && WS.emojiIcon(code); return n ? `<span class="glyph${cls ? ' ' + cls : ''}">${WS.iconSvg(n)}</span>` : WS.emoji(code, cls || ''); };
   // A "Book" style button: dropped entirely when the site has nowhere to send people.
   const bookBtn = (c, cls, label) => (c.book ? `<a${cls ? ` class="${cls}"` : ''} href="${c.book}">${e(label)}</a>` : '');
+  // A linked Google listing's rating is never stored in the site (Google's terms allow caching only the place ID):
+  // the page shows it live. Live markup is hidden until the runtime has Google's answer (data-glive), and stays
+  // hidden when Google is unavailable; in the editor a plain "Google rating" label stands in.
+  WS.googleLinked = (site) => !!WS.str(site && site.biz && site.biz.googlePlaceId);
+  WS.gLive = (c, liveHtml, editHtml, tag, attrs) => (c.mode === 'edit' ? `<${tag}${attrs || ''}>${editHtml}</${tag}>` : `<${tag}${attrs || ''} data-glive hidden>${liveHtml}</${tag}>`);
   // Proof for the opening, only from the owner's real answers (never invented): a floating card with the strongest
-  // fact (a linked Google rating, else years in business, else licensed and insured) and small chips for the rest.
+  // fact (years in business, else licensed and insured) and small chips for the rest (a linked Google rating is a
+  // live chip, filled from Google on the page and never stored).
   const heroProof = (c) => {
     const list = WS.trustBadges ? WS.trustBadges(c.site, {}) : [];
     const by = {}; list.forEach((x) => { by[x.k] = x; });
     let card = '', used = '';
-    const g = by.rating && WS.googleScore(c.site);
-    if (g) { used = 'rating'; card = `<p class="hc-num"><b data-count="${g.rating.toFixed(1)}" data-src="hero">${g.rating.toFixed(1)}</b><span class="hc-stars" aria-hidden="true">★★★★★</span></p><p class="hc-cap">Google rating${g.count ? ' · ' + g.count.toLocaleString('en-US') + ' reviews' : ''}</p>`; }
-    else if (by.founded && by.founded.yrs) { used = 'founded'; const y = by.founded.yrs, n = new Date().getFullYear() - y, city = WS.cityName(c.biz.city); card = `<p class="hc-num"><b data-count="${n}" data-src="years" data-founded="${y}">${n}</b><span class="hc-unit">years</span></p><p class="hc-cap">${city ? 'Serving ' + e(city) + ' since ' + y : 'In business since ' + y}</p>`; }
+    if (by.founded && by.founded.yrs) { used = 'founded'; const y = by.founded.yrs, n = new Date().getFullYear() - y, city = WS.cityName(c.biz.city); card = `<p class="hc-num"><b data-count="${n}" data-src="years" data-founded="${y}">${n}</b><span class="hc-unit">years</span></p><p class="hc-cap">${city ? 'Serving ' + e(city) + ' since ' + y : 'In business since ' + y}</p>`; }
     else if (by.licensed && by.insured) { used = 'li'; card = `<p class="hc-num hc-ico">${WS.iconSvg('shield-check')}</p><p class="hc-cap"><b>Licensed &amp; insured</b>Work done properly, and covered</p>`; }
     const chips = [];
     if (used !== 'li') { if (by.licensed && by.insured) chips.push({ icon: 'shield-check', label: 'Licensed & insured' }); else if (by.licensed) chips.push({ icon: 'shield-check', label: 'Licensed' }); else if (by.insured) chips.push({ icon: 'badge-check', label: 'Insured' }); }
     if (by.founded && used !== 'founded') chips.push({ icon: 'calendar', label: by.founded.label });
-    if (by.rating && used !== 'rating') chips.push({ icon: 'star', label: by.rating.label });
+    if (by.rating) chips.push({ icon: 'star', label: by.rating.label, live: true });
     if (by.area) chips.push({ icon: 'map-pin', label: by.area.label });
     // A trust band right on the page already says it: the opening doesn't repeat the chips (nor the card, for the
     // bold numbers band).
@@ -579,7 +587,7 @@ const WSENGINE = (function(){
         const eb = head1 !== c.name ? `<p class="hc-eb">${e(c.name)}${WS.str(c.biz.city) ? `<span class="hc-dot" aria-hidden="true"></span><span class="hc-city">${e(WS.cityName(c.biz.city))}</span>` : ''}</p>` : '';
         const h1 = `<h1 class="hc-h${head1.length > 46 ? ' hc-long' : head1.length < 22 ? ' hc-short' : ''}">${e(head1)}</h1>`;
         const pr = heroProof(c);
-        const chips = pr.chips.length ? `<ul class="hc-chips" aria-label="At a glance">${pr.chips.map((x) => `<li>${WS.iconSvg(x.icon)}<span>${e(x.label)}</span></li>`).join('')}</ul>` : '';
+        const chips = pr.chips.length ? `<ul class="hc-chips" aria-label="At a glance">${pr.chips.map((x) => (x.live ? WS.gLive(c, `${WS.iconSvg(x.icon)}<span><span data-g="rating"></span> on Google</span>`, `${WS.iconSvg(x.icon)}<span>${e(x.label)}</span>`, 'li') : `<li>${WS.iconSvg(x.icon)}<span>${e(x.label)}</span></li>`)).join('')}</ul>` : '';
         const copy = `${status}${eb}${h1}${sub ? `<p class="hc-sub">${e(sub)}</p>` : ''}${actions}${chips}`;
         if (s.variant === 'collage') {
           const has1 = c.photo('photo'), has2 = c.photo('photo2');
@@ -821,7 +829,7 @@ const WSENGINE = (function(){
         item: [
           { key: 'label', label: 'Label', type: 'text' },
           { key: 'source', label: 'Where the number comes from', type: 'select', options: () => WS.statSources.map((x) => [x.id, x.name]) },
-          { key: 'value', label: 'Number', type: 'text', hint: 'Used when typed, and as the backup for live numbers' },
+          { key: 'value', label: 'Number', type: 'text', hint: 'Used when typed. Google numbers are always shown live, never typed' },
           { key: 'suffix', label: 'After the number', type: 'text', hint: 'e.g. + or ★ or k' },
           { key: 'emoji', label: 'Emoji', type: 'emoji' },
         ],
@@ -831,15 +839,19 @@ const WSENGINE = (function(){
       variant: 'row', title: '',
       items: [
         { label: 'Years on the block', source: 'years', value: site.biz.founded ? String(new Date().getFullYear() - +site.biz.founded) : '10', suffix: '', emoji: '' },
-        { label: 'Google rating', source: 'google_rating', value: '4.9', suffix: '★', emoji: '' },
-        { label: 'Five-star reviews', source: 'google_reviews', value: '312', suffix: '', emoji: '' },
+        { label: 'Google rating', source: 'google_rating', value: '', suffix: '★', emoji: '' },
+        { label: 'Google reviews', source: 'google_reviews', value: '', suffix: '', emoji: '' },
         { label: 'Cuts this year', source: 'manual', value: '4,800', suffix: '+', emoji: '' },
       ],
     }),
     render: (s, c) => {
-      const list = WS.filled(s.items, ['label', 'value']).map((x) => x.it).filter((it) => WS.str(it.value) !== '' || (it.source === 'years' && c.biz.founded) || (/^google_/.test(it.source || '') && c.biz.googlePlaceId));
+      // Google numbers are live only (a stored value is never shown): with no linked listing they're dropped, and on the
+      // page they stay hidden until Google answers (data-gstat).
+      const gsrc = (it) => /^google_/.test(it.source || '');
+      const list = WS.filled(s.items, ['label', 'value']).map((x) => x.it).filter((it) => (gsrc(it) ? WS.googleLinked(c.site) : WS.str(it.value) !== '' || (it.source === 'years' && c.biz.founded)));
       if (!list.length) return '';
       const items = list.map((it) => {
+        if (gsrc(it)) return `<div class="stat"${c.mode === 'edit' ? '' : ' data-gstat hidden'}>${it.emoji ? glyph(c, it.emoji, 'stat-emo') : ''}<p class="num"><span data-count="" data-src="${e(it.source)}">${c.mode === 'edit' ? '—' : ''}</span>${it.suffix ? `<small>${e(it.suffix)}</small>` : ''}</p><p class="lbl">${e(it.label)}</p></div>`;
         const val = it.source === 'years' && c.biz.founded ? String(new Date().getFullYear() - +c.biz.founded) : WS.str(it.value);
         return `<div class="stat">${it.emoji ? glyph(c, it.emoji, 'stat-emo') : ''}<p class="num"><span data-count="${e(String(val).replace(/,/g, ''))}" data-src="${e(it.source || 'manual')}" ${it.source === 'years' ? `data-founded="${e(c.biz.founded || '')}"` : ''}>${e(val)}</span>${it.suffix ? `<small>${e(it.suffix)}</small>` : ''}</p><p class="lbl">${e(it.label)}</p></div>`;
       });
@@ -1124,9 +1136,13 @@ const WSENGINE = (function(){
       const acts = `${bookBtn(c, 'btn', c.biz.bookLabel || 'Book now')}${addr ? `<a class="btn ghost" href="${WS.map(addr)}">Get directions</a>` : ''}${callBtn}`;
       const info = `<div class="v-info"><div class="sh">${eyebrow(s, 'Visit', title)}<h2 class="h2">${e(title)}</h2></div>${addr ? `<a class="addr" href="${WS.map(addr)}">${e(addr)}</a>` : ''}${status}${acts ? `<div class="actions">${acts}</div>` : ''}`;
       if (addr) {
-        const map = s.variant === 'map'
-          ? `<iframe class="mapf" title="Map to ${e(c.name)}" src="${WS.mapEmbed(addr)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`
-          : `<div class="vm-ph" data-map="${e(WS.mapEmbed(addr))}" data-map-title="Map to ${e(c.name)}"><span class="vm-pin">${WS.iconSvg('map-pin')}</span><p class="vm-a">${e(addr)}</p><button type="button" class="btn btn-ink vm-load">Show map</button><p class="vm-n">Loads Google Maps</p></div>`;
+        // With a Maps Embed key: the map (now, or on a click). Without one: a directions link, which the page's runtime
+        // turns into a "Show map" button when the server gives the page a key (meta ws-maps-key).
+        const mkey = WS.str(c.site && c.site.mapsEmbedKey) || WS.str(WS.mapsKey);
+        const embed = WS.mapEmbed(addr, mkey);
+        const map = embed && s.variant === 'map'
+          ? `<iframe class="mapf" title="Map to ${e(c.name)}" src="${e(embed)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>`
+          : `<div class="vm-ph" data-ws-map="${e(addr)}"${embed ? ` data-map="${e(embed)}"` : ''}${s.variant === 'map' ? ' data-ws-map-now' : ''} data-map-title="Map to ${e(c.name)}"><span class="vm-pin">${WS.iconSvg('map-pin')}</span><p class="vm-a">${e(addr)}</p><button type="button" class="btn btn-ink vm-load"${embed ? '' : ' hidden'}>Show map</button><a class="btn btn-ink vm-dir" href="${WS.map(addr)}" target="_blank" rel="noopener"${embed ? ' hidden' : ''}>Get directions</a><p class="vm-n"${embed ? '' : ' hidden'}>Loads Google Maps</p></div>`;
         return `<section class="visit visit-geo on-base" id="visit"><div class="wrap visit-grid">${info}${hours || reachT}</div><div class="v-map">${map}</div></div></section>`;
       }
       if (!hours) return `<section class="visit visit-solo on-base" id="visit"><div class="wrap"><div class="v-info v-solo"><div class="sh">${eyebrow(s, 'Contact', title)}<h2 class="h2">${e(title)}</h2></div>${reachT}${acts ? `<div class="actions">${acts}</div>` : ''}</div></div></section>`;
@@ -1157,13 +1173,6 @@ const WSENGINE = (function(){
   const townsOf = (s, c) => { const own = WS.townList(s && s.towns); return own.length ? own : WS.townList(c.biz && c.biz.towns); };
   // The founding year as a number when it is a real past year (else 0).
   WS.foundedYear = (v) => { const s = WS.str(v), y = parseInt(s, 10), now = new Date().getFullYear(); return /^\d{4}$/.test(s) && y >= 1800 && y <= now ? y : 0; };
-  // Google rating + review count: biz.googleRating / biz.googleReviews, else a Numbers band's Google items.
-  WS.googleScore = (site) => {
-    const b = (site && site.biz) || {};
-    let r = parseFloat(b.googleRating), n = parseInt(b.googleReviews, 10);
-    if (!(r >= 1 && r <= 5) && b.googlePlaceId && WS.allSections) WS.allSections(site).forEach((s) => { if (s.type === 'stats') (s.items || []).forEach((it) => { if (it && it.source === 'google_rating' && !(r >= 1 && r <= 5)) r = parseFloat(it.value); if (it && it.source === 'google_reviews' && !(n > 0)) n = parseInt(String(it.value).replace(/,/g, ''), 10); }); });
-    return r >= 1 && r <= 5 ? { rating: Math.round(r * 10) / 10, count: n > 0 ? n : 0 } : null;
-  };
   // Trust badges, only from real data. A section toggle (true/false) overrides the setup answer.
   WS.trustBadges = (site, sec) => {
     const b = (site && site.biz) || {}, s = sec || {}, out = [];
@@ -1172,8 +1181,7 @@ const WSENGINE = (function(){
     if (yes('insured')) out.push({ k: 'insured', icon: 'badge-check', label: 'Insured', sub: 'For your peace of mind' });
     const y = WS.foundedYear(WS.str(s.founded) || b.founded), yrs = y ? new Date().getFullYear() - y : 0;
     if (y) out.push({ k: 'founded', icon: 'calendar', label: 'Since ' + y, sub: yrs >= 2 ? yrs + ' years in business' : 'Established', yrs: yrs >= 2 ? y : 0 });
-    const g = s.showRating === false ? null : WS.googleScore(site);
-    if (g) out.push({ k: 'rating', icon: 'star', label: g.rating.toFixed(1) + ' on Google', sub: g.count ? g.count.toLocaleString('en-US') + ' review' + (g.count === 1 ? '' : 's') : 'Google rating' });
+    if (s.showRating !== false && WS.googleLinked(site)) out.push({ k: 'rating', icon: 'star', label: 'Google rating', sub: 'Shown live from Google', live: true });
     const t = s.showArea === false ? [] : townsOf(s, { biz: b });
     // "Serving Asheville & 3 nearby towns": the home city leads, and only the other towns are counted.
     const city = WS.cityName(b.city), lc = city.toLowerCase(), near = t.filter((x) => x.toLowerCase() !== lc), lead = city && (near.length < t.length || !WS.townList(s.towns).length) ? city : t[0], more = lead === t[0] ? near.filter((x) => x !== t[0]) : near;
@@ -1204,13 +1212,15 @@ const WSENGINE = (function(){
         const out = [];
         list.forEach((x) => {
           if (x.k === 'founded') out.push(x.yrs ? `<li><p class="tbb-num"><span data-count="${new Date().getFullYear() - x.yrs}" data-src="years" data-founded="${x.yrs}">${new Date().getFullYear() - x.yrs}</span></p><p class="tbb-l">Years in business</p></li>` : `<li><p class="tbb-num">${e(x.label.replace(/^Since /, ''))}</p><p class="tbb-l">Established</p></li>`);
-          else if (x.k === 'rating') { const g = WS.googleScore(c.site); out.push(`<li><p class="tbb-num"><span data-count="${g.rating.toFixed(1)}" data-src="trust">${g.rating.toFixed(1)}</span><small aria-hidden="true">★</small></p><p class="tbb-l">${g.count ? e(g.count.toLocaleString('en-US')) + ' Google reviews' : 'Google rating'}</p></li>`); }
+          else if (x.k === 'rating') out.push(WS.gLive(c, `<p class="tbb-num"><span data-g="rating"></span><small aria-hidden="true">★</small></p><p class="tbb-l" data-g="sub">Google rating</p>`, `<p class="tbb-num tbb-ico">${WS.iconSvg('star')}</p><p class="tbb-l">Google rating (live)</p>`, 'li'));
           else if (x.k === 'area') { const m = /^& (\d+) nearby/.exec(x.sub || ''); const n = m ? +m[1] + 1 : 0; out.push(n >= 2 ? `<li><p class="tbb-num"><span data-count="${n}" data-src="trust">${n}</span></p><p class="tbb-l">Towns served around ${e(x.label.replace(/^Serving /, ''))}</p></li>` : `<li><p class="tbb-num tbb-ico">${WS.iconSvg('map-pin')}</p><p class="tbb-l">${e(x.label)}</p></li>`); }
         });
         if (lic.length) out.unshift(`<li><p class="tbb-num tbb-ico">${WS.iconSvg('shield-check')}</p><p class="tbb-l">${lic.length > 1 ? 'Licensed &amp; insured' : e(lic[0].label)}</p></li>`);
         return `<section class="trust trust-band on-pop" id="trust"><div class="wrap"><ul class="tbb tb-n${out.length}" aria-label="Why you can trust us">${out.join('')}</ul></div></section>`;
       }
-      const li = list.map((x) => `<li class="tb-${x.k}"><span class="tb-ic">${WS.iconSvg(x.icon)}</span><span class="tb-t"><b>${e(x.label)}</b><small>${yrsSpan(x)}</small></span></li>`).join('');
+      const li = list.map((x) => (x.live
+        ? WS.gLive(c, `<span class="tb-ic">${WS.iconSvg(x.icon)}</span><span class="tb-t"><b><span data-g="rating"></span> on Google</b><small data-g="sub">Google rating</small></span>`, `<span class="tb-ic">${WS.iconSvg(x.icon)}</span><span class="tb-t"><b>${e(x.label)}</b><small>${e(x.sub)}</small></span>`, 'li', ` class="tb-${x.k}"`)
+        : `<li class="tb-${x.k}"><span class="tb-ic">${WS.iconSvg(x.icon)}</span><span class="tb-t"><b>${e(x.label)}</b><small>${yrsSpan(x)}</small></span></li>`)).join('');
       if (v === 'cards') return `<section class="trust trust-cards on-base" id="trust"><div class="wrap">${WS.str(s.title) ? head(s, '', 'Why trust us') : ''}<ul class="tb-cards tb-n${list.length}" aria-label="Why you can trust us">${li}</ul></div></section>`;
       return `<section class="trust trust-strip on-base" id="trust"><div class="wrap"><ul class="tb-row tb-n${list.length}" aria-label="Why you can trust us">${li}</ul></div></section>`;
     },
@@ -2039,7 +2049,9 @@ main>.on-base:not(.hero-photo):not(.pagehead)+.on-base:not(.hero):not(.pagehead)
 .vm-pin .ico{width:24px;height:24px}
 .vm-a{margin:0;max-width:28ch;font-weight:600;font-size:16px;padding:4px 10px;border-radius:6px;background:color-mix(in srgb,var(--bg),transparent 12%)}
 .vm-n{margin:0;font-size:12px;padding:2px 8px;border-radius:6px;background:color-mix(in srgb,var(--bg),transparent 12%);color:color-mix(in srgb,var(--fg),transparent 25%)}
-.vm-load{margin-top:4px}
+.vm-load,.vm-dir{margin-top:4px}
+.vm-ph [hidden],[data-glive][hidden],[data-gstat][hidden]{display:none!important}
+.gr-av{width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px}
 /* heroes: legible text over any photo, new layouts */
 .hero-media::after{background:linear-gradient(180deg,rgba(0,0,0,.36) 0%,rgba(0,0,0,0) 24%,rgba(0,0,0,.1) 46%,rgba(0,0,0,.68) 100%),linear-gradient(90deg,rgba(0,0,0,.4) 0%,rgba(0,0,0,.1) 55%,rgba(0,0,0,0) 100%)}
 .hero-center .hero-media::after{background:linear-gradient(180deg,rgba(0,0,0,.46) 0%,rgba(0,0,0,.36) 45%,rgba(0,0,0,.52) 100%)}
@@ -2735,7 +2747,8 @@ main>.on-base:not(.hero-photo):not(.pagehead)+.on-base:not(.hero):not(.pagehead)
     const brand = site.brand || 'Websprout';
     const desc = b.seoDescription || b.tagline || '';
     const pillHref = WS.bookHref(site);
-    // Stock photos (Unsplash) must credit the photographer; Google place photos credit their author and Google.
+    // Stock photos (Unsplash) must credit the photographer; Google place photos credit their author (authorAttributions:
+    // name linked to their profile) and "Google Maps" (Google's text attribution where its logo isn't used).
     // Only credit photos the site still uses.
     const _pc = site.photoCredits || {}; const _used = site.photos || {}; const _seenPc = {};
     const _pcl = Object.keys(_pc).filter((k) => _used[k] && _pc[k] && _pc[k].name && !_seenPc[(_pc[k].source || '') + '|' + _pc[k].name] && (_seenPc[(_pc[k].source || '') + '|' + _pc[k].name] = 1));
@@ -2747,7 +2760,7 @@ main>.on-base:not(.hero-photo):not(.pagehead)+.on-base:not(.hero):not(.pagehead)
     Object.keys(_pc).forEach((k) => { const f = _pfb[k]; if (_used[k] && _pc[k] && _pc[k].source === 'google' && f && typeof f === 'object' && WS.str(f.name) && !_seenPc['|' + f.name] && (_seenPc['|' + f.name] = 1)) _pcu.push({ name: WS.str(f.name), link: f.link }); });
     const _utm = 'utm_source=websprout&utm_medium=referral';
     const photoCredit = (_pcu.length ? ` &nbsp;·&nbsp; Photos by ${_pcu.slice(0, 8).map((c) => `<a href="${e(String((/^https:\/\//i.test(WS.safeUrl(c.link)) && WS.safeUrl(c.link)) || 'https://unsplash.com').split('?')[0] + '?' + _utm)}">${e(c.name)}</a>`).join(', ')} on <a href="https://unsplash.com/?${_utm}">Unsplash</a>` : '')
-      + (_pcg.length ? ` &nbsp;·&nbsp; Photo${_pcg.length > 1 ? 's' : ''}: ${_pcg.slice(0, 6).map((k) => { const u = WS.safeUrl(_pc[k].link); return /^https:\/\//i.test(u) ? `<a href="${e(u)}" rel="nofollow noopener">${e(_pc[k].name)}</a>` : e(_pc[k].name); }).join(', ')} · Google` : '');
+      + (_pcg.length ? ` &nbsp;·&nbsp; Photo${_pcg.length > 1 ? 's' : ''}: ${_pcg.slice(0, 6).map((k) => { const u = WS.safeUrl(_pc[k].link); return /^https:\/\//i.test(u) ? `<a href="${e(u)}" target="_blank" rel="nofollow noopener">${e(_pc[k].name)}</a>` : e(_pc[k].name); }).join(', ')} · Google Maps` : '');
     const markHref = multi ? '#/' : '#';
     const routerInit = (multi && activePath != null) ? `window.__wsInitPath=${JSON.stringify(activePath)};` : '';
     const runtime = WS.runtime(site) + (multi ? routerInit + WS.pageRouter : '');
@@ -2866,7 +2879,13 @@ document.documentElement.classList.add('js');document.body.classList.add('js');
   function railKeys(){[].slice.call(document.querySelectorAll('.rail')).forEach(function(r){if(r.scrollWidth>r.clientWidth+2)r.setAttribute('tabindex','0');else r.removeAttribute('tabindex')})}
   railKeys();window.addEventListener('resize',railKeys);window.addEventListener('load',railKeys);
   // Map placeholder: load Google's map only when the visitor asks for it.
-  document.addEventListener('click',function(ev){var b=ev.target&&ev.target.closest?ev.target.closest('.vm-load'):null;if(!b||EDIT)return;var ph=b.closest('.vm-ph');if(!ph)return;var fr=document.createElement('iframe');fr.className='mapf';fr.title=ph.getAttribute('data-map-title')||'Map';fr.src=ph.getAttribute('data-map');fr.setAttribute('referrerpolicy','no-referrer-when-downgrade');fr.setAttribute('allowfullscreen','');ph.parentNode.replaceChild(fr,ph);});
+  // The map is Google's Maps Embed API, which needs a key: baked in when the renderer had one, else given to the
+  // published page by the server as <meta name="ws-maps-key">. No key: the placeholder stays a directions link.
+  function loadMap(ph){var src=ph.getAttribute('data-map');if(!src||!ph.parentNode)return;var fr=document.createElement('iframe');fr.className='mapf';fr.title=ph.getAttribute('data-map-title')||'Map';fr.src=src;fr.setAttribute('loading','lazy');fr.setAttribute('referrerpolicy','no-referrer-when-downgrade');fr.setAttribute('allowfullscreen','');ph.parentNode.replaceChild(fr,ph);}
+  try{var MK=document.querySelector('meta[name="ws-maps-key"]'),mk=MK?String(MK.getAttribute('content')||'').trim():'';
+    if(mk)[].slice.call(document.querySelectorAll('.vm-ph[data-ws-map]')).forEach(function(ph){if(!ph.getAttribute('data-map'))ph.setAttribute('data-map','https://www.google.com/maps/embed/v1/place?key='+encodeURIComponent(mk)+'&q='+encodeURIComponent(ph.getAttribute('data-ws-map')||''));[].slice.call(ph.querySelectorAll('.vm-load,.vm-n')).forEach(function(x){x.hidden=false});var dr=ph.querySelector('.vm-dir');if(dr)dr.hidden=true;});
+    [].slice.call(document.querySelectorAll('.vm-ph[data-ws-map-now][data-map]')).forEach(loadMap);}catch(e){}
+  document.addEventListener('click',function(ev){var b=ev.target&&ev.target.closest?ev.target.closest('.vm-load'):null;if(!b||EDIT)return;var ph=b.closest('.vm-ph');if(ph)loadMap(ph);});
   // open / closed status
   function f(t){var p=t.split(':'),h=+p[0],m=p[1];var s=h>=12?'pm':'am';h=h%12||12;return h+(m!=='00'?':'+m:'')+' '+s}
   function toM(t){var p=String(t||'0:0').split(':');return (+p[0]||0)*60+(+p[1]||0)}
@@ -2885,18 +2904,27 @@ document.documentElement.classList.add('js');document.body.classList.add('js');
   function count(el){var target=parseFloat(el.dataset.count);if(isNaN(target)||EDIT){return}var dec=(el.dataset.count.split('.')[1]||'').length,t0=null,dur=1400;
     function step(ts){if(!t0)t0=ts;var k=Math.min(1,(ts-t0)/dur),v=target*(1-Math.pow(1-k,3));el.textContent=fmt(v,dec);if(k<1)requestAnimationFrame(step)}requestAnimationFrame(step)}
   function startCounts(){seen(nums,count)}
+  // Google content is fetched live on each visit (one request per page, shared) and never stored in the site.
+  var GP=null;function gplace(){if(!GP)GP=fetch(STATS_API+'?place='+encodeURIComponent(PLACE)).then(function(r){return r.ok?r.json():null}).catch(function(){return null});return GP}
+  var GON=!!(STATS_API&&PLACE&&!EDIT);
   var live=nums.filter(function(el){return /^google_/.test(el.dataset.src)});
-  if(live.length&&STATS_API&&PLACE&&!EDIT){
-    fetch(STATS_API+'?place='+encodeURIComponent(PLACE)).then(function(r){return r.ok?r.json():null}).then(function(j){
-      if(j)live.forEach(function(el){var v=el.dataset.src==='google_rating'?j.rating:j.reviews;if(v!=null){el.dataset.count=String(v);el.textContent=fmt(+v,(String(v).split('.')[1]||'').length)}});
-    }).catch(function(){}).then(startCounts);
+  if(live.length&&GON){
+    gplace().then(function(j){
+      if(j)live.forEach(function(el){var v=el.dataset.src==='google_rating'?j.rating:j.reviews;if(v!=null){el.dataset.count=String(v);el.textContent=fmt(+v,(String(v).split('.')[1]||'').length);var st=el.closest('[data-gstat]');if(st)st.hidden=false}});
+    }).then(startCounts);
   } else startCounts();
+  // live rating badges and chips (Google): hidden until Google answers, and they stay hidden when it doesn't
+  (function(){var gl=[].slice.call(document.querySelectorAll('[data-glive]'));if(!gl.length||!GON)return;
+    gplace().then(function(j){if(!j||!(j.rating>=1&&j.rating<=5))return;var n=+j.reviews||0;
+      gl.forEach(function(el){[].slice.call(el.querySelectorAll('[data-g="rating"]')).forEach(function(x){x.textContent=(+j.rating).toFixed(1)});if(n)[].slice.call(el.querySelectorAll('[data-g="sub"]')).forEach(function(x){x.textContent=n.toLocaleString('en-US')+' Google review'+(n===1?'':'s')});el.hidden=false});
+    });
+  })();
   // live Google reviews (needs a linked place; falls back to the typed reviews already on the page)
   (function(){var box=document.querySelector('[data-greviews]');if(!box||EDIT)return;
     // Nothing typed and nothing from Google: drop the whole band rather than show an empty section.
     function none(){if(!box.querySelector('.rw blockquote'))box.remove();}
     if(!STATS_API||!PLACE){none();return;}
-    fetch(STATS_API+'?place='+encodeURIComponent(PLACE)).then(function(r){return r.ok?r.json():null}).then(function(j){
+    gplace().then(function(j){
       // Reviews the owner chose to hide (by Google review id) are skipped; the attribution then says so.
       var hide=(box.getAttribute('data-ghide')||'').split(' ').filter(Boolean),items=(j&&j.items||[]).filter(function(v){return !(v.id&&hide.indexOf(v.id)>-1)}),cut=j&&j.items&&items.length<j.items.length;
       if(!items.length){none();return;}
@@ -2904,9 +2932,12 @@ document.documentElement.classList.add('js');document.body.classList.add('js');
       var rw=box.querySelector('.rw'),sum=box.querySelector('.gr-sum'),at=box.querySelector('.gr-attr');
       function star(n){var o='';for(var i=0;i<5;i++)o+=i<Math.round(n)?'★':'☆';return o}
       function esc(s){return String(s==null?'':s).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;').split('"').join('&quot;')}
-      rw.innerHTML=items.map(function(v){return '<blockquote><div class="gr-stars" aria-label="'+v.rating+' out of 5 stars">'+star(v.rating)+'</div><p>'+esc(v.text.length>320?v.text.slice(0,317)+'…':v.text)+'</p><footer>'+esc(v.name)+(v.when?' · '+esc(v.when):'')+(/^https:\\/\\//.test(v.link||'')?' · <a href="'+esc(v.link)+'" target="_blank" rel="noopener nofollow">on Google</a>':'')+'</footer></blockquote>'}).join('');
-      if(j.rating&&sum){sum.hidden=false;sum.innerHTML='<b>'+j.rating.toFixed(1)+'</b> <span class="gr-stars">'+star(j.rating)+'</span> <span>'+(j.reviews||0).toLocaleString()+' Google reviews</span>'}
-      if(at){at.hidden=false;at.innerHTML=(cut?'Selected reviews from Google, chosen by the business':'Reviews from Google')+(/^https:\\/\\//.test(j.url||'')?' · <a href="'+esc(j.url)+'" target="_blank" rel="noopener">See all on Google</a>':'')}
+      function ok(u){return /^https:\\/\\//.test(u||'')}
+      // Each review credits its author as Google requires: their name linked to their Google Maps profile, and their photo.
+      rw.innerHTML=items.map(function(v){var who=(ok(v.authorPhoto)?'<img class="gr-av" src="'+esc(v.authorPhoto)+'" alt="" width="28" height="28" loading="lazy" referrerpolicy="no-referrer">':'')+(ok(v.authorUri)?'<a href="'+esc(v.authorUri)+'" target="_blank" rel="nofollow noopener">'+esc(v.name)+'</a>':esc(v.name));
+        return '<blockquote><div class="gr-stars" aria-label="'+esc(v.rating)+' out of 5 stars">'+star(v.rating)+'</div><p>'+esc(v.text.length>320?v.text.slice(0,317)+'…':v.text)+'</p><footer>'+who+(v.when?' · '+esc(v.when):'')+(ok(v.link)?' · <a href="'+esc(v.link)+'" target="_blank" rel="nofollow noopener">on Google Maps</a>':'')+'</footer></blockquote>'}).join('');
+      if(j.rating&&sum){sum.hidden=false;sum.innerHTML='<b>'+(+j.rating).toFixed(1)+'</b> <span class="gr-stars">'+star(j.rating)+'</span> <span>'+(+j.reviews||0).toLocaleString()+' Google reviews</span>'}
+      if(at){at.hidden=false;at.innerHTML=(cut?'Selected reviews from Google Maps, chosen by the business':'Reviews from Google Maps')+(ok(j.url)?' · <a href="'+esc(j.url)+'" target="_blank" rel="nofollow noopener">See all on Google Maps</a>':'')}
     }).catch(none);
   })();
   // before / after sliders

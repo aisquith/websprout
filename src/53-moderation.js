@@ -241,3 +241,64 @@ async function doAdminModDismiss(request, env) {
   }
   return wsModJson({ ok: true, allowed: allowed });
 }
+
+// ── "Report this site" (link in the free-site badge and the app footer) ──
+// Anyone can report a site; reports land in Admin > Moderation (with the take-down buttons) and email the owner.
+function wsReportSlugFrom(v) {
+  let s = String(v || '').trim().toLowerCase();
+  try { if (/^https?:\/\//.test(s)) s = new URL(s).hostname + new URL(s).pathname; } catch (e) {}
+  let m = /^([a-z0-9-]{1,63})\.websprout\.app/.exec(s); if (m && m[1] !== 'www') return { slug: m[1] };
+  m = /(?:^|\/)websprout\.app\/s\/([a-z0-9-]{1,63})/.exec(s); if (m) return { slug: m[1] };
+  m = /^([a-z0-9.-]+\.[a-z]{2,})/.exec(s); if (m) return { host: m[1].replace(/^www\./, '') };
+  return {};
+}
+const WS_REPORT_REASONS = { sexual: 'Sexual or adult content', profanity: 'Vulgar or offensive language', hate: 'Hate or harassment', scam: 'Scam, phishing or fraud', impersonation: 'Pretends to be another business or brand', violence: 'Violence or illegal goods', copyright: 'Uses my copyrighted work (see the DMCA section of our Terms)', other: 'Something else' };
+function wsReportPage(site, sent) {
+  const e = function (x) { return String(x || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+  const opts = Object.keys(WS_REPORT_REASONS).map(function (k) { return '<option value="' + k + '">' + e(WS_REPORT_REASONS[k]) + '</option>'; }).join('');
+  return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Report a site · Websprout</title>'
+    + '<style>body{font-family:-apple-system,Segoe UI,Arial,sans-serif;background:#060d05;color:#eaf2e8;margin:0;padding:32px 16px}main{max-width:520px;margin:0 auto}h1{font-size:24px;margin:0 0 8px}p{color:rgba(234,242,232,.75);line-height:1.6}label{display:block;font-weight:600;margin:16px 0 6px}input,select,textarea{width:100%;box-sizing:border-box;padding:11px;border-radius:9px;border:1px solid rgba(255,255,255,.2);background:#0f1a0d;color:#eaf2e8;font:inherit}select option{background:#0f1a0d;color:#eaf2e8}textarea{min-height:110px}button{margin-top:18px;background:#2d9e4a;color:#fff;border:0;border-radius:10px;padding:12px 22px;font:inherit;font-weight:700;cursor:pointer}a{color:#7fe39a}#msg{margin-top:14px;font-weight:600}</style></head><body><main>'
+    + '<h1>Report a site</h1><p>Websites on Websprout are made by their owners. If one breaks our rules (adult content, hate, scams, impersonation, copyright) tell us and we’ll review it, usually within one business day. In an emergency, contact the police.</p>'
+    + '<form id="f"><label for="site">Site address</label><input id="site" name="site" required maxlength="300" value="' + e(site) + '" placeholder="name.websprout.app">'
+    + '<label for="reason">What’s wrong?</label><select id="reason" name="reason">' + opts + '</select>'
+    + '<label for="details">Details (optional)</label><textarea id="details" name="details" maxlength="2000" placeholder="Which page, what you saw"></textarea>'
+    + '<label for="email">Your email (optional, so we can follow up)</label><input id="email" name="email" type="email" maxlength="200">'
+    + '<input name="_hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">'
+    + '<button type="submit">Send report</button><div id="msg" role="status"></div></form>'
+    + '<p style="margin-top:28px;font-size:13px">You can also email <a href="mailto:abuse@websprout.app">abuse@websprout.app</a>.</p></main>'
+    + '<script>document.getElementById("f").addEventListener("submit",function(ev){ev.preventDefault();var f=ev.target,m=document.getElementById("msg"),b=f.querySelector("button");var d={};new FormData(f).forEach(function(v,k){d[k]=v;});b.disabled=true;m.textContent="Sending…";'
+    + 'fetch("/report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)}).then(function(r){return r.json();}).then(function(j){if(j&&j.ok){f.reset();m.textContent="Thanks. We’ll review this site.";}else{b.disabled=false;m.textContent=(j&&j.error)||"That didn’t send. Please try again.";}}).catch(function(){b.disabled=false;m.textContent="That didn’t send. Please try again.";});});</script>'
+    + '</body></html>';
+}
+async function doReportPage(request, env) {
+  const url = new URL(request.url);
+  let site = url.searchParams.get('site') || '';
+  if (!site) { const ref = request.headers.get('referer') || ''; if (/^https:\/\//.test(ref) && !/^https:\/\/(www\.)?websprout\.app/.test(ref)) { try { site = new URL(ref).hostname; } catch (e) {} } }
+  return new Response(wsReportPage(String(site).slice(0, 300)), { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
+}
+async function doReportSubmit(request, env) {
+  try {
+    if (!env.KV) return wsModJson({ ok: false, error: 'Not available right now.' }, 503);
+    const b = await request.json().catch(function () { return {}; });
+    if (b._hp) return wsModJson({ ok: true });
+    if (!(await wsRate(env, 'reportrate:' + wsClientIp(request, env), 10, 3600))) return wsModJson({ ok: false, error: 'Too many reports from here. Please email abuse@websprout.app.' }, 429);
+    const t = wsReportSlugFrom(b.site);
+    let slug = t.slug || '';
+    if (!slug && t.host) { try { slug = (await env.KV.get('domain:' + t.host)) || (await env.KV.get('domain:www.' + t.host)) || ''; } catch (e) {} }
+    if (!slug || !(await env.KV.get('pubmeta:' + slug))) return wsModJson({ ok: false, error: 'We couldn’t find a Websprout site at that address. Check it, or email abuse@websprout.app.' }, 400);
+    const reason = WS_REPORT_REASONS[b.reason] ? b.reason : 'other';
+    const details = String(b.details || '').replace(/[\u0000-\u0008\u000b-\u001f]/g, '').slice(0, 2000);
+    const email = /^[^\s@<>"]{1,64}@[^\s@<>"]{1,190}\.[a-z]{2,}$/i.test(String(b.email || '').trim()) ? String(b.email).trim().slice(0, 200) : '';
+    let m = {}; try { m = JSON.parse((await env.KV.get('pubmeta:' + slug)) || '{}'); } catch (e) {}
+    let prev = null; try { prev = JSON.parse((await env.KV.get('modq:' + slug)) || 'null'); } catch (e) {}
+    const reports = ((prev && prev.reports) || 0) + 1;
+    await wsModQueue(env, slug, m.siteId, { status: 'report', category: reason === 'copyright' ? 'other' : reason, reason: (WS_REPORT_REASONS[reason] + (details ? ': ' + details : '')).slice(0, 300) }, { reports: reports, reporter: email });
+    if (reports === 1 || reports === 5) {
+      try {
+        if (await wsMailCapOk(env, 'support')) await wsSendMail(env, { from: 'Websprout <hello@websprout.app>', to: [SUPPORT_EMAIL], reply_to: email || undefined, subject: 'Site reported: ' + slug + '.websprout.app (' + WS_REPORT_REASONS[reason] + ')',
+          html: '<p><b>' + slug + '.websprout.app</b> was reported' + (reports > 1 ? ' (' + reports + ' reports)' : '') + '.</p><p>Reason: ' + escHtml(WS_REPORT_REASONS[reason]) + '</p>' + (details ? '<p>Details: ' + escHtml(details) + '</p>' : '') + (email ? '<p>Reporter: ' + escHtml(email) + '</p>' : '') + '<p>Review it in <a href="https://websprout.app/admin#moderation">Admin → Moderation</a>.</p>' });
+      } catch (e) {}
+    }
+    return wsModJson({ ok: true });
+  } catch (e) { return wsModJson({ ok: false, error: 'That didn’t send. Please try again.' }, 500); }
+}
