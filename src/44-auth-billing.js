@@ -271,7 +271,7 @@ async function doSupport(request, env){
     await wsMailCount(env, 'support');
     // Instant reply to the sender (acknowledgment, plus an AI answer when our help facts cover it), after the response.
     await wsBg(request, wsSupportAutoReply(env, { to: email, name: name, subject: '', message: message }).then(function(r){
-      if (env.KV) return env.KV.put('supportlog:' + Date.now() + ':' + Math.random().toString(36).slice(2, 6), JSON.stringify({ via: 'form', to: email, sent: r.sent, ai: !!r.answer, skip: r.skip || '' }), { expirationTtl: 30 * 86400 });
+      if (env.KV) return env.KV.put('supportlog:' + Date.now() + ':' + Math.random().toString(36).slice(2, 6), JSON.stringify({ via: 'form', to: email, sent: r.sent, ai: !!r.answer, person: !!r.person, skip: r.skip || '' }), { expirationTtl: 30 * 86400 });
     }));
     return succeed({ ok:true });
   }catch(e){ return fail('Could not send'); }

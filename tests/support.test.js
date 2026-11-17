@@ -50,20 +50,28 @@ module.exports = async function (ctx, t) {
   t.eq(k.sent[0].subject, 'Re: Domain question', 'subject threads with theirs');
   t.eq(k.sent[0].headers['Auto-Submitted'], 'auto-replied', 'marked as an auto-reply (prevents loops)');
   t.eq(k.sent[0].reply_to, 'support@websprout.app', 'replies go to support');
-  r = await k.L.wsSupportAutoReply(e, { to: 'pat@example.com', name: 'Pat', subject: '', message: 'Another question about my domain please' });
-  t.ok(!r.sent && r.skip === 'recent', 'one auto-reply per sender per 12 hours');
+  t.ok(/any other questions/.test(k.sent[0].html) && !/follow up|get back to you/.test(k.sent[0].html), 'a fully answered question does not promise a follow-up');
+  t.eq(k.sent.length, 1, 'and nobody on the team is pinged');
+  for (let i = 0; i < 5; i++) r = await k.L.wsSupportAutoReply(e, { to: 'pat@example.com', name: 'Pat', subject: 'Re: Domain question', message: 'A follow-up question about my domain please' });
+  t.ok(r.sent, 'follow-up questions get answered too');
+  r = await k.L.wsSupportAutoReply(e, { to: 'pat@example.com', name: 'Pat', subject: '', message: 'Yet another question about my domain' });
+  t.ok(!r.sent && r.skip === 'recent', 'at most 6 replies per sender per day (loop guard)');
 
-  // Human-only topics: no AI call
-  k = make({ answerable: true, reply: 'should not be used at all here' });
-  r = await k.L.wsSupportAutoReply(env(), { to: 'a@b.co', name: '', subject: '', message: 'I was charged twice this month and want a refund' });
-  t.ok(r.sent && !r.answer && r.skip === 'human', 'billing questions get only the acknowledgment');
-  t.ok(!k.calls.some((u) => u.indexOf('generativelanguage') > -1), 'and Gemini is not called for them');
-  t.ok(/Hi,/.test(k.sent[0].html) && /a person will read it/i.test(k.sent[0].html), 'acknowledgment says a person will reply');
+  // Billing and problems are answered too; what needs a person is flagged to the team.
+  k = make({ answerable: true, needs_person: true, reply: 'Sorry about that. You can see every charge under Settings, "Manage billing & cancel plan". Refund requests are reviewed by the team.' });
+  r = await k.L.wsSupportAutoReply(env(), { to: 'a@b.co', name: '', subject: 'Charged twice', message: 'I was charged twice this month and want a refund' });
+  t.ok(r.sent && r.answer && r.person, 'a refund request gets a real answer and is flagged for a person');
+  t.ok(k.calls.some((u) => u.indexOf('generativelanguage') > -1), 'Gemini is asked about billing questions');
+  t.ok(/Manage billing/.test(k.sent[0].html) && /passed this to the team/.test(k.sent[0].html), 'the reply answers and says the team will follow up');
+  t.ok(k.sent[1] && k.sent[1].to[0] === 'owner@example.com' && /Needs you: Charged twice/.test(k.sent[1].subject) && k.sent[1].reply_to === 'a@b.co', 'the team gets a "needs you" email they can reply to directly');
+  t.ok(/charged twice/.test(k.sent[1].html) && /Manage billing/.test(k.sent[1].html), 'it shows what they asked and what was already sent');
+  t.ok(L.wsSupportReplyOk('Refund requests are reviewed by the team, and cancelling stops future charges.'), 'explaining the refund policy is allowed');
 
   // Unanswerable, rejected, failing AI -> acknowledgment
   k = make({ answerable: false, reply: '' });
   r = await k.L.wsSupportAutoReply(env(), { to: 'c@d.co', message: 'Do you integrate with my point of sale system?' });
-  t.ok(r.sent && !r.answer, 'questions outside the facts get the acknowledgment');
+  t.ok(r.sent && !r.answer && r.person, 'questions outside the facts get the acknowledgment and go to a person');
+  t.ok(/someone from the team will get back to you/.test(k.sent[0].html), 'the acknowledgment says someone will reply');
   k = make({ answerable: true, reply: 'Sure, it is $3 a month for you.' });
   r = await k.L.wsSupportAutoReply(env(), { to: 'c@d.co', message: 'How much does Pro cost for a small shop?' });
   t.ok(r.sent && !r.answer && r.skip === 'rejected', 'a bad AI answer is dropped, the acknowledgment still goes');
