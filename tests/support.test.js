@@ -46,7 +46,7 @@ module.exports = async function (ctx, t) {
   let r = await k.L.wsSupportAutoReply(e, { to: 'Pat@Example.com', name: 'Pat Smith', subject: 'Domain question', message: 'Can I use my own domain name with my site?' });
   t.ok(r.sent && r.answer, 'an answerable question gets an AI answer');
   t.eq(k.sent[0].to[0], 'pat@example.com', 'sent to the sender');
-  t.ok(/Hi Pat,/.test(k.sent[0].html) && /own domain/.test(k.sent[0].html) && /written by AI/.test(k.sent[0].html), 'greets by first name, includes the answer and says it is AI-written');
+  t.ok(/Hi Pat,/.test(k.sent[0].html) && /own domain/.test(k.sent[0].html) && !/AI/.test(k.sent[0].html + k.sent[0].text), 'greets by first name, includes the answer, no mention of AI');
   t.eq(k.sent[0].subject, 'Re: Domain question', 'subject threads with theirs');
   t.eq(k.sent[0].headers['Auto-Submitted'], 'auto-replied', 'marked as an auto-reply (prevents loops)');
   t.eq(k.sent[0].reply_to, 'support@websprout.app', 'replies go to support');

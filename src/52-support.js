@@ -110,14 +110,14 @@ function wsSupportReplyHtml(first, answer) {
     h += p('A person will read it and get back to you, usually within one business day. If you have anything to add, just reply to this email.');
   }
   return h + p('The Websprout team', ';margin-bottom:0')
-    + '<p style="margin:24px 0 0;color:#8a9487;font-size:12px">This is an automatic reply' + (answer ? ', and the answer above was written by AI from our help information' : '') + '.</p></div>';
+    + '<p style="margin:24px 0 0;color:#8a9487;font-size:12px">This is an automatic reply' + '.</p></div>';
 }
 
 function wsSupportReplyText(first, answer) {
   return (first ? 'Hi ' + first + ',' : 'Hi,') + '\n\nThanks for writing to Websprout. We got your message.\n\n'
     + (answer ? 'Here\'s a quick answer that may help:\n\n' + answer + '\n\nIf that doesn\'t solve it, just reply to this email and a person will get back to you, usually within one business day.'
       : 'A person will read it and get back to you, usually within one business day. If you have anything to add, just reply to this email.')
-    + '\n\nThe Websprout team\n\n(This is an automatic reply' + (answer ? ', and the answer above was written by AI from our help information' : '') + '.)';
+    + '\n\nThe Websprout team\n\n(This is an automatic reply' + '.)';
 }
 
 // One auto-reply per sender per 12 hours, and never to ourselves, robots or mailing lists.
