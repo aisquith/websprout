@@ -39,14 +39,14 @@ module.exports = async function (ctx, t) {
     const dark = {};
     for (const type of ['Barber', 'Taqueria', 'Tattoo studio', 'Cocktail bar']) { dark[type] = 0; for (let i = 0; i < 30; i++) if (/^b_/.test((await K.buildV3Site({ name: 'Biz ' + i, type, city: 'Austin' }, {}, {})).site.palette)) dark[type]++; }
     t.ok(Object.values(dark).every((n) => n >= 2 && n <= 25), 'barbers, evening food and drink and tattoo studios get a dark theme some of the time (' + JSON.stringify(dark) + ')');
-    const fam = { Dentist: /^w_(teal|ocean|emerald)$/, 'Law firm': /^w_(indigo|slate|emerald)$/, Accountant: /^w_(indigo|slate|emerald)$/, Florist: /^w_(rose|emerald|plum)$/, Bakery: /^w_(amber|rust|rose)$/, Daycare: /^w_(amber|rose|teal)$/ };
+    const fam = { Dentist: /^w_(teal|ocean|emerald)$/, 'Law firm': /^w_(navy|forest|oxblood|slate)$/, Accountant: /^w_(navy|forest|slate)$/, Florist: /^w_(rose|berry|sage|clay)$/, Bakery: /^w_(amber|rust|rose)$/, Daycare: /^w_(amber|rose|teal)$/ };
     const off = [];
     for (const type of Object.keys(fam)) for (let i = 0; i < 12; i++) { const p = (await K.buildV3Site({ name: 'Biz ' + i, type }, {}, {})).site.palette; if (!fam[type].test(p)) off.push(type + ' ' + p); }
-    t.eq(off.join(', '), '', 'accents fit the kind of business (dental blues and greens, legal navy, slate and green, warm florists and bakeries)');
+    t.eq(off.join(', '), '', 'accents fit the kind of business (dental blues and greens, legal navy, forest and oxblood, warm florists and bakeries)');
     const own = (await K.buildV3Site({ name: 'Biz', type: 'Dentist', look: 'dark' }, {}, {})).site.palette;
     t.ok(/^b_/.test(own), 'the owner’s Dark look still wins (' + own + ')');
     const yoga = (await K.buildV3Site({ name: 'Calm', type: 'Yoga studio' }, {}, {})).site.typeset;
-    t.ok(['refined', 'clean', 'editorial'].indexOf(yoga) > -1, 'a yoga studio gets a calm type theme, not the condensed gym one (' + yoga + ')');
+    t.ok(['warm', 'elegant', 'refined'].indexOf(yoga) > -1, 'a yoga studio gets a calm type theme, not the condensed gym one (' + yoga + ')');
   }
 
   // ---- B. page rhythm: tones alternate by position, a light band breaks up long dark pages ----

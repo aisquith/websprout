@@ -163,12 +163,12 @@ module.exports = async function (ctx, t) {
       secs(s).forEach((x) => { const k = x.type + ':' + x.variant; (seen[k] = seen[k] || new Set()).add(fam[type]); });
     }
     t.ok(icons, 'new sites use line icons');
-    const want = ['hero:center', 'hero:frame', 'hero:minimal', 'services:rows', 'services:numbered', 'services:feature', 'steps:line', 'intro:columns', 'cta:card'];
+    const want = ['hero:center', 'hero:frame', 'hero:cinema', 'hero:collage', 'services:bento', 'services:rows', 'services:numbered', 'services:feature', 'steps:line', 'intro:columns', 'cta:card'];
     t.eq(want.filter((k) => !seen[k]).join(','), '', 'new layouts are used across business types');
     t.ok(!seen['hero:frame'] || [...seen['hero:frame']].every((f) => f === 'trades' || f === 'pro'), 'framed hero only for trades and professionals (' + [...(seen['hero:frame'] || [])] + ')');
     t.ok(!seen['intro:columns'] || [...seen['intro:columns']].every((f) => f === 'pro'), 'two-column intro only for professional firms');
     t.ok(!seen['steps:line'] || [...seen['steps:line']].every((f) => f !== 'food' && f !== 'beauty'), 'timeline steps for process-led businesses');
-    t.ok([...tsets['Law firm']].every((x) => x === 'classic' || x === 'editorial') && [...tsets.Daycare].every((x) => x === 'friendly' || x === 'clean') && [...tsets['Hair salon']].every((x) => x === 'refined' || x === 'editorial'), 'type themes fit the business: ' + JSON.stringify(Object.fromEntries(Object.entries(tsets).map(([k, v]) => [k, [...v]]))));
+    t.ok([...tsets['Law firm']].every((x) => x === 'classic' || x === 'editorial' || x === 'elegant') && [...tsets.Daycare].every((x) => x === 'friendly' || x === 'clean') && [...tsets['Hair salon']].every((x) => x === 'refined' || x === 'editorial' || x === 'elegant'), 'type themes fit the business: ' + JSON.stringify(Object.fromEntries(Object.entries(tsets).map(([k, v]) => [k, [...v]]))));
     t.ok(new Set(Object.values(tsets).flatMap((v) => [...v])).size >= 5, 'the newer type themes are in use');
     // three or more reviews: quote cards
     const rv = await build(base('Hair salon', { name: 'Gloss', reviews: [{ quote: 'Lovely cut and a warm welcome.', name: 'A' }, { quote: 'Best color I have had in years.', name: 'B' }, { quote: 'Always on time and so friendly.', name: 'C' }] }));
@@ -182,7 +182,7 @@ module.exports = async function (ctx, t) {
       shot.add(h.variant + (s.photos[h.id + '.photo'] ? '+photo' : ''));
     }
     t.ok(!bare.has('split'), 'without a photo the hero never uses the side-by-side photo layout (' + [...bare] + ')');
-    t.ok([...shot].every((v) => /\+photo$/.test(v)) && [...shot].some((v) => /^split/.test(v)) && [...shot].some((v) => /^photo/.test(v)), 'with a photo the hero varies between photo layouts (' + [...shot] + ')');
+    t.ok([...shot].every((v) => /\+photo$/.test(v)) && [...shot].some((v) => /^collage/.test(v)) && [...shot].some((v) => /^cinema/.test(v)), 'with a photo the hero varies between the headline-first layouts (' + [...shot] + ')');
   }
 
   // ---- on the real worker ----

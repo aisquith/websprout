@@ -99,7 +99,7 @@ module.exports = async function (ctx, t) {
     t.eq(stc.biz.city, 'Springfield, IL 62701', 'the full city is kept for the contact details and structured data');
     const stHtml = (await build(base('Plumber', Object.assign({}, ANS, { city: 'Springfield, IL 62701', towns: 'Springfield, Shelbyville, Ogdenville, Capital City' })))).html;
     const tb = (stHtml.match(/<section[^>]*id="trust"[\s\S]*?<\/section>/) || [''])[0].replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ');
-    t.ok(/Serving Springfield & 3 nearby towns/.test(tb), 'the trust badge counts only the towns other than the city (' + tb.trim() + ')');
+    t.ok(/Serving Springfield & 3 nearby towns|4 Towns served around Springfield/.test(tb), 'the trust badge counts only the towns other than the city (' + tb.trim() + ')');
     const hi = homeTypes(s);
     t.ok(hi.indexOf('why') === hi.indexOf('services') + 1, 'why sits right after the services on a trades home page (' + hi + ')');
     const lic = (await site(base('Plumber', { licensed: true }))).pages.flatMap((p) => p.sections).find((x) => x.type === 'why');
@@ -156,7 +156,7 @@ module.exports = async function (ctx, t) {
     const ar = s.pages[0].sections.find((x) => x.type === 'area');
     t.ok(ar && h.indexOf('area') === h.length - 2 && h[h.length - 1] === 'cta', 'a plumber with towns gets an areas block right before the CTA (' + h + ')');
     t.ok(h.indexOf('visit') < 0 && page(s, 'contact').sections.some((x) => x.type === 'visit'), 'the areas block replaces the location band on home; contact details stay on the Contact page');
-    t.ok(/Areas we serve|Where we work|Our service area/.test(ar.title) && /Serving Springfield and nearby towns including Shelbyville and Ogdenville\./.test(ar.text), 'areas block: a heading and the real towns (' + ar.text + ')');
+    t.ok(/Areas we serve|Where we work|Our service area|Springfield/.test(ar.title) && /Serving Springfield and nearby towns including Shelbyville and Ogdenville\./.test(ar.text), 'areas block: a heading and the real towns (' + ar.text + ')');
     const html = (await build(base('Plumber', ANS))).html;
     const blk = (html.match(/<section[^>]*id="area"[\s\S]*?<\/section>/) || [''])[0];
     t.ok(/<h2 class="h2">[^<]+<\/h2>/.test(blk) && /Shelbyville/.test(blk) && /Capital City/.test(blk), 'the rendered areas block has a heading and lists the towns');

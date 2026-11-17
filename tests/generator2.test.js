@@ -140,10 +140,10 @@ module.exports = async function (ctx, t) {
   }
   {
     // too few results for the specific search → retry with the category search
-    const B = builder((u) => (u.indexOf('/search/photos') > -1 ? json(/query=artisan/.test(u) ? UNS(30, 'c') : UNS(2, 's')) : json({})));
+    const B = builder((u) => (u.indexOf('/search/photos') > -1 ? json(/query=baker/.test(u) ? UNS(30, 'c') : UNS(2, 's')) : json({})));
     const s = (await B.build({ name: 'Glow', type: 'Gluten free bakery', servicesText: 'Teff loaves' }, KEYS())).site;
     const q = B.calls.filter((u) => /search\/photos/.test(u)).map((u) => decodeURIComponent(u.split('query=')[1]));
-    t.eq(q.join(' | '), 'gluten free bakery teff loaves | artisan bakery bread pastries', 'few results: retried with the category search');
+    t.eq(q.join(' | '), 'gluten free bakery teff loaves | baker bakery fresh bread pastries', 'few results: retried with the category search');
     t.eq(Object.keys(s.photos).length, 4, 'retry results fill the hero and gallery');
     const heroes = new Set();
     for (let i = 0; i < 12; i++) { const B2 = builder(both); const s2 = (await B2.build({ name: 'Glow', type: 'Bakery' }, KEYS())).site; heroes.add(Object.entries(s2.photos).find(([k]) => /^hero-/.test(k))[1]); }

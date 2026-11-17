@@ -368,10 +368,12 @@ function v3Pick(arr) { return arr[Math.floor(v3Rand() * arr.length)]; }
 // planner, a yoga studio isn't a gym); health and dental get blues, teals and greens, legal and finance navy,
 // slate and deep green, florists and bakeries warm colors, rose and green.
 const V3_PAL_SUB = [
-  [/flor|flower/, ['w_rose', 'w_emerald', 'w_plum']], [/yoga|pilates|meditat|tai chi|barre/, ['w_emerald', 'w_teal', 'w_plum']],
-  [/massage|wellness|acupunct|chiropract|physio|therap/, ['w_teal', 'w_emerald', 'w_ocean']], [/\bbar\b|pub|tavern|brew|winery|wine|taproom|cocktail|lounge/, ['w_amber', 'w_crimson', 'w_coffee']],
+  [/flor|flower/, ['w_rose', 'w_berry', 'w_sage', 'w_clay']], [/yoga|pilates|meditat|tai chi|barre/, ['w_sage', 'w_clay', 'w_olive', 'w_plum']],
+  [/plumb|drain|sewer|water heater/, ['w_navy', 'w_lagoon', 'w_ocean', 'w_rust']], [/roof|gutter|siding/, ['w_clay', 'w_slate', 'w_navy', 'w_forest']], [/electric/, ['w_navy', 'w_amber', 'w_charcoal']], [/hvac|heating|furnace|air condition|cooling/, ['w_navy', 'w_crimson', 'w_lagoon']],
+  [/(?<!men['’]?s )groom|(?<!hot )\bdogs?\b|\bpets?\b|kennel/, ['w_clay', 'w_lagoon', 'w_olive', 'w_berry']], [/steak|smokehouse|bbq|barbecue/, ['w_oxblood', 'w_rust', 'w_coffee']],
+  [/massage|wellness|acupunct|chiropract|physio|therap/, ['w_sage', 'w_teal', 'w_lagoon', 'w_olive']], [/\bbar\b|pub|tavern|brew|winery|wine|taproom|cocktail|lounge/, ['w_amber', 'w_crimson', 'w_coffee']],
 ];
-const V3_PAL_CAT = { dental: ['w_teal', 'w_ocean', 'w_emerald'], health: ['w_teal', 'w_emerald', 'w_ocean'], legal: ['w_indigo', 'w_slate', 'w_emerald'], finance: ['w_indigo', 'w_slate', 'w_emerald'], childcare: ['w_amber', 'w_rose', 'w_teal'], bakery: ['w_amber', 'w_rust', 'w_rose'] };
+const V3_PAL_CAT = { dental: ['w_teal', 'w_ocean', 'w_emerald'], health: ['w_teal', 'w_emerald', 'w_ocean'], legal: ['w_navy', 'w_forest', 'w_oxblood', 'w_slate'], finance: ['w_navy', 'w_forest', 'w_slate'], childcare: ['w_amber', 'w_rose', 'w_teal'], bakery: ['w_amber', 'w_rust', 'w_rose'] };
 function v3PalSet(cat, type) { const t = String(type || '').toLowerCase(), hit = V3_PAL_SUB.find(function (x) { return x[0].test(t); }); return hit ? hit[1] : (V3_PAL_CAT[cat] || null); }
 // How often a business gets the dark (Noir) twin. 0 = always light unless the owner picks Dark.
 function v3DarkChance(cat, type) {
@@ -406,31 +408,31 @@ function v3Starter(type, cred) {
   // random per site for variety, never a clashing two-hue scheme. Owners can switch to a Noir (black +
   // color) twin or any other theme in the editor.
   const PAL_SETS = {
-    barber: ['w_mono', 'w_charcoal', 'w_slate'],
-    salon: ['w_rose', 'w_plum', 'w_coffee'],
-    spa: ['w_emerald', 'w_teal', 'w_plum'],
+    barber: ['w_mono', 'w_oxblood', 'w_navy', 'w_charcoal'],
+    salon: ['w_rose', 'w_berry', 'w_plum', 'w_clay'],
+    spa: ['w_sage', 'w_olive', 'w_plum', 'w_clay'],
     tattoo: ['w_mono', 'w_charcoal', 'w_crimson'],
     bakery: ['w_amber', 'w_rust', 'w_rose'],
     cafe: ['w_coffee', 'w_amber', 'w_rust'],
-    restaurant: ['w_rust', 'w_crimson', 'w_coffee'],
-    lawn: ['w_emerald', 'w_teal', 'w_slate'],
-    cleaning: ['w_ocean', 'w_teal', 'w_indigo'],
+    restaurant: ['w_rust', 'w_crimson', 'w_olive', 'w_oxblood'],
+    lawn: ['w_forest', 'w_olive', 'w_emerald'],
+    cleaning: ['w_lagoon', 'w_teal', 'w_berry', 'w_navy'],
     marine: ['w_ocean', 'w_slate', 'w_indigo'],
-    auto: ['w_crimson', 'w_charcoal', 'w_mono'],
+    auto: ['w_crimson', 'w_charcoal', 'w_navy'],
     fitness: ['w_mono', 'w_crimson', 'w_charcoal'],
-    pet: ['w_teal', 'w_emerald', 'w_ocean'],
+    pet: ['w_clay', 'w_lagoon', 'w_olive', 'w_berry'],
     photo: ['w_charcoal', 'w_slate', 'w_plum'],
     retail: ['w_plum', 'w_rose', 'w_coffee'],
-    home: ['w_slate', 'w_ocean', 'w_charcoal'],
+    home: ['w_navy', 'w_clay', 'w_forest', 'w_slate'],
     generic: ['w_indigo', 'w_slate', 'w_ocean'],
-    legal: ['w_indigo', 'w_slate', 'w_charcoal'],
+    legal: ['w_navy', 'w_forest', 'w_oxblood'],
     dental: ['w_teal', 'w_ocean', 'w_indigo'],
     health: ['w_teal', 'w_emerald', 'w_ocean'],
     finance: ['w_indigo', 'w_slate', 'w_emerald'],
     realestate: ['w_charcoal', 'w_coffee', 'w_slate'],
     education: ['w_indigo', 'w_amber', 'w_teal'],
-    events: ['w_rose', 'w_plum', 'w_coffee'],
-    moving: ['w_ocean', 'w_amber', 'w_slate'],
+    events: ['w_rose', 'w_berry', 'w_sage'],
+    moving: ['w_navy', 'w_amber', 'w_clay'],
     studio: ['w_mono', 'w_charcoal', 'w_plum'],
     locksmith: ['w_charcoal', 'w_amber', 'w_slate'],
     appliance: ['w_ocean', 'w_slate', 'w_teal'],
@@ -440,15 +442,15 @@ function v3Starter(type, cred) {
   // Type themes that suit each category, first one most often: 'bold' (condensed), 'grotesk' (Inter Tight),
   // 'clean' (Plex), 'editorial' (Newsreader), 'refined' (DM Serif), 'classic' (Playfair), 'friendly' (Nunito).
   const TYPE_BY_CAT = {
-    barber: ['bold', 'bold', 'grotesk'], tattoo: ['bold', 'grotesk'], auto: ['bold', 'grotesk'], fitness: ['grotesk', 'bold'], marine: ['bold', 'clean'], home: ['grotesk', 'bold', 'clean'],
-    salon: ['refined', 'refined', 'editorial'], spa: ['refined', 'editorial', 'clean'], bakery: ['refined', 'editorial', 'friendly'], cafe: ['editorial', 'refined', 'grotesk'], restaurant: ['classic', 'editorial', 'refined'],
-    photo: ['editorial', 'grotesk'], retail: ['editorial', 'refined', 'grotesk'], lawn: ['grotesk', 'clean', 'friendly'], cleaning: ['friendly', 'clean', 'grotesk'], pet: ['friendly', 'friendly', 'clean'], generic: ['clean', 'grotesk'],
-    legal: ['classic', 'classic', 'editorial'], dental: ['clean', 'friendly'], health: ['clean', 'friendly', 'refined'], finance: ['classic', 'clean'], realestate: ['classic', 'editorial'], education: ['friendly', 'clean'],
-    events: ['refined', 'editorial'], moving: ['grotesk', 'bold'], studio: ['grotesk', 'bold', 'clean'], locksmith: ['bold', 'grotesk'], appliance: ['clean', 'grotesk'], tailor: ['editorial', 'refined', 'classic'], childcare: ['friendly', 'friendly', 'clean'],
+    barber: ['bold', 'sturdy', 'grotesk'], tattoo: ['bold', 'sturdy'], auto: ['sturdy', 'bold'], fitness: ['sturdy', 'grotesk', 'bold'], marine: ['sturdy', 'clean'], home: ['sturdy', 'geo', 'grotesk'],
+    salon: ['refined', 'elegant', 'editorial'], spa: ['elegant', 'refined', 'editorial'], bakery: ['warm', 'refined', 'editorial'], cafe: ['warm', 'editorial', 'refined'], restaurant: ['classic', 'warm', 'editorial'],
+    photo: ['editorial', 'grotesk'], retail: ['editorial', 'refined', 'grotesk'], lawn: ['geo', 'grotesk', 'warm'], cleaning: ['geo', 'friendly', 'clean'], pet: ['warm', 'friendly', 'friendly'], generic: ['clean', 'grotesk'],
+    legal: ['classic', 'elegant', 'editorial'], dental: ['geo', 'clean', 'friendly'], health: ['geo', 'clean', 'refined'], finance: ['classic', 'clean'], realestate: ['classic', 'editorial'], education: ['friendly', 'clean'],
+    events: ['elegant', 'refined'], moving: ['sturdy', 'grotesk'], studio: ['grotesk', 'bold', 'geo'], locksmith: ['sturdy', 'bold'], appliance: ['geo', 'clean'], tailor: ['editorial', 'refined', 'classic'], childcare: ['friendly', 'friendly', 'clean'],
   };
   const _tt = (typeof WSENGINE !== 'undefined' && WSENGINE.typeThemes) || {};
   // A yoga or pilates studio is calm, not a condensed gym poster.
-  const _tsub = /yoga|pilates|meditat|barre/i.test(String(type || '')) ? ['refined', 'clean', 'editorial'] : null;
+  const _tsub = /yoga|pilates|meditat|barre/i.test(String(type || '')) ? ['warm', 'elegant', 'refined'] : null;
   const _ts = (_tsub || TYPE_BY_CAT[r.category] || ['bold', 'clean']).filter((x) => _tt[x]);
   r.typeset = v3FlavorPick(_ts.length ? _ts : ['bold']);
   r.palette = v3FlavorPick(v3PalSet(r.category, type) || PAL_SETS[r.category] || ['w_mono', 'w_slate', 'w_charcoal']);
@@ -464,11 +466,11 @@ function v3Starter(type, cred) {
 // falls back to its designed gradient hero — nothing breaks, no latency. Keeps the make-or-break first
 // impression photo-led, like the sites small businesses actually admire.
 const PHOTO_QUERY = {
-  barber: 'barbershop haircut', salon: 'hair salon styling', spa: 'spa wellness treatment', tattoo: 'tattoo studio art',
-  bakery: 'artisan bakery bread pastries', cafe: 'cozy coffee shop interior', restaurant: 'restaurant plated food',
-  lawn: 'landscaping green lawn garden', cleaning: 'bright clean home interior', marine: 'boat on the water marina',
-  auto: 'auto repair garage mechanic', fitness: 'modern gym workout', pet: 'happy dog grooming', photo: 'photographer camera studio',
-  retail: 'boutique shop interior', home: 'home renovation craftsmanship', generic: 'local small business storefront',
+  barber: 'barber cutting hair barbershop', salon: 'hairstylist styling client hair salon', spa: 'spa treatment massage therapist', tattoo: 'tattoo artist tattooing client',
+  bakery: 'baker bakery fresh bread pastries', cafe: 'barista coffee shop', restaurant: 'restaurant dining table food',
+  lawn: 'landscaper gardening lawn', cleaning: 'house cleaner cleaning home', marine: 'boat on the water marina',
+  auto: 'mechanic repairing car garage', fitness: 'personal trainer gym workout', pet: 'dog groomer grooming dog', photo: 'photographer camera studio',
+  retail: 'boutique shop interior', home: 'carpenter renovating home', generic: 'local small business storefront',
   locksmith: 'locksmith door lock key', appliance: 'appliance repair technician', tailor: 'tailor sewing alterations', childcare: 'children daycare classroom play'
 };
 // One Unsplash search → normalized photos, best match first. null = the request failed (no point retrying),
@@ -553,6 +555,8 @@ const V3_PHOTO_CONFLICT = [
 ];
 const V3_PHOTO_DESK = /laptop|computer|\boffice\b|\bdesk\b|meeting|smartphone|keyboard|typing|business ?(man|woman)|\bsuit\b/;
 const V3_PHOTO_POSE = /portrait|posing|\bposes?\b|selfie|headshot|fashion|\bmodel\b|smiling (man|woman)/;
+const V3_PHOTO_PEOPLE = /\b(man|woman|men|women|person|people|worker|workers|technician|team|crew|hands?|customer|client|working|chef|baker|barber|stylist|hairdresser|groomer|roofer|plumber|electrician|mechanic|gardener|landscaper|trainer|instructor|teacher|florist|therapist|dentist|doctor|lawyer)\b/;
+const V3_PHOTO_TEXTURE = /texture|pattern|close[- ]?up|closeup|macro|abstract|background|wallpaper|backdrop/;
 function v3PhotoRel(biz, sc) {
   const t = String((biz && biz.type) || '').toLowerCase(), terms = {};
   const add = function (w) { w = String(w || ''); if (w.length >= 4 && !V3_VAGUE_WORD.test(w) && !/^(with|under|from|into|over|fixing|repairs?|shop|home|house|room|interior|work|working|local)$/.test(w)) terms[w.length >= 6 ? w.slice(0, 5) : w] = 1; };
@@ -560,7 +564,7 @@ function v3PhotoRel(biz, sc) {
   v3Words(sc && sc.photoQuery).split(' ').forEach(add);
   ((biz && biz.services) || []).forEach(function (s) { v3Words(s && s.name).split(' ').forEach(add); });
   V3_PHOTO_TERMS.forEach(function (x) { if (x[0].test(t)) x[1].split(' ').forEach(add); });
-  return { terms: Object.keys(terms).map(function (w) { return new RegExp('\\b' + w); }), bad: V3_PHOTO_CONFLICT.filter(function (x) { return x[0].test(t) && !x[1].test(t); }).map(function (x) { return x[1]; }), trades: !!(sc && sc.labels && sc.labels.family === 'trades') };
+  return { terms: Object.keys(terms).map(function (w) { return new RegExp('\\b' + w); }), bad: V3_PHOTO_CONFLICT.filter(function (x) { return x[0].test(t) && !x[1].test(t); }).map(function (x) { return x[1]; }), trades: !!(sc && sc.labels && sc.labels.family === 'trades'), people: !!(sc && sc.labels && /^(trades|beauty|pro)$/.test(sc.labels.family)) };
 }
 function v3PhotoScore(p, rel) {
   const s = (p && p.txt) || '';
@@ -569,6 +573,9 @@ function v3PhotoScore(p, rel) {
   let n = 2 * Math.min(hit, 4) - 6 * Math.min(rel.bad.filter(function (re) { return re.test(s); }).length, 2);
   if (rel.trades && V3_PHOTO_DESK.test(s)) n -= 4;
   if (rel.trades && !hit && V3_PHOTO_POSE.test(s)) n -= 3;
+  // People at work and finished jobs beat textures: a roofer at work, not a close-up of shingles.
+  if (rel.people && hit && hit < 3 && V3_PHOTO_PEOPLE.test(s)) n += 2;
+  if (rel.people && V3_PHOTO_TEXTURE.test(s)) n -= 3;
   return n;
 }
 // n different photos (never the same one twice). With the relevance check the best-scoring come first: the hero at
@@ -850,9 +857,10 @@ const V3_PAGE_ORDER = {
 // Layout options per family (repeats weight a choice). Photo-led layouts only when that section has a photo;
 // v3Look drops any option the engine doesn't offer.
 const V3_LOOKS = {
-  heroPhoto: { food: ['photo', 'center', 'split', 'minimal'], trades: ['frame', 'frame', 'photo', 'split'], beauty: ['center', 'split', 'photo', 'minimal'], pro: ['frame', 'frame', 'split', 'photo'], creative: ['photo', 'center', 'minimal'], retail: ['minimal', 'photo', 'split'] },
+  // Headline-first openings lead (full-bleed cinema, or the collage); the classic layouts stay in the mix for variety.
+  heroPhoto: { food: ['cinema', 'cinema', 'collage', 'center', 'split'], trades: ['cinema', 'cinema', 'collage', 'frame'], beauty: ['cinema', 'cinema', 'collage', 'collage'], pro: ['collage', 'collage', 'cinema', 'frame'], creative: ['cinema', 'collage', 'minimal'], retail: ['collage', 'cinema', 'minimal'] },
   heroPlain: { food: ['photo', 'center', 'type'], trades: ['photo', 'type'], beauty: ['center', 'type', 'photo'], pro: ['photo', 'center'], creative: ['center', 'type'], retail: ['type', 'photo'] },
-  menu: { food: ['grid', 'list', 'feature'], trades: ['numbered', 'list', 'grid'], beauty: ['grid', 'list'], pro: ['grid', 'numbered', 'list'], creative: ['grid', 'feature', 'list'], retail: ['grid', 'grid', 'list'] },
+  menu: { food: ['bento', 'bento', 'grid', 'feature'], trades: ['bento', 'bento', 'numbered', 'grid'], beauty: ['bento', 'bento', 'grid', 'list'], pro: ['bento', 'grid', 'numbered', 'list'], creative: ['bento', 'grid', 'feature'], retail: ['bento', 'grid', 'list'] },
   mainList: { food: ['list', 'feature', 'grid'], trades: ['grid', 'rows', 'numbered'], beauty: ['list', 'rows', 'grid'], pro: ['rows', 'rows', 'grid', 'list'], creative: ['grid', 'feature'], retail: ['grid'] },
   gallery: { food: ['bento', 'strip'], trades: ['strip'], beauty: ['bento', 'strip'], pro: ['strip'], creative: ['bento', 'bento', 'strip'], retail: ['strip', 'bento'] },
   steps: { food: ['grid'], trades: ['line', 'line', 'grid'], beauty: ['grid'], pro: ['line', 'grid'], creative: ['grid', 'line'], retail: ['grid'] },
@@ -923,6 +931,10 @@ function v3ServeLine(b) {
   if (!city) return 'We work in ' + v3And(near.slice(0, 3)) + (near.length > 3 ? ' and nearby towns.' : '.');
   return near.length === 1 ? 'Serving ' + city + ' and ' + near[0] + '.' : 'Serving ' + city + ' and nearby towns including ' + near[0] + ' and ' + near[1] + '.';
 }
+// A title from a { city, plain } pool: the city version when there is a city (CITY replaced), else a plain one.
+function v3CityPick(pool, b) { const city = v3City(b); return city && pool.city ? v3Pick(pool.city).replace(/CITY/g, city) : v3Pick(pool.plain || ['Why choose us']); }
+// A plain line for a named service with no description (a card is never just a title), varied per business.
+function v3SvcFill(fam, name, i) { const p = V3_SVC_FILL[fam] || V3_SVC_FILL.pro; return p[(parseInt(v3Hash(name), 36) + i) % p.length]; }
 function v3Years(b) { return b.founded ? new Date().getFullYear() - parseInt(b.founded, 10) : -1; }
 // Businesses that go to their customers (trades, cleaners, movers, mobile services) get an "Areas we serve" block.
 function v3ServiceArea(fam, cat, type, b) { return (fam === 'trades' && !(cat === 'auto' && b.address && !/mobile/i.test(type))) || /\bmobile\b|dog walk|pet sit|house ?sit|walker|we come to you/i.test(String(type || '')); }
@@ -1038,14 +1050,25 @@ function v3HomePhotos(site, home, gal) {
     const spare = gal && home.indexOf(gal) < 0 ? ['p0', 'p1', 'p2'].map(function (k) { return gal.id + '.' + k; }).filter(function (k) { return ph[k]; }) : [];
     let lent = 0;
     const ok = function (t, v) { return !!(WSENGINE.sections[t] && (WSENGINE.sections[t].variants || {})[v]); };
-    const lend = function (s) {
+    const lend = function (s, slot) {
       const k = spare.shift(); if (!k) return false;
-      const to = s.id + '.photo'; ph[to] = ph[k]; lent++;
+      const to = s.id + '.' + (slot || 'photo'); ph[to] = ph[k]; lent++;
       ['photoCredits', 'photoFallbacks'].forEach(function (f) { if (site[f] && site[f][k]) site[f][to] = site[f][k]; });
       return true;
     };
     // The photo-led services layout only with a photo (half a page of empty space otherwise).
     home.forEach(function (s) { if (s.type === 'services' && s.variant === 'feature' && !ph[s.id + '.photo'] && !lend(s)) s.variant = ok('services', 'grid') ? 'grid' : 'list'; });
+    // The bento's feature card shows a real photo: a spare one, else the home gallery's third (the gallery keeps two).
+    home.forEach(function (s) {
+      if (s.type !== 'services' || s.variant !== 'bento' || ph[s.id + '.photo'] || lend(s)) return;
+      const k = gal && home.indexOf(gal) > -1 && ph[gal.id + '.p1'] && ph[gal.id + '.p2'] ? gal.id + '.p2' : '';
+      if (!k) return;
+      const to = s.id + '.photo'; ph[to] = ph[k]; delete ph[k];
+      ['photoCredits', 'photoFallbacks'].forEach(function (f) { if (site[f] && site[f][k]) { site[f][to] = site[f][k]; delete site[f][k]; } });
+    });
+    // The collage opening gets its second photo from the spares.
+    const hc = home.find(function (s) { return s.type === 'hero' && s.variant === 'collage'; });
+    if (hc && ph[hc.id + '.photo'] && !ph[hc.id + '.photo2']) lend(hc, 'photo2');
     if (!spare.length) return;
     const why = home.find(function (s) { return s.type === 'why'; });
     if (why && ok('why', 'split') && lend(why)) why.variant = 'split';
@@ -1129,10 +1152,13 @@ function v3Pages(site, sc, isShop) {
     // two real badges), "why choose us" after the services (trades, professionals, beauty), and the towns they serve
     // near the end for businesses that go to their customers. Each only when the engine offers it and it has content.
     const trustItems = (fam === 'trades' || fam === 'pro') && can('trust') ? v3TrustItems(b) : [];
-    const trust = trustItems.length >= 2 ? mk('trust', { variant: v3Look('trust', trustItems.length >= 3 ? ['strip', 'strip', 'cards'] : ['strip']), title: '' }) : null;
-    const area = (b.towns || []).length && can('area') && v3ServiceArea(fam, cat, b.type, b) ? mk('area', { variant: v3Look('area', []), title: v3Pick(['Areas we serve', 'Where we work', 'Our service area']), text: [v3ServeLine(b) || (b.city ? 'Based in ' + v3City(b) + '.' : ''), 'Not sure if we cover your address? Get in touch and we’ll let you know.'].filter(Boolean).join(' ') }) : null;
+    const trust = trustItems.length >= 2 ? mk('trust', { variant: v3Look('trust', trustItems.length >= 3 ? ['band', 'band', 'strip', 'cards'] : ['strip', 'band']), title: '' }) : null;
+    const area = (b.towns || []).length && can('area') && v3ServiceArea(fam, cat, b.type, b) ? mk('area', { variant: v3Look('area', []), title: v3CityPick(V3_AREA_TITLE, b), text: [v3ServeLine(b) || (b.city ? 'Based in ' + v3City(b) + '.' : ''), 'Not sure if we cover your address? Get in touch and we’ll let you know.'].filter(Boolean).join(' ') }) : null;
     const whyItems = (fam === 'trades' || fam === 'pro' || fam === 'beauty') && can('why') ? v3WhyItems(b, cat, fam, !!area, !!trust) : [];
-    const why = whyItems.length >= 3 ? mk('why', { variant: v3Look('why', ['grid', 'split']), title: v3Pick(['Why choose us', 'Why people choose us', 'Why work with us']), items: whyItems }) : null;
+    const why = whyItems.length >= 3 ? mk('why', { variant: v3Look('why', ['grid', 'split']), title: v3CityPick(V3_WHY_TITLE[fam] || V3_WHY_TITLE.pro, b), items: whyItems }) : null;
+    // The supporting line under a headline-first opening: a plain local line (the owner's own answer already leads the
+    // story or the why points). Stored on the hero, so it shows (and can be edited) in those layouts only.
+    if (hero && !WSENGINE.str(hero.sub)) { const city = v3City(b); hero.sub = city && V3_HERO_SUB[fam] ? v3Pick(V3_HERO_SUB[fam]).replace(/CITY/g, city) : ''; }
     let homeUsedIntro = false;
     let homeIntro = null;
     const V3_PROMISE = {
@@ -1592,7 +1618,7 @@ async function buildV3Site(d, env, opts) {
       const _items = biz.services.filter(function (x) { return x.name; }).map(function (x, i) {
         const k = _norm(x.name);
         const hit = _starter.find(function (s) { return s.k && (s.k === k || (k.length > 3 && (s.k.indexOf(k) > -1 || k.indexOf(s.k) > -1))); });
-        return { emoji: knownType ? ((hit && hit.emoji) || _recs[(i + 2) % (_recs.length || 1)] || '') : '', name: x.name, text: x.desc || (hit ? hit.text : ''), from: x.price || '' };
+        return { emoji: knownType ? ((hit && hit.emoji) || _recs[(i + 2) % (_recs.length || 1)] || '') : '', name: x.name, text: x.desc || (hit ? hit.text : '') || v3SvcFill(sc.labels.family, biz.name, i), from: x.price || '' };
       });
       add('services', { variant: 'grid', title: sc.servicesTitle || 'What we do', items: _items });
     }
