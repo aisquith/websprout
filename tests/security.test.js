@@ -11,6 +11,12 @@ module.exports = async function (ctx, t) {
     t.eq(r.status, 403, 'admin grant refuses ' + site + ' requests');
     t.eq((await r.text()).trim(), 'Forbidden', 'admin grant ' + site + ' is blocked before auth');
   }
+  // A grant link opened from an email app or typed in arrives as "none" (or as a navigation): refused, so a customer
+  // can't get Pro by sending the owner a link.
+  for (const h of [{ 'Sec-Fetch-Site': 'none' }, { 'Sec-Fetch-Site': 'same-origin', 'Sec-Fetch-Mode': 'navigate' }]) {
+    const r = await fetch(base + '/admin/grant?email=x@y.com&plan=pro', { headers: h });
+    t.eq(r.status, 403, 'admin grant refuses a link opened directly ' + JSON.stringify(h));
+  }
   // siteIds with separators are rejected (no writing into another site's keys)
   let r = await post(base, '/api/form/abcd1234:x', { a: 'b' });
   t.eq(r.status, 400, 'form siteId with ":" is rejected');

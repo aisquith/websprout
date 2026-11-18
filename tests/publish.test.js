@@ -71,7 +71,8 @@ module.exports = async function (ctx, t) {
   let m = await mail(lead);
   t.ok(m && /Glow Salon/.test(m.from) && /Glow Salon/.test(m.subject), 'visitor gets an auto-reply from the business');
   t.ok(m && /Hi Ana,/.test(m.html) && !/pills|<b>Ruiz/.test(m.html), 'auto-reply greets by first name and never echoes the message');
-  await post(base, '/api/inbox/notify', { site: s.siteId, key: s.formKey, email: 'owner@glow.test' });
+  // A signed-in owner can send alerts to their own address straight away (other addresses need a confirmation click).
+  await post(base, '/api/inbox/notify', { site: s.siteId, key: s.formKey, email: 'owner@glow.test' }, { Cookie: lib.cookie(await lib.signIn(base, 'owner@glow.test')) });
   const lead2 = 'bo.' + Date.now().toString(36) + '@glow.test';
   await post(base, '/api/form/' + s.siteId, { email: lead2, message: 'Hi' });
   m = await mail(lead2);

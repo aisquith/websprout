@@ -61,7 +61,7 @@ const WS_CROSS_ORIGIN_POST = {
 };
 function wsCrossOriginOk(p){ return WS_CROSS_ORIGIN_POST[p] === 1 || p.indexOf('/api/form/') === 0; } // + /api/form/<site>: published-site contact forms
 // Endpoints that legitimately post a non-JSON body (they do their own checks): the sign-in form and the sandboxed renderer.
-const WS_FORM_POST = { '/auth/verify': 1, '/render': 1, '/email-optout': 1, '/api/resend/webhook': 1 };
+const WS_FORM_POST = { '/auth/verify': 1, '/api/inbox/notify/confirm': 1, '/render': 1, '/email-optout': 1, '/api/resend/webhook': 1 };
 // Security headers on every response, framing rules on the app's own pages, and the one-time upgrade of an old
 // ws_sess cookie to __Host-ws_sess (see getSession).
 function wsFinish(request, url, host, res){
@@ -139,7 +139,6 @@ async function wsRoute(request, env, url, _host) {
     if (url.pathname === '/ws-engine.js') return new Response(wsEngineJs(), { headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'public, max-age=86400' } });
     if (url.pathname === '/products') return doProducts(request, env);
     if (url.pathname === '/store-preview') return doStorePreview(request, env);
-    if (url.pathname === '/api/post' && request.method === 'POST') return doWritePost(request, env);
     if (url.pathname === '/api/invoice' && request.method === 'POST') return doInvoice(request, env);
     if (url.pathname === '/connect/start' && request.method === 'GET') return doConnectStart(request, env);
     if (url.pathname === '/connect/return' && request.method === 'GET') return doConnectReturn(request, env);
@@ -185,6 +184,10 @@ async function wsRoute(request, env, url, _host) {
     if (url.pathname === '/email-optout' && (request.method === 'GET' || request.method === 'POST')) return doEmailOptout(request, env);
     // State-changing admin links: refuse requests triggered from another page (e.g. an <img> on a published *.websprout.app site)
     if ((url.pathname === '/admin/grant' || url.pathname === '/admin/feature' || url.pathname === '/admin/nudge') && ['same-origin', 'none', ''].indexOf(request.headers.get('sec-fetch-site') || '') === -1) return new Response('Forbidden', { status: 403 });
+    // Granting Pro and featuring a site only happen from buttons in the admin panel (a same-origin fetch). A link opened
+    // from an email or typed into the address bar arrives as "none" and is refused, so a customer can't email the owner
+    // a /admin/grant link and get Pro by having it tapped.
+    if ((url.pathname === '/admin/grant' || url.pathname === '/admin/feature') && ((request.headers.get('sec-fetch-site') || '') === 'none' || request.headers.get('sec-fetch-mode') === 'navigate')) return new Response('Forbidden: use the buttons in the admin panel.', { status: 403 });
     if (url.pathname === '/admin/grant') return doAdminGrant(request, env);
     if (url.pathname === '/admin/errors/clear' && request.method === 'POST') { if (['same-origin', 'none', ''].indexOf(request.headers.get('sec-fetch-site') || '') === -1) return new Response('Forbidden', { status: 403 }); return doAdminErrorsClear(request, env); }
     if (url.pathname === '/admin/feature') return doAdminFeature(request, env);
@@ -228,6 +231,7 @@ async function wsRoute(request, env, url, _host) {
     if (url.pathname === '/api/connect-domain' && request.method === 'POST') return wsAfter(request, env, 'domain_connected', doConnectDomain);
     if (url.pathname === '/api/inbox' && request.method === 'GET') return doInboxData(request, env);
     if (url.pathname === '/api/inbox/notify' && request.method === 'POST') return doInboxNotify(request, env);
+    if (url.pathname === '/api/inbox/notify/confirm') return doInboxNotifyConfirm(request, env);
     if (url.pathname === '/api/inbox/autoreply' && request.method === 'POST') return doInboxAutoReply(request, env);
     // Test servers only: read back mail that wsSendMail recorded instead of sending.
     if (url.pathname === '/__test/mail' && _testOk && env.KV) return new Response((await env.KV.get('testmail:' + (url.searchParams.get('to') || '').toLowerCase())) || 'null', { headers: { 'Content-Type': 'application/json' } });

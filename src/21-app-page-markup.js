@@ -998,21 +998,20 @@
       <div class="d-provider-card">
         <div class="d-prov-head">
           <span class="d-prov-logo">🟠</span>
-          <div><div class="d-prov-name">Cloudflare Pages</div><div class="d-prov-sub">Unlimited bandwidth, blazing fast CDN</div></div>
+          <div><div class="d-prov-name">Cloudflare Pages</div><div class="d-prov-sub">Free plan on Cloudflare&#39;s global network</div></div>
         </div>
         <ul class="d-features">
-          <li>Unlimited free bandwidth</li>
-          <li>300+ global locations</li>
+          <li>Free plan (check their current limits)</li>
           <li>Free HTTPS + custom domain</li>
-          <li>Perfect for high-traffic sites</li>
+          <li>Handy if your domain is already on Cloudflare</li>
         </ul>
         <ol class="d-steps">
-          <li class="d-step"><div class="d-step-n">1</div><div class="d-step-txt"><strong>Download your site</strong>Click ⬇ Download in the studio header to save your HTML file.</div></li>
-          <li class="d-step"><div class="d-step-n">2</div><div class="d-step-txt"><strong>Rename to index.html</strong>Rename the downloaded file from <code>websprout-site.html</code> to <code>index.html</code>.</div></li>
-          <li class="d-step"><div class="d-step-n">3</div><div class="d-step-txt"><strong>Go to Cloudflare Pages</strong>Visit <a href="https://pages.cloudflare.com" target="_blank" style="color:#f6821f">pages.cloudflare.com</a>, sign up free, click Create project → Direct Upload.</div></li>
-          <li class="d-step"><div class="d-step-n">4</div><div class="d-step-txt"><strong>Upload and deploy</strong>Name your project, drag in <code>index.html</code>, click Deploy. Done in 60 seconds.</div></li>
+          <li class="d-step"><div class="d-step-n">1</div><div class="d-step-txt"><strong>Download your site</strong>Click ⬇ Download in the studio header. One page saves as an .html file; several pages save as a .zip.</div></li>
+          <li class="d-step"><div class="d-step-n">2</div><div class="d-step-txt"><strong>Get the files ready</strong>One page: put the file in a new folder and rename it <code>index.html</code>. A .zip is already set up, keep it as it is.</div></li>
+          <li class="d-step"><div class="d-step-n">3</div><div class="d-step-txt"><strong>Go to Cloudflare Pages</strong>Sign in at <a href="https://dash.cloudflare.com" target="_blank" rel="noopener" style="color:#f6821f">dash.cloudflare.com</a>, open Workers &amp; Pages → Create → Pages → Upload assets.</div></li>
+          <li class="d-step"><div class="d-step-n">4</div><div class="d-step-txt"><strong>Upload and deploy</strong>Name your project, drag in the folder (or the .zip), click Deploy site. Done in about a minute.</div></li>
         </ol>
-        <a href="https://pages.cloudflare.com" target="_blank" class="d-btn d-btn-cf" style="display:block;text-align:center;text-decoration:none;margin-top:16px">Open Cloudflare Pages →</a>
+        <a href="https://dash.cloudflare.com" target="_blank" rel="noopener" class="d-btn d-btn-cf" style="display:block;text-align:center;text-decoration:none;margin-top:16px">Open Cloudflare Pages →</a>
       </div>
       <a href="/deploy-guide" target="_blank" class="d-guide-link">📖 Read the full deploy guide</a>
     </div>
@@ -1259,7 +1258,7 @@
       <div id="panePlan" class="pf-pane">
         <div id="pfActions" style="margin-bottom:14px"></div>
         <div class="set-h">What Pro includes</div>
-        <div class="set-note" style="margin-bottom:0">Remove the &ldquo;Made with Websprout&rdquo; badge, connect your own custom domain, download your full source code, and unlock multi-page sites and the built-in store. Start with a 7-day free trial, then $10/month, renewing monthly until you cancel. Cancel anytime.</div>
+        <div class="set-note" style="margin-bottom:0">Remove the &ldquo;Made with Websprout&rdquo; badge, connect your own custom domain, download your full source code, and sell online with the built-in store. Start with a 7-day free trial, then $10/month, renewing monthly until you cancel. Cancel anytime.</div>
       </div>
       <div id="panePrivacy" class="pf-pane">
         <div class="set-h" style="margin-top:4px">Your data</div>

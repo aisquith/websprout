@@ -30,7 +30,8 @@ module.exports = async function (ctx, t) {
   t.eq(r.headers.get('access-control-allow-origin'), '*', 'place-photo can be used from published sites');
 
   // ---- the route with Google faked ----
-  const genSrc = rd('49-copy.js') + '\n' + rd('50-generator.js');
+  // Helpers that live in another file (44-auth-billing.js), stubbed for this kit: one IP, no rate limit.
+  const genSrc = 'function wsClientIp(){ return "1.2.3.4"; }\nasync function wsRate(){ return true; }\n' + rd('49-copy.js') + '\n' + rd('50-generator.js');
   const routeKit = (fetchFn, cachesObj) => new Function('fetch', 'caches', genSrc + '\n;return { doPlacePhoto, v3Hash, v3PhotoQueries, v3StarterBase, PHOTO_QUERY, V3_COLORFUL, V3_COPYBOOK };')(fetchFn, cachesObj);
   {
     const calls = [];

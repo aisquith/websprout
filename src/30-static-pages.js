@@ -243,6 +243,7 @@ a{color:#2d7a3a}
 <li><strong>Analytics and activity events:</strong> raw events are deleted after 400 days (about 13 months). After that we keep only daily totals that contain no personal information. If our main analytics database is unavailable, events go to a backup log that is deleted after 60 days.</li>
 <li><strong>Technical error reports from the app:</strong> 30 days.</li>
 <li><strong>Payment records:</strong> kept by Stripe as the law requires.</li>
+<li><strong>Free-trial record:</strong> if you start a Pro free trial, we keep a one-way fingerprint (a hash) of your email address, even after you delete your account, so each person gets one free trial. It can't be turned back into your address and isn't used for anything else.</li>
 </ul>
 <p>We may also send you an occasional service email about your own account or sites (for example, a one-time reminder that an unpublished site is saved); every such email includes an unsubscribe link, and we honor opt-outs. When you delete a site or your account, the associated data is removed from our systems, except payment records that Stripe is required to retain by law. You can delete everything at any time (see below).</p>
 <h2>Children</h2>
@@ -468,7 +469,12 @@ h1{font-size:clamp(2rem,4vw,3rem);font-weight:900;color:#0f1a0d;letter-spacing:-
 .faq-q:hover{background:#f8faf8}
 .faq-icon{font-size:18px;color:#2d7a3a;transition:transform .2s;flex-shrink:0}
 .faq-a{padding:0 20px;max-height:0;overflow:hidden;transition:all .25s ease;font-size:14px;color:#555;line-height:1.7}
-.faq-item.open .faq-a{padding:0 20px 16px;max-height:300px}
+.faq-item.open .faq-a{padding:0 20px 16px;max-height:600px}
+.note{margin-top:16px;font-size:13.5px;color:#555;background:#f8faf8;border:1px solid #e8f0e5;border-radius:10px;padding:12px 14px;line-height:1.6}
+.note a{color:#2d7a3a}
+.dns{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+.dns th,.dns td{border:1px solid #e8f0e5;padding:6px 8px;text-align:left}
+.dns th{background:#f8faf8;font-weight:700;color:#444}
 .faq-item.open .faq-icon{transform:rotate(45deg)}
 
 footer{border-top:1px solid #e8f0e5;padding:28px 5vw;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;background:#f8faf8}
@@ -494,69 +500,72 @@ footer{border-top:1px solid #e8f0e5;padding:28px 5vw;display:flex;align-items:ce
   <div class="hero-inner">
     <div class="eyebrow">Deploy Guide</div>
     <h1>Get your site live in minutes</h1>
-    <p class="lead">You built your site — now let's get it online. There are three ways to do it, easiest first. Most people never need to look past Option 1.</p>
+    <p class="lead">You built your site. Now put it online. There are three ways, easiest first. Most people only need Option 1.</p>
   </div>
 </div>
 
 <div class="wrap">
-  <div class="rec-banner"><div class="rec-icon">💡</div><div><strong>New here? Use Option 1.</strong> Publishing on Websprout is free and takes one click — no other accounts, no tokens, no files. The other options are only if you want your own domain or want to host the files yourself.</div></div>
+  <div class="rec-banner"><div class="rec-icon">💡</div><div><strong>New here? Use Option 1.</strong> Publishing on Websprout is free: sign in with your email, pick a name, and you're live. No hosting account, no files. Options 2 and 3 are for your own domain or your own hosting.</div></div>
 
   <div class="guide-card" style="margin-bottom:28px">
     <div class="guide-header">
       <div class="guide-logo">🌐</div>
-      <h2>Option 1 — Publish free on Websprout (easiest)</h2>
-      <p>The simplest way to go live. Your site gets a free address like <code>yourname.websprout.app</code>, with HTTPS, in one click. No second account, nothing to download.</p>
+      <h2>Option 1: Publish free on Websprout (easiest)</h2>
+      <p>Your site gets a free address like <code>yourname.websprout.app</code> with HTTPS. Nothing to download and no other accounts.</p>
     </div>
     <div class="guide-body">
       <ol class="step-list">
-        <li class="step-item"><div class="step-num">1</div><div class="step-content"><strong>Build your site</strong>Describe your business on the Websprout home page and let it generate the site. Tweak anything with the chat until it looks right.</div></li>
-        <li class="step-item"><div class="step-num">2</div><div class="step-content"><strong>Click the Publish button</strong>In the studio toolbar at the top, click <strong>🌐 Publish</strong>.</div></li>
-        <li class="step-item"><div class="step-num">3</div><div class="step-content"><strong>Choose your free address</strong>Type the name you want — say <code>joes-tacos</code> — and you will get <code>joes-tacos.websprout.app</code>. If it is taken, try another.</div></li>
-        <li class="step-item"><div class="step-num">4</div><div class="step-content"><strong>Hit Publish — you are live</strong>Your site is online instantly at that address with free HTTPS. Share the link right away. A small "Made with Websprout" badge sits in the corner.</div></li>
-        <li class="step-item"><div class="step-num">5</div><div class="step-content"><strong>(Optional) Remove the badge</strong>Go Pro ($10/month) to remove the badge, connect your own domain, and unlock downloading the code. Cancel anytime.</div></li>
+        <li class="step-item"><div class="step-num">1</div><div class="step-content"><strong>Build your site</strong>Describe your business on the Websprout home page, pick your services, and let it build. Change anything by clicking on it or asking the chat.</div></li>
+        <li class="step-item"><div class="step-num">2</div><div class="step-content"><strong>Click Publish</strong>Click the green <strong>Publish ▾</strong> button at the top of the editor, then <strong>Publish online</strong>.</div></li>
+        <li class="step-item"><div class="step-num">3</div><div class="step-content"><strong>Sign in</strong>Enter your email and click the sign-in link we send you. It's free, there's no password, and it keeps your site tied to you, so only you can change it.</div></li>
+        <li class="step-item"><div class="step-num">4</div><div class="step-content"><strong>Choose your free address</strong>Type the name you want (at least 3 letters or numbers). For example, <code>joes-tacos</code> becomes <code>joes-tacos.websprout.app</code>. If it's taken, try another.</div></li>
+        <li class="step-item"><div class="step-num">5</div><div class="step-content"><strong>Publish. You're live.</strong>After a quick automatic content check, your site goes online at that address with HTTPS. Share the link right away. Free sites show a small "Made with Websprout" badge.</div></li>
       </ol>
-      <div style="margin-top:18px;font-size:13.5px;color:#666">To update later, edit in Websprout and click Publish again — the same address refreshes instantly.</div>
+      <div class="note"><strong>To update your site,</strong> edit it in Websprout and click Publish again. The same address updates right away. Your contact form, reviews and messages keep working.</div>
+      <div class="note"><strong>Go Pro</strong> to remove the badge, connect your own domain, and download your site's code. Pro is $10 a month, starts with a 7-day free trial, and you can cancel anytime from Settings.</div>
     </div>
   </div>
 
   <div class="guide-card" style="margin-bottom:28px">
     <div class="guide-header">
       <div class="guide-logo">🔗</div>
-      <h2>Option 2 — Use your own domain (Pro)</h2>
-      <p>Want <code>yourbusiness.com</code> instead of a websprout.app address? Point any domain you own at your published site. This is a Pro feature.</p>
+      <h2>Option 2: Use your own domain (Pro)</h2>
+      <p>Want <code>www.yourbusiness.com</code> instead of a websprout.app address? Connect a domain you own to your published site.</p>
     </div>
     <div class="guide-body">
       <ol class="step-list">
-        <li class="step-item"><div class="step-num">1</div><div class="step-content"><strong>Publish your site first</strong>Do Option 1 so your site is live at a websprout.app address. Your custom domain will point at that.</div></li>
-        <li class="step-item"><div class="step-num">2</div><div class="step-content"><strong>Get a domain (if you do not have one)</strong>Buy one from a registrar such as Namecheap, Cloudflare, or GoDaddy — usually about $10–15 a year. Already own one? Skip ahead.</div></li>
-        <li class="step-item"><div class="step-num">3</div><div class="step-content"><strong>Enter your domain in Websprout</strong>Go Pro, open the <strong>Custom domain</strong> box in Websprout, and type your domain (for example <code>yourbusiness.com</code>). Websprout shows you the exact record to add.</div></li>
-        <li class="step-item"><div class="step-num">4</div><div class="step-content"><strong>Add one DNS record at your registrar</strong>Log in where you bought the domain, find its <strong>DNS settings</strong>, and add a <strong>CNAME</strong> record pointing to <code>yourslug.websprout.app</code> (Websprout shows your exact target). Save it.</div></li>
-        <li class="step-item"><div class="step-num">5</div><div class="step-content"><strong>Wait a little — then you are live</strong>DNS changes take a few minutes to a few hours to spread. Once they do, your site loads on your own domain, with HTTPS set up automatically.</div></li>
+        <li class="step-item"><div class="step-num">1</div><div class="step-content"><strong>Publish your site first</strong>Do Option 1. Your domain will show that published site.</div></li>
+        <li class="step-item"><div class="step-num">2</div><div class="step-content"><strong>Have a domain</strong>Already own one? Skip ahead. If not, type the name you want in the <strong>Use your own domain</strong> box and click <strong>Find</strong> to see if it's available. Domains usually cost about $10 to $20 a year from a registrar like GoDaddy, Namecheap or Cloudflare.</div></li>
+        <li class="step-item"><div class="step-num">3</div><div class="step-content"><strong>Enter your domain in Websprout</strong>Open <strong>Publish ▾ → Publish online</strong>, type your domain (like <code>yourbusiness.com</code>) in the <strong>Use your own domain</strong> box, and click <strong>Connect</strong>. Websprout shows the exact records to add.</div></li>
+        <li class="step-item"><div class="step-num">4</div><div class="step-content"><strong>Add two DNS records where you bought the domain</strong>In your domain provider's DNS settings, add:
+          <table class="dns"><tr><th>Type</th><th>Name / Host</th><th>Value / Points to</th></tr>
+          <tr><td>TXT</td><td><code>_websprout</code></td><td>the code Websprout shows you</td></tr>
+          <tr><td>CNAME</td><td><code>www</code></td><td><code>sites.websprout.app</code></td></tr></table>
+          The TXT record proves the domain is yours. The CNAME sends <code>www.yourbusiness.com</code> to your site.</div></li>
+        <li class="step-item"><div class="step-num">5</div><div class="step-content"><strong>Forward the bare domain to www</strong>Most providers have a <strong>Forwarding</strong> or <strong>Redirect</strong> setting. Forward <code>yourbusiness.com</code> to <code>https://www.yourbusiness.com</code>, so both addresses work.</div></li>
+        <li class="step-item"><div class="step-num">6</div><div class="step-content"><strong>Click "I added them. Check again"</strong>DNS changes usually take a few minutes, sometimes up to an hour or two. Once Websprout sees the records, it sets up HTTPS for you automatically.</div></li>
       </ol>
-      <div style="margin-top:18px;font-size:13.5px;color:#666">Cannot find your DNS settings? Search "[your registrar] add CNAME record" — every registrar has a short help page with screenshots.</div>
+      <div class="note">Can't find your DNS settings? Search "[your provider] add CNAME record". Every provider has a help page with screenshots. Still stuck? Email <a href="mailto:support@websprout.app">support@websprout.app</a>.</div>
+      <div class="note">If you cancel Pro, your domain sends visitors to your free websprout.app address, so nobody hits a dead page. Go Pro again and your domain comes right back.</div>
     </div>
   </div>
 
-  <div class="compare-title">Option 3 — Host the code yourself (advanced)</div>
-  <div class="compare-sub">Prefer to put the downloaded HTML on your own free hosting? Go Pro to download your code, then pick one of these. Both have free plans with HTTPS and custom domains (plans and limits change, so check their current pricing) — here is how they compare.</div>
+  <div class="compare-title">Option 3: Host the code yourself (Pro, advanced)</div>
+  <div class="compare-sub">Prefer your own hosting? With Pro, open <strong>Publish ▾ → Download code</strong>. A one-page site downloads as a single <code>.html</code> file named after your business. A site with several pages downloads as a <code>.zip</code> that already contains <code>index.html</code> and every page. Then use either host below. Both have free plans with HTTPS and custom domains. Plans change, so check their current limits.</div>
   <table class="cmp-table">
     <thead>
       <tr>
-        <th>Feature</th>
+        <th></th>
         <th><span class="badge-n">● Netlify</span></th>
         <th><span class="badge-cf">● Cloudflare Pages</span></th>
       </tr>
     </thead>
     <tbody>
-      <tr><td>Setup time</td><td class="netlify-col"><span class="good">~2 minutes (drag & drop)</span></td><td class="cf-col"><span class="ok">~5 minutes</span></td></tr>
-      <tr><td>Free bandwidth</td><td class="netlify-col"><span class="ok">Free plan; check current limits</span></td><td class="cf-col"><span class="ok">Free plan; check current limits</span></td></tr>
-      <tr><td>Free sites</td><td class="netlify-col"><span class="ok">Free plan; check current limits</span></td><td class="cf-col"><span class="ok">Free plan; check current limits</span></td></tr>
-      <tr><td>Global CDN speed</td><td class="netlify-col"><span class="ok">Fast (Fastly CDN)</span></td><td class="cf-col"><span class="good">Very fast (300+ locations)</span></td></tr>
-      <tr><td>Custom domain</td><td class="netlify-col"><span class="good">Free & easy</span></td><td class="cf-col"><span class="good">Free & easy</span></td></tr>
-      <tr><td>HTTPS / SSL</td><td class="netlify-col"><span class="good">Automatic</span></td><td class="cf-col"><span class="good">Automatic</span></td></tr>
-      <tr><td>Free subdomain</td><td class="netlify-col"><span class="ok">yoursite.netlify.app</span></td><td class="cf-col"><span class="ok">yoursite.pages.dev</span></td></tr>
-      <tr><td>Best for</td><td class="netlify-col"><span class="ok">Beginners, quick deploys</span></td><td class="cf-col"><span class="ok">High-traffic, global sites</span></td></tr>
-      <tr><td>One-click deploy</td><td class="netlify-col"><span class="good">✓ Built into Websprout</span></td><td class="cf-col"><span class="ok">Manual (5 easy steps)</span></td></tr>
+      <tr><td>Setup time</td><td class="netlify-col"><span class="good">About 2 minutes</span></td><td class="cf-col"><span class="ok">About 5 minutes</span></td></tr>
+      <tr><td>From inside Websprout</td><td class="netlify-col"><span class="good">✓ One-click deploy</span></td><td class="cf-col"><span class="ok">Upload by hand</span></td></tr>
+      <tr><td>Free address</td><td class="netlify-col"><span class="ok">yoursite.netlify.app</span></td><td class="cf-col"><span class="ok">yoursite.pages.dev</span></td></tr>
+      <tr><td>Custom domain + HTTPS</td><td class="netlify-col"><span class="good">Free, automatic HTTPS</span></td><td class="cf-col"><span class="good">Free, automatic HTTPS</span></td></tr>
+      <tr><td>Best for</td><td class="netlify-col"><span class="ok">Quickest setup</span></td><td class="cf-col"><span class="ok">Domains already on Cloudflare</span></td></tr>
     </tbody>
   </table>
 
@@ -565,98 +574,76 @@ footer{border-top:1px solid #e8f0e5;padding:28px 5vw;display:flex;align-items:ce
       <div class="guide-header">
         <div class="guide-logo">🟢</div>
         <h2>Deploy to Netlify</h2>
-        <p>The fastest way to get your site live. One click from inside Websprout — no setup required.</p>
+        <p>Deploy straight from Websprout, or drag and drop.</p>
       </div>
       <div class="guide-body">
         <ol class="step-list">
-          <li class="step-item">
-            <div class="step-num">1</div>
-            <div class="step-content"><strong>Generate &amp; unlock your site</strong>Build your site on Websprout and go Pro ($10/month) to unlock downloading the source code.</div>
-          </li>
-          <li class="step-item">
-            <div class="step-num">2</div>
-            <div class="step-content"><strong>Get your Netlify access token</strong>A one-time key that lets Websprout deploy for you. In Netlify: click your avatar (top right) → <strong>User settings</strong> → <strong>Applications</strong> → scroll to <strong>Personal access tokens</strong> → <strong>New access token</strong> → name it "Websprout" → <strong>Generate</strong> → copy it. Then in the studio open <strong>Deploy → Netlify</strong> and paste it. It is saved on your device only — we never see it.</div>
-          </li>
-          <li class="step-item">
-            <div class="step-num">3</div>
-            <div class="step-content"><strong>Get your live URL</strong>In about 10 seconds, your site is live at a <code>*.netlify.app</code> URL. Share it immediately.</div>
-          </li>
-          <li class="step-item">
-            <div class="step-num">4</div>
-            <div class="step-content"><strong>Add a custom domain (optional)</strong>In your Netlify dashboard go to Site Settings → Domain Management → Add custom domain. Free with any domain registrar.</div>
-          </li>
+          <li class="step-item"><div class="step-num">1</div><div class="step-content"><strong>Create a free Netlify account</strong>At <code>app.netlify.com/signup</code>.</div></li>
+          <li class="step-item"><div class="step-num">2</div><div class="step-content"><strong>Make an access token</strong>In Netlify, open <strong>User settings → Applications</strong>. Under <strong>Personal access tokens</strong>, click <strong>New access token</strong>, name it "Websprout", and copy it.</div></li>
+          <li class="step-item"><div class="step-num">3</div><div class="step-content"><strong>Deploy from Websprout</strong>Open <strong>Publish ▾ → Deploy to Netlify / Cloudflare</strong>, paste the token, pick a site name, and click <strong>Deploy my site live!</strong> The token is saved in your browser only. Websprout never stores it.</div></li>
+          <li class="step-item"><div class="step-num">4</div><div class="step-content"><strong>You're live</strong>In a few seconds your site is at <code>yoursitename.netlify.app</code>. To add your own domain, go to your Netlify site's <strong>Domain management</strong> page.</div></li>
         </ol>
-        <div style="margin-top:16px;font-size:13px;color:#666"><strong>No token, even simpler:</strong> click ⬇ Download in Websprout, then go to <code>app.netlify.com/drop</code> and drag your HTML file onto the page — instantly live.</div>
-        <a href="https://app.netlify.com/signup" target="_blank" class="guide-cta netlify">Create free Netlify account →</a>
+        <div class="note"><strong>No token, even simpler:</strong> download your site, then go to <code>app.netlify.com/drop</code>. Drag in a folder holding your files. For a one-page site, rename the file to <code>index.html</code> first. For a .zip, unzip it and drag in the folder.</div>
+        <a href="https://app.netlify.com/signup" target="_blank" rel="noopener" class="guide-cta netlify">Create free Netlify account →</a>
       </div>
     </div>
     <div class="guide-card">
       <div class="guide-header">
         <div class="guide-logo">🟠</div>
         <h2>Deploy to Cloudflare Pages</h2>
-        <p>Best for high-traffic sites, on Cloudflare's fast global network.</p>
+        <p>Good if your domain is already on Cloudflare.</p>
       </div>
       <div class="guide-body">
         <ol class="step-list">
-          <li class="step-item">
-            <div class="step-num">1</div>
-            <div class="step-content"><strong>Download your site</strong>Unlock and download your HTML file from Websprout. It will save as <code>websprout-site.html</code>.</div>
-          </li>
-          <li class="step-item">
-            <div class="step-num">2</div>
-            <div class="step-content"><strong>Rename the file</strong>Rename <code>websprout-site.html</code> to <code>index.html</code> — Cloudflare requires this exact name.</div>
-          </li>
-          <li class="step-item">
-            <div class="step-num">3</div>
-            <div class="step-content"><strong>Go to Cloudflare Pages</strong>Visit <code>pages.cloudflare.com</code>, sign up free, and click Create a project → Direct Upload.</div>
-          </li>
-          <li class="step-item">
-            <div class="step-num">4</div>
-            <div class="step-content"><strong>Upload your file</strong>Name your project, drag in your <code>index.html</code> file, and click Deploy. Done in 60 seconds.</div>
-          </li>
-          <li class="step-item">
-            <div class="step-num">5</div>
-            <div class="step-content"><strong>Your site is live</strong>Cloudflare gives you a <code>*.pages.dev</code> URL immediately. Add a custom domain anytime for free.</div>
-          </li>
+          <li class="step-item"><div class="step-num">1</div><div class="step-content"><strong>Download your site</strong>Open <strong>Publish ▾ → Download code</strong> in Websprout.</div></li>
+          <li class="step-item"><div class="step-num">2</div><div class="step-content"><strong>Get the files ready</strong>One-page site: make a new folder, put the file in it, and rename the file to <code>index.html</code>. Multi-page site: the .zip is already set up, so keep it as it is.</div></li>
+          <li class="step-item"><div class="step-num">3</div><div class="step-content"><strong>Create a Pages project</strong>Sign in at <code>dash.cloudflare.com</code>, open <strong>Workers &amp; Pages</strong>, click <strong>Create</strong>, choose <strong>Pages</strong>, then <strong>Upload assets</strong>. Cloudflare sometimes renames these buttons, but look for the direct-upload choice.</div></li>
+          <li class="step-item"><div class="step-num">4</div><div class="step-content"><strong>Upload and deploy</strong>Name your project, drag in the folder (or the .zip), and click <strong>Deploy site</strong>.</div></li>
+          <li class="step-item"><div class="step-num">5</div><div class="step-content"><strong>You're live</strong>Your site is at <code>yourproject.pages.dev</code>. Add your own domain under the project's <strong>Custom domains</strong> tab.</div></li>
         </ol>
-        <a href="https://pages.cloudflare.com" target="_blank" class="guide-cta cf">Go to Cloudflare Pages →</a>
+        <a href="https://dash.cloudflare.com/sign-up" target="_blank" rel="noopener" class="guide-cta cf">Go to Cloudflare →</a>
       </div>
     </div>
   </div>
+  <div class="note" style="margin:-30px 0 60px"><strong>Good to know when you host it yourself:</strong> your contact form still delivers messages to your Websprout inbox. To change the site later, edit it in Websprout, download it again and upload the new files. Self-hosted sites don't update by themselves.</div>
 
   <div class="faq-title">Frequently asked questions</div>
   <div class="faq-list">
     <div class="faq-item">
       <div class="faq-q">Which option should I pick? <span class="faq-icon">+</span></div>
-      <div class="faq-a">If you just want your site online, use Option 1 — publishing free on Websprout is the fastest and needs nothing else. Use Option 2 if you own a domain like yourbusiness.com and want to use it. Only use Option 3 if you specifically want the files hosted on your own Netlify or Cloudflare account.</div>
+      <div class="faq-a">If you just want your site online, use Option 1. It's the fastest and needs nothing else. If you own a domain like yourbusiness.com, add Option 2. Use Option 3 only if you specifically want the files on your own Netlify or Cloudflare account.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">Do I have to pay to put my site online? <span class="faq-icon">+</span></div>
-      <div class="faq-a">No. Publishing live on Websprout is free, with a small badge. Pro removes the badge, connects your own domain, and lets you download and self-host the code. Pro starts with a 7-day free trial, then $10/month &mdash; cancel anytime.</div>
+      <div class="faq-a">No. Building, previewing and publishing on Websprout are free, with a small badge. Pro removes the badge, connects your own domain, and lets you download your code. It starts with a 7-day free trial (for your first subscription), then costs $10 a month. Cancel anytime in Settings → Manage billing &amp; cancel plan.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Why do I need to sign in to publish? <span class="faq-icon">+</span></div>
+      <div class="faq-a">Signing in ties the site to you, so nobody else can change or take over your published site. It's free and uses a one-time email link, with no password to remember.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">My site was refused when I tried to publish. Why? <span class="faq-icon">+</span></div>
+      <div class="faq-a">Every site gets an automatic check before it goes live, to keep scams and harmful content off Websprout. If a normal business site was blocked by mistake, email support@websprout.app and we'll review it.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">How long does a custom domain take? <span class="faq-icon">+</span></div>
+      <div class="faq-a">Usually a few minutes once both DNS records are saved. Sometimes it takes up to a few hours. HTTPS is set up automatically after the records are found. If Websprout says it can't find the records, double-check the Name/Host fields. Some providers want just <code>www</code> and <code>_websprout</code>, not the full domain.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Does my domain work without "www"? <span class="faq-icon">+</span></div>
+      <div class="faq-a">Yes, once you forward the bare domain (yourbusiness.com) to the www address at your domain provider. That's step 5 of Option 2.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">Do I need to pay for hosting? <span class="faq-icon">+</span></div>
-      <div class="faq-a">Usually not. Netlify and Cloudflare Pages both have a free plan that is enough for most small business websites. Their limits change from time to time, so check their current pricing pages.</div>
-    </div>
-    <div class="faq-item">
-      <div class="faq-q">What is a Personal Access Token? <span class="faq-icon">+</span></div>
-      <div class="faq-a">A Personal Access Token is a secret key that lets Websprout talk to Netlify on your behalf to deploy your site. You get it from your Netlify account under User Settings → Applications → Personal Access Tokens. It stays on your device only — we never store it on our servers.</div>
-    </div>
-    <div class="faq-item">
-      <div class="faq-q">Can I update my site after deploying? <span class="faq-icon">+</span></div>
-      <div class="faq-a">Yes. Use the visual editor in Websprout to make changes, re-download your site, and re-deploy. On Netlify, you can drag and drop a new file onto your existing site to update it. On Cloudflare Pages, you can upload a new version through the dashboard.</div>
-    </div>
-    <div class="faq-item">
-      <div class="faq-q">How do I connect a custom domain? <span class="faq-icon">+</span></div>
-      <div class="faq-a">Both platforms make this easy and free. On Netlify: Site Settings → Domain Management → Add custom domain, then follow the DNS instructions from your domain registrar. On Cloudflare Pages: Custom Domains → Add a domain. If your domain is already on Cloudflare, it's automatic.</div>
+      <div class="faq-a">Not with Option 1 or 2, because Websprout hosts your site. For Option 3, Netlify and Cloudflare Pages both have free plans that cover most small business sites. Check their current pricing pages, since limits change.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q">Is my site secure (HTTPS)? <span class="faq-icon">+</span></div>
-      <div class="faq-a">Yes, automatically. Both Netlify and Cloudflare Pages issue free SSL certificates via Let's Encrypt the moment your site is deployed. Your site will always serve over HTTPS with no extra configuration.</div>
+      <div class="faq-a">Yes. Sites published on Websprout, custom domains connected through Websprout, and sites on Netlify or Cloudflare Pages all get free HTTPS automatically.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q">Which should I choose? <span class="faq-icon">+</span></div>
-      <div class="faq-a">For most people, Netlify is easier and faster to get started. If you expect high traffic or already use Cloudflare for a domain, Cloudflare Pages is a strong long-term choice because of its large global network.</div>
+      <div class="faq-q">Can I take my site down? <span class="faq-icon">+</span></div>
+      <div class="faq-a">Yes. Open Publish online in the editor and choose to take the site offline. It stays saved in your account, so you can publish again anytime. Sites you host yourself are removed from your Netlify or Cloudflare dashboard.</div>
     </div>
   </div>
 </div>

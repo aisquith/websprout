@@ -1223,7 +1223,7 @@ document.addEventListener('DOMContentLoaded',function(){
     var sid=window._wsSite||localStorage.getItem('ws_site')||'';var k=window._wsKey||localStorage.getItem('ws_key')||'';
     var em=((document.getElementById('leadsNotify')||{}).value||'').trim();
     if(!sid||!k){if(window.toast)toast('Publish or generate a site first.');return;}
-    fetch('/api/inbox/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:sid,key:k,email:em})}).then(function(){if(window.toast)toast('Saved \\u2014 leads will be emailed to '+(em||'your account email'));}).catch(function(){if(window.toast)toast('Could not save. Try again.');});
+    fetch('/api/inbox/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:sid,key:k,email:em})}).then(function(x){return x.json();}).then(function(z){if(window.toast)toast(z&&z.error?z.error:(z&&z.pending?z.message:('Saved \\u2014 leads will be emailed to '+(em||'your account email'))),3200);}).catch(function(){if(window.toast)toast('Could not save. Try again.');});
   });
   // ── Marketing copy (AI post writer) ──
   var _postKind='social';
@@ -1949,7 +1949,7 @@ function wsRenderLeadsCard(pad){
     box.appendChild(wseEl('div','wse-hint wse-tip',me.auth?'Reply from your own email or phone, and see leads from all your sites in one place.':'Your Leads inbox lets you reply from your own email or phone.'));
     // Alerts and auto-reply
     var w=wseEl('div','wse-ctl');w.appendChild(wseEl('div','wse-ctl-label','Email me when a lead arrives'));var r=wseEl('div','wse-row');var ni=document.createElement('input');ni.className='wse-field';ni.type='email';ni.placeholder='you@example.com';ni.value=j.notify||'';ni.setAttribute('aria-label','Email for new lead alerts');var nb=wseEl('button','wse-savebtn','Save');nb.type='button';r.appendChild(ni);r.appendChild(nb);w.appendChild(r);box.appendChild(w);
-    nb.addEventListener('click',function(){fetch('/api/inbox/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:sid,key:key,email:ni.value.trim()})}).then(function(x){return x.json();}).then(function(z){try{toast(z&&z.error?z.error:(ni.value.trim()?'Lead alerts will go to '+ni.value.trim():'Lead alerts turned off'),2600);}catch(e){}});});
+    nb.addEventListener('click',function(){fetch('/api/inbox/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:sid,key:key,email:ni.value.trim()})}).then(function(x){return x.json();}).then(function(z){try{toast(z&&z.error?z.error:(z&&z.pending?z.message:(ni.value.trim()?'Lead alerts will go to '+ni.value.trim():'Lead alerts turned off')),3200);}catch(e){}});});
     var ar=document.createElement('label');ar.className='wse-check';var cb=document.createElement('input');cb.type='checkbox';cb.checked=j.autoreply!==false;ar.appendChild(cb);ar.appendChild(document.createTextNode(' Send people an automatic “thanks, we got your message” email'));box.appendChild(ar);
     cb.addEventListener('change',function(){fetch('/api/inbox/autoreply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:sid,key:key,on:cb.checked})}).then(function(){try{toast(cb.checked?'Auto-reply on':'Auto-reply off',2000);}catch(e){}});});
   }).catch(function(){box.innerHTML='';box.appendChild(wseEl('div','wse-hint','Leads aren’t available right now.'));});

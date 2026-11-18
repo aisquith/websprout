@@ -247,6 +247,12 @@ async function doProducts(request, env){
     if (!_pro) return fail('PRO_REQUIRED');
     let products = Array.isArray(b.products) ? b.products.slice(0,200) : [];
     products = products.map(function(p){ var pu=String(p.payUrl||'').trim().slice(0,600); if(!/^https:\/\//i.test(pu)) pu=''; return { name:String(p.name||'').slice(0,140), price:String(p.price||'').slice(0,40), img:String(p.img||'').slice(0,600), desc:String(p.desc||'').slice(0,500), payUrl:pu, category:String(p.category||'').slice(0,40) }; }).filter(function(p){ return p.name; });
+    // Products appear on the live site without a new publish, so they get the same content check as a publish.
+    if (products.length) {
+      const _txt = products.map(function(p){ return [p.name, p.desc, p.category].filter(Boolean).join(' - '); }).join('\n').replace(/[<>]/g, ' ');
+      const _mv = await wsModCheck(env, { name: 'Shop products', slug: '', pages: ['<p>' + _txt + '</p>'] });
+      if (_mv.status === 'block') return new Response(JSON.stringify({ error: wsModMessage(_mv.category), moderation: true }), { status: 422, headers: { 'Content-Type': 'application/json' } });
+    }
     await env.KV.put('products:' + b.siteId, JSON.stringify(products));
     return succeed({ ok:true, products: products });
   } catch(e){ return wsErr(e); }

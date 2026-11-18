@@ -116,7 +116,7 @@ function load(){fetch('/api/inbox?site='+encodeURIComponent(site)+'&key='+encode
   L.innerHTML=h;
 }).catch(function(){nmsg('Could not load. Check your link and try again.',false);});}
 function saveAutoReply(){var on=document.getElementById('autoreply').checked;fetch('/api/inbox/autoreply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:site,key:key,on:on})}).then(function(r){return r.json();}).then(function(j){nmsg(j.error?j.error:(on?'Auto-reply on':'Auto-reply off'),!j.error);}).catch(function(){nmsg('Could not save',false);});}
-function saveNotify(){var email=document.getElementById('notify').value.trim();fetch('/api/inbox/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:site,key:key,email:email})}).then(function(r){return r.json();}).then(function(j){if(j.error){nmsg(j.error,false);}else{nmsg(email?'Saved! New submissions will be emailed to '+email:'Email notifications turned off.',true);}});}
+function saveNotify(){var email=document.getElementById('notify').value.trim();fetch('/api/inbox/notify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:site,key:key,email:email})}).then(function(r){return r.json();}).then(function(j){if(j.error){nmsg(j.error,false);}else if(j.pending){nmsg(j.message,true);}else{nmsg(email?'Saved! New submissions will be emailed to '+email:'Email notifications turned off.',true);}});}
 function clearAll(){if(!confirm('Delete ALL submissions for this site? This cannot be undone.'))return;fetch('/api/inbox/clear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:site,key:key})}).then(function(r){return r.json();}).then(function(){load();});}
 function exportCsv(){if(!DATA.length)return;var cols={};DATA.forEach(function(s){for(var k in s.fields)cols[k]=1;});var keys=Object.keys(cols);var rows=[['date'].concat(keys)];DATA.forEach(function(s){var r=[new Date(s.ts).toISOString()];keys.forEach(function(k){r.push(s.fields[k]||'');});rows.push(r);});
   var csv=rows.map(function(r){return r.map(function(c){var v=String(c);if(/^[=+\\-@\\t\\r]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"';}).join(',');}).join('\\n');
@@ -186,6 +186,8 @@ async function doHit(request, env){
     const b = await request.json().catch(function(){ return {}; });
     const site = String(b.site||'').replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
     if (!site) return new Response('{}', { headers: formCors() });
+    // Count views only for published sites, so made-up IDs can't fill the database.
+    if (env.KV && !(await env.KV.get('slugof:' + site))) return new Response('{}', { headers: formCors() });
     if (env.DB) { await wsCount(env, 'site_views', site, request); return new Response('{"ok":true}', { headers: formCors() }); }
     const day = new Date().toISOString().slice(0,10).replace(/-/g,'');
     const tk = 'views:'+site+':total', dk = 'views:'+site+':'+day;
@@ -249,10 +251,14 @@ async function doFormSubmit(request, env, siteId){
     const fields = {}; let n = 0;
     for (const k in data){ if (String(k).charAt(0) === '_') continue; if (n++ >= 25) break; let val = data[k]; if (typeof val !== 'string') val = String(val); val = wsClean(val); if (!val) continue; fields[wsClean(k).slice(0,60)] = val.slice(0,3000); }
     if (Object.keys(fields).length === 0) return jsonR({ ok:false, error:'empty' }, 400);
-    const ip = request.headers.get('cf-connecting-ip') || '0';
+    const ip = wsClientIp(request, env);
     const rlKey = 'frl:' + siteId + ':' + ip;
     const rl = parseInt(await env.KV.get(rlKey) || '0');
     if (rl > 40) return jsonR({ ok:false, error:'rate' }, 429);
+    // One sender across every site too, so made-up site IDs can't be used to get around the per-site limit.
+    if (!(await wsRate(env, 'frl:ip:' + ip + ':' + Math.floor(Date.now() / 3600000), 80, 3700))) return jsonR({ ok:false, error:'rate' }, 429);
+    // Only real sites (published, or made in the last 30 days) collect messages; anything else is dropped quietly.
+    if (!(await env.KV.get('slugof:' + siteId)) && !(await env.KV.get('site:' + siteId))) return jsonR({ ok:true });
     await env.KV.put(rlKey, String(rl + 1), { expirationTtl: 3600 });
     const ts = Date.now();
     // Bot check failed (or no token): the message is still saved and the owner still hears about it, but no
@@ -337,7 +343,7 @@ function siteNameFromHtml(html){
 // One place to send mail. Test servers (WS_TEST_MODE, never set in production) record it instead.
 // Global daily caps per kind of mail (KV counters; override with MAIL_CAP_<KIND>), so no single feature can be used
 // to send unlimited mail from our domain.
-const WS_MAIL_CAPS = { autoreply: 500, lead: 2000, review: 300, invoice: 300, site_email: 200, signin: 1000, support: 200, supportreply: 150 };
+const WS_MAIL_CAPS = { owneralert: 100, billing: 500, autoreply: 500, lead: 2000, review: 300, invoice: 300, site_email: 200, signin: 1000, support: 200, supportreply: 150 };
 async function wsMailCapOk(env, kind){
   if (!env || !env.KV) return true;
   const cap = parseInt(env['MAIL_CAP_' + String(kind).toUpperCase()], 10) || WS_MAIL_CAPS[kind] || 1000;
@@ -636,9 +642,41 @@ async function doInboxNotify(request, env){
     if (!env.KV) return fail('KV not configured');
     if (!(await siteKeyOk(b.site, b.key, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{ 'Content-Type':'application/json' } });
     const email = (b.email || '').trim().slice(0,120);
-    if (email) await env.KV.put('notify:' + b.site, email); else await env.KV.delete('notify:' + b.site);
-    return succeed({ ok:true, notify: email });
+    if (!email) { await env.KV.delete('notify:' + b.site); return succeed({ ok:true, notify: '' }); }
+    if (!/^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(email)) return fail('Please enter a valid email address.');
+    // Lead alerts go straight to the signed-in owner's own address (or the site's recorded owner). Any other
+    // address must click a confirmation link first, so nobody can point a site's alerts at a stranger's inbox and
+    // use the contact form to send them mail.
+    const low = email.toLowerCase();
+    let mine = false;
+    try { const s = await getSession(request, env); if (s && String(s.email || '').toLowerCase() === low) mine = true; } catch(e){}
+    try { if (!mine && String((await env.KV.get('siteowner:' + b.site)) || '').toLowerCase() === low) mine = true; } catch(e){}
+    try { if (!mine && String((await env.KV.get('notify:' + b.site)) || '').toLowerCase() === low) mine = true; } catch(e){}
+    if (mine) { await env.KV.put('notify:' + b.site, email); return succeed({ ok:true, notify: email }); }
+    if (!isRealEmail(email)) return fail('Please enter a valid email address.');
+    const current = (await env.KV.get('notify:' + b.site)) || '';
+    if (!(await wsRate(env, 'notifyconf:site:' + b.site + ':' + new Date().toISOString().slice(0,10), 3, 90000)) || !(await wsRate(env, 'notifyconf:to:' + low + ':' + new Date().toISOString().slice(0,10), 3, 90000)))
+      return fail('Too many confirmation emails today. Please try again tomorrow.');
+    const t = randToken(16);
+    await env.KV.put('notifyconf:' + t, JSON.stringify({ site: b.site, email: email }), { expirationTtl: 3 * 86400 });
+    const link = SITE_ORIGIN + '/api/inbox/notify/confirm?t=' + t;
+    if (await wsMailCapOk(env, 'lead')) await wsSendMail(env, { from: 'Websprout <hello@websprout.app>', to: [email], subject: 'Confirm your email for website messages',
+      html: '<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#222;font-size:15px;line-height:1.55"><p style="margin:0 0 14px">Someone asked for messages from their Websprout website’s contact form to be emailed to this address.</p><p style="margin:0 0 18px">If that was you, confirm below. If not, ignore this email and nothing will be sent.</p><p style="margin:0 0 18px"><a href="' + link + '" style="display:inline-block;background:#2d7a3a;color:#fff;padding:12px 22px;border-radius:9px;text-decoration:none;font-weight:700">Yes, send me messages</a></p><p style="margin:0;color:#999;font-size:12px">The link works for 3 days.</p></div>',
+      text: 'Someone asked for messages from their Websprout website’s contact form to be emailed to this address. If that was you, confirm here: ' + link + ' . If not, ignore this email.' });
+    return succeed({ ok:true, pending:true, notify: current, message: 'Check ' + email + ' for a confirmation link. Messages start going there once you click it.' });
   } catch(e){ return wsErr(e); }
+}
+async function doInboxNotifyConfirm(request, env){
+  const page = function(msg){ return new Response('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Websprout</title></head><body style="font-family:-apple-system,Segoe UI,Arial,sans-serif;background:#f8faf8;color:#0f1a0d;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center"><div style="max-width:420px;padding:24px"><div style="font-size:40px">🌱</div><p style="font-size:17px;line-height:1.5">' + msg + '</p><a href="/" style="color:#2d7a3a;font-weight:700">Go to Websprout</a></div></body></html>', { headers: { 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex' } }); };
+  try {
+    const t = String(new URL(request.url).searchParams.get('t') || '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 64);
+    const v = t && env.KV ? JSON.parse((await env.KV.get('notifyconf:' + t)) || 'null') : null;
+    if (!v || !v.site || !v.email) return page('This link has expired or was already used.');
+    // Opening the link only shows a button (mail scanners open links on their own); pressing it confirms.
+    if (request.method !== 'POST') return page('Send messages from this website’s contact form to <b>' + escHtml(v.email) + '</b>?</p><form method="POST" action="/api/inbox/notify/confirm?t=' + t + '"><button style="background:#2d7a3a;color:#fff;border:0;border-radius:9px;padding:12px 22px;font-size:15px;font-weight:700;cursor:pointer">Yes, send me messages</button></form><p>');
+    await env.KV.put('notify:' + v.site, v.email); await env.KV.delete('notifyconf:' + t);
+    return page('Confirmed. New messages from the website will be emailed to ' + escHtml(v.email) + '.');
+  } catch(e){ return page('Something went wrong. Please try again.'); }
 }
 
 // List every key under a prefix (KV.list returns at most 1000 per call).

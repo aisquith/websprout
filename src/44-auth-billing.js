@@ -8,6 +8,10 @@ const SESS_COOKIE = '__Host-ws_sess';
 const SESS_TTL = 60*60*24*30;
 function randToken(n){ n=n||24; const a=new Uint8Array(n); crypto.getRandomValues(a); return Array.from(a).map(function(b){return ('0'+b.toString(16)).slice(-2);}).join(''); }
 async function sha256hex(s){ const d=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(s))); return Array.from(new Uint8Array(d)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join(''); }
+// One free trial per person: a one-way fingerprint of the email (dots and +tags dropped, so name+1@gmail.com counts as
+// name@gmail.com) is kept after the account is deleted. It can't be turned back into the address.
+function wsTrialNorm(email){ let e=String(email||'').trim().toLowerCase(); const at=e.lastIndexOf('@'); if(at<1) return e; let local=e.slice(0,at), dom=e.slice(at+1); local=local.split('+')[0]; if(dom==='gmail.com'||dom==='googlemail.com'){ local=local.replace(/\./g,''); dom='gmail.com'; } return local+'@'+dom; }
+async function wsTrialKey(email){ return 'trialused:' + (await sha256hex('trial|' + wsTrialNorm(email))).slice(0, 40); }
 function parseCookies(request){ const h=request.headers.get('Cookie')||''; const o={}; h.split(';').forEach(function(p){ const i=p.indexOf('='); if(i>-1){ let v=p.slice(i+1).trim(); try{ v=decodeURIComponent(v); }catch(e){} o[p.slice(0,i).trim()]=v; } }); return o; }
 // Every value sent for one cookie name (a planted duplicate shows up as a second value).
 function cookieValues(request, name){ const h=request.headers.get('Cookie')||''; const out=[]; h.split(';').forEach(function(p){ const i=p.indexOf('='); if(i>-1 && p.slice(0,i).trim()===name){ let v=p.slice(i+1).trim(); try{ v=decodeURIComponent(v); }catch(e){} out.push(v); } }); return out; }
@@ -52,7 +56,17 @@ async function wsDropSessionCookie(request, env){
   }
 }
 // Client IP for rate limits. Test servers (WS_TEST_MODE) may name one so tests can exercise limits independently.
-function wsClientIp(request, env){ return ((env && env.WS_TEST_MODE === '1') && request.headers.get('x-ws-test-ip')) || request.headers.get('cf-connecting-ip') || '0'; }
+// IPv6 users get a whole /64 block (one home or phone has billions of addresses), so limits group them by their
+// first four blocks: rotating addresses inside it doesn't reset a limit.
+function wsClientIp(request, env){
+  const ip = ((env && env.WS_TEST_MODE === '1') && request.headers.get('x-ws-test-ip')) || request.headers.get('cf-connecting-ip') || '0';
+  if (ip.indexOf(':') === -1) return ip;
+  const parts = ip.toLowerCase().split('::');
+  const head = parts[0] ? parts[0].split(':') : [];
+  const tail = parts.length > 1 && parts[1] ? parts[1].split(':') : [];
+  const full = parts.length > 1 ? head.concat(new Array(Math.max(0, 8 - head.length - tail.length)).fill('0'), tail) : head;
+  return full.slice(0, 4).map(function (x) { return x.replace(/^0+(?=.)/, ''); }).join(':') + '::/64';
+}
 // Fixed-window counter: true while under max; counts this hit.
 async function wsRate(env, key, max, ttl){
   if(!env || !env.KV) return true;
@@ -196,7 +210,8 @@ async function doBillingCheckout(request, env){
         +'&success_url='+encodeURIComponent(SITE_ORIGIN+'/?sub=success')+'&cancel_url='+encodeURIComponent(SITE_ORIGIN+'/');
       body += u.stripeCustomer ? '&customer='+encodeURIComponent(u.stripeCustomer) : '&customer_email='+encodeURIComponent(em);
       // The advertised 7-day free trial (first subscription only; Checkout ignores trials set on the Price).
-      if(!u.stripeCustomer && !u.trialUsed) body += '&subscription_data[trial_period_days]=7&payment_method_collection=always';
+      let _trialBefore = false; try{ _trialBefore = !!(await env.KV.get(await wsTrialKey(em))); }catch(e){}
+      if(!u.stripeCustomer && !u.trialUsed && !_trialBefore) body += '&subscription_data[trial_period_days]=7&payment_method_collection=always';
       const r=await fetch('https://api.stripe.com/v1/checkout/sessions', { method:'POST', headers:{ 'Authorization':'Bearer '+sk, 'Content-Type':'application/x-www-form-urlencoded' }, body:body });
       const j=await r.json();
       if(r.ok && j && j.url) return succeed({ url:j.url });

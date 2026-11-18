@@ -640,10 +640,12 @@ const PHOTO_QUERY = {
 // [] = it worked but found nothing.
 // Unsplash's API allows a fixed number of calls per hour. Count every real call in KV and stop at UNSPLASH_HOURLY_CAP
 // (default 45): new sites then fall back to the designed gradients instead of failing.
-async function unsplashSpend(env) {
+// share < 1 stops a caller early: editor photo searches may use only part of the hour, so new sites always keep some.
+async function unsplashSpend(env, share) {
   if (!env || !env.KV) return true;
   const cap = parseInt(env.UNSPLASH_HOURLY_CAP, 10); const max = isNaN(cap) || cap < 0 ? 45 : cap;
-  try { const k = 'unsplash:budget:' + new Date().toISOString().slice(0, 13); const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= max) return false; await env.KV.put(k, String(n + 1), { expirationTtl: 2 * 3600 }); } catch (e) {}
+  const lim = share ? Math.floor(max * share) : max;
+  try { const k = 'unsplash:budget:' + new Date().toISOString().slice(0, 13); const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= lim) return false; await env.KV.put(k, String(n + 1), { expirationTtl: 2 * 3600 }); } catch (e) {}
   return true;
 }
 async function unsplashSearch(query, env, ms) {
@@ -852,12 +854,15 @@ async function doPlacePhoto(request, env) {
   if (!GPLACE_RE.test(pid) || !/^\d$/.test(i) || !/^[a-z0-9]{0,8}$/.test(k) || (fb && !GPHOTO_FB_RE.test(fb))) return nope(400);
   // Always fetch one size from Google: each width would be a separate billed call, and the srcset asks for several.
   const w = 1600;
+  // Photos load on visitors' screens, so the limit is generous; it only stops one address from burning the month's budget.
+  const _ppip = wsClientIp(request, env);
   // Not cached at the edge: once the month rolls over the real photo comes back.
   const backup = function () { return fb ? new Response(null, { status: 302, headers: { 'Location': fb, 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=3600' } }) : nope(404); };
   if (!env.GOOGLE_PLACES_KEY) return backup();
   const cache = (typeof caches !== 'undefined' && caches.default) || null;
   const ckey = new Request('https://websprout.app/api/place-photo?pid=' + encodeURIComponent(pid) + '&i=' + i + '&w=' + w + '&k=' + k);
   try { if (cache) { const hit = await cache.match(ckey); if (hit) return hit; } } catch (e) {}
+  if (!(await wsRate(env, 'pprl:' + _ppip + ':' + Math.floor(Date.now() / 3600000), 150, 3700))) return backup();
   // The photo URL is Places content: kept (edge, KV, browser) only for the 10-minute dedupe window.
   const found = function (uri) { return new Response(null, { status: 302, headers: { 'Location': uri, 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=' + PLACES_DEDUPE_TTL } }); };
   try {
@@ -999,12 +1004,12 @@ async function doPhotoSearch(request, env) {
   if (!q) return jsonR({ ok: true, results: [] });
   try {
     if (env.KV) {
-      const ip = request.headers.get('cf-connecting-ip') || '0'; const k = 'phrate:' + ip;
+      const ip = wsClientIp(request, env); const k = 'phrate:' + ip;
       const n = parseInt((await env.KV.get(k)) || '0', 10) || 0;
-      if (n >= 60) return jsonR({ ok: false, error: 'Too many searches. Please wait a few minutes.', results: [] }, 429);
+      if (n >= 30) return jsonR({ ok: false, error: 'Too many searches. Please wait a few minutes.', results: [] }, 429);
       await env.KV.put(k, String(n + 1), { expirationTtl: 3600 });
     }
-    if (!(await unsplashSpend(env))) return jsonR({ ok: false, error: 'Photo search is busy. Try again soon.', results: [] });
+    if (!(await unsplashSpend(env, 0.7))) return jsonR({ ok: false, error: 'Photo search is busy. Try again soon.', results: [] });
     const r = await fetch('https://api.unsplash.com/search/photos?per_page=18&content_filter=high&query=' + encodeURIComponent(q), { headers: { 'Authorization': 'Client-ID ' + env.UNSPLASH_ACCESS_KEY, 'Accept-Version': 'v1' } });
     if (!r.ok) return jsonR({ ok: false, error: 'Photo search is busy. Try again soon.', results: [] });
     const j = await r.json();
@@ -1535,9 +1540,10 @@ function v3AiSvcName(x, ctx) {
 function v3AiKeys(env) { try { if (typeof geminiKeys === 'function') return geminiKeys(env); } catch (e) {} return env && env.GEMINI_API_KEY ? String(env.GEMINI_API_KEY).split(',').map(function (k) { return k.trim(); }).filter(Boolean) : []; }
 function v3AiCap(env) { const n = parseInt(env && env.AI_MONTHLY_CAP, 10); return isNaN(n) || n < 0 ? 30000 : n; } // ~$0.003 per site on Gemini 2.5 Flash: 30k is about $100 a month at most
 // Count one call against the monthly cap (ai:count:YYYY-MM) before making it. No KV, no counter, no calls.
-async function v3AiSpend(env) {
+// share < 1: anonymous builds stop at that part of the month's budget, so signed-in owners always keep some.
+async function v3AiSpend(env, share) {
   if (!env || !env.KV) return false;
-  try { const k = 'ai:count:' + new Date().toISOString().slice(0, 7); const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= v3AiCap(env)) return false; await env.KV.put(k, String(n + 1), { expirationTtl: 40 * 86400 }); return true; } catch (e) { return false; }
+  try { const k = 'ai:count:' + new Date().toISOString().slice(0, 7); const n = parseInt((await env.KV.get(k)) || '0', 10) || 0; if (n >= Math.floor(v3AiCap(env) * (share || 1))) return false; await env.KV.put(k, String(n + 1), { expirationTtl: 40 * 86400 }); return true; } catch (e) { return false; }
 }
 // The facts the AI may use: the owner's own answers only. The city as said in a sentence, the other towns.
 // Never Google content (reviews, ratings): Google's terms don't allow feeding it to another service.
@@ -1600,9 +1606,9 @@ function v3AiText(x, cap, ctx, kind) { return v3AiCheck(x, cap, ctx, kind).v || 
 // Ask Gemini once (one retry, with the next key, only if the first try is rate-limited or overloaded). Returns the checked fields plus `rejected`
 // (short "field:reason" codes, kept on the site as copyRejected), { fail } when the call failed or timed out,
 // or null when there was no call (no key, cap reached).
-async function v3AiCopy(env, facts, draft) {
+async function v3AiCopy(env, facts, draft, share) {
   const keys = v3AiKeys(env);
-  if (!keys.length || !(await v3AiSpend(env))) return null;
+  if (!keys.length || !(await v3AiSpend(env, share))) return null;
   const t0 = Date.now();
   const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
   let timer = 0;
@@ -1728,7 +1734,8 @@ async function doCreate(request, env) {
   let body; try { body = await request.json(); } catch { return fail('Invalid request'); }
   const _t0 = Date.now();
   try {
-    const r = await buildV3Site(body || {}, env, { ai: true });
+    let _crSess = null; try { _crSess = await getSession(request, env); } catch (e) {}
+    const r = await buildV3Site(body || {}, env, { ai: true, aiShare: _crSess ? 1 : 0.8 });
     const site = r.site, siteId = r.siteId, html = r.html;
     const formKey = await siteKey(siteId, env);
     try { if (env.KV) await env.KV.put('site:' + siteId, JSON.stringify(site), { expirationTtl: 60 * 60 * 24 * 30 }); } catch (e) {}
@@ -1931,7 +1938,7 @@ async function buildV3Site(d, env, opts) {
     // A type with no template and no owner services: the AI may suggest the services (checked in v3AiCopy).
     const _suggest = sc.category === 'generic' && !isShop && !site.sections.some(function (s) { return s.type === 'services' || s.type === 'products'; });
     const _aiDraft = { suggestServices: _suggest, phone: biz.phone, address: biz.address, cityFull: biz.city, taglinePool: sc.taglinePool || [], prices: biz.services.map(function (s) { return s.price; }).filter(Boolean), copy: { tagline: heroTag, intro: aboutText, services: (site.sections.find(function (s) { return s.type === 'services'; }) || { items: [] }).items.map(function (it) { return { name: it.name, text: it.text }; }), why: v3WithSeed(seed + '|whydraft', function () { return v3WhyItems(biz, sc.category, sc.labels.family, !!((biz.towns || []).length && WSENGINE.sections.area && v3ServiceArea(sc.labels.family, sc.category, biz.type, biz)), v3TrustOn(biz, sc.labels.family)); }).filter(function (w) { return w.source === 'starter'; }).map(function (w) { return { title: w.title, text: w.text }; }), faq: _starterFaq ? (sc.faq || []).map(function (x) { return { q: x[0], a: v3FaqFit(x[0], x[1], biz) }; }) : [], cta: { title: sc.ctaTitle || '', text: sc.ctaText || '' } } };
-    const _aiP = (opts && opts.ai) ? v3AiCopy(env, v3AiFacts(biz, sc, site.sections.map(function (s) { return s.type; })), _aiDraft).catch(function () { return null; }) : Promise.resolve(null);
+    const _aiP = (opts && opts.ai) ? v3AiCopy(env, v3AiFacts(biz, sc, site.sections.map(function (s) { return s.type; })), _aiDraft, opts && opts.aiShare).catch(function () { return null; }) : Promise.resolve(null);
     try {
       const _gOn = !!biz.googlePlaceId && (await gphotoLeft(env)) > 0;
       const _found = await Promise.all([

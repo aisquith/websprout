@@ -134,7 +134,7 @@ module.exports = async function (ctx, t) {
     t.eq(nokv.calls.length, 0, 'no KV counter: no AI call');
     const ex = fake(GOOD); const s4 = (await ex.build(biz(), env(), null)).site;
     t.ok(ex.calls.length === 0 && s4.copySource === 'template', 'builds without the AI option (examples) never call Gemini');
-    t.ok(/buildV3Site\(input, env\)/.test(rd('50-generator.js')) && /buildV3Site\(body \|\| \{\}, env, \{ ai: true \}\)/.test(rd('50-generator.js')), 'only /create asks for AI copy; /example stays on the template');
+    t.ok(/buildV3Site\(input, env\)/.test(rd('50-generator.js')) && /buildV3Site\(body \|\| \{\}, env, \{ ai: true, aiShare: _crSess \? 1 : 0\.8 \}\)/.test(rd('50-generator.js')), 'only /create asks for AI copy; /example stays on the template');
     const rot = fake((c, n) => (n === 1 ? new Response('busy', { status: 429 }) : GOOD));
     const s5 = (await rot.build(biz(), env({ GEMINI_API_KEY: 'K1,K2' }))).site;
     t.ok(rot.calls.length === 2 && rot.calls[0].o.headers['x-goog-api-key'] !== rot.calls[1].o.headers['x-goog-api-key'] && s5.copySource === 'ai', 'a rate-limited key rolls over to the next one');

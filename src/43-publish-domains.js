@@ -1,16 +1,20 @@
 // ───────────────────────────────────────────────────────────
 // PUBLISH — host generated sites live on websprout.app subdomains
 // ───────────────────────────────────────────────────────────
-const RESERVED_SLUGS = ['www','sites','app','api','inbox','preview','admin','mail','blog','help','support','status','cdn','assets','static','dashboard','login','signup','sign-up','docs','about','terms','privacy','deploy','render','generate','stats','track','chat','modify','publish','unpublish','s','og','robots','sitemap','success'];
+const RESERVED_SLUGS = ['www','sites','app','api','inbox','preview','admin','mail','blog','help','support','status','cdn','assets','static','dashboard','login','signup','sign-up','docs','about','terms','privacy','deploy','render','generate','stats','track','chat','modify','publish','unpublish','s','og','robots','sitemap','success',
+  'billing','account','accounts','auth','oauth','pay','payment','payments','checkout','secure','security-check','portal','dev','staging','test','m','email','webmail','smtp','ns','ns1','ns2','mx','ftp','abuse','report','legal','privacy-choices','team','official','verify','store','shop'];
 function slugify(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40); }
 
 const PUB_404 = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Site not found</title><style>body{font-family:-apple-system,Segoe UI,Arial,sans-serif;background:#060d05;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center}.b{max-width:420px;padding:24px}.m{font-size:40px;margin-bottom:10px}a{color:#4ade80;font-weight:700;text-decoration:none}</style></head><body><div class="b"><div class="m">🌱</div><h1 style="font-size:22px;margin:0 0 8px">This site isn\'t published yet</h1><p style="color:rgba(255,255,255,.72);line-height:1.6">There\'s no live site at this address. <br>Build your own in seconds at <a href="https://websprout.app">websprout.app</a>.</p></div></body></html>';
 
 function withBadge(html){
-  if (!html || html.indexOf('ws-badge') > -1) return html;
+  if (!html) return html;
+  // Always add the badge on free sites. Drop any copy already in the stored page (older publishes baked one in) so it
+  // shows exactly once; the text "ws-badge" in a page can no longer switch it off.
+  html = html.replace(/<style id="ws-badge-css">[\s\S]*?<\/style>/g, '').replace(/<div id="ws-badge"[^>]*>[\s\S]*?<\/a><\/div>/g, '');
   // The cart pill (engine .wsp-cart, legacy #wsCartBtn) also sits bottom-right: lift it above the badge, and hide
   // the badge while the cart drawer is open so it never covers the drawer.
-  const b = '<style id="ws-badge-css">.wsp-cart,#wsCartBtn{bottom:64px!important}.wsp-draw.on~#ws-badge{display:none!important}@media(max-width:480px){#ws-badge{font-size:11px!important;padding:6px 10px!important;bottom:10px!important;right:10px!important}.wsp-cart,#wsCartBtn{bottom:56px!important;right:12px!important}}@media(max-width:700px){body.has-bar #ws-badge{bottom:calc(var(--bar-h,64px) + 10px)!important}body.has-bar .wsp-cart,body.has-bar #wsCartBtn{bottom:calc(var(--bar-h,64px) + 56px)!important}body.has-bar .ws-top{bottom:calc(var(--bar-h,64px) + 18px)}}</style><div id="ws-badge" style="position:fixed;bottom:14px;right:14px;z-index:2147483600;display:flex;align-items:center;gap:6px;background:rgba(15,26,13,.92);color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif;font-size:12px;font-weight:600;padding:7px 12px;border-radius:100px;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.14);line-height:1"><a href="https://websprout.app/?utm_source=badge&utm_medium=referral&ref=badge" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">🌱 Built with Websprout — make yours free</a><a href="https://websprout.app/report" target="_blank" rel="noopener nofollow" aria-label="Report this site" style="color:inherit;opacity:.62;text-decoration:none;border-left:1px solid rgba(255,255,255,.25);padding-left:7px;font-weight:500">Report</a></div>';
+  const b = '<style id="ws-badge-css">body #ws-badge[id]{display:flex!important;visibility:visible!important;opacity:1!important;position:fixed!important;z-index:2147483600!important;transform:none!important;clip-path:none!important;filter:none!important;pointer-events:auto!important}.wsp-cart,#wsCartBtn{bottom:64px!important}.wsp-draw.on~#ws-badge{display:none!important}@media(max-width:480px){#ws-badge{font-size:11px!important;padding:6px 10px!important;bottom:10px!important;right:10px!important}.wsp-cart,#wsCartBtn{bottom:56px!important;right:12px!important}}@media(max-width:700px){body.has-bar #ws-badge{bottom:calc(var(--bar-h,64px) + 10px)!important}body.has-bar .wsp-cart,body.has-bar #wsCartBtn{bottom:calc(var(--bar-h,64px) + 56px)!important}body.has-bar .ws-top{bottom:calc(var(--bar-h,64px) + 18px)}}</style><div id="ws-badge" style="position:fixed;bottom:14px;right:14px;z-index:2147483600;display:flex;align-items:center;gap:6px;background:rgba(15,26,13,.92);color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif;font-size:12px;font-weight:600;padding:7px 12px;border-radius:100px;text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.14);line-height:1"><a href="https://websprout.app/?utm_source=badge&utm_medium=referral&ref=badge" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">🌱 Built with Websprout — make yours free</a><a href="https://websprout.app/report" target="_blank" rel="noopener nofollow" aria-label="Report this site" style="color:inherit;opacity:.62;text-decoration:none;border-left:1px solid rgba(255,255,255,.25);padding-left:7px;font-weight:500">Report</a></div>';
   const i = html.lastIndexOf('</body>');
   return i > -1 ? html.slice(0,i) + b + html.slice(i) : html + b;
 }
@@ -207,6 +211,10 @@ async function doPublish(request, env){
       const _owner = String((await env.KV.get('siteowner:' + b.siteId)) || '').toLowerCase();
       if (_owner && _owner !== _pubEmail && _pubEmail !== SUPPORT_EMAIL.toLowerCase()) return new Response(JSON.stringify({ error:'This site belongs to another account. Sign in with that account to publish it.', signin:true }), { status:403, headers:{'Content-Type':'application/json'} });
     } catch(e){}
+    // Limits per account: plenty for real editing, but nobody can hammer the content check (each changed page costs
+    // an AI review) or flood the service.
+    if (!(await wsRate(env, 'pubrl:h:' + _pubEmail + ':' + Math.floor(Date.now() / 3600000), 40, 3700)) || !(await wsRate(env, 'pubrl:d:' + _pubEmail + ':' + new Date().toISOString().slice(0, 10), 200, 90000)))
+      return new Response(JSON.stringify({ error:'You’ve published a lot in a short time. Please wait a little and try again.' }), { status:429, headers:{'Content-Type':'application/json'} });
     const slug = slugify(b.slug || '');
     if (slug.length < 3) return fail('Pick a name with at least 3 letters/numbers');
     if (RESERVED_SLUGS.indexOf(slug) > -1) return fail('That name is reserved — choose another');
@@ -229,7 +237,8 @@ async function doPublish(request, env){
      try {
       const formAction = 'https://websprout.app/api/form/' + b.siteId;
       pubHtml = html.replace(/<form\b([^>]*)>/gi, function(m, attrs){
-        if (/\sdata-sa-check\b/i.test(attrs)) return m;
+        // The service-area ZIP checker runs in the page and never submits anywhere: drop any action so it can't post off-site.
+        if (/\sdata-sa-check\b/i.test(attrs)) return '<form' + attrs.replace(/\s(?:action|formaction)\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '') + '>';
         let a = attrs;
         if (/\saction\s*=/i.test(a)) a = a.replace(/\saction\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/i, ' action="' + formAction + '"');
         else a = ' action="' + formAction + '"' + a;

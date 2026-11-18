@@ -65,6 +65,7 @@ async function wsSendProWelcome(env, email, session){
   }
   if (!trialEnd && !(session && session.amount_total)) trialEnd = Date.now() + 7*86400000;
   try { const u = JSON.parse((await env.KV.get('user:' + em)) || '{}'); if (u && u.email) { u.trialUsed = true; await env.KV.put('user:' + em, JSON.stringify(u)); } } catch(e){}
+  try { await env.KV.put(await wsTrialKey(em), '1'); } catch(e){}
   const price = '$' + (Math.round(amount * 100) / 100).toFixed(amount % 1 ? 2 : 0) + '/month';
   const when = trialEnd ? new Date(trialEnd).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric', timeZone:'UTC' }) : '';
   const lines = trialEnd
@@ -74,9 +75,9 @@ async function wsSendProWelcome(env, email, session){
     + '<div style="background:#0f1a0d;padding:22px;text-align:center"><span style="color:#fff;font-size:20px;font-weight:800">\uD83C\uDF31 Welcome to Websprout Pro</span></div>'
     + '<div style="padding:26px;font-size:15px;line-height:1.7">' + lines.map(function(l){ return '<p style="margin:0 0 12px">' + l + '</p>'; }).join('')
     + '<p style="margin:0 0 12px"><b>How to cancel:</b> sign in at <a href="https://websprout.app" style="color:#2d7a3a">websprout.app</a>, open <b>Settings \u2192 Manage billing &amp; cancel plan</b>, and click Cancel. ' + (trialEnd ? 'Cancel before ' + when + ' and you won\u2019t be charged at all. ' : '') + 'You can also reply to this email and we\u2019ll cancel it for you.</p>'
-    + '<p style="margin:0 0 12px">Pro includes: no Websprout badge, your own domain, multi-page sites, the built-in store and code download.</p>'
+    + '<p style="margin:0 0 12px">Pro includes: no Websprout badge, your own domain, the built-in store and code download.</p>'
     + '<p style="margin:0;font-size:13px;color:#777">Terms: <a href="https://websprout.app/terms" style="color:#777">websprout.app/terms</a></p></div></div>';
-  if (!(await wsMailCapOk(env, 'support'))) return;
+  if (!(await wsMailCapOk(env, 'billing'))) return;
   await wsSendMail(env, { from:'Websprout <hello@websprout.app>', reply_to:'support@websprout.app', to:[em], subject: trialEnd ? 'Your Websprout Pro free trial has started (first charge ' + when + ')' : 'Your Websprout Pro subscription has started', html: html });
 }
 async function doStripeWebhook(request, env){
@@ -89,6 +90,8 @@ async function doStripeWebhook(request, env){
   if(!okSig) return new Response('bad signature', { status:400 });
   let ev={}; try{ ev=JSON.parse(raw); }catch(e){ return new Response('bad json', { status:400 }); }
   const done = new Response('{"received":true}', { headers:{ 'Content-Type':'application/json' } });
+  // With a live Stripe key, test-mode events (card 4242) never change a real account.
+  if (ev.livemode === false && /^(sk|rk)_live_/.test(String(env.STRIPE_SECRET_KEY || '').trim())) return done;
   // Stripe retries and may deliver an event twice: handle each event id once (remembered for 3 days).
   const evId = String(ev.id || '').slice(0, 100);
   // The event is marked handled only after it succeeds; on an error we answer 500 so Stripe retries it (every step is
@@ -112,10 +115,17 @@ async function doStripeWebhook(request, env){
         const typed = String((obj.customer_details && obj.customer_details.email) || obj.customer_email || '').slice(0, 120);
         try{ console.warn('stripe: checkout ' + evId + ' has no valid account reference; Pro not granted'); await env.KV.put('prounmatched:' + evId, JSON.stringify({ ts: Date.now(), customer: cust, sub: obj.subscription || '', ref: ref.slice(0, 80), typed: typed }), { expirationTtl: 90*86400 }); }catch(e){}
         // Someone paid but we can't tell which account: tell the owner right away so they can grant Pro by hand.
-        try{ if(await wsMailCapOk(env, 'support')) await wsSendMail(env, { from: 'Websprout <hello@websprout.app>', to: [SUPPORT_EMAIL], subject: 'Action needed: a Pro payment is not linked to an account',
+        try{ if(await wsMailCapOk(env, 'owneralert')) await wsSendMail(env, { from: 'Websprout <hello@websprout.app>', to: [SUPPORT_EMAIL], subject: 'Action needed: a Pro payment is not linked to an account',
           html: '<p>A customer paid for Pro but the payment could not be matched to a Websprout account, so Pro was <b>not</b> turned on automatically.</p><p>Email typed at checkout: <b>' + escHtml(typed || '(none)') + '</b><br>Stripe customer: ' + escHtml(cust || '(none)') + '<br>Subscription: ' + escHtml(obj.subscription || '(none)') + '</p><p>Find their account in Admin &gt; Customers and use <b>Give Pro</b>, or refund them in Stripe. These also show in Admin &gt; Revenue.</p>' }); }catch(e){}
         await markDone();
         return done;
+      }
+      // Stripe can deliver this event late (or retry it) after the subscription was already cancelled: only a live
+      // subscription turns Pro on. With STRIPE_PRO_PRICE set, it must also be the Pro price, not some other product.
+      if(obj.subscription){
+        if(!(await wsSubLive(env, obj.subscription))){ await markDone(); return done; }
+        const _pp = String(env.STRIPE_PRO_PRICE || '').trim(), _sk = String(env.STRIPE_SECRET_KEY || '').trim();
+        if(_pp && _sk){ try{ const _r = await fetch('https://api.stripe.com/v1/subscriptions/' + encodeURIComponent(obj.subscription), { headers:{ 'Authorization':'Bearer ' + _sk } }); if(_r.ok){ const _j = await _r.json(); const _ids = ((_j.items && _j.items.data) || []).map(function(it){ return it && it.price && it.price.id; }).filter(Boolean); if(_ids.length && _ids.indexOf(_pp) === -1){ try{ console.warn('stripe: checkout ' + evId + ' is not the Pro price; Pro not granted'); }catch(e){} await markDone(); return done; } } }catch(e){} }
       }
       await setUserPlan(env, email, 'pro', cust, obj.subscription||'');
       try{ await wsSendProWelcome(env, email, obj); }catch(e){ try{ console.error('pro welcome', (e && e.message) || e); }catch(_){} }
@@ -158,7 +168,11 @@ async function doSave(request, env){
     if (!b.siteId || !b.key || !b.html) return fail('Missing data');
     if (!(await siteKeyOk(b.siteId, b.key, env))) return new Response(JSON.stringify({ error:'Invalid key' }), { status:403, headers:{'Content-Type':'application/json'} });
     if (b.html.length > 4*1024*1024) return fail('Site too large');
-    var _dft = { html: b.html, name: (b.name||'My site').slice(0,90), ts: Date.now() };
+    // Autosave runs every 12 seconds at most, so 600 an hour per site is far above real use; it only stops a script
+    // from writing gigabytes. Forced history snapshots (the restore button) are limited to 30 a day.
+    if (!(await wsRate(env, 'saverl:' + b.siteId + ':' + Math.floor(Date.now() / 3600000), 600, 3700))) return new Response(JSON.stringify({ error:'Too many saves. Please wait a minute.' }), { status:429, headers:{'Content-Type':'application/json'} });
+    if (b.snapshot === true && !(await wsRate(env, 'snaprl:' + b.siteId + ':' + new Date().toISOString().slice(0,10), 30, 90000))) b.snapshot = false;
+    var _dft ={ html: b.html, name: (b.name||'My site').slice(0,90), ts: Date.now() };
     if (b.site && typeof b.site === 'object' && Array.isArray(b.site.sections)) { try { const _sj = JSON.stringify(b.site); if (_sj.length <= 6*1024*1024) _dft.site = b.site; } catch(e){} }
     else { try { const _prev = JSON.parse((await env.KV.get('draft:' + b.siteId)) || 'null'); if (_prev && _prev.site && !('site' in b)) _dft.site = _prev.site; } catch(e){} }
     if (Array.isArray(b.pages) && b.pages.length > 1) {

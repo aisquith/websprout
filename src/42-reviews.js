@@ -16,7 +16,10 @@ async function doReviewSubmit(request, env){
     const name = wsClean(b.name||'').slice(0,80).trim();
     const text = wsClean(b.text||'').slice(0,1500).trim();
     if(text.length < 2) return jsonR({ ok:false, error:'empty' }, 400);
-    const ip = request.headers.get('cf-connecting-ip') || '0';
+    const ip = wsClientIp(request, env);
+    // Reviews only for real sites (published, or made in the last 30 days), and a cap per visitor across all sites (made-up site IDs can't dodge it).
+    if(!(await env.KV.get('slugof:' + siteId)) && !(await env.KV.get('site:' + siteId))) return jsonR({ ok:true });
+    if(!(await wsRate(env, 'rrl:ip:' + ip + ':' + Math.floor(Date.now() / 3600000), 30, 3700))) return jsonR({ ok:false, error:'rate' }, 429);
     const rlKey = 'rrl:' + siteId + ':' + ip;
     const rl = parseInt(await env.KV.get(rlKey) || '0', 10) || 0;
     if(rl > 15) return jsonR({ ok:false, error:'rate' }, 429);
@@ -116,6 +119,8 @@ async function doReviewsManage(request, env){
     const name = wsClean(b.name||'').slice(0,80).trim();
     const text = wsClean(b.text||'').slice(0,1500).trim();
     if(text.length < 1) return jsonR({ ok:false, error:'empty' }, 400);
+    // Owner-added reviews show on the live site right away, so they get the same word check as a publish.
+    { const _hit = wsModWordHit(name + ' ' + text); if(_hit) return jsonR({ ok:false, error:'That review has words that can’t appear on Websprout sites. Please change them.' }, 422); }
     const id = Date.now() + ':' + Math.random().toString(36).slice(2,8);
     await env.KV.put('review:'+siteId+':'+id, JSON.stringify({ id, name, rating, text, ts:Date.now(), status:'approved', source:'owner' }), { expirationTtl: 400*86400 });
   } else if(action === 'approve' || action === 'delete'){
