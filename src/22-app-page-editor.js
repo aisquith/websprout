@@ -47,21 +47,97 @@ function autoSetDevice(){
     var p=new URLSearchParams(window.location.search);
     if(p.get('sub')==='success'){
       window.history.replaceState({},'',window.location.pathname);
-      toast('\uD83C\uDF89 Thanks! Starting your free trial...',6000);
       try{if(window.wsConv)window.wsConv('trial');}catch(e){}
-      var tries=0;
-      var iv=setInterval(function(){
-        tries++;
-        fetch('/me').then(function(r){return r.json();}).then(function(me){
-          window._wsUser=me;
-          if(me&&me.pro){clearInterval(iv);unlocked=true;try{applyUnlock();}catch(e){}toast('\u2705 You are Pro \u2014 everything is unlocked!',6000);}
-          else if(tries>=8){clearInterval(iv);toast('All set \u2014 if it does not unlock shortly, refresh the page.',7000);}
-        }).catch(function(){if(tries>=8)clearInterval(iv);});
-      },2000);
+      wsProWelcome();
     }
     var s=localStorage.getItem('wsh');if(s&&s.length>100)gHTML=s;
   }catch(e){}
 })();
+
+// Back from Stripe checkout: a "Welcome to Pro" moment. Shows "Activating..." while the payment notice reaches us
+// (usually a few seconds), then celebrates and refreshes every place that shows the plan, with no page reload.
+function wsProWelcome(){
+  if(document.getElementById('wsProWel'))return;
+  var css=document.createElement('style');
+  css.textContent='#wsProWel{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(4,10,4,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;transition:opacity .3s;font-family:inherit}'
+    +'#wsProWel.on{opacity:1}#wsProWel canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}'
+    +'.wpw-card{position:relative;width:min(440px,100%);background:#0f1a0d;border:1px solid rgba(127,227,154,.22);border-radius:22px;padding:30px 26px 24px;text-align:center;color:#eaf2e8;box-shadow:0 30px 80px rgba(0,0,0,.55);transform:translateY(14px) scale(.96);transition:transform .45s cubic-bezier(.2,1.3,.4,1)}'
+    +'#wsProWel.on .wpw-card{transform:none}'
+    +'.wpw-ico{width:68px;height:68px;margin:0 auto 14px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:34px;background:linear-gradient(135deg,#f5c542,#2d9e4a);box-shadow:0 10px 30px rgba(245,197,66,.25)}'
+    +'.wpw-done .wpw-ico{animation:wpwPop .6s cubic-bezier(.2,1.6,.4,1)}'
+    +'.wpw-spin{width:30px;height:30px;border-radius:50%;border:3px solid rgba(6,18,10,.25);border-top-color:#06120a;animation:wpwSpin .8s linear infinite}'
+    +'.wpw-badge{display:inline-block;position:relative;overflow:hidden;font-size:11px;font-weight:800;letter-spacing:.8px;padding:4px 11px;border-radius:999px;background:linear-gradient(135deg,#f5c542,#2d9e4a);color:#06120a;margin-bottom:10px}'
+    +'.wpw-badge:after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent);transform:skewX(-20deg);animation:wpwShine 2.4s 0.6s ease-in-out infinite}'
+    +'.wpw-h{font-size:24px;font-weight:800;letter-spacing:-.4px;margin:0 0 6px;color:#fff}.wpw-p{font-size:14.5px;line-height:1.55;color:rgba(234,242,232,.75);margin:0 0 16px}'
+    +'.wpw-list{list-style:none;margin:0 0 20px;padding:0;text-align:left;display:grid;gap:9px}'
+    +'.wpw-list li{display:flex;gap:10px;align-items:center;font-size:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:11px;padding:10px 12px;opacity:0;transform:translateY(6px);animation:wpwIn .4s forwards}'
+    +'.wpw-list i{flex:none;width:22px;height:22px;border-radius:50%;background:#2d9e4a;color:#fff;font-style:normal;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center}'
+    +'.wpw-btn{display:block;width:100%;border:0;border-radius:12px;padding:13px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;background:#2d9e4a;color:#fff}.wpw-btn:hover{background:#34b155}'
+    +'.wpw-link{display:block;width:100%;margin-top:8px;background:none;border:0;color:#7fe39a;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;padding:8px}'
+    +'.wpw-note{font-size:12px;color:rgba(234,242,232,.5);margin-top:12px}'
+    +'@keyframes wpwSpin{to{transform:rotate(360deg)}}@keyframes wpwPop{0%{transform:scale(.4)}100%{transform:scale(1)}}@keyframes wpwIn{to{opacity:1;transform:none}}@keyframes wpwShine{0%{left:-60%}60%,100%{left:130%}}'
+    +'@media (prefers-reduced-motion:reduce){#wsProWel *{animation:none!important;transition:none!important}.wpw-list li{opacity:1;transform:none}}';
+  document.head.appendChild(css);
+  var ov=document.createElement('div');ov.id='wsProWel';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.setAttribute('aria-labelledby','wpwH');
+  ov.innerHTML='<div class="wpw-card" aria-live="polite"></div>';
+  document.body.appendChild(ov);
+  var card=ov.querySelector('.wpw-card');
+  requestAnimationFrame(function(){ov.classList.add('on');});
+  function close(){ov.classList.remove('on');setTimeout(function(){try{ov.remove();css.remove();}catch(e){}},320);}
+  function activating(slow){
+    card.className='wpw-card';
+    card.innerHTML='<div class="wpw-ico"><div class="wpw-spin" aria-hidden="true"></div></div>'
+      +'<h2 class="wpw-h" id="wpwH">'+(slow?'Payment received':'Activating Pro&hellip;')+'</h2>'
+      +'<p class="wpw-p">'+(slow?'We&rsquo;re finishing setup. This usually takes under a minute, and everything unlocks here by itself.':'Your payment went through. Unlocking your Pro features&hellip;')+'</p>'
+      +(slow?'<button class="wpw-link" id="wpwReload" type="button">Refresh now</button>':'');
+    var rl=document.getElementById('wpwReload');if(rl)rl.addEventListener('click',function(){location.reload();});
+  }
+  function done(me){
+    // Everywhere the plan shows: sign-in button, account menu, profile, editor locks.
+    try{if(window.wsSetAuthUI)window.wsSetAuthUI(me);else{window._wsUser=me;unlocked=true;applyUnlock();}}catch(e){}
+    try{unlocked=true;applyUnlock();}catch(e){}
+    try{if(window.wsRefreshAcctMenu)window.wsRefreshAcctMenu(me);}catch(e){}
+    var hasSite=!!(typeof gHTML!=='undefined'&&gHTML&&gHTML.length>100)||!!localStorage.getItem('ws_site');
+    var items=['The Websprout badge is gone from your live sites','Connect your own domain','Download your site&rsquo;s code','Take payments in your online store'];
+    card.className='wpw-card wpw-done';
+    card.innerHTML='<div class="wpw-ico" aria-hidden="true">&#127793;</div>'
+      +'<div class="wpw-badge">&#10022; PRO</div>'
+      +'<h2 class="wpw-h" id="wpwH">Welcome to Pro'+(me&&me.name?', '+String(me.name).split(' ')[0].replace(/[<>&"]/g,''):'')+'!</h2>'
+      +'<p class="wpw-p">Everything is unlocked. Here&rsquo;s what you have now:</p>'
+      +'<ul class="wpw-list">'+items.map(function(t,i){return '<li style="animation-delay:'+(0.15+i*0.12)+'s"><i aria-hidden="true">&#10003;</i><span>'+t+'</span></li>';}).join('')+'</ul>'
+      +'<button class="wpw-btn" id="wpwGo" type="button">Start using Pro</button>'
+      +(hasSite?'<button class="wpw-link" id="wpwDom" type="button">Connect my domain &rarr;</button>':'')
+      +'<div class="wpw-note">Your receipt and plan details are on their way to your email.</div>';
+    document.getElementById('wpwGo').addEventListener('click',close);
+    var dm=document.getElementById('wpwDom');if(dm)dm.addEventListener('click',function(){close();setTimeout(function(){var b=document.getElementById('publishBtn');if(b)b.click();},350);});
+    try{document.getElementById('wpwGo').focus();}catch(e){}
+    confetti();
+  }
+  function confetti(){
+    try{if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;}catch(e){}
+    var c=document.createElement('canvas');ov.insertBefore(c,ov.firstChild);
+    var dpr=window.devicePixelRatio||1,W=window.innerWidth,H=window.innerHeight;c.width=W*dpr;c.height=H*dpr;
+    var x=c.getContext('2d');x.scale(dpr,dpr);
+    var cols=['#f5c542','#2d9e4a','#7fe39a','#ffffff','#e8b931'],P=[];
+    for(var i=0;i<150;i++)P.push({x:W/2+(Math.random()-.5)*80,y:H*0.42,vx:(Math.random()-.5)*13,vy:-Math.random()*14-4,r:Math.random()*Math.PI,vr:(Math.random()-.5)*.3,w:6+Math.random()*6,h:4+Math.random()*5,c:cols[i%cols.length]});
+    var t0=Date.now();
+    (function f(){var el=Date.now()-t0;x.clearRect(0,0,W,H);
+      P.forEach(function(p){p.vy+=.32;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.globalAlpha=Math.max(0,1-el/3200);x.fillStyle=p.c;x.fillRect(-p.w/2,-p.h/2,p.w,p.h);x.restore();});
+      if(el<3200&&c.isConnected)requestAnimationFrame(f);else{try{c.remove();}catch(e){}}})();
+  }
+  ov.addEventListener('keydown',function(e){if(e.key==='Escape'&&card.classList.contains('wpw-done'))close();});
+  activating(false);
+  // Stripe's notice usually lands within seconds; keep checking for up to 3 minutes.
+  var start=Date.now(),slowShown=false,stopped=false;
+  (function poll(){
+    if(stopped)return;
+    fetch('/me',{cache:'no-store'}).then(function(r){return r.json();}).then(function(me){
+      if(me&&me.pro){stopped=true;done(me);return;}
+      if(!slowShown&&Date.now()-start>20000){slowShown=true;activating(true);}
+      if(Date.now()-start<180000)setTimeout(poll,1500);else{card.querySelector('.wpw-p').innerHTML='Your payment went through. If Pro isn&rsquo;t showing yet, refresh the page or email support@websprout.app and we&rsquo;ll sort it out right away.';}
+    }).catch(function(){if(Date.now()-start<180000)setTimeout(poll,2500);});
+  })();
+}
 
 function toast(m,d){var t=document.getElementById('toast');if(!t)return;t.textContent=m;t.style.pointerEvents='';t.classList.add('on');if(t._wsTo)clearTimeout(t._wsTo);t._wsTo=setTimeout(function(){t.classList.remove('on');t._wsTo=null;},d||4000);}
 

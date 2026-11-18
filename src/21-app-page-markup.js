@@ -1408,7 +1408,10 @@
     applyAuthBtn($('signInBtn'),me,'');
     applyAuthBtn($('acctBtn'),me,'\uD83D\uDC64 ');
     if(me&&me.pro){try{if(typeof unlocked!=='undefined')unlocked=true;if(typeof applyUnlock==='function')applyUnlock();}catch(e){}}
+    // A plan change (e.g. right after checkout) shows at once: an open profile panel redraws with the new plan.
+    try{var _pm=$('profileModal');if(_pm&&_pm.style.display&&_pm.style.display!=='none'&&window.openProfile)window.openProfile();}catch(e){}
   }
+  window.wsSetAuthUI=setAuthUI;
   fetch('/me').then(function(r){return r.json();}).then(setAuthUI).catch(function(){});
   try{var P=new URLSearchParams(location.search);var lg=P.get('login');if(lg){history.replaceState(null,'',location.pathname);setTimeout(function(){if(window.toast){if(lg==='ok')toast('\u2713 Signed in!');else if(lg==='expired')toast('That link expired — please request a new one',6000);else if(lg==='error')toast('Sign-in failed — please try again',6000);}},400);}}catch(e){}
 })();

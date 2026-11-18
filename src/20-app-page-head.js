@@ -1095,6 +1095,8 @@ nav.scrolled{background:rgba(6,12,5,.78)!important;backdrop-filter:blur(16px) sa
   var lastAnchor=null;
   function close(){var el=document.getElementById('acctMenu');if(el){el.classList.remove('open');el.setAttribute('aria-hidden','true');}var b=document.getElementById('signInBtn');if(b)b.setAttribute('aria-expanded','false');if(lastAnchor)lastAnchor.setAttribute('aria-expanded','false');}
   window.wsCloseAcctMenu=close;
+  // Redraw an open menu after the plan changes (no reload needed); a closed one rebuilds itself when opened.
+  window.wsRefreshAcctMenu=function(me){var el=document.getElementById('acctMenu');if(el&&el.classList.contains('open'))build(me||window._wsUser||{});};
   window.wsToggleAcctMenu=function(me,anchor){var el=document.getElementById('acctMenu');if(!el)return;if(el.classList.contains('open')){close();return;}build(me||window._wsUser||{});place(anchor);lastAnchor=anchor||null;if(anchor)anchor.setAttribute('aria-expanded','true');el.classList.add('open');el.setAttribute('aria-hidden','false');var b=document.getElementById('signInBtn');if(b)b.setAttribute('aria-expanded','true');};
   function act(a){
     close();
