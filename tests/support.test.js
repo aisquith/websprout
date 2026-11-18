@@ -136,6 +136,19 @@ module.exports = async function (ctx, t) {
   em = msgOf('From: someone@shop.com\r\nAuto-Submitted: auto-replied\r\nSubject: Out of office\r\n\r\nI am away.');
   await k.L.wsHandleEmail(em.m, env());
   t.ok(em.fwd.length === 1 && k.sent.length === 0, 'an out-of-office reply is forwarded but never answered');
+  // Forged mail can't make us email a stranger.
+  k = make({ answerable: true, reply: 'Yes, with Pro you can connect your own domain from the editor.' });
+  em = msgOf('From: ceo@bigbank.com\r\nAuthentication-Results: mx.cloudflare.net; spf=pass smtp.mailfrom=spam.ru; dmarc=fail header.from=bigbank.com\r\nSubject: Hi\r\n\r\nHow do I publish?');
+  await k.L.wsHandleEmail(em.m, env());
+  t.ok(em.fwd.length === 1 && k.sent.length === 0, 'mail that fails DMARC is forwarded but gets no automatic reply');
+  k = make({ answerable: true, reply: 'Yes, with Pro you can connect your own domain from the editor.' });
+  em = msgOf('From: ana@shop.com\r\nReply-To: victim@elsewhere.org\r\nAuthentication-Results: mx; dkim=pass header.d=shop.com; dmarc=pass\r\nSubject: Hi\r\n\r\nHow do I publish?');
+  await k.L.wsHandleEmail(em.m, env());
+  t.ok(k.sent.length === 1 && k.sent[0].to[0] === 'ana@shop.com', 'a Reply-To on another domain is ignored: the reply goes to the sender');
+  k = make({ answerable: true, reply: 'Yes, with Pro you can connect your own domain from the editor.' });
+  em = msgOf('From: ana@shop.com\r\nReply-To: help@shop.com\r\nAuthentication-Results: mx; spf=pass; dmarc=none\r\nSubject: Hi\r\n\r\nHow do I publish?');
+  await k.L.wsHandleEmail(em.m, env());
+  t.ok(k.sent.length === 1 && k.sent[0].to[0] === 'help@shop.com', 'a Reply-To on the sender\'s own domain is used');
   const off = env(); off.SUPPORT_EMAIL_AUTOREPLY = 'off';
   k = make({}); em = msgOf(raw);
   await k.L.wsHandleEmail(em.m, off);

@@ -80,4 +80,25 @@ module.exports = async function (ctx, t) {
   await post(base, '/save', { siteId: rs.siteId, key: rs.formKey, html: rs.html, name: 'Review Spot' }, { Cookie: cookie(s2) });
   r = await post(base, '/api/reviews/manage', { site: rs.siteId, action: 'add', name: 'Sam', rating: 5, text: 'This place is shit' }, { Cookie: cookie(s2) });
   t.ok(r.status === 422, 'an owner-added review with profanity is refused (' + r.status + ')');
+
+  // 7. One free trial per card (Stripe faked): a second email with the same card has its trial cancelled, no charge.
+  {
+    const fs = require('fs'), path = require('path');
+    const rd = (f) => fs.readFileSync(path.join(__dirname, '..', 'src', f), 'utf8');
+    // One function's source: a one-line function is its own line; otherwise up to the closing brace at line start.
+    const fn = (src, name) => { const i = src.indexOf('function ' + name + '('); const a = src.lastIndexOf('\n', i) + 1; const line = src.slice(a, src.indexOf('\n', i)); if ((line.match(/\{/g) || []).length === (line.match(/\}/g) || []).length) return line; return src.slice(a, src.indexOf('\n}\n', i) + 3); };
+    const a44 = rd('44-auth-billing.js'), a46 = rd('46-account-saves.js');
+    const code = [fn(a44, 'sha256hex'), fn(a44, 'wsTrialNorm'), fn(a44, 'wsTrialKey'), fn(a46, 'wsTrialCardCheck')].join('\n');
+    const store = new Map(); const KV = { get: async (k) => (store.has(k) ? store.get(k) : null), put: async (k, v) => { store.set(k, v); } };
+    const calls = []; const mails = [];
+    const fakeFetch = async (u, o) => { calls.push({ u: String(u), m: (o && o.method) || 'GET' }); if ((o && o.method) === 'DELETE') return { ok: true, json: async () => ({}) }; return { ok: true, json: async () => ({ status: 'trialing', default_payment_method: { card: { fingerprint: 'FP123' } } }) }; };
+    const kit = new Function('fetch', 'wsMailCapOk', 'wsSendMail', code + '\nreturn { wsTrialCardCheck, wsTrialNorm };')(fakeFetch, async () => true, async (env, m) => { mails.push(m); return true; });
+    const env = { STRIPE_SECRET_KEY: 'sk_live_x', KV };
+    t.eq(await kit.wsTrialCardCheck(env, 'sub_1', 'first@shop.com'), false, 'first trial on a card goes ahead');
+    t.eq(await kit.wsTrialCardCheck(env, 'sub_1b', 'first@shop.com'), false, 'the same person again is not treated as a second person');
+    t.eq(await kit.wsTrialCardCheck(env, 'sub_2', 'second@other.com'), true, 'a second email with the same card loses the trial');
+    t.ok(calls.some((c) => c.m === 'DELETE' && /sub_2/.test(c.u)), 'that trial subscription is cancelled at Stripe (no charge)');
+    t.ok(mails.length === 1 && mails[0].to[0] === 'second@other.com' && /not charged/.test(mails[0].html), 'and the customer is told why, and that they were not charged');
+    t.eq(kit.wsTrialNorm('Jo.Hn+promo@GoogleMail.com'), 'john@gmail.com', 'gmail dots, +tags and googlemail are folded together');
+  }
 };

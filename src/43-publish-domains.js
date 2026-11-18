@@ -228,6 +228,13 @@ async function doPublish(request, env){
     {
       const _mv = await wsModCheck(env, { name: siteNameFromHtml(b.html), slug: slug, pages: [b.html].concat(Array.isArray(b.pages) ? b.pages.map(function(p){ return p && p.html; }) : []) });
       if (_mv.status === 'block') { await wsModQueue(env, slug, b.siteId, _mv, { email: _pubEmail, refused: true }); return new Response(JSON.stringify({ error: wsModMessage(_mv.category), moderation:true }), { status:422, headers:{'Content-Type':'application/json'} }); }
+      // The month's content-check budget is used up: a brand-new site waits instead of going live unchecked (sites
+      // already live can still update; they were checked before). The owner hears about it once a day to raise
+      // MOD_MONTHLY_CAP. A Gemini outage or timeout (reason 'error') does not block anyone.
+      if (_mv.status === 'unchecked' && _mv.reason === 'cap' && !existing && !(await env.KV.get('slugof:' + b.siteId))) {
+        try { const _ak = 'modcapalert:' + new Date().toISOString().slice(0, 10); if (!(await env.KV.get(_ak))) { await env.KV.put(_ak, '1', { expirationTtl: 90000 }); if (await wsMailCapOk(env, 'owneralert')) await wsSendMail(env, { from: 'Websprout <hello@websprout.app>', to: [SUPPORT_EMAIL], subject: 'Action needed: content-check budget used up', html: '<p>The monthly budget for AI content checks (MOD_MONTHLY_CAP) is used up, so <b>new sites can’t publish</b> until next month. Sites already live can still update.</p><p>To fix it now, raise MOD_MONTHLY_CAP in Cloudflare (Workers &rarr; websprout &rarr; Settings &rarr; Variables).</p>' }); } } catch(e){}
+        return new Response(JSON.stringify({ error:'We can’t publish new sites for a few minutes. Your site is saved; please try again a little later.' }), { status:503, headers:{'Content-Type':'application/json'} });
+      }
       if (_mv.status === 'unchecked' && _mv.reason !== 'nokey' && _mv.reason !== 'off') await wsModQueue(env, slug, b.siteId, _mv, { email: _pubEmail });
     }
     // Capture leads through Websprout's own backend: point every form at our endpoint AND inject a

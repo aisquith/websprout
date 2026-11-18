@@ -962,7 +962,7 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 
   document.getElementById('deployBtn').addEventListener('click',function(){
-    if(!unlocked){reverifyPro('deployBtn','🔒 Go Pro ($10/mo) to deploy your site!');return;}
+    if(!_proPass.deployBtn){reverifyPro('deployBtn','🔒 Go Pro ($10/mo) to deploy your site!');return;}delete _proPass.deployBtn;
     if(!gHTML){toast('Generate a site first!');return;}
     var savedToken=localStorage.getItem('ws_netlify_token');
     // If token already saved, skip to step 3
@@ -1044,7 +1044,7 @@ document.addEventListener('DOMContentLoaded',function(){
   // -- Email delivery on payment return -------------------------
   // (Email is stored in localStorage - remind user to download)
   document.getElementById('dlBtn').addEventListener('click',function(){
-    if(!unlocked){reverifyPro('dlBtn','🔒 Go Pro ($10/mo) to download');return;}
+    if(!_proPass.dlBtn){reverifyPro('dlBtn','🔒 Go Pro ($10/mo) to download');return;}delete _proPass.dlBtn;
     if(!gHTML)return;
     if(!window._wsDlOk){ if(window.wsDownloadGate){ window.wsDownloadGate(); return; } }
     window._wsDlOk=false;
@@ -1056,7 +1056,7 @@ document.addEventListener('DOMContentLoaded',function(){
   });
   var copyBtnEl=document.getElementById('copyBtn');
   if(copyBtnEl)copyBtnEl.addEventListener('click',function(){
-    if(!unlocked){reverifyPro('copyBtn','🔒 Go Pro ($10/mo) to copy your code');return;}
+    if(!_proPass.copyBtn){reverifyPro('copyBtn','🔒 Go Pro ($10/mo) to copy your code');return;}delete _proPass.copyBtn;
     if(!gHTML)return;
     function done(){toast('📋 Full HTML copied to clipboard!');}
     function fallback(){
@@ -3725,7 +3725,9 @@ function applyUnlock(){
 
 // Before paywalling a gated action, re-confirm Pro status live — fixes stale/cross-session
 // cases where /me wasn't re-checked after sign-in. If genuinely Pro, unlock and re-run the action.
-var _reverifying=false;
+// Every download, copy or deploy asks the server first (a value in the browser can be edited); a yes is good for
+// that one click only.
+var _reverifying=false, _proPass={};
 function reverifyPro(btnId, lockMsg){
   if(_reverifying)return; _reverifying=true;
   fetch('/me').then(function(r){return r.json();}).then(function(me){
@@ -3733,7 +3735,7 @@ function reverifyPro(btnId, lockMsg){
     window._wsUser=me;
     if(me&&me.pro){
       unlocked=true; try{applyUnlock();}catch(e){}
-      var b=document.getElementById(btnId); if(b)b.click();
+      _proPass[btnId]=1; var b=document.getElementById(btnId); if(b)b.click();
     }else{
       toast(lockMsg);
     }

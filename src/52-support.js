@@ -259,6 +259,17 @@ function wsParseInbound(raw) {
   return { headers: top, from: from, replyTo: rt.addr ? rt : from, subject: wsDecodeWords(top['subject'] || '').replace(/[\r\n]+/g, ' ').trim(), messageId: top['message-id'] || '', text: text };
 }
 // Robots, lists, bounces and other auto-replies never get a reply (no mail loops).
+// The receiving server's verdict on the sender (Authentication-Results, or its ARC copy). With no verdict at all we
+// still answer; a verdict where nothing passed means the From address is probably forged.
+function wsInboundAuthOk(h) {
+  const v = [h['authentication-results'], h['arc-authentication-results']].filter(Boolean).join(' ; ').toLowerCase();
+  if (!v) return true;
+  // DMARC is the check that ties the visible From to the real sender, so it decides when the domain publishes one.
+  if (/\bdmarc=pass\b/.test(v)) return true;
+  if (/\bdmarc=(?:fail|quarantine|reject)\b/.test(v)) return false;
+  // No DMARC policy: accept a DKIM or SPF pass.
+  return /\b(?:dkim|spf)=pass\b/.test(v);
+}
 function wsInboundIsAuto(h) {
   const as = String(h['auto-submitted'] || '').toLowerCase();
   if (as && as !== 'no') return true;
@@ -289,7 +300,11 @@ async function wsHandleEmail(message, env) {
     const raw = await wsReadRaw(message.raw, 400 * 1024);
     const m = wsParseInbound(raw);
     if (wsInboundIsAuto(m.headers)) return;
-    const to = m.replyTo.addr || m.from.addr;
+    // Don't let a forged message make us email a stranger: skip senders whose mail failed the sender checks (SPF,
+    // DKIM, DMARC) that the receiving server recorded, and only answer a Reply-To on the sender's own domain.
+    if (!wsInboundAuthOk(m.headers)) return;
+    const _fd = String(m.from.addr || '').split('@')[1] || '', _rd = String(m.replyTo.addr || '').split('@')[1] || '';
+    const to = (m.replyTo.addr && _rd.toLowerCase() === _fd.toLowerCase()) ? m.replyTo.addr : m.from.addr;
     if (!to || !wsSupportAddrOk(to) || !wsSupportAddrOk(m.from.addr || to)) return;
     const r = await wsSupportAutoReply(env, { to: to, name: m.replyTo.name || m.from.name, subject: m.subject, message: m.text, messageId: m.messageId });
     try { if (env.KV) await env.KV.put('supportlog:' + Date.now() + ':' + Math.random().toString(36).slice(2, 6), JSON.stringify({ via: 'email', to: to, subject: m.subject.slice(0, 120), sent: r.sent, ai: !!r.answer, person: !!r.person, skip: r.skip || '' }), { expirationTtl: 30 * 86400 }); } catch (e) {}

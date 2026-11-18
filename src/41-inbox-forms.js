@@ -233,7 +233,13 @@ async function wsTurnstileOk(env, token, ip){
   try {
     const body = new FormData(); body.append('secret', secret); body.append('response', token); if (ip) body.append('remoteip', ip);
     const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method:'POST', body: body });
-    const j = await r.json(); return !!(j && j.success);
+    const j = await r.json(); if (!(j && j.success)) return false;
+    // The check must have been solved on a Websprout site (or a customer's connected domain), not on a page someone
+    // built to harvest tokens.
+    const host = String(j.hostname || '').toLowerCase();
+    if (!host || host === 'websprout.app' || /\.websprout\.app$/.test(host) || host === 'localhost' || host === 'example.com') return true;
+    try { if (env.KV && (await env.KV.get('domain:' + host))) return true; } catch(e){ return true; }
+    return false;
   } catch(e){ return true; } // Cloudflare unreachable: don't lose a real customer's message
 }
 function jsonR(obj, status){ return new Response(JSON.stringify(obj), { status: status||200, headers: { ...formCors(), 'Content-Type':'application/json' } }); }

@@ -52,6 +52,33 @@ async function wsSubLive(env, sub){
   const sk = (env.STRIPE_SECRET_KEY || '').trim(); if (!sk) return true;
   try { const r = await fetch('https://api.stripe.com/v1/subscriptions/' + encodeURIComponent(sub), { headers:{ 'Authorization':'Bearer ' + sk } }); if (!r.ok) return true; const j = await r.json(); return ['active', 'trialing', 'past_due'].indexOf(String(j && j.status)) > -1; } catch(e){ return true; }
 }
+// One free trial per card, too: a new email with a card that already had a trial doesn't get another. Stripe gives
+// each card a fingerprint (the same for every customer using that card). If the card trialed before under another
+// email, the new trial is cancelled before any charge and the customer is told they can subscribe without a trial.
+// Returns true when the trial was cancelled.
+async function wsTrialCardCheck(env, sub, email){
+  const sk = (env.STRIPE_SECRET_KEY || '').trim();
+  if (!sk || !sub || !env.KV || env.WS_TEST_MODE === '1') return false;
+  try {
+    const r = await fetch('https://api.stripe.com/v1/subscriptions/' + encodeURIComponent(sub) + '?expand[]=default_payment_method', { headers:{ 'Authorization':'Bearer ' + sk } });
+    if (!r.ok) return false;
+    const j = await r.json();
+    if (!j || j.status !== 'trialing') return false;
+    const fp = j.default_payment_method && j.default_payment_method.card && j.default_payment_method.card.fingerprint;
+    if (!fp) return false;
+    const me = (await wsTrialKey(email)).slice(-24);
+    const k = 'trialcard:' + String(fp).replace(/[^A-Za-z0-9]/g, '').slice(0, 40);
+    const prev = await env.KV.get(k);
+    if (!prev || prev === me) { await env.KV.put(k, me); return false; }
+    const c = await fetch('https://api.stripe.com/v1/subscriptions/' + encodeURIComponent(sub), { method:'DELETE', headers:{ 'Authorization':'Bearer ' + sk } });
+    if (!c.ok) return false;
+    try { await env.KV.put(await wsTrialKey(email), '1'); const u = JSON.parse((await env.KV.get('user:' + email)) || '{}'); if (u && u.email) { u.trialUsed = true; await env.KV.put('user:' + email, JSON.stringify(u)); } } catch(e){}
+    try { if (await wsMailCapOk(env, 'billing')) await wsSendMail(env, { from:'Websprout <hello@websprout.app>', reply_to:'support@websprout.app', to:[email], subject:'About your Websprout Pro free trial',
+      html:'<div style="font-family:-apple-system,Segoe UI,Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#222;font-size:15px;line-height:1.55"><p style="margin:0 0 14px">Thanks for trying Websprout Pro.</p><p style="margin:0 0 14px">The card you used has already had a Websprout free trial, and the free trial is one per person, so we cancelled this new trial. <b>You were not charged.</b></p><p style="margin:0 0 14px">You can still get Pro right away (without a trial) from <b>Settings &rarr; Go Pro</b> at <a href="https://websprout.app" style="color:#2d7a3a">websprout.app</a>.</p><p style="margin:0">Questions? Just reply to this email.</p><p style="margin:14px 0 0">The Websprout team</p></div>',
+      text:'Thanks for trying Websprout Pro. The card you used has already had a Websprout free trial, and the free trial is one per person, so we cancelled this new trial. You were not charged. You can still get Pro right away (without a trial) from Settings > Go Pro at https://websprout.app. Questions? Just reply to this email. - The Websprout team' }); } catch(e){}
+    return true;
+  } catch(e){ return false; }
+}
 // Confirmation after checkout (auto-renewal laws): what they signed up for, when the first charge happens, that it
 // renews monthly until cancelled, and how to cancel. Sent once per subscription; also marks the trial as used.
 async function wsSendProWelcome(env, email, session){
@@ -127,6 +154,7 @@ async function doStripeWebhook(request, env){
         const _pp = String(env.STRIPE_PRO_PRICE || '').trim(), _sk = String(env.STRIPE_SECRET_KEY || '').trim();
         if(_pp && _sk){ try{ const _r = await fetch('https://api.stripe.com/v1/subscriptions/' + encodeURIComponent(obj.subscription), { headers:{ 'Authorization':'Bearer ' + _sk } }); if(_r.ok){ const _j = await _r.json(); const _ids = ((_j.items && _j.items.data) || []).map(function(it){ return it && it.price && it.price.id; }).filter(Boolean); if(_ids.length && _ids.indexOf(_pp) === -1){ try{ console.warn('stripe: checkout ' + evId + ' is not the Pro price; Pro not granted'); }catch(e){} await markDone(); return done; } } }catch(e){} }
       }
+      if(obj.subscription && await wsTrialCardCheck(env, obj.subscription, email)){ await markDone(); return done; }
       await setUserPlan(env, email, 'pro', cust, obj.subscription||'');
       try{ await wsSendProWelcome(env, email, obj); }catch(e){ try{ console.error('pro welcome', (e && e.message) || e); }catch(_){} }
       try{ await logEvent(request, env, 'pro_start', { email: email, server: true, dedupe: ev.id, props:{ amount: obj.amount_total || 0 } }); }catch(e){}
