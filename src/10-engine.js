@@ -1715,9 +1715,9 @@ main{min-height:55vh}
 .foot a{text-decoration:none;color:rgba(255,255,255,.72)}.foot a:hover{color:#fff}
 .foot-brand b{display:block;font-family:var(--display);font-weight:var(--mark-weight,800);letter-spacing:var(--mark-tracking,.02em);font-size:22px;line-height:1.1;color:#fff;margin-bottom:10px}
 .foot-brand p{margin:0;max-width:38ch}
-.foot-col{display:flex;flex-direction:column;gap:8px;min-width:0}
+.foot-col{display:flex;flex-direction:column;gap:4px;min-width:0}
 .foot-col h4{margin:0 0 4px;font:600 11px/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.45)}
-.foot-col a,.foot-col span{overflow-wrap:anywhere}
+.foot-col a,.foot-col span{overflow-wrap:anywhere}.foot-col a{padding:2px 0}td a{display:inline-block;padding:3px 0}
 .ws-top{position:fixed;left:18px;bottom:18px;z-index:8000;width:44px;height:44px;border-radius:50%;border:1px solid var(--hair);background:color-mix(in srgb,var(--base),transparent 6%);color:var(--base-text);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .25s,transform .25s;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .ws-top.on{opacity:1;transform:none;pointer-events:auto}
 .ws-top:hover{background:var(--base-text);color:var(--base)}
@@ -1798,7 +1798,7 @@ main{min-height:55vh}
 .mark-logo{display:block;height:44px;width:auto;max-width:200px;object-fit:contain}
 .top.solid .mark-logo{height:36px}
 .credits{margin:0;text-align:center;font:500 11px/1.6 'Work Sans',system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:16px 20px 26px;background:#111;color:rgba(255,255,255,.64)}
-.credits a{text-decoration:none}.credits a:hover{text-decoration:underline}
+.credits a{text-decoration:none;display:inline-block;padding:5px 0}.credits a:hover{text-decoration:underline}
 
 /* photo slots */
 figure.slot{position:relative;overflow:hidden;background:var(--surface);color:var(--base-text);--slot-ink:var(--base-text)}

@@ -1210,7 +1210,7 @@
   <div style="background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:18px;max-width:400px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.6)">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.07)">
       <div style="display:flex;align-items:center;gap:9px"><div class="nav-logo-mark" style="width:26px;height:26px"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true"><path d="M12 21V12" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/><path d="M12 14.5C10.4 9.8 6.2 7.6 3 8.2C3.4 13 7.6 15.5 12 14.5Z" fill="#fff"/><path d="M12 13C13.5 8.2 17.8 6 21 6.6C20.6 11.4 16.4 13.9 12 13Z" fill="#fff"/></svg></div><div id="authTitle" style="font-size:17px;font-weight:800;color:#fff">Sign in to Websprout</div></div>
-      <button id="authClose" aria-label="Close" style="background:none;border:none;color:rgba(255,255,255,.72);font-size:22px;cursor:pointer;line-height:1">&times;</button>
+      <button id="authClose" aria-label="Close" style="width:36px;height:36px;margin:-8px -10px -8px 0;display:flex;align-items:center;justify-content:center;background:none;border:none;color:rgba(255,255,255,.72);font-size:22px;cursor:pointer;line-height:1">&times;</button>
     </div>
     <div style="padding:22px">
       <div id="authIntro" style="font-size:13px;color:rgba(255,255,255,.72);margin-bottom:16px;line-height:1.5">Sign in to save your sites to your account and open them from any device.</div>
@@ -1230,7 +1230,7 @@
   <div style="background:#0f1a0d;border:1px solid rgba(45,122,58,.3);border-radius:18px;max-width:420px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,.07)">
       <div style="font-size:17px;font-weight:800;color:#fff">Settings</div>
-      <button id="profileClose" aria-label="Close" style="background:none;border:none;color:rgba(255,255,255,.72);font-size:22px;cursor:pointer;line-height:1">&times;</button>
+      <button id="profileClose" aria-label="Close" style="width:36px;height:36px;margin:-8px -10px -8px 0;display:flex;align-items:center;justify-content:center;background:none;border:none;color:rgba(255,255,255,.72);font-size:22px;cursor:pointer;line-height:1">&times;</button>
     </div>
     <div style="padding:22px">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">

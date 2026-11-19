@@ -408,7 +408,7 @@ textarea.dark-input{resize:vertical;min-height:76px;line-height:1.6}
 .cmp-card{border-radius:16px;padding:26px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.02)}
 .cmp-card.highlight{border-color:rgba(45,122,58,.35);background:rgba(45,122,58,.07)}
 .cmp-head{font-size:14px;font-weight:700;color:#fff;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.cmp-badge{background:#2d7a3a;color:#fff;font-size:10px;font-weight:700;padding:2px 9px;border-radius:100px}
+.cmp-badge{background:#2d7a3a;color:#fff;font-size:11px;font-weight:700;padding:2px 9px;border-radius:100px}
 .cmp-list{list-style:none;display:flex;flex-direction:column;gap:10px}
 .cmp-item{font-size:13px;color:rgba(255,255,255,.72);display:flex;align-items:flex-start;gap:8px;line-height:1.5}
 .cmp-item::before{content:'v';color:#4ade80;font-weight:900;font-size:11px;flex-shrink:0;margin-top:2px}
@@ -444,7 +444,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .foot-logo{font-size:15px;font-weight:800;color:#fff;text-decoration:none;display:flex;align-items:center;gap:7px}
 .foot-logo em{font-style:normal;color:#4ade80}
 .foot-links{display:flex;gap:20px;flex-wrap:wrap}
-.foot-links a{font-size:13px;color:rgba(255,255,255,.72);text-decoration:none;transition:color .15s}
+.foot-links a{font-size:13px;color:rgba(255,255,255,.72);text-decoration:none;transition:color .15s;display:inline-block;padding:6px 0}
 .foot-links a:hover{color:rgba(255,255,255,.72)}
 
 /* ---- TOAST ---- */
@@ -865,6 +865,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
   #signInBtn.is-authed{border:none !important;background:transparent !important;padding:0 !important;margin-right:4px;max-width:none;min-width:0}
   #signInBtn.is-authed .auth-name{display:none}
   #signInBtn.is-authed .auth-ava{display:inline-flex}
+  #acctBtn{min-width:32px;min-height:32px;justify-content:center}
   #signInBtn:not(.is-authed){border:none !important;background:transparent !important;padding:0 !important;margin-right:4px;max-width:none;min-width:0}
   #signInBtn:not(.is-authed) .auth-name{display:none}
   #signInBtn:not(.is-authed) .auth-ava-guest{display:inline-flex}
@@ -896,7 +897,7 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .ws-ex:hover,.ws-ex:focus-visible{transform:translateY(-4px);border-color:rgba(74,222,128,.45);box-shadow:0 26px 60px -24px rgba(0,0,0,.9)}
 .ws-ex-bar{display:flex;align-items:center;gap:5px;height:26px;padding:0 10px;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.06)}
 .ws-ex-bar span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.18)}
-.ws-ex-bar em{font-style:normal;font-size:10.5px;color:rgba(255,255,255,.42);margin-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ws-ex-bar em{font-style:normal;font-size:11.5px;color:rgba(255,255,255,.42);margin-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ws-ex-vp{position:relative;aspect-ratio:16/10;overflow:hidden;background:#f4f4f2}
 .ws-ex-vp iframe{position:absolute;top:0;left:0;width:1280px;height:800px;border:0;transform-origin:0 0;transform:scale(var(--s,.27));pointer-events:none}
 .ws-ex-cap{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:12px 14px}

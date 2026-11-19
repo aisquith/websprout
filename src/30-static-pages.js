@@ -414,7 +414,7 @@ nav{height:56px;border-bottom:1px solid #e8f0e5;display:flex;align-items:center;
 .logo{font-size:17px;font-weight:800;color:#0f1a0d;text-decoration:none;display:flex;align-items:center;gap:8px}
 .logo-mark{width:28px;height:28px;background:#2d7a3a;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
 .logo em{font-style:normal;color:#2d7a3a}
-.back-btn{font-size:14px;color:#2d7a3a;text-decoration:none;font-weight:600;display:flex;align-items:center;gap:6px}
+.back-btn{font-size:14px;color:#2d7a3a;text-decoration:none;font-weight:600;display:flex;align-items:center;gap:6px;padding:6px 0}
 .back-btn:hover{text-decoration:underline}
 .hero{background:#f8faf8;border-bottom:1px solid #e8f0e5;padding:60px 5vw}
 .hero-inner{max-width:760px;margin:0 auto;text-align:center}
@@ -480,8 +480,8 @@ h1{font-size:clamp(2rem,4vw,3rem);font-weight:900;color:#0f1a0d;letter-spacing:-
 footer{border-top:1px solid #e8f0e5;padding:28px 5vw;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;background:#f8faf8}
 .foot-logo{font-size:15px;font-weight:800;color:#0f1a0d;text-decoration:none;display:flex;align-items:center;gap:7px}
 .foot-logo em{font-style:normal;color:#2d7a3a}
-.foot-links{display:flex;gap:20px}
-.foot-links a{font-size:13px;color:#888;text-decoration:none}
+.foot-links{display:flex;gap:4px 20px;flex-wrap:wrap}
+.foot-links a{font-size:13px;color:#888;text-decoration:none;display:inline-block;padding:6px 0}
 .foot-links a:hover{color:#0f1a0d}
 
 @media(max-width:700px){
