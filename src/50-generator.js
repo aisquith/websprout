@@ -1731,10 +1731,12 @@ async function doCreate(request, env) {
     const ip = wsClientIp(request, env), d = new Date().toISOString();
     if (!(await wsRate(env, 'crrate:h:' + d.slice(0, 13) + ':' + ip, 20, 3600)) || !(await wsRate(env, 'crrate:d:' + d.slice(0, 10) + ':' + ip, 60, 86400))) return new Response(JSON.stringify({ error: 'You have made a lot of sites in a short time. Please try again in a little while.' }), { status: 429, headers: { 'Content-Type': 'application/json' } });
   }
+  // Growing a site needs an account. Test servers enforce it only on requests that ask (x-ws-test-auth).
+  let _crSess = null; try { _crSess = await getSession(request, env); } catch (e) {}
+  if (!_crSess && (env.WS_TEST_MODE !== '1' || request.headers.get('x-ws-test-auth'))) return new Response(JSON.stringify({ error: 'Please sign in to grow your site.', signin: true }), { status: 401, headers: { 'Content-Type': 'application/json' } });
   let body; try { body = await request.json(); } catch { return fail('Invalid request'); }
   const _t0 = Date.now();
   try {
-    let _crSess = null; try { _crSess = await getSession(request, env); } catch (e) {}
     const r = await buildV3Site(body || {}, env, { ai: true, aiShare: _crSess ? 1 : 0.8 });
     const site = r.site, siteId = r.siteId, html = r.html;
     const formKey = await siteKey(siteId, env);

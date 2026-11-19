@@ -673,8 +673,10 @@ document.addEventListener('DOMContentLoaded',function(){
   document.getElementById('next1').addEventListener('click',function(){
     var ty=(document.getElementById('bizType')||{}).value||'';
     if(!ty.trim()){var bt=document.getElementById('bizType');if(bt)bt.focus();toast('What kind of business is it? 🌱');return;}
-    doCreateV3();
+    wsGrowClicked();
   });
+  // This script can load after the first /me answer: pick up a site that was waiting on sign-in.
+  if(window._wsUser&&window._wsUser.auth)wsResumePendingGen(false);
   var _n2e=document.getElementById('next2');if(_n2e)_n2e.addEventListener('click',function(){buildSummary();showPanel(3);});
   var _b2e=document.getElementById('back2');if(_b2e)_b2e.addEventListener('click',function(){showPanel(1);});
   document.getElementById('back3').addEventListener('click',function(){showPanel(2);});
@@ -2937,7 +2939,40 @@ function wsMoreAnswers(){
   var tw=((g('moreTowns')||{}).value||'').trim().slice(0,300);if(sa&&window._wsWhere!=='come'&&tw)out.towns=tw;
   return out;
 }
-function doCreateV3(){
+// Growing a site needs an account. Signed out, the answers are kept (ws_pending_gen, 30 minutes) and the sign-in box
+// opens; the site grows as soon as this browser is signed in: right here when the emailed link is opened in another
+// tab (this tab keeps a heartbeat so the other tab leaves it alone), or on the way back from Google.
+var WS_PENDING_GEN='ws_pending_gen',_wsGenBeat=0;
+function wsPendingRead(){
+  try{var p=JSON.parse(localStorage.getItem(WS_PENDING_GEN)||'null');if(p&&p.p&&Date.now()-(p.t||0)<1800000)return p;localStorage.removeItem(WS_PENDING_GEN);}catch(e){}
+  return null;
+}
+function wsPendingBeat(on){try{var p=wsPendingRead();if(!p)return;p.w=on?Date.now():0;localStorage.setItem(WS_PENDING_GEN,JSON.stringify(p));}catch(e){}}
+function wsStopBeat(){if(_wsGenBeat){clearInterval(_wsGenBeat);_wsGenBeat=0;}}
+function wsGrowAfterSignIn(payload){
+  payload=payload||wsCreatePayload();
+  try{localStorage.setItem(WS_PENDING_GEN,JSON.stringify({t:Date.now(),w:Date.now(),p:payload}));}catch(e){}
+  wsStopBeat();_wsGenBeat=setInterval(function(){wsPendingBeat(true);},1500);
+  if(window.openAuth)window.openAuth({intro:'Sign in to grow your site. It’s free, your answers are saved, and your site starts growing the moment you’re in.',onSignedIn:function(){wsStopBeat();if(!wsResumePendingGen(true)&&typeof toast==='function')toast('✓ Signed in! Your site opened in the tab from your email link.',6000);}});
+}
+// Leaving the page (e.g. off to Google) stops the heartbeat, so the page that comes back grows the site.
+window.addEventListener('pagehide',function(){if(_wsGenBeat){wsStopBeat();wsPendingBeat(false);}});
+function wsResumePendingGen(own){
+  var p=wsPendingRead();if(!p)return false;
+  if(!own&&p.w&&Date.now()-p.w<5000){setTimeout(function(){if(typeof toast==='function')toast('✓ Signed in! Head back to your other Websprout tab: your site is growing there.',8000);},900);return false;}
+  try{localStorage.removeItem(WS_PENDING_GEN);}catch(e){}
+  var d=p.p,put=function(id,v){var el=document.getElementById(id);if(el&&v&&!el.value)el.value=v;};
+  put('bizName',d.name);put('bizType',d.type);put('bizCity',d.city);put('bizPhone',d.phone);put('customPrompt',d.about);
+  wsRunCreate(d);return true;
+}
+window.wsResumePendingGen=wsResumePendingGen;
+function wsGrowClicked(){
+  var go=function(me){if(me&&me.auth)doCreateV3();else wsGrowAfterSignIn();};
+  if(window._wsUser){go(window._wsUser);return;}
+  fetch('/me',{cache:'no-store'}).then(function(r){return r.json();}).then(function(me){if(window.wsSetAuthUI)window.wsSetAuthUI(me);go(me);}).catch(function(){go(null);});
+}
+function doCreateV3(){wsRunCreate(wsCreatePayload());}
+function wsCreatePayload(){
   var val=function(id){var el=document.getElementById(id);return el?(el.value||''):'';};
   var type=val('bizType').trim()||((typeof selectedType!=='undefined'&&selectedType)?selectedType:'');
   var payload={name:val('bizName').trim(),type:type,about:val('customPrompt').trim().slice(0,400),city:val('bizCity').trim().slice(0,80),phone:val('bizPhone').trim().slice(0,40)};
@@ -2946,6 +2981,9 @@ function doCreateV3(){
   // The services picked as chips (merged with any typed elsewhere, without repeats).
   try{var _st=wsSvcText();if(_st)payload.servicesText=payload.servicesText?wsSvcMerge(payload.servicesText,_st):_st;}catch(e){}
   var gp=window._wsPlace;if(gp&&gp.googlePlaceId){payload.googlePlaceId=gp.googlePlaceId;payload.googleName=gp.name||'';payload.address=gp.address||'';payload.hours=gp.hours||[];payload.reviews=gp.reviews||[];if(typeof gp.rating==='number'&&isFinite(gp.rating))payload.rating=gp.rating;if(typeof gp.count==='number'&&isFinite(gp.count))payload.count=gp.count;}
+  return payload;
+}
+function wsRunCreate(payload){
   var btn=document.getElementById('gbtn'),gt=document.getElementById('gbtnTxt'),ld=document.getElementById('loading');
   if(btn)btn.disabled=true;if(gt)gt.textContent='Growing...';if(ld)ld.classList.add('on');
   if(window.wsQaShow)try{wsQaShow();}catch(e){}
@@ -2953,6 +2991,7 @@ function doCreateV3(){
     .then(function(x){return x.json().then(function(dd){return {ok:x.ok,d:dd};});})
     .then(function(r){
       if(btn)btn.disabled=false;if(gt)gt.textContent='Regrow';if(ld)ld.classList.remove('on');
+      if(r.d&&r.d.signin){if(window.wsQaHide)wsQaHide();wsGrowAfterSignIn(payload);return;}
       if(!r.ok||!r.d||r.d.error||!r.d.html){if(window.wsQaHide)wsQaHide();if(typeof toast==='function')toast('Something went wrong - please try again',3000);return;}
       gHTML=r.d.html;window._wsPrompt=payload.tagline||'';window._wsSiteData=r.d.site||null;try{if(window._wsSiteData){wsPersistSiteData();}else{localStorage.removeItem('ws_sd');}}catch(e){}setTimeout(function(){try{wsBuildPaletteBar();}catch(e){}},400);try{localStorage.setItem('wsh',gHTML);}catch(e){}undoStack=[gHTML];redoStack=[];editCount=0;
       try{window._wsPages=null;window._wsCurPage=0;localStorage.removeItem('ws_pages');var _pt=document.getElementById('wsPageTabs');if(_pt&&_pt.parentNode)_pt.parentNode.removeChild(_pt);}catch(e){}
