@@ -201,7 +201,7 @@ a{color:#2d7a3a}
 <h2>What we don't collect</h2>
 <p>We do not track you across other websites. We do not sell your data. We use only the cookies necessary for the service to work, including a sign-in cookie to keep you logged in.</p>
 <h2>Advertising</h2>
-<p>We may advertise Websprout on Google and Meta (Facebook and Instagram). To see whether those ads work, we can turn on ad measurement on websprout.app. When it is on, websprout.app loads Google Ads / Google Analytics 4 tags and the Meta Pixel. These tags may set cookies and tell Google or Meta when someone who saw an ad visits, publishes a site or starts a Pro trial.</p>
+<p>We may advertise Websprout on Google and Meta (Facebook and Instagram). To see whether those ads work, we can turn on ad measurement on websprout.app. When it is on, websprout.app loads Google Tag Manager, Google Ads / Google Analytics 4 tags and the Meta Pixel. These tags may set cookies and tell Google or Meta when someone who saw an ad visits, creates an account, publishes a site or starts a Pro trial.</p>
 <ul>
 <li>These tags run only on websprout.app. They never run on the websites our customers publish.</li>
 <li>They load only for visitors in the United States.</li>

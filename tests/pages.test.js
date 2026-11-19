@@ -27,6 +27,7 @@ module.exports = async function (ctx, t) {
   }
   for (const l of links) {
     if (/^\/(admin|auth\/google|connect\/start|example)/.test(l)) continue; // need auth, secrets or query params
+    if (/['+]/.test(l)) continue; // a link put together in a script, not a real address
     const r = await fetch(base + l, { redirect: 'manual' });
     t.ok(r.status < 400, 'internal link ' + l + ' resolves (' + r.status + ')');
   }

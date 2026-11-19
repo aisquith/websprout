@@ -256,6 +256,7 @@ async function wsRoute(request, env, url, _host) {
       const _cur = url.searchParams.get('v') === editorVersion(_s0);
       return new Response(_js, { headers: { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': _cur ? 'public, max-age=31536000, immutable' : 'no-cache' } });
     }
+    if (url.pathname === '/favicon.ico' || url.pathname === '/favicon.svg') return new Response('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#2d7a3a"/><path d="M12 21V12" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/><path d="M12 14.5C10.4 9.8 6.2 7.6 3 8.2C3.4 13 7.6 15.5 12 14.5Z" fill="#fff"/><path d="M12 13C13.5 8.2 17.8 6 21 6.6C20.6 11.4 16.4 13.9 12 13Z" fill="#fff"/></svg>', { headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=604800' } });
     if (url.pathname === '/robots.txt') return new Response(ROBOTS, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=86400' } });
     let _html = PAGE_SHELL;
     // Stripe subscription link comes from an env var so it persists across code updates
@@ -266,7 +267,11 @@ async function wsRoute(request, env, url, _host) {
     if (env.GOOGLE_PLACES_KEY) _html = _html.split('id="gFillWrap" hidden').join('id="gFillWrap"');
     { const _ads = wsAdsAllowed(request) ? wsAdsTags(env) : ''; if (_ads) _html = _html.replace('</head>', _ads + '</head>'); }
     try { const _sg = await getSitesGrown(env); if (_sg && _sg > 0) _html = _html.split('id="liveCount">&mdash;<').join('id="liveCount">' + fmtThousands(_sg) + '<'); } catch (e) {}
-    return new Response(_html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate', 'Pragma': 'no-cache' } });
+    // Any other address still shows the app (so a mistyped link is not a dead end) but answers 404 and is kept out of
+    // search results, instead of looking like a real page ("soft 404").
+    const _nf = url.pathname !== '/' && url.pathname !== '/index.html';
+    if (_nf) _html = _html.replace('<head>', '<head><meta name="robots" content="noindex">');
+    return new Response(_html, { status: _nf ? 404 : 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate', 'Pragma': 'no-cache' } });
 }
 
 
@@ -342,11 +347,15 @@ async function doTestAnalytics(request, env){
 //   GOOGLE_TAG_ID             AW-123456789 (Google Ads) or G-XXXXXXX (Google Analytics 4)
 //   GOOGLE_ADS_PUBLISH_LABEL  AW-123456789/AbCdEf  conversion: someone published their first site
 //   GOOGLE_ADS_TRIAL_LABEL    AW-123456789/GhIjKl  conversion: someone started the Pro trial
-//   META_PIXEL_ID             1234567890           Meta (Facebook/Instagram) Pixel: Lead on publish, StartTrial on Pro
+//   GOOGLE_ADS_SIGNUP_LABEL   AW-123456789/MnOpQr  conversion: someone created an account
+//   META_PIXEL_ID             1234567890           Meta (Facebook/Instagram) Pixel: CompleteRegistration on sign-up,
+//                                                  Lead on publish, StartTrial on Pro
+//   GOOGLE_GTM_ID             GTM-XXXXXXX          Google Tag Manager container. Every conversion is also pushed to the
+//                                                  dataLayer as an event (ws_signup, ws_publish, ws_trial) for GTM triggers.
 function wsAdsCfg(env){
-  const g = String((env && env.GOOGLE_TAG_ID) || '').trim(), m = String((env && env.META_PIXEL_ID) || '').trim();
+  const g = String((env && env.GOOGLE_TAG_ID) || '').trim(), m = String((env && env.META_PIXEL_ID) || '').trim(), t = String((env && env.GOOGLE_GTM_ID) || '').trim().toUpperCase();
   const lab = function(v){ v = String(v || '').trim(); return /^AW-\d{5,15}\/[A-Za-z0-9_-]{4,40}$/.test(v) ? v : ''; };
-  return { g: /^(AW-\d{5,15}|G-[A-Z0-9]{4,15})$/.test(g) ? g : '', meta: /^\d{8,20}$/.test(m) ? m : '', pub: lab(env && env.GOOGLE_ADS_PUBLISH_LABEL), trial: lab(env && env.GOOGLE_ADS_TRIAL_LABEL) };
+  return { g: /^(AW-\d{5,15}|G-[A-Z0-9]{4,15})$/.test(g) ? g : '', gtm: /^GTM-[A-Z0-9]{4,12}$/.test(t) ? t : '', meta: /^\d{8,20}$/.test(m) ? m : '', pub: lab(env && env.GOOGLE_ADS_PUBLISH_LABEL), trial: lab(env && env.GOOGLE_ADS_TRIAL_LABEL), signup: lab(env && env.GOOGLE_ADS_SIGNUP_LABEL) };
 }
 // Ad tags load only for visitors in the US (no consent banner needed there), and never when the browser sends Global
 // Privacy Control or the visitor opted out at /privacy-choices (CCPA/CPRA "Do Not Sell or Share").
@@ -357,17 +366,20 @@ function wsAdsAllowed(request){
   const c = String(h.get('cf-ipcountry') || '').toUpperCase();
   return c === 'US';
 }
-function wsAdsOn(env){ const c = wsAdsCfg(env); return !!(c.g || c.meta); }
+function wsAdsOn(env){ const c = wsAdsCfg(env); return !!(c.g || c.meta || c.gtm); }
 function wsAdsTags(env){
   const c = wsAdsCfg(env);
-  if (!c.g && !c.meta) return '';
+  if (!c.g && !c.meta && !c.gtm) return '';
   let h = '';
+  if (c.gtm) h += '<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({"gtm.start":new Date().getTime(),event:"gtm.js"});var f=d.getElementsByTagName(s)[0],j=d.createElement(s);j.async=true;j.src="https://www.googletagmanager.com/gtm.js?id="+i;f.parentNode.insertBefore(j,f);})(window,document,"script","dataLayer","' + c.gtm + '");</script>';
   if (c.g) h += '<script async src="https://www.googletagmanager.com/gtag/js?id=' + c.g + '"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","' + c.g + '");</script>';
   if (c.meta) h += '<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");fbq("init","' + c.meta + '");fbq("track","PageView");</script>';
-  // wsConv("publish", siteId) / wsConv("trial"): each conversion is reported once per site (publish) or once per browser (trial).
+  // wsConv("signup") / wsConv("publish", siteId) / wsConv("trial"): each conversion is reported once per browser
+  // (once per site for publish).
   h += '<script>window.wsConv=function(k,id){try{var key="ws_conv_"+k+"_"+(id||"");if(localStorage.getItem(key))return;localStorage.setItem(key,"1");}catch(e){}'
-    + 'try{var L=' + JSON.stringify({ publish: c.pub, trial: c.trial }) + ';if(window.gtag&&L[k])gtag("event","conversion",{send_to:L[k]});}catch(e){}'
-    + 'try{if(window.fbq)fbq("track",k==="trial"?"StartTrial":"Lead");}catch(e){}};</script>';
+    + 'try{window.dataLayer=window.dataLayer||[];window.dataLayer.push({event:"ws_"+k});}catch(e){}'
+    + 'try{var L=' + JSON.stringify({ publish: c.pub, trial: c.trial, signup: c.signup }) + ';if(window.gtag&&L[k])gtag("event","conversion",{send_to:L[k]});}catch(e){}'
+    + 'try{if(window.fbq)fbq("track",k==="trial"?"StartTrial":(k==="signup"?"CompleteRegistration":"Lead"));}catch(e){}};</script>';
   return h;
 }
 // Privacy page wording when ad measurement is on.
@@ -375,7 +387,7 @@ function wsPrivacyWithAds(page){
   return page
     .replace('Websprout measures how the site is used without cookies or third-party trackers:', 'Websprout measures how the site is used without cookies:')
     .replace('<p>We do not track you across other websites. We do not sell your data. We use only the cookies necessary for the service to work, including a sign-in cookie to keep you logged in.</p>',
-      '<p>We do not sell your data. Besides the cookies the service needs (including a sign-in cookie to keep you logged in), websprout.app uses Google and Meta advertising tags to measure whether our ads work: they may set cookies and tell those companies when someone who saw an ad publishes a site or starts a Pro trial. These tags never run on the websites our customers publish. You can opt out of personalized ads at <a href="https://adssettings.google.com">adssettings.google.com</a> and in your Facebook or Instagram ad preferences.</p>');
+      '<p>We do not sell your data. Besides the cookies the service needs (including a sign-in cookie to keep you logged in), websprout.app uses Google and Meta advertising tags to measure whether our ads work: they may set cookies and tell those companies when someone who saw an ad creates an account, publishes a site or starts a Pro trial. These tags never run on the websites our customers publish. You can opt out of personalized ads at <a href="https://adssettings.google.com">adssettings.google.com</a> and in your Facebook or Instagram ad preferences.</p>');
 }
 function succeed(data) {
   return new Response(JSON.stringify(data), { status: 200, headers: { 'Content-Type': 'application/json' } });

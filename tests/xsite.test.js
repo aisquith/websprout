@@ -32,7 +32,7 @@ module.exports = async function (ctx, t) {
     t.ok(r.status === 403 || /login=error/.test(r.headers.get('location') || ''), 'sign-in POST from a customer subdomain is refused');
     r = await fetch(base + '/auth/verify', { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Origin: base }, body: 'token=' + tok });
     const sc = r.headers.get('set-cookie') || '';
-    t.ok(/login=ok/.test(r.headers.get('location') || ''), 'sign-in from the app works');
+    t.ok(/login=(ok|new)/.test(r.headers.get('location') || ''), 'sign-in from the app works');
     t.ok(/__Host-ws_sess=[a-f0-9]{64}/.test(sc) && /Secure/i.test(sc) && /Path=\//.test(sc) && /HttpOnly/i.test(sc) && /SameSite=Lax/i.test(sc) && !/Domain=/i.test(sc), 'session cookie is __Host- prefixed: Secure, HttpOnly, SameSite=Lax, Path=/, no Domain (' + sc.slice(0, 120) + ')');
     r = await fetch(base + '/auth/verify', { method: 'POST', redirect: 'manual', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Origin: base }, body: 'token=' + tok });
     t.ok(/login=expired/.test(r.headers.get('location') || ''), 'a sign-in link works only once');

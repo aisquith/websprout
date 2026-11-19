@@ -99,7 +99,7 @@ async function doGoogleCallback(request, env){
     const _gu=await getUserOrCreate(p.email, p.name||'', env);
     const t=await mintSession(p.email, env);
     try{ await logEvent(request, env, _gu.isNew ? 'signup' : 'login', { email: p.email, props:{ via:'google' } }); }catch(e){}
-    const h=new Headers(); h.append('Location',SITE_ORIGIN+'/?login=ok'); h.append('Set-Cookie',sessionCookie(t)); h.append('Set-Cookie',clearCookie('__Host-ws_ostate'));
+    const h=new Headers(); h.append('Location',SITE_ORIGIN+(_gu.isNew?'/?login=new':'/?login=ok')); h.append('Set-Cookie',sessionCookie(t)); h.append('Set-Cookie',clearCookie('__Host-ws_ostate'));
     return new Response(null, { status:302, headers:h });
   }catch(e){ return Response.redirect(SITE_ORIGIN+'/?login=error',302); }
 }
@@ -169,7 +169,7 @@ async function doVerify(request, env){
     const _eu=await getUserOrCreate(m.email, '', env);
     const st=await mintSession(m.email, env);
     try{ await logEvent(request, env, _eu.isNew ? 'signup' : 'login', { email: m.email, props:{ via:'email' } }); }catch(e){}
-    const h=new Headers(); h.append('Location',SITE_ORIGIN+'/?login=ok'); h.append('Set-Cookie',sessionCookie(st));
+    const h=new Headers(); h.append('Location',SITE_ORIGIN+(_eu.isNew?'/?login=new':'/?login=ok')); h.append('Set-Cookie',sessionCookie(st));
     return new Response(null, { status:302, headers:h });
   }catch(e){ return Response.redirect(SITE_ORIGIN+'/?login=error',302); }
 }
