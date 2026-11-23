@@ -88,13 +88,13 @@ module.exports = async function (ctx, t) {
   const before = await page.evaluate(() => { const p = window._wsSiteData.pages[wsActivePageIdx()]; return { path: p.path, title: p.title }; });
   await page.evaluate(() => [...document.querySelectorAll('#wsEdHost .wse-link')].find((b) => b.textContent === 'Rename').click()); await sleep(200);
   t.ok(await page.evaluate(() => { const i = document.querySelector('#wsePgTabs input.wse-tabin'); return !!i && document.activeElement === i && i.maxLength === 30; }), 'Rename turns the page tab into a text box (no pop-up)');
-  await page.keyboard.down('Control'); await page.keyboard.press('KeyA'); await page.keyboard.up('Control');
+  await page.evaluate(() => document.activeElement.select());
   await page.keyboard.type('   '); await page.keyboard.press('Enter'); await sleep(200);
   t.ok(await page.evaluate(() => !!document.querySelector('#wsePgTabs input.wse-tabin') && /name/.test(document.querySelector('#wsEdHost .wse-err').textContent)), 'an empty page name shows an error and keeps editing');
-  await page.keyboard.down('Control'); await page.keyboard.press('KeyA'); await page.keyboard.up('Control');
+  await page.evaluate(() => document.activeElement.select());
   await page.keyboard.type('Home'); await page.keyboard.press('Enter'); await sleep(200);
   t.ok(await page.evaluate(() => /already have a page/.test(document.querySelector('#wsEdHost .wse-err').textContent)), 'a duplicate page name is refused');
-  await page.keyboard.down('Control'); await page.keyboard.press('KeyA'); await page.keyboard.up('Control');
+  await page.evaluate(() => document.activeElement.select());
   await page.keyboard.type('What we do'); await page.keyboard.press('Enter'); await sleep(400);
   const after = await page.evaluate(() => { const p = window._wsSiteData.pages[wsActivePageIdx()]; return { path: p.path, title: p.title, red: JSON.stringify(window._wsSiteData.redirects || {}) }; });
   t.ok(after.title === 'What we do' && after.path === before.path && after.red === '{}', 'renaming changes the name but not the address ' + JSON.stringify([before, after]));

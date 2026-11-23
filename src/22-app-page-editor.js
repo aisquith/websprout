@@ -11,13 +11,20 @@ var gHTML='',unlocked=false,selectedType='',selectedStyle='';
       for(var _ii=0;_ii<_ign.length;_ii++){ if((o.msg||'').indexOf(_ign[_ii])>-1) return; }
       var key=(o.msg||'')+'|'+(o.line||'');
       if(_errSeen[key])return;_errSeen[key]=1;_errSent++;
-      o.where=o.where||'studio';o.url=location.href;
+      if(!o.where){var _st=document.getElementById('studio');o.where=(_st&&_st.classList.contains('on'))?'studio':'home';}o.url=location.href;
       try{o.build=window._wsBuild||'';}catch(e){}
       fetch('/api/clientlog',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o),keepalive:true}).catch(function(){});
     }catch(e){}
   };
   window.addEventListener('error',function(e){window._wsReport({msg:(e&&e.message)||'error',src:(e&&e.filename)||'',line:(e&&e.lineno)||0,stack:(e&&e.error&&e.error.stack)||''});});
-  window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;window._wsReport({msg:('promise: '+((r&&r.message)||String(r||''))).slice(0,200),stack:(r&&r.stack)||''});});
+  // A failed request rejects with a bare "Failed to fetch": note which request it was (method and path, never the query).
+  var _leaving=false;window.addEventListener('pagehide',function(){_leaving=true;});window.addEventListener('beforeunload',function(){_leaving=true;});window.addEventListener('pageshow',function(){_leaving=false;});
+  try{var _of=window.fetch;if(_of&&!_of._ws){var _wf=function(input,init){var u='',m='GET';try{u=typeof input==='string'?input:((input&&input.url)||String(input||''));m=String((init&&init.method)||(input&&input.method)||'GET').toUpperCase();}catch(x){}
+    return _of.apply(this,arguments).catch(function(err){try{if(err&&typeof err==='object'&&!err._wsReq){var a=document.createElement('a');a.href=u;err._wsReq=m+' '+(a.host&&a.host!==location.host?a.host:'')+a.pathname;}}catch(x){}throw err;});};_wf._ws=1;window.fetch=_wf;}}catch(x){}
+  window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason,req=(r&&r._wsReq)||'';
+    // Not bugs: the visitor is offline, left the page mid-request, or cancelled it.
+    if(req&&(_leaving||navigator.onLine===false||(r&&r.name==='AbortError')))return;
+    window._wsReport({msg:('promise: '+((r&&r.message)||String(r||''))+(req?' ['+req+']':'')).slice(0,200),stack:(r&&r.stack)||''});});
 })();
 var undoStack=[],redoStack=[],editCount=0;
 

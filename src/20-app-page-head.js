@@ -520,7 +520,8 @@ footer{background:#030804;border-top:1px solid rgba(255,255,255,.05);padding:32p
 .deploy-cta-banner-text span{color:#4ade80}
 .deploy-cta-banner-btn{background:#00c7b7;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s}
 .deploy-cta-banner-btn:hover{background:#00a89c;transform:translateY(-1px)}
-.deploy-cta-dismiss{background:none;border:none;color:rgba(255,255,255,.72);font-size:16px;cursor:pointer;padding:0 4px}
+.deploy-cta-dismiss{background:none;border:none;color:rgba(255,255,255,.72);font-size:16px;cursor:pointer;padding:0 4px;min-width:32px;min-height:32px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:8px}
+.deploy-cta-dismiss:hover{background:rgba(255,255,255,.08);color:#fff}
 .s-purple{background:linear-gradient(135deg,#6d28d9,#7c3aed);color:#fff}
 .s-purple:hover{box-shadow:0 4px 16px rgba(109,40,217,.4)}
 .s-body{display:flex;flex:1;overflow:hidden}
@@ -1103,6 +1104,8 @@ nav.scrolled{background:rgba(6,12,5,.78)!important;backdrop-filter:blur(16px) sa
 .studio.ws-locked .chat>*,.studio.ws-locked .s-actions>*{opacity:.5}
 #builder{scroll-margin-top:210px}
 #showcase{scroll-margin-top:30px}
+@media(max-width:480px){nav{gap:6px;padding:0 10px}.nav-logo{font-size:16px;gap:7px;min-width:0}.nav-logo-mark{width:28px;height:28px}#navCta{padding:8px 11px;font-size:13px;flex-shrink:0}#signInBtn{margin-right:0 !important}}
+@media(max-width:350px){.nav-logo .lw{display:none}}
 .lp-start .section-eyebrow,.lp-feat-inner .section-eyebrow,.ws-showcase .section-eyebrow{background:linear-gradient(90deg,#4ade80,#22d3ee);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
 .lp-start .section-title,.lp-feat-inner .section-title{color:#fff}
 .lp-start .section-title{margin-bottom:10px}
