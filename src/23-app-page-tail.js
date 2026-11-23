@@ -349,7 +349,7 @@
         var a=document.createElement('a');a.className='ws-ex';a.href='/example?i='+i;a.target='_blank';a.rel='noopener';
         a.setAttribute('aria-label','Open the example site for '+it[0]+', a '+it[1].toLowerCase());
         var bar=document.createElement('div');bar.className='ws-ex-bar';bar.innerHTML='<span></span><span></span><span></span>';
-        var url=document.createElement('em');url.textContent=it[0].toLowerCase().replace(/[^a-z0-9]+/g,'')+'.websprout.app';bar.appendChild(url);
+        var url=document.createElement('em');url.textContent=it[0].toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')+'.websprout.app';bar.appendChild(url);
         var vp=document.createElement('div');vp.className='ws-ex-vp';
         var fr=document.createElement('iframe');fr.setAttribute('tabindex','-1');fr.setAttribute('aria-hidden','true');fr.setAttribute('loading','lazy');fr.title=it[0];fr.dataset.src='/example?i='+i;
         vp.appendChild(fr);
@@ -362,6 +362,59 @@
       var frames=grid.querySelectorAll('iframe');
       if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){load(en.target);io.unobserve(en.target);}});},{rootMargin:'400px'});frames.forEach(function(f){io.observe(f);});}
       else frames.forEach(load);
+    })();
+
+    /* #2b hero: quick start box, address hint, and the live demo (real example sites growing in a browser frame) */
+    (function(){
+      function slug(t){return String(t||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40);}
+      var rm=reduce||document.documentElement.classList.contains('ws-rm');
+      var qf=document.getElementById('lpQuick'),qi=document.getElementById('lpQuickName'),addr=document.getElementById('lpAddr');
+      if(qi&&addr){qi.addEventListener('input',function(){var s=slug(qi.value);addr.textContent='';if(s.length>1){addr.appendChild(document.createTextNode('Your free address could be '));var b=document.createElement('b');b.textContent=s+'.websprout.app';addr.appendChild(b);}});}
+      if(qf&&qi){qf.addEventListener('submit',function(e){e.preventDefault();
+        var n=document.getElementById('bizName'),ty=document.getElementById('bizType'),v=(qi.value||'').trim();
+        if(n&&v){n.value=v;try{n.dispatchEvent(new Event('input',{bubbles:true}));}catch(err){}}
+        var st=document.getElementById('start')||document.getElementById('builder');
+        if(st&&st.scrollIntoView)st.scrollIntoView({behavior:rm?'auto':'smooth',block:'start'});
+        var f=v?ty:n; if(f)setTimeout(function(){try{f.focus({preventScroll:true});}catch(err){try{f.focus();}catch(e2){}}},rm?0:560);
+      });}
+      var lc=document.getElementById('liveCount'),lw=document.getElementById('lpCount');
+      if(lc&&lw&&!/[0-9]/.test(lc.textContent||''))lw.hidden=true;
+
+      var stage=document.getElementById('lpStage'),vp=document.getElementById('lpVp'),pvp=document.getElementById('lpPhoneVp');
+      if(!stage||!vp||!document.getElementById('lpFrame'))return;
+      var g1=document.getElementById('lpGrow'),g2=document.getElementById('lpGrow2'),gt=document.getElementById('lpGrowT'),typed=document.getElementById('lpTyped'),urlEl=document.getElementById('lpUrl'),tilt=document.getElementById('lpTilt');
+      /* name, kind, index into the server's example list (the same six sites as the gallery below) */
+      var items=[['Rosa Verde','restaurant',1],['Fade & Co.','barber shop',0],['Petal & Stem','wedding florist',5],['Spotless Pros','house cleaning',2],['Still Water Yoga','yoga studio',4],['Hartley & Reed','law firm',3]];
+      var lite=false; try{lite=!!(navigator.connection&&navigator.connection.saveData);}catch(e){}
+      function phoneOn(){return !!(pvp&&pvp.clientWidth);}
+      function fit(){var w=parseFloat(getComputedStyle(vp).getPropertyValue('--w'))||1280; if(vp.clientWidth)vp.style.setProperty('--s',(vp.clientWidth/w).toFixed(4)); if(phoneOn())pvp.style.setProperty('--s2',(pvp.clientWidth/390).toFixed(4));}
+      fit();window.addEventListener('resize',fit);setTimeout(fit,300);
+      /* A fresh iframe each time: changing the address of one that is already loaded would add a step to the Back button. */
+      function swap(id,src,title,done){var old=document.getElementById(id);if(!old)return done();var f=document.createElement('iframe');f.id=id;f.setAttribute('tabindex','-1');f.setAttribute('aria-hidden','true');f.title=title;f.onload=function(){f.onload=null;done();};f.onerror=function(){done();};f.src=src;old.parentNode.replaceChild(f,old);}
+      var cur=-1,tok=0,visible=true,timer=null;
+      function grow(i){cur=i;var it=items[i],my=++tok,n=phoneOn()?2:1,ready=false,t0=Date.now();
+        if(urlEl)urlEl.textContent=slug(it[0])+'.websprout.app';
+        if(gt)gt.textContent='Growing '+it[0];
+        if(g1)g1.classList.add('on'); if(g2)g2.classList.add('on');
+        function reveal(){if(ready||my!==tok)return;ready=true;setTimeout(function(){if(my!==tok)return;if(g1)g1.classList.remove('on');if(g2)g2.classList.remove('on');if(!rm&&!lite)timer=setTimeout(next,5600);},Math.max(0,(rm?0:1500)-(Date.now()-t0)));}
+        function one(){n--;if(n<=0)reveal();}
+        var src='/example?i='+it[2];
+        swap('lpFrame',src,'Example website',one);
+        if(phoneOn())swap('lpPhoneFrame',src,'Example website on a phone',one);
+        setTimeout(reveal,8000);
+      }
+      function typeOut(txt,done){if(!typed||rm){if(typed)typed.textContent=txt;return done();}
+        var s=typed.textContent||'';
+        (function erase(){if(s.length){s=s.slice(0,-1);typed.textContent=s;setTimeout(erase,14);}else{var k=0;(function put(){if(k<txt.length){k++;typed.textContent=txt.slice(0,k);setTimeout(put,42);}else setTimeout(done,320);})();}})();
+      }
+      function next(){if(!visible||document.hidden){timer=setTimeout(next,1500);return;}var i=(cur+1)%items.length,it=items[i];typeOut(it[0]+', '+it[1],function(){grow(i);});}
+      if('IntersectionObserver' in window){new IntersectionObserver(function(es){visible=!!es[es.length-1].isIntersecting;},{threshold:.05}).observe(stage);}
+      grow(0);
+      if(tilt&&!rm&&window.matchMedia&&window.matchMedia('(hover:hover) and (min-width:1021px)').matches){
+        var zone=stage.parentNode||stage;
+        zone.addEventListener('pointermove',function(e){var r=stage.getBoundingClientRect();var x=Math.max(-1,Math.min(1,(e.clientX-r.left)/r.width-.5)),y=Math.max(-1,Math.min(1,(e.clientY-r.top)/r.height-.5));tilt.style.setProperty('--ry',(-9+x*8).toFixed(2)+'deg');tilt.style.setProperty('--rx',(4-y*6).toFixed(2)+'deg');});
+        zone.addEventListener('pointerleave',function(){tilt.style.removeProperty('--ry');tilt.style.removeProperty('--rx');});
+      }
     })();
 
     /* #5 scroll reveal (only hide what is below the fold, so no flash) */

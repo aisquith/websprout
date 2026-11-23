@@ -28,7 +28,7 @@
     <li><a href="#how" id="howLink">How it works</a></li>
     <li><a href="#pricing" id="pricingLink">Pricing</a></li>
     <li><a href="#" id="mySitesLink">My sites</a></li>
-    <li><a href="/deploy-guide" target="_blank">Deploy guide</a></li>
+    <li><a href="#showcase" id="exLink">Examples</a></li>
     <li><a href="#" id="supportLink">Support</a></li>
   </ul>
   <button class="nav-burger" id="navBurger" aria-label="Open menu" aria-expanded="false"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></button>
@@ -38,35 +38,59 @@
 
 <main id="wsMain" tabindex="-1">
 <div class="hero" id="hero">
-  <div class="hero-pill">
-    <div class="hero-pill-dot"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden="true"><path d="M12 21V12" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/><path d="M12 14.5C10.4 9.8 6.2 7.6 3 8.2C3.4 13 7.6 15.5 12 14.5Z" fill="#fff"/><path d="M12 13C13.5 8.2 17.8 6 21 6.6C20.6 11.4 16.4 13.9 12 13Z" fill="#fff"/></svg></div>
-    Free to build &amp; preview
-  </div>
-  <h1>Plant an idea.<br><em>Grow a website.</em></h1>
-  <p class="hero-sub">Describe your business. Get a complete, professional website in seconds.</p>
+  <div class="lp-hero">
+    <div class="lp-hero-copy">
+      <div class="hero-pill">
+        <div class="hero-pill-dot"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden="true"><path d="M12 21V12" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/><path d="M12 14.5C10.4 9.8 6.2 7.6 3 8.2C3.4 13 7.6 15.5 12 14.5Z" fill="#fff"/><path d="M12 13C13.5 8.2 17.8 6 21 6.6C20.6 11.4 16.4 13.9 12 13Z" fill="#fff"/></svg></div>
+        Free to build &amp; publish
+      </div>
+      <h1>Plant an idea.<br><em>Grow a website.</em></h1>
+      <p class="hero-sub">Tell us your business name and what you do. Websprout grows a complete, professional website in seconds, ready to publish for free.</p>
+      <form class="lp-quick" id="lpQuick" novalidate>
+        <input id="lpQuickName" aria-label="Your business name" type="text" maxlength="60" autocomplete="organization" autocapitalize="words" enterkeyhint="go" placeholder="Your business name">
+        <button type="submit" class="lp-quick-go" id="lpQuickGo"><span>Grow my site</span><svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><path d="M4 10h11M11 5.5l4.5 4.5-4.5 4.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </form>
+      <p class="lp-addr" id="lpAddr"></p>
+      <ul class="lp-ticks">
+        <li><svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="rgba(52,211,153,.16)"/><path d="M6 10.4l2.6 2.6L14 7.6" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>No credit card</li>
+        <li><svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="rgba(52,211,153,.16)"/><path d="M6 10.4l2.6 2.6L14 7.6" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ready in seconds</li>
+        <li><svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="rgba(52,211,153,.16)"/><path d="M6 10.4l2.6 2.6L14 7.6" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Free to publish</li>
+      </ul>
+      <p class="lp-count" id="lpCount"><b class="stat-n" id="liveCount">&mdash;</b> <span>sites grown so far</span></p>
+    </div>
 
-  <div class="hero-stats">
-    <div class="hero-stat">
-      <div class="stat-n" id="liveCount">&mdash;</div>
-      <div class="stat-l">Sites grown</div>
+    <div class="lp-stage" id="lpStage" aria-hidden="true">
+      <div class="lp-glow"></div>
+      <div class="lp-prompt"><span class="lp-prompt-ic"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden="true"><path d="M12 21V12" stroke="#06210f" stroke-width="2.3" stroke-linecap="round"/><path d="M12 14.5C10.4 9.8 6.2 7.6 3 8.2C3.4 13 7.6 15.5 12 14.5Z" fill="#06210f"/><path d="M12 13C13.5 8.2 17.8 6 21 6.6C20.6 11.4 16.4 13.9 12 13Z" fill="#06210f"/></svg></span><span class="lp-prompt-txt" id="lpTyped">Rosa Verde, restaurant</span><i class="lp-caret"></i></div>
+      <div class="lp-tilt" id="lpTilt">
+        <div class="lp-browser">
+          <div class="lp-bar"><span></span><span></span><span></span><em id="lpUrl">rosa-verde.websprout.app</em><b class="lp-live"><i></i>Live</b></div>
+          <div class="lp-vp" id="lpVp">
+            <iframe id="lpFrame" tabindex="-1" aria-hidden="true" title="Example website"></iframe>
+            <div class="lp-grow" id="lpGrow"><div class="lp-grow-in"><svg viewBox="0 0 24 24" width="44" height="44" fill="none" aria-hidden="true"><path d="M12 21V12" stroke="#4ade80" stroke-width="2.3" stroke-linecap="round"/><path d="M12 14.5C10.4 9.8 6.2 7.6 3 8.2C3.4 13 7.6 15.5 12 14.5Z" fill="#4ade80"/><path d="M12 13C13.5 8.2 17.8 6 21 6.6C20.6 11.4 16.4 13.9 12 13Z" fill="#34d399"/></svg><div class="lp-grow-t" id="lpGrowT">Growing your site</div><div class="lp-grow-bar"><i></i></div></div></div>
+          </div>
+        </div>
+        <div class="lp-phone">
+          <div class="lp-phone-vp" id="lpPhoneVp">
+            <iframe id="lpPhoneFrame" tabindex="-1" aria-hidden="true" title="Example website on a phone"></iframe>
+            <div class="lp-grow lp-grow-sm" id="lpGrow2"><div class="lp-grow-in"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" aria-hidden="true"><path d="M12 21V12" stroke="#4ade80" stroke-width="2.3" stroke-linecap="round"/><path d="M12 14.5C10.4 9.8 6.2 7.6 3 8.2C3.4 13 7.6 15.5 12 14.5Z" fill="#4ade80"/><path d="M12 13C13.5 8.2 17.8 6 21 6.6C20.6 11.4 16.4 13.9 12 13Z" fill="#34d399"/></svg><div class="lp-grow-bar"><i></i></div></div></div>
+          </div>
+        </div>
+        <div class="lp-chip lp-chip-a"><svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="rgba(52,211,153,.16)"/><path d="M6 10.4l2.6 2.6L14 7.6" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Contact form built in</div>
+        <div class="lp-chip lp-chip-b"><svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="rgba(52,211,153,.16)"/><path d="M6 10.4l2.6 2.6L14 7.6" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ready for phones</div>
+      </div>
+      <div class="lp-stage-cap">A real site from the builder. A new one grows every few seconds.</div>
     </div>
-    <div class="hero-stat">
-      <div class="stat-n">Instant</div>
-      <div class="stat-l">to build</div>
-    </div>
-    <div class="hero-stat">
-      <div class="stat-n">$10</div>
-      <div class="stat-l">per month</div>
-    </div>
-    <div class="hero-stat">
-      <div class="stat-n">Free</div>
-      <div class="stat-l">to publish</div>
-    </div>
+  </div>
+
+  <div class="lp-start" id="start">
+    <div class="section-eyebrow">Start here</div>
+    <h2 class="section-title">Two answers. One finished website.</h2>
+    <p class="lp-start-sub">Your business name and what you do are all it takes. Everything else is optional.</p>
   </div>
 
   <!-- BUILDER CARD -->
   <div class="builder-wrap" id="builder">
-    <div class="builder-label">&#8594; Tell us about your business</div>
     <div class="builder-card">
       <div class="step-tabs" style="display:none">
         <button class="step-tab active" id="tab1"><span class="step-n">1</span>Site type</button>
@@ -187,15 +211,16 @@
 
 <!-- TRUST BAR -->
 <div class="trust-bar">
-  <div class="trust-item"><span class="trust-icon">&#9989;</span> No credit card to preview</div>
-  <div class="trust-item"><span class="trust-icon">&#9989;</span> A complete, ready-to-publish site</div>
-  <div class="trust-item"><span class="trust-icon">&#9989;</span> Download the source code</div>
-  <div class="trust-item"><span class="trust-icon">&#9989;</span> Deploy anywhere free</div>
+  <div class="trust-item"><span class="trust-icon"><svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="rgba(52,211,153,.16)"/><path d="M6 10.4l2.6 2.6L14 7.6" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>No credit card to preview</div>
+  <div class="trust-item"><span class="trust-icon"><svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="rgba(52,211,153,.16)"/><path d="M6 10.4l2.6 2.6L14 7.6" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>A complete, ready-to-publish site</div>
+  <div class="trust-item"><span class="trust-icon"><svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="rgba(52,211,153,.16)"/><path d="M6 10.4l2.6 2.6L14 7.6" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Download the source code</div>
+  <div class="trust-item"><span class="trust-icon"><svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="rgba(52,211,153,.16)"/><path d="M6 10.4l2.6 2.6L14 7.6" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Deploy anywhere free</div>
 </div>
 
 <!-- SHOWCASE -->
 <div class="ws-showcase ws-reveal" id="showcase" aria-label="Example website styles">
-  <div class="ws-sc-head">Example sites, made by the builder</div>
+  <div class="section-eyebrow">Examples</div>
+  <h2 class="ws-sc-head">Real sites, made by the builder</h2>
   <div class="ws-sc-sub">Every one of these was made by the same builder you are about to use, from just a name and a business type. Click one to look around.</div>
   <div class="ws-ex-grid" id="wsExGrid"></div>
   <div class="ws-sc-note">Example businesses. Every site comes out different: layout, colors, fonts and words.</div>
@@ -208,19 +233,65 @@
     <div class="section-title">From seed to site in 3 steps.</div>
     <div class="how-grid">
       <div class="how-card">
+        <div class="how-art how-art-1" aria-hidden="true"><div class="ha-field"><small>Business name</small><span>Marguerite Bakery<i></i></span></div><div class="ha-field"><small>What kind of business?</small><span>Bakery</span></div></div>
         <div class="how-step-num">1</div>
         <h3>Plant your idea</h3>
         <p>Enter your business name and type, and add a detail or two if you like. That is all it takes.</p>
       </div>
       <div class="how-card">
+        <div class="how-art how-art-2" aria-hidden="true"><div class="ha-win"><div class="ha-win-bar"><b></b><b></b><b></b></div><div class="ha-win-body"><i class="ha-b1"></i><i class="ha-b2"></i><i class="ha-b3"></i><div class="ha-row"><i></i><i></i><i></i></div></div></div></div>
         <div class="how-step-num">2</div>
         <h3>Watch it grow</h3>
-        <p>Your site appears instantly &mdash; real sections, working navigation, and a contact form, all ready to go.</p>
+        <p>Your site appears in seconds: real sections, working navigation and a contact form, all ready to go.</p>
       </div>
       <div class="how-card">
+        <div class="how-art how-art-3" aria-hidden="true"><div class="ha-url"><i></i><span>marguerite-bakery.websprout.app</span></div><div class="ha-live">Live on the web</div></div>
         <div class="how-step-num">3</div>
-        <h3>Launch your sites</h3>
+        <h3>Launch it</h3>
         <p>Publish your site live for free at name.websprout.app. Try Pro free for 7 days to remove the badge and connect your own domain. Cancel anytime.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div class="lp-feat" id="features">
+  <div class="lp-feat-inner">
+    <div class="section-eyebrow">What you get</div>
+    <h2 class="section-title">Everything a local business site needs.</h2>
+    <div class="lf-grid">
+      <div class="lf-card lf-wide">
+        <div class="lf-txt"><span class="lf-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18M8 13h8M8 16.5h5"/></svg></span>
+          <h3>A complete site, not a blank template</h3>
+          <p>Several pages with words written for your kind of business, real sections, working navigation and a contact form. It is finished when it appears.</p>
+        </div>
+        <div class="lf-art lf-art-pages" aria-hidden="true"><span>Home</span><span>Services</span><span>About</span><span>Contact</span></div>
+      </div>
+      <div class="lf-card"><span class="lf-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 013 3L8 19l-4 1z"/><path d="M14 7l3 3"/></svg></span>
+        <h3>Click to edit</h3>
+        <p>Click any text or photo and type. No code and no drag-and-drop puzzle.</p>
+      </div>
+      <div class="lf-card"><span class="lf-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="M4 7l8 6 8-6"/></svg></span>
+        <h3>Messages reach you</h3>
+        <p>Contact form messages go straight to your Websprout inbox, and to your email if you add it.</p>
+      </div>
+      <div class="lf-card lf-wide">
+        <div class="lf-txt"><span class="lf-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 100 18c1.2 0 2-.9 2-2 0-1.4 1-2.2 2.3-2.2H18a3 3 0 003-3C21 8.6 17 3 12 3z"/><circle cx="7.8" cy="12" r="1"/><circle cx="10" cy="8" r="1"/><circle cx="14.5" cy="7.6" r="1"/></svg></span>
+          <h3>One click to change the look</h3>
+          <p>Shuffle the layout, colors and fonts, or pick your own brand color. Every site comes out different.</p>
+        </div>
+        <div class="lf-art lf-art-sw" aria-hidden="true"><i style="background:#2d7a3a"></i><i style="background:#1d4ed8"></i><i style="background:#b45309"></i><i style="background:#be185d"></i><i style="background:#0f766e"></i><i style="background:#111827"></i></div>
+      </div>
+      <div class="lf-card lf-wide">
+        <div class="lf-txt"><span class="lf-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4.5 4.5 0 006.4 0l3-3a4.5 4.5 0 00-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 00-6.4 0l-3 3a4.5 4.5 0 006.4 6.4l1-1"/></svg></span>
+          <h3>Live at your own address</h3>
+          <p>Publish free at yourname.websprout.app. Connect your own domain with Pro.</p>
+        </div>
+        <div class="lf-art lf-art-url" aria-hidden="true"><span><i></i>yourname.websprout.app</span><span class="dim">yourbusiness.com <b>Pro</b></span></div>
+      </div>
+      <div class="lf-card"><span class="lf-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg></span>
+        <h3>Right on every screen</h3>
+        <p>Every site is checked for phones and for color contrast before you see it.</p>
       </div>
     </div>
   </div>
@@ -1182,9 +1253,9 @@
   var lnk=$('supportLink');if(lnk)lnk.addEventListener('click',function(e){e.preventDefault();openS();});
   document.addEventListener('click',function(e){
     var a=(e.target&&e.target.closest)?e.target.closest('a'):null;if(!a)return;
-    if(a.id==='howLink'||a.id==='pricingLink'){
+    if(a.id==='howLink'||a.id==='pricingLink'||a.id==='exLink'){
       e.preventDefault();
-      var t=document.getElementById(a.id==='howLink'?'how':'pricing');
+      var t=document.getElementById(a.id==='howLink'?'how':a.id==='exLink'?'showcase':'pricing');
       if(t){if(t.scrollIntoView)t.scrollIntoView({behavior:'smooth',block:'start'});else window.scrollTo(0,(t.getBoundingClientRect().top+(window.pageYOffset||0))-58);}
     }else if(a.id==='mySitesLink'){
       e.preventDefault();
