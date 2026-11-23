@@ -707,6 +707,7 @@
     });}
   })();
   </script>
+  <div class="s-lock" id="wsLockBar" hidden><span><b>This is your site.</b> Sign in free to edit and publish it.</span><button type="button" id="wsLockBtn">Sign in free</button></div>
   <div class="s-body">
     <div class="preview-frame-wrap" id="previewWrap">
       <iframe id="pf" title="Live site preview" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox" style="width:100%;height:4000px;border:none;display:block;background:#fff"></iframe>
@@ -1492,6 +1493,7 @@
   }
   function setAuthUI(me){
     window._wsUser=me;
+    try{if(window.wsLockSync)window.wsLockSync();}catch(e){}
     try{
       if(me&&me.auth&&me.email){
         var _own=localStorage.getItem('ws_owner');

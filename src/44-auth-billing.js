@@ -175,7 +175,8 @@ async function doVerify(request, env){
 }
 async function doMe(request, env){
   const s=await getSession(request, env);
-  if(!s) return succeed({ auth:false });
+  // lock: the studio is look-only until sign-in. Test servers lock only for requests that ask (x-ws-test-auth).
+  if(!s) return succeed({ auth:false, lock: env.WS_TEST_MODE !== '1' || !!request.headers.get('x-ws-test-auth') });
   let u=null; try{ u=JSON.parse(await env.KV.get('user:'+s.email)||'null'); }catch(e){}
   // Founder/owner account is always Pro — persist it to the accounts database so every plan check agrees
   if((s.email||'').toLowerCase() === SUPPORT_EMAIL.toLowerCase() && (!u || u.plan !== 'pro')){

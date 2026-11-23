@@ -348,6 +348,7 @@ function wsApplyFrameHtml(raw){
 }
 if(!window._wsHWired){window._wsHWired=true;window.addEventListener('message',function(ev){
   var m=wsPfMsg(ev);if(!m)return;var f=document.getElementById('pf');
+  if(wsIsLocked()&&(m.type==='wsSlotClick'||m.type==='wsSelect'||m.type==='wsSync')){if(m.type!=='wsSync')wsLockAsk();return;}
   if(m.type==='wsH'){var h=+m.h;if(!(h>80&&h<200000))return;f.style.height=Math.round(h)+'px';if(h>120){var sk=document.getElementById('skelWrap');if(sk&&sk.classList.contains('show')){sk.classList.remove('show');setStudioReady(true);}}return;}
   if(m.type==='wsSlotClick'){openSlotPicker(String(m.slotId||'image').slice(0,120),String(m.label||'Add photo').slice(0,80));return;}
   if(m.type==='wsSelect'){window._wsCvSel={rot:(typeof m.rot==='string'?m.rot.slice(0,1000):null),href:String(m.href||'').slice(0,2000),txt:String(m.txt||'').slice(0,300)};wsShowBar(String(m.kind||'text'),String(m.tag||'').slice(0,12),String(m.slotId||'').slice(0,120));return;}
@@ -2966,11 +2967,18 @@ function wsResumePendingGen(own){
   wsRunCreate(d);return true;
 }
 window.wsResumePendingGen=wsResumePendingGen;
-function wsGrowClicked(){
-  var go=function(me){if(me&&me.auth)doCreateV3();else wsGrowAfterSignIn();};
-  if(window._wsUser){go(window._wsUser);return;}
-  fetch('/me',{cache:'no-store'}).then(function(r){return r.json();}).then(function(me){if(window.wsSetAuthUI)window.wsSetAuthUI(me);go(me);}).catch(function(){go(null);});
-}
+// Anyone can grow a site. The server asks for sign-in (signin:true) only after a few signed-out sites in a day.
+function wsGrowClicked(){doCreateV3();}
+// Signed out, the studio is look-only: scrolling and moving between pages work, editing and publishing ask for sign-in.
+function wsIsLocked(){var u=window._wsUser,st=document.getElementById('studio');return !!(st&&st.classList.contains('on')&&u&&u.auth===false&&u.lock);}
+function wsLockSync(){var st=document.getElementById('studio'),bar=document.getElementById('wsLockBar'),on=wsIsLocked();if(st)st.classList.toggle('ws-locked',on);if(bar)bar.hidden=!on;}
+function wsLockAsk(){if(window.openAuth)window.openAuth({intro:'Sign in free to edit and publish your site. It stays just as you see it now.',onSignedIn:function(){wsLockSync();if(typeof toast==='function')toast('\u2713 Signed in! Your site is ready to edit.',5000);}});}
+window.wsLockSync=wsLockSync;
+(function(){var st=document.getElementById('studio');if(!st)return;
+  var hit=function(e){if(!wsIsLocked())return false;var t=e.target;if(!t||!t.closest)return false;if(t.closest('#wsLockBtn')){return e.type==='click';}return !!t.closest('.chat,.s-actions');};
+  st.addEventListener('click',function(e){if(hit(e)){e.preventDefault();e.stopPropagation();wsLockAsk();}},true);
+  st.addEventListener('focusin',function(e){if(e.target&&e.target.id!=='wsLockBtn'&&hit(e)&&/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)){try{e.target.blur();}catch(x){}}},true);
+})();
 function doCreateV3(){wsRunCreate(wsCreatePayload());}
 function wsCreatePayload(){
   var val=function(id){var el=document.getElementById(id);return el?(el.value||''):'';};
@@ -3821,6 +3829,7 @@ function openStudio(html){
   sessionStorage.setItem('ws_studio','1');
   autoSetDevice();
   if(unlocked)applyUnlock();
+  wsLockSync();
   // Grey out buttons until site loads
   setStudioReady(false);
   setTimeout(function(){setPreview(html);},50);

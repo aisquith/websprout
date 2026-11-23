@@ -1095,6 +1095,12 @@ nav.scrolled{background:rgba(6,12,5,.78)!important;backdrop-filter:blur(16px) sa
 .lp-stage-cap{position:relative;z-index:1;margin:52px 0 0;text-align:center;font-size:12.5px;color:rgba(255,255,255,.5)}
 
 .lp-start{max-width:760px;margin:84px auto 26px;text-align:center;scroll-margin-top:84px}
+.s-lock{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;padding:9px 14px;background:linear-gradient(90deg,#0f2a14,#123a1c 50%,#0f2a14);border-bottom:1px solid rgba(74,222,128,.35);color:#eafff2;font-size:14px;text-align:center}
+.s-lock[hidden]{display:none}
+.s-lock b{font-weight:700;color:#fff}
+.s-lock button{border:0;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:800;color:#06210f;padding:8px 16px;border-radius:9px;background:linear-gradient(135deg,#4ade80,#16a34a);box-shadow:0 6px 18px -8px rgba(34,197,94,.8)}
+.s-lock button:hover{filter:brightness(1.07)}
+.studio.ws-locked .chat>*,.studio.ws-locked .s-actions>*{opacity:.5}
 #builder{scroll-margin-top:210px}
 #showcase{scroll-margin-top:30px}
 .lp-start .section-eyebrow,.lp-feat-inner .section-eyebrow,.ws-showcase .section-eyebrow{background:linear-gradient(90deg,#4ade80,#22d3ee);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
